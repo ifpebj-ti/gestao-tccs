@@ -1,3 +1,15 @@
+<!--![CI/CD](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/main.yml/badge.svg)--> <!--Adicionar depois que criar a pipeline-->
+![License](https://img.shields.io/github/license/ifpebj-ti/gestao-tccs)
+![Last Commit](https://img.shields.io/github/last-commit/ifpebj-ti/gestao-tccs)
+![Top Languages](https://img.shields.io/github/languages/top/ifpebj-ti/gestao-tccs)
+![Repo Size](https://img.shields.io/github/repo-size/ifpebj-ti/gestao-tccs)
+![Contributors](https://img.shields.io/github/contributors/ifpebj-ti/gestao-tccs)
+![Open Issues](https://img.shields.io/github/issues/ifpebj-ti/gestao-tccs)
+![Open PRs](https://img.shields.io/github/issues-pr/ifpebj-ti/gestao-tccs)
+![Forks](https://img.shields.io/github/forks/ifpebj-ti/gestao-tccs)
+![Stars](https://img.shields.io/github/stars/ifpebj-ti/gestao-tccs)
+<!--![Tags Versions](https://img.shields.io/github/v/tag/ifpebj-ti/gestao-tccs)--> <!--Adicionar caso o sistema venha a ter versões separadas por tags-->
+
 # 📘 Sistema de Gestão de TCCs
 
 Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando processos como cadastro, orientação, defesa e avaliação.
