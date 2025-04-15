@@ -1,0 +1,1820 @@
+{
+  "version": "2.4.1",
+  "summary": {
+    "title": "Modelagem de Ameaças - Gestão de TCCs",
+    "owner": "David Almeida",
+    "description": "O Projeto de Gestão de TCC tem como objetivo tornar a supervisão e o acompanhamento dos TCCs mais eficientes, minimizando problemas enfrentados pelos orientadores e garantindo maior organização no fluxo de trabalho. A plataforma permitirá a digitalização e assinatura eletrônica de documentos, reduzindo burocracias e agilizando processos.",
+    "id": 0
+  },
+  "detail": {
+    "contributors": [
+      {
+        "name": "David Almeida"
+      },
+      {
+        "name": "Edson Valença"
+      },
+      {
+        "name": "José Gabriel"
+      },
+      {
+        "name": "Mariana Cavalcanti"
+      }
+    ],
+    "diagrams": [
+      {
+        "id": 0,
+        "title": "Diagrama STRIDE - Gestão de TCCs",
+        "diagramType": "STRIDE",
+        "placeholder": "New STRIDE diagram description",
+        "thumbnail": "./public/content/images/thumbnail.stride.jpg",
+        "version": "2.4.1",
+        "cells": [
+          {
+            "position": {
+              "x": 388.75,
+              "y": 300
+            },
+            "size": {
+              "width": 112.5,
+              "height": 60
+            },
+            "attrs": {
+              "text": {
+                "text": "Usuários"
+              },
+              "body": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "strokeDasharray": null
+              }
+            },
+            "visible": true,
+            "shape": "actor",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "78888aef-3ac7-41f3-9af0-2738c6d4a77f"
+                },
+                {
+                  "group": "right",
+                  "id": "68505e4c-bf78-4384-8d35-ebd9142189de"
+                },
+                {
+                  "group": "bottom",
+                  "id": "73a51735-fca4-4fdd-b1a6-0d78f7f7821d"
+                },
+                {
+                  "group": "left",
+                  "id": "57912b7b-47f2-4de7-9ada-d357eb19b980"
+                }
+              ]
+            },
+            "id": "ffe6bba6-30e6-45f5-919b-d3dbded1bff0",
+            "zIndex": 1,
+            "data": {
+              "type": "tm.Actor",
+              "name": "Usuários",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "providesAuthentication": false,
+              "threats": [
+                {
+                  "id": "1fd338cf-495d-4a9b-a53f-48890631dc61",
+                  "title": "Negação de ações realizadas",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Repudiation",
+                  "description": "Um usuário alega não ter assinado um documento, mesmo tendo feito isso.",
+                  "mitigation": "Registro de logs imutáveis com IP, timestamp e id do usuário, notificações por e-mail confirmando ações importantes.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 1,
+                  "score": ""
+                },
+                {
+                  "id": "f32cdaf9-7ebb-48ef-b41b-35b8e1c97401",
+                  "title": "Acesso de usuário não autorizado",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Spoofing",
+                  "description": "Um invasor tenta se passar por um usuário legítimo usando e-mail e senha roubados.",
+                  "mitigation": "Tokens de primeiro acesso com validade curta, bloqueio após tentativas incorretas",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 2,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "spoofing": 2,
+                "repudiation": 5
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 886,
+              "y": 280
+            },
+            "size": {
+              "width": 120,
+              "height": 100
+            },
+            "attrs": {
+              "text": {
+                "text": "Frontend Web"
+              },
+              "body": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "strokeDasharray": null
+              }
+            },
+            "visible": true,
+            "shape": "process",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "d78d622f-ef37-4202-919d-8177fd189500"
+                },
+                {
+                  "group": "right",
+                  "id": "e806b524-16d4-4026-95a7-139dc115ba39"
+                },
+                {
+                  "group": "bottom",
+                  "id": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+                },
+                {
+                  "group": "left",
+                  "id": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+                }
+              ]
+            },
+            "id": "9d674d48-3d7d-4a4b-879f-f935d0136625",
+            "zIndex": 6,
+            "data": {
+              "type": "tm.Process",
+              "name": "Frontend Web",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "",
+              "threats": [
+                {
+                  "id": "cbb35e8a-fc91-4ca2-b41f-d520f24ca124",
+                  "title": "Uso de sessão roubada",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Spoofing",
+                  "description": "Invasor acessa o sistema com um token de sessão roubado.",
+                  "mitigation": "Tokens curtos com expiração.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 9,
+                  "score": ""
+                },
+                {
+                  "id": "d330c8fd-ff74-47cb-8099-4c9abd6a17ce",
+                  "title": "Manipulação do JavaScript",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Alguém injeta código malicioso no frontend.",
+                  "mitigation": "Content Security Policy (CSP)",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 10,
+                  "score": ""
+                },
+                {
+                  "id": "5141d903-5149-419e-8015-cedffba98f2d",
+                  "title": "Alterar dados do DOM para acessar funções",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Elevation of privilege",
+                  "description": "Alguém altera atributos do HTML para ativar recursos de admin.",
+                  "mitigation": "Autorização sempre feita no backend, nunca confiar no DOM.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 11,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "spoofing": 1,
+                "tampering": 1,
+                "repudiation": 0,
+                "informationDisclosure": 0,
+                "denialOfService": 0,
+                "elevationOfPrivilege": 1
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 1296,
+              "y": 280
+            },
+            "size": {
+              "width": 100,
+              "height": 100
+            },
+            "attrs": {
+              "text": {
+                "text": "Backend API"
+              },
+              "body": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "strokeDasharray": null
+              }
+            },
+            "visible": true,
+            "shape": "process",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "d78d622f-ef37-4202-919d-8177fd189500"
+                },
+                {
+                  "group": "right",
+                  "id": "e806b524-16d4-4026-95a7-139dc115ba39"
+                },
+                {
+                  "group": "bottom",
+                  "id": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+                },
+                {
+                  "group": "left",
+                  "id": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+                }
+              ]
+            },
+            "id": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+            "zIndex": 7,
+            "data": {
+              "type": "tm.Process",
+              "name": "Backend API",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "",
+              "threats": [
+                {
+                  "id": "792c294e-9f32-4211-9088-c69781f68fd4",
+                  "title": "Acesso à API com token inválido ou forjado",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Spoofing",
+                  "description": "Alguém forja um JWT ou token de autenticação.",
+                  "mitigation": "Assinatura forte dos tokens, validação com expiração.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 12,
+                  "score": ""
+                },
+                {
+                  "id": "c08348dd-6b89-4fbd-81f8-6880cac802b3",
+                  "title": "Manipulação de parâmetros na API",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Modificação de parâmetros para acessar dados de outro usuário.",
+                  "mitigation": "Controle de acesso baseado em contexto no backend.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 13,
+                  "score": ""
+                },
+                {
+                  "id": "7a6a78f8-5833-4217-bc49-65d7acd5ac50",
+                  "title": "Falta de rastreabilidade das requisições",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Repudiation",
+                  "description": "Ações não são associadas de forma auditável ao usuário que as fez.",
+                  "mitigation": "Logging detalhado com ID do usuário, IP e ação.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 14,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "spoofing": 1,
+                "tampering": 1,
+                "repudiation": 1,
+                "informationDisclosure": 0,
+                "denialOfService": 0,
+                "elevationOfPrivilege": 0
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 1969,
+              "y": 290
+            },
+            "size": {
+              "width": 180,
+              "height": 80
+            },
+            "attrs": {
+              "text": {
+                "text": "Banco de Dados PostgreSQL"
+              },
+              "topLine": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "strokeDasharray": null
+              },
+              "bottomLine": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "strokeDasharray": null
+              }
+            },
+            "visible": true,
+            "shape": "store",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "a2b48ff6-12a7-43ff-8058-a6012da10e09"
+                },
+                {
+                  "group": "right",
+                  "id": "98f32522-03b0-40de-b398-584fbfe82415"
+                },
+                {
+                  "group": "bottom",
+                  "id": "3c790268-fbf7-4329-b62e-d80c0ad5e721"
+                },
+                {
+                  "group": "left",
+                  "id": "97df189a-26fe-4f61-8ca4-13e747025154"
+                }
+              ]
+            },
+            "id": "a52536d1-43fb-40c7-bf03-303f80e1abbd",
+            "zIndex": 8,
+            "data": {
+              "type": "tm.Store",
+              "name": "Banco de Dados PostgreSQL",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isALog": false,
+              "isEncrypted": false,
+              "isSigned": false,
+              "storesCredentials": false,
+              "storesInventory": false,
+              "threats": [
+                {
+                  "id": "b1d63fae-14d9-43b4-b02a-1e5838da6ce9",
+                  "title": "Usuário nega que alterou dados",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Repudiation",
+                  "description": "Alguém diz que não modificou o status de um TCC.",
+                  "mitigation": "Logging com quem fez a alteração, e quando.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 20,
+                  "score": ""
+                },
+                {
+                  "id": "d03aa13d-d07e-4f88-a938-cd25b380a7af",
+                  "title": "Vazamento por má configuração",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Information disclosure",
+                  "description": "Banco de dados exposto na internet ou má configuração de roles.",
+                  "mitigation": "Acesso apenas por rede privada, roles com mínimo privilégio.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 21,
+                  "score": ""
+                },
+                {
+                  "id": "bf4392fb-6193-4c9c-a3b1-86f0d5bbebe6",
+                  "title": "Consulta pesada sem índice ou com injeção",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Denial of service",
+                  "description": "Ataques com queries pesadas que travam o banco.",
+                  "mitigation": "Limitação de tempo de execução, monitoração e otimização de queries.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 22,
+                  "score": ""
+                },
+                {
+                  "id": "e8b34754-1337-4091-8dad-005727a5d817",
+                  "title": "Senhas visíveis no banco",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Information disclosure",
+                  "description": "Não utilização de criptografia para as senhas dos usuários",
+                  "mitigation": "Hashing com salt nas senhas",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 24,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 0,
+                "repudiation": 1,
+                "informationDisclosure": 2,
+                "denialOfService": 1
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 1610,
+              "y": -160
+            },
+            "size": {
+              "width": 100,
+              "height": 120
+            },
+            "attrs": {
+              "text": {
+                "text": "API SouGov"
+              },
+              "body": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": "4 3"
+              }
+            },
+            "visible": true,
+            "shape": "process",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "d78d622f-ef37-4202-919d-8177fd189500"
+                },
+                {
+                  "group": "right",
+                  "id": "e806b524-16d4-4026-95a7-139dc115ba39"
+                },
+                {
+                  "group": "bottom",
+                  "id": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+                },
+                {
+                  "group": "left",
+                  "id": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+                }
+              ]
+            },
+            "id": "f4171a32-6153-48d5-bfee-9c637325b04e",
+            "zIndex": 9,
+            "data": {
+              "type": "tm.Process",
+              "name": "API SouGov",
+              "description": "",
+              "outOfScope": true,
+              "reasonOutOfScope": "É uma API externa",
+              "hasOpenThreats": false,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "",
+              "threats": []
+            }
+          },
+          {
+            "position": {
+              "x": 1520,
+              "y": 730
+            },
+            "size": {
+              "width": 190,
+              "height": 100
+            },
+            "attrs": {
+              "text": {
+                "text": "API Google Drive"
+              },
+              "body": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": "4 3"
+              }
+            },
+            "visible": true,
+            "shape": "process",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "d78d622f-ef37-4202-919d-8177fd189500"
+                },
+                {
+                  "group": "right",
+                  "id": "e806b524-16d4-4026-95a7-139dc115ba39"
+                },
+                {
+                  "group": "bottom",
+                  "id": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+                },
+                {
+                  "group": "left",
+                  "id": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+                }
+              ]
+            },
+            "id": "83f14f3d-61f7-4a52-b93c-9f3473c0599a",
+            "zIndex": 10,
+            "data": {
+              "type": "tm.Process",
+              "name": "API Google Drive",
+              "description": "",
+              "outOfScope": true,
+              "reasonOutOfScope": "É uma API externa",
+              "hasOpenThreats": false,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "",
+              "threats": []
+            }
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Request",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": [
+                {
+                  "id": "bfc9cff6-2832-4e8c-ad14-a76e767a1455",
+                  "title": "Modificação de requisição",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Alguém intercepta e altera uma requisição do frontend ao backend.",
+                  "mitigation": "Uso de HTTPS com TLS, validação de dados no backend.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 3,
+                  "score": ""
+                },
+                {
+                  "id": "35f56766-b620-4bb3-8c7d-92c6a91a784c",
+                  "title": "Ataque DDoS via requisições maliciosas",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Denial of service",
+                  "description": "O backend é sobrecarregado por múltiplas requisições maliciosas.",
+                  "mitigation": "Validação e sanitização de entrada, limitação de taxa (rate limiting)",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 6,
+                  "score": ""
+                },
+                {
+                  "id": "ed0231ff-1bad-4881-97e4-5fc358980e99",
+                  "title": "Vazamento de informações",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Information disclosure",
+                  "description": "Informações pessoais nos parâmetros da URL",
+                  "mitigation": "HTTPS, não usar GET para dados sensíveis",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 23,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 1,
+                "informationDisclosure": 1,
+                "denialOfService": 2
+              }
+            },
+            "labels": [
+              "Request"
+            ],
+            "id": "e4d57afd-c99a-4e22-b765-c645c9ed49f2",
+            "source": {
+              "x": 940,
+              "y": 280
+            },
+            "target": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "d78d622f-ef37-4202-919d-8177fd189500"
+            },
+            "vertices": [
+              {
+                "x": 1150,
+                "y": 250
+              }
+            ]
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Response",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": [
+                {
+                  "id": "ec6a22ca-9753-4fa2-9455-da8b2cb9a628",
+                  "title": "Vazamento de dados na resposta",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "A resposta do backend inclui dados sensíveis além do necessário.",
+                  "mitigation": "Minimização de dados em resposta, mascaramento de informações sensíveis.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 4,
+                  "score": ""
+                },
+                {
+                  "id": "cfc677d4-9f2f-4e4f-9477-29fc17954b3b",
+                  "title": "Manipulação de resposta do backend",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Um agente intercepta e modifica a resposta antes que ela chegue ao frontend.",
+                  "mitigation": "HTTPS end-to-end, validação de integridade no frontend.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 8,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 2,
+                "informationDisclosure": 0,
+                "denialOfService": 0
+              }
+            },
+            "labels": [
+              "Response"
+            ],
+            "id": "753033c7-bc58-4f4b-87ef-fe69d45b60bb",
+            "source": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+            },
+            "target": {
+              "cell": "9d674d48-3d7d-4a4b-879f-f935d0136625",
+              "port": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+            },
+            "vertices": [
+              {
+                "x": 1120,
+                "y": 430
+              }
+            ]
+          },
+          {
+            "shape": "trust-boundary-curve",
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Boundary",
+              "name": "Zona do Cliente / Servidor",
+              "description": "",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            },
+            "labels": [
+              "Zona do Cliente / Servidor"
+            ],
+            "id": "dc446302-2d45-445f-b1ab-b83ae9f29447",
+            "source": {
+              "x": 1000,
+              "y": 160
+            },
+            "target": {
+              "x": 1290,
+              "y": 560
+            },
+            "vertices": []
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Upload/Download de arquivos",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": [
+                {
+                  "id": "ee066bb3-f327-4a75-8f11-ac1d2d440400",
+                  "title": "Alteração maliciosa em arquivos no Google Drive",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Arquivos do TCC são adulterados por usuários não autorizados.",
+                  "mitigation": "Controle de permissões no Drive, versionamento de documentos.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 15,
+                  "score": ""
+                },
+                {
+                  "id": "b5935671-48c1-445d-b1b0-d965c7b33474",
+                  "title": "Upload massivo ou acesso abusivo ao Drive",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Denial of service",
+                  "description": "Tentativa de sobrecarregar a integração com arquivos grandes.",
+                  "mitigation": "Limites de tamanho, quotas de upload.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 16,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 1,
+                "informationDisclosure": 0,
+                "denialOfService": 1
+              }
+            },
+            "labels": [
+              "Upload/Download de arquivos"
+            ],
+            "id": "0bb211f8-2f13-45a6-b35f-e0e71dcb3ed8",
+            "source": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "e806b524-16d4-4026-95a7-139dc115ba39"
+            },
+            "target": {
+              "cell": "83f14f3d-61f7-4a52-b93c-9f3473c0599a",
+              "port": "d78d622f-ef37-4202-919d-8177fd189500"
+            },
+            "vertices": []
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Envio de documentos para assinar",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": [
+                {
+                  "id": "99d2b0cf-dab6-43bb-9ddc-2e692a1f8e8d",
+                  "title": "Alteração do payload antes da assinatura",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Documento assinado não corresponde ao que foi enviado.",
+                  "mitigation": "Verificação pós-assinatura.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 17,
+                  "score": ""
+                },
+                {
+                  "id": "f775574c-32b6-46cc-ac39-aa74404fd3ff",
+                  "title": "Chamada excessiva à API de assinatura",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Denial of service",
+                  "description": "Tentativa de bloquear fluxo de assinatura com requisições sucessivas.",
+                  "mitigation": "Limitação de requisições.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 18,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 1,
+                "informationDisclosure": 0,
+                "denialOfService": 1
+              }
+            },
+            "labels": [
+              "Envio de documentos para assinar"
+            ],
+            "id": "5fce521d-c073-4186-bc56-f428ea36d838",
+            "source": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "e806b524-16d4-4026-95a7-139dc115ba39"
+            },
+            "target": {
+              "cell": "f4171a32-6153-48d5-bfee-9c637325b04e",
+              "port": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+            },
+            "vertices": [
+              {
+                "x": 1540,
+                "y": 200
+              }
+            ]
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "#333333",
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Resposta de documento assinado",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": []
+            },
+            "labels": [
+              "Resposta de documento assinado"
+            ],
+            "id": "6fed3652-06ab-47ef-a09d-2e5f5e059c80",
+            "source": {
+              "cell": "f4171a32-6153-48d5-bfee-9c637325b04e",
+              "port": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+            },
+            "target": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "d78d622f-ef37-4202-919d-8177fd189500"
+            },
+            "vertices": [
+              {
+                "x": 1390,
+                "y": 130
+              }
+            ]
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Agendamento de defesa do TCC",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": [
+                {
+                  "id": "2755baaa-5359-42be-b5fc-11b8ddd80720",
+                  "title": "Alteração de detalhes de evento",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Alteração das informações de data ou link da reunião online",
+                  "mitigation": "Notificar usuários responsáveis sobre mudanças em eventos.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 25,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 1,
+                "informationDisclosure": 0,
+                "denialOfService": 0
+              }
+            },
+            "labels": [
+              "Agendamento de defesa do TCC"
+            ],
+            "id": "1b16b528-16b3-4864-b6f7-fc231e5ee737",
+            "source": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "d78d622f-ef37-4202-919d-8177fd189500"
+            },
+            "target": {
+              "cell": "0a079f8c-e303-44ee-87f4-578154c6f6b0",
+              "port": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+            },
+            "vertices": [
+              {
+                "x": 1215,
+                "y": 150
+              }
+            ]
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "red",
+                "strokeWidth": 2.5,
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": "block"
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Queries de leitura \ne escrita de dados",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": true,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": [
+                {
+                  "id": "effa02e1-0663-4cca-a9c5-636ad74d656c",
+                  "title": "Injeção ou modificação direta no banco",
+                  "status": "Open",
+                  "severity": "TBD",
+                  "type": "Tampering",
+                  "description": "Injeção SQL altera dados de TCC.",
+                  "mitigation": "Validação de entrada.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 19,
+                  "score": ""
+                }
+              ],
+              "threatFrequency": {
+                "tampering": 1,
+                "informationDisclosure": 0,
+                "denialOfService": 0
+              }
+            },
+            "labels": [
+              "Queries de leitura \ne escrita de dados"
+            ],
+            "id": "c8ff3f94-71ce-49d9-a3e8-737271097c98",
+            "source": {
+              "cell": "5f9d1d94-721f-4a0c-accb-3e591dafd013",
+              "port": "e806b524-16d4-4026-95a7-139dc115ba39"
+            },
+            "target": {
+              "cell": "a52536d1-43fb-40c7-bf03-303f80e1abbd",
+              "port": "97df189a-26fe-4f61-8ca4-13e747025154"
+            },
+            "vertices": []
+          },
+          {
+            "shape": "trust-boundary-curve",
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Boundary",
+              "name": "Camada de Persistência",
+              "description": "",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            },
+            "labels": [
+              "Camada de Persistência"
+            ],
+            "id": "0e60259c-34ab-4119-9d8f-50b1ee02afb4",
+            "source": {
+              "x": 1950,
+              "y": 210
+            },
+            "target": {
+              "x": 2000,
+              "y": 490
+            },
+            "vertices": [
+              {
+                "x": 1840,
+                "y": 340
+              }
+            ]
+          },
+          {
+            "shape": "trust-boundary-curve",
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Boundary",
+              "name": "Serviço Externo",
+              "description": "",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            },
+            "labels": [
+              "Serviço Externo"
+            ],
+            "id": "59bbbc15-48d7-4c16-ae15-1a06f330f9a5",
+            "source": {
+              "x": 1080,
+              "y": -130
+            },
+            "target": {
+              "x": 1370,
+              "y": -130
+            },
+            "vertices": [
+              {
+                "x": 1210,
+                "y": -60
+              }
+            ]
+          },
+          {
+            "shape": "trust-boundary-curve",
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Boundary",
+              "name": "Serviço Externo",
+              "description": "",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            },
+            "labels": [
+              "Serviço Externo"
+            ],
+            "id": "9a92babf-5415-4653-96f0-78a07ac4ebd8",
+            "source": {
+              "x": 1570,
+              "y": -150
+            },
+            "target": {
+              "x": 1780,
+              "y": -70
+            },
+            "vertices": [
+              {
+                "x": 1620,
+                "y": -10
+              }
+            ]
+          },
+          {
+            "shape": "trust-boundary-curve",
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Boundary",
+              "name": "Serviço Externo",
+              "description": "",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            },
+            "labels": [
+              "Serviço Externo"
+            ],
+            "id": "2269afcf-b039-4b4b-bbe1-0626cad094e2",
+            "source": {
+              "x": 1510,
+              "y": 830
+            },
+            "target": {
+              "x": 1720,
+              "y": 690
+            },
+            "vertices": [
+              {
+                "x": 1550,
+                "y": 690
+              }
+            ]
+          },
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "#333333",
+                "targetMarker": {
+                  "name": "block"
+                },
+                "sourceMarker": {
+                  "name": ""
+                },
+                "strokeDasharray": null
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Flow",
+              "name": "Interação com o sistema",
+              "description": "",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "",
+              "threats": []
+            },
+            "labels": [
+              "Interação com o sistema"
+            ],
+            "id": "79019f9e-9556-4373-a90c-dd8c312c390e",
+            "source": {
+              "cell": "ffe6bba6-30e6-45f5-919b-d3dbded1bff0",
+              "port": "68505e4c-bf78-4384-8d35-ebd9142189de"
+            },
+            "target": {
+              "cell": "9d674d48-3d7d-4a4b-879f-f935d0136625",
+              "port": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+            },
+            "vertices": []
+          },
+          {
+            "shape": "trust-boundary-curve",
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "data": {
+              "type": "tm.Boundary",
+              "name": "Internet Pública",
+              "description": "",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            },
+            "labels": [
+              "Internet Pública"
+            ],
+            "id": "e34a5e68-cf21-4554-a84d-ca07045112da",
+            "source": {
+              "x": 620,
+              "y": 230
+            },
+            "target": {
+              "x": 660,
+              "y": 520
+            },
+            "vertices": [
+              {
+                "x": 550,
+                "y": 360
+              }
+            ]
+          },
+          {
+            "position": {
+              "x": 1120,
+              "y": -200
+            },
+            "size": {
+              "width": 190,
+              "height": 100
+            },
+            "attrs": {
+              "text": {
+                "text": "API Google Calendário"
+              },
+              "body": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": "4 3"
+              }
+            },
+            "visible": true,
+            "shape": "process",
+            "ports": {
+              "groups": {
+                "top": {
+                  "position": "top",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "position": "right",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "bottom": {
+                  "position": "bottom",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                },
+                "left": {
+                  "position": "left",
+                  "attrs": {
+                    "circle": {
+                      "r": 4,
+                      "magnet": true,
+                      "stroke": "#5F95FF",
+                      "strokeWidth": 1,
+                      "fill": "#fff",
+                      "style": {
+                        "visibility": "hidden"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "group": "top",
+                  "id": "d78d622f-ef37-4202-919d-8177fd189500"
+                },
+                {
+                  "group": "right",
+                  "id": "e806b524-16d4-4026-95a7-139dc115ba39"
+                },
+                {
+                  "group": "bottom",
+                  "id": "4f49f575-0eb3-4bcf-9d1c-b0e31f389fc9"
+                },
+                {
+                  "group": "left",
+                  "id": "ee9cb717-f320-4200-9af1-a76b19d9a0c3"
+                }
+              ]
+            },
+            "id": "0a079f8c-e303-44ee-87f4-578154c6f6b0",
+            "zIndex": 11,
+            "data": {
+              "type": "tm.Process",
+              "name": "API Google Calendário",
+              "description": "",
+              "outOfScope": true,
+              "reasonOutOfScope": "É uma API externa",
+              "hasOpenThreats": false,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "",
+              "threats": []
+            }
+          }
+        ],
+        "description": "Diagrama de modelagem de ameaças usando o Threat Dragon e a metodologia STRIDE (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege)."
+      }
+    ],
+    "diagramTop": 2,
+    "reviewer": "David Almeida",
+    "threatTop": 25
+  }
+}
