@@ -1,0 +1,83 @@
+# --- FRONTEND ---
+
+# dependencies
+frontend/node_modules
+frontend/.pnp
+frontend.pnp.*
+frontend.yarn/*
+!frontend/.yarn/patches
+!frontend/.yarn/plugins
+!frontend/.yarn/releases
+!frontend/.yarn/versions
+
+# testing
+frontend/coverage
+
+# next.js
+frontend/.next/
+frontend/out/
+
+# production
+frontend/build
+
+# misc
+frontend/.DS_Store
+frontend/*.pem
+
+# debug
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+frontend/.env*
+
+# vercel
+frontend/.vercel
+
+# typescript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# --- BACKEND (.NET) ---
+
+backend/*.swp
+backend/*.*~
+backend/project.lock.json
+backend/.DS_Store
+backend/*.pyc
+
+# VSCode
+backend/.vscode
+
+# User-specific files
+backend/*.suo
+backend/*.user
+backend/*.userosscache
+backend/*.sln.docstates
+
+# Build results
+backend/**/[Dd]ebug/
+backend/**/[Dd]ebugPublic/
+backend/**/[Rr]elease/
+backend/**/[Rr]eleases/
+backend/**/x64/
+backend/**/x86/
+backend/**/build/
+backend/**/bld/
+backend/**/bin/
+backend/**/obj/
+backend**/msbuild.log
+backend/**/msbuild.err
+backend/**/msbuild.wrn
+
+# Visual Studio
+backend/.vs/
+
+# SQLite temporários
+backend/*.db-shm
+backend/*.db-wal
+
+# Rider / JetBrains
+backend/.idea
