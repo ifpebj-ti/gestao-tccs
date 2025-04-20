@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Domain", "gestaotcc.Domain\gestaotcc.Domain.csproj", "{ADA1ACD5-04FF-4DEA-B363-EF41126A6D30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Application", "gestaotcc.Application\gestaotcc.Application.csproj", "{428AEC04-C787-456C-ACE1-6157A202409B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Infra", "gestaotcc.Infra\gestaotcc.Infra.csproj", "{D26364E7-EFB4-46EE-8BFF-FD6F6060E6C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Api", "gestaotcc.Api\gestaotcc.Api.csproj", "{DE430EEC-08DC-47AF-9EFC-CC0B11A36477}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ADA1ACD5-04FF-4DEA-B363-EF41126A6D30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADA1ACD5-04FF-4DEA-B363-EF41126A6D30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADA1ACD5-04FF-4DEA-B363-EF41126A6D30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADA1ACD5-04FF-4DEA-B363-EF41126A6D30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{428AEC04-C787-456C-ACE1-6157A202409B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{428AEC04-C787-456C-ACE1-6157A202409B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{428AEC04-C787-456C-ACE1-6157A202409B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{428AEC04-C787-456C-ACE1-6157A202409B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D26364E7-EFB4-46EE-8BFF-FD6F6060E6C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D26364E7-EFB4-46EE-8BFF-FD6F6060E6C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D26364E7-EFB4-46EE-8BFF-FD6F6060E6C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D26364E7-EFB4-46EE-8BFF-FD6F6060E6C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE430EEC-08DC-47AF-9EFC-CC0B11A36477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE430EEC-08DC-47AF-9EFC-CC0B11A36477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE430EEC-08DC-47AF-9EFC-CC0B11A36477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE430EEC-08DC-47AF-9EFC-CC0B11A36477}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
