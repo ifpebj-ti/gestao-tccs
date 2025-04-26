@@ -13,6 +13,12 @@ RUN npm install
 # Copia o restante da aplicação
 COPY . ./
 
+# Permite passar qual env usar no build
+ARG ENV_FILE
+
+# Copia o env correto para .env (Next lê automaticamente)
+RUN cp $ENV_FILE .env
+
 # Compila o projeto Next.js para produção
 RUN npm run build
 
