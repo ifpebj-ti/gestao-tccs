@@ -26,4 +26,3 @@ Acesse a Wiki do Projeto para mais detalhes sobre requisitos, arquitetura e flux
 
 ## 🎨 Protótipo
 Confira o protótipo interativo no [Figma](https://www.figma.com/design/gaL3ToIzCBEcyh09FpyXE1/Gest%C3%A3o-de-TCCs---Gov.BR?node-id=4002-2726&t=aqQQCIGpvvDAxGUC-1).
-
