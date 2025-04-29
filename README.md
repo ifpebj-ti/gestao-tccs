@@ -1,4 +1,4 @@
-<!--![CI/CD](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/main.yml/badge.svg)--> <!--Adicionar depois que criar a pipeline-->
+![CI/CD](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production.yml/badge.svg)
 ![License](https://img.shields.io/github/license/ifpebj-ti/gestao-tccs)
 ![Last Commit](https://img.shields.io/github/last-commit/ifpebj-ti/gestao-tccs)
 ![Top Languages](https://img.shields.io/github/languages/top/ifpebj-ti/gestao-tccs)
