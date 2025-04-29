@@ -1,0 +1,67 @@
+name: Production Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+
+jobs:
+  frontend:
+    name: Frontend Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.head_commit.modified && contains(join(github.event.head_commit.modified, ','), 'frontend/') }}
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Instalar dependências
+        run: |
+          cd frontend
+          npm install
+
+      - name: Buildar Frontend
+        run: |
+          cd frontend
+          npm run build
+
+  backend:
+    name: Backend Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.head_commit.modified && contains(join(github.event.head_commit.modified, ','), 'backend/') }}
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restaurar dependências
+        run: |
+          cd backend
+          dotnet restore
+
+      - name: Buildar Backend
+        run: |
+          cd backend
+          dotnet build --configuration Release
+
+      - name: Rodar Testes
+        run: echo "Nenhum teste implementado ainda."
