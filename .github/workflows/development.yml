@@ -18,7 +18,7 @@ jobs:
   frontend:
     name: Frontend Development
     runs-on: ubuntu-latest
-    if: ${{ github.event.head_commit.modified && contains(join(github.event.head_commit.modified, ','), 'frontend/') }}
+    # Adicionar condição para rodar apenas se houver alterações no frontend
 
     steps:
       - name: Checkout código
@@ -47,7 +47,7 @@ jobs:
   backend:
     name: Backend Development
     runs-on: ubuntu-latest
-    if: ${{ github.event.head_commit.modified && contains(join(github.event.head_commit.modified, ','), 'backend/') }}
+    # Adicionar condição para rodar apenas se houver alterações no backend
 
     steps:
       - name: Checkout código
