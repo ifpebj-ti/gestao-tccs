@@ -3,13 +3,13 @@ name: Development Workflow
 on :
   push:
     branches:
-      - development
+      - develop
     paths:
       - 'frontend/**'
       - 'backend/**'
   pull_request:
     branches:
-      - development
+      - develop
     paths:
       - 'frontend/**'
       - 'backend/**'
