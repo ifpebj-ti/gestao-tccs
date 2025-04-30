@@ -21,4 +21,9 @@
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\gestaotcc.Application\gestaotcc.Application.csproj" />
+      <ProjectReference Include="..\gestaotcc.Domain\gestaotcc.Domain.csproj" />
+    </ItemGroup>
+
 </Project>

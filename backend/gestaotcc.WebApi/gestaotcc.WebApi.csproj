@@ -16,4 +16,10 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\gestaotcc.Application\gestaotcc.Application.csproj" />
+      <ProjectReference Include="..\gestaotcc.Domain\gestaotcc.Domain.csproj" />
+      <ProjectReference Include="..\gestaotcc.Infra\gestaotcc.Infra.csproj" />
+    </ItemGroup>
+
 </Project>
