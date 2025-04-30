@@ -22,7 +22,7 @@ services:
       - NODE_ENV=development
     depends_on:
       - backend
-  
+
   postgres:
     image: postgres:15
     container_name: gestao-postgres
@@ -45,3 +45,6 @@ services:
       - backend
     volumes:
       - ./frontend/config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  postgres_data:
