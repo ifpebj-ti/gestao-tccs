@@ -3,13 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Domain", "gestaotcc.Domain\gestaotcc.Domain.csproj", "{2B0D2048-4AF6-4FDA-B375-3F2ACD408FB3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Domain", "gestaotcc.Domain\gestaotcc.Domain.csproj", "{49B4A0B2-AD0C-4BDA-B895-5F10E534EBEC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Application", "gestaotcc.Application\gestaotcc.Application.csproj", "{BE1883CF-3642-437F-B295-6D7AC0E4D2EA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Application", "gestaotcc.Application\gestaotcc.Application.csproj", "{D22C398A-BEFF-4EE1-9336-E1A5BDC5625B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Infra", "gestaotcc.Infra\gestaotcc.Infra.csproj", "{8396A390-C0CA-4985-8311-8B56CA129838}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.WebApi", "gestaotcc.WebApi\gestaotcc.WebApi.csproj", "{FF5B7B6E-E9FC-4301-B575-133558296A27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Infra", "gestaotcc.Infra\gestaotcc.Infra.csproj", "{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,21 +18,17 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2B0D2048-4AF6-4FDA-B375-3F2ACD408FB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2B0D2048-4AF6-4FDA-B375-3F2ACD408FB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2B0D2048-4AF6-4FDA-B375-3F2ACD408FB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2B0D2048-4AF6-4FDA-B375-3F2ACD408FB3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BE1883CF-3642-437F-B295-6D7AC0E4D2EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BE1883CF-3642-437F-B295-6D7AC0E4D2EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BE1883CF-3642-437F-B295-6D7AC0E4D2EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BE1883CF-3642-437F-B295-6D7AC0E4D2EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8396A390-C0CA-4985-8311-8B56CA129838}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8396A390-C0CA-4985-8311-8B56CA129838}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8396A390-C0CA-4985-8311-8B56CA129838}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8396A390-C0CA-4985-8311-8B56CA129838}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FF5B7B6E-E9FC-4301-B575-133558296A27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FF5B7B6E-E9FC-4301-B575-133558296A27}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FF5B7B6E-E9FC-4301-B575-133558296A27}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FF5B7B6E-E9FC-4301-B575-133558296A27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49B4A0B2-AD0C-4BDA-B895-5F10E534EBEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49B4A0B2-AD0C-4BDA-B895-5F10E534EBEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49B4A0B2-AD0C-4BDA-B895-5F10E534EBEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49B4A0B2-AD0C-4BDA-B895-5F10E534EBEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D22C398A-BEFF-4EE1-9336-E1A5BDC5625B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D22C398A-BEFF-4EE1-9336-E1A5BDC5625B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D22C398A-BEFF-4EE1-9336-E1A5BDC5625B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D22C398A-BEFF-4EE1-9336-E1A5BDC5625B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
