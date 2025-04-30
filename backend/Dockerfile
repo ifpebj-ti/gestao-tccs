@@ -16,7 +16,7 @@ RUN dotnet restore
 COPY . .
 
 # Publica a aplicação
-RUN dotnet publish ./gestaotcc.Api/gestaotcc.Api.csproj -c Release -o /app/out
+RUN dotnet publish ./gestaotcc.WebApi/gestaotcc.WebApi.csproj -c Release -o /app/out
 
 # Etapa de runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
