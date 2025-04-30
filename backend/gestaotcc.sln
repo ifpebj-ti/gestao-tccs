@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Application", "ge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.Infra", "gestaotcc.Infra\gestaotcc.Infra.csproj", "{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gestaotcc.WebApi", "gestaotcc.WebApi\gestaotcc.WebApi.csproj", "{9245A646-447C-42D5-AAD2-5357C1C707F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89E55DC1-98EA-4ABC-8EBE-9EABF67230BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9245A646-447C-42D5-AAD2-5357C1C707F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9245A646-447C-42D5-AAD2-5357C1C707F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9245A646-447C-42D5-AAD2-5357C1C707F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9245A646-447C-42D5-AAD2-5357C1C707F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
