@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copia a solução e os arquivos de projeto
 COPY ./gestaotcc.sln ./
-COPY ./gestaotcc.Api/gestaotcc.WebApi.csproj ./gestaotcc.WebApi/
+COPY ./gestaotcc.WebApi/gestaotcc.WebApi.csproj ./gestaotcc.WebApi/
 COPY ./gestaotcc.Application/gestaotcc.Application.csproj ./gestaotcc.Application/
 COPY ./gestaotcc.Domain/gestaotcc.Domain.csproj ./gestaotcc.Domain/
 COPY ./gestaotcc.Infra/gestaotcc.Infra.csproj ./gestaotcc.Infra/
