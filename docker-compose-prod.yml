@@ -5,7 +5,7 @@ services:
     image: ghcr.io/seu-usuario/seu-repositorio-backend:tag-a-definir # TODO: substitua com a imagem correta
     container_name: gestao-backend
     ports:
-      - "8080:8080"
+      - "${PORT_MACHINE_BACKEND}:${PORT_CONTAINER_BACKEND}"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
@@ -13,9 +13,7 @@ services:
     image: ghcr.io/seu-usuario/seu-repositorio-frontend:tag-a-definir # TODO: substitua com a imagem correta
     container_name: gestao-frontend
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
+      - "${PORT_MACHINE_FRONTEND}:${PORT_CONTAINER_FRONTEND}"
     depends_on:
       - backend
 
@@ -29,7 +27,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${PORT_MACHINE_POSTGRES}:${PORT_CONTAINER_POSTGRES}"
 
 volumes:
   postgres_data:

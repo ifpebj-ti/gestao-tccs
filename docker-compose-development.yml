@@ -6,7 +6,7 @@ services:
       context: ./backend
     container_name: gestao-backend
     ports:
-      - "8080:8080"
+      - "${PORT_MACHINE_BACKEND}:${PORT_CONTAINER_BACKEND}"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
 
@@ -14,10 +14,10 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080/api
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: gestao-frontend
     ports:
-      - "3000:3000"
+      - "${PORT_MACHINE_FRONTEND}:${PORT_CONTAINER_FRONTEND}"
     depends_on:
       - backend
 
@@ -31,6 +31,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${PORT_MACHINE_POSTGRES}:${PORT_CONTAINER_POSTGRES}"
 volumes:
   postgres_data:
