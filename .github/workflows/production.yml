@@ -1,4 +1,4 @@
-name: Production Workflow
+name: CI/CD Workflow
 
 on:
   push:
@@ -16,52 +16,93 @@ on:
 
 jobs:
   frontend:
-    name: Frontend Production
+    name: Frontend CI/CD
     runs-on: ubuntu-latest
-    # Adicionar condição para rodar apenas se houver alterações no frontend
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '18'
 
-      - name: Instalar dependências
-        run: |
-          cd frontend
-          npm install
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Buildar Frontend
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build Docker image
         run: |
-          cd frontend
-          npm run build
+          docker build -t ghcr.io/${{ github.repository_owner }}/gestao-frontend:latest -f Dockerfile .
+
+      - name: Install Docker Scout
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
+          sh install-scout.sh
+
+      - name: Scan image for critical vulnerabilities
+        run: |
+          docker scout cves ghcr.io/${{ github.repository_owner }}/gestao-frontend:latest --only-severity critical --exit-code 1 || exit 0
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/gestao-frontend:latest
 
   backend:
-    name: Backend Production
+    name: Backend CI/CD
     runs-on: ubuntu-latest
-    # Adicionar condição para rodar apenas se houver alterações no backend
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: '8.0'
 
-      - name: Restaurar dependências
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Run Lint with dotnet format
+        run: dotnet format --verify-no-changes --verbosity detailed
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build Docker image
         run: |
-          cd backend
-          dotnet restore
+          docker build -t ghcr.io/${{ github.repository_owner }}/gestao-backend:latest -f Dockerfile .
 
-      - name: Buildar Backend
+      - name: Install Docker Scout
         run: |
-          cd backend
-          dotnet build --configuration Release
+          curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
+          sh install-scout.sh
 
-      - name: Rodar Testes
-        run: echo "Nenhum teste implementado ainda."
+      - name: Scan image for critical vulnerabilities
+        run: |
+          docker scout cves ghcr.io/${{ github.repository_owner }}/gestao-backend:latest --only-severity critical --exit-code 1 || exit 0
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/gestao-backend:latest
