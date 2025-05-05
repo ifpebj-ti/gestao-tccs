@@ -18,6 +18,10 @@ jobs:
   frontend:
     name: Frontend CI/CD
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
     defaults:
       run:
         working-directory: frontend
@@ -64,6 +68,10 @@ jobs:
   backend:
     name: Backend CI/CD
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
     defaults:
       run:
         working-directory: backend
