@@ -61,7 +61,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest --only-severity critical --exit-code 1 || exit 0
+          docker scout cves gestaotccs-frontend:latest --only-severity critical --exit-code 1 || exit 0
 
       - name: Push Docker image
         run: |
@@ -108,7 +108,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:latest --only-severity critical --exit-code 1 || exit 0
+          docker scout cves gestaotccs-backend:latest --only-severity=critical --exit-code 1 || exit 0
 
       - name: Push Docker image
         run: |
