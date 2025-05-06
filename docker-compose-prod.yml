@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    image: ghcr.io/seu-usuario/seu-repositorio-backend:tag-a-definir # TODO: substitua com a imagem correta
+    image: ghcr.io/ifpebj-ti/gestaotccs-backend:latest
     container_name: gestao-backend
     ports:
       - "${PORT_MACHINE_BACKEND}:${PORT_CONTAINER_BACKEND}"
@@ -10,10 +10,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
 
   frontend:
-    image: ghcr.io/seu-usuario/seu-repositorio-frontend:tag-a-definir # TODO: substitua com a imagem correta
+    image: ghcr.io/ifpebj-ti/gestaotccs-frontend:latest
     container_name: gestao-frontend
     ports:
       - "${PORT_MACHINE_FRONTEND}:${PORT_CONTAINER_FRONTEND}"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
       - backend
 
