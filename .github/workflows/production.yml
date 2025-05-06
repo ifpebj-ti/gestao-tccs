@@ -59,7 +59,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves --only-severity critical --exit-code 1 gestaotccs-frontend:latest
+          docker scout cves "-only-severity critical --exit-code 1 gestaotccs-frontend:latest"
 
       - name: Push Docker image
         run: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves --only-severity=critical --exit-code 1 gestaotccs-backend:latest
+          docker scout cves "--only-severity=critical --exit-code 1 gestaotccs-backend:latest"
 
       - name: Push Docker image
         run: |
