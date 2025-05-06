@@ -50,9 +50,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build \
-            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-            -t ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest -f Dockerfile .
+          docker build -t ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest -f Dockerfile .
 
       - name: Install Docker Scout
         run: |
@@ -61,7 +59,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves gestaotccs-frontend:latest --only-severity critical --exit-code 1 || exit 0
+          docker scout cves --only-severity critical --exit-code 1 gestaotccs-frontend:latest
 
       - name: Push Docker image
         run: |
@@ -108,7 +106,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves gestaotccs-backend:latest --only-severity=critical --exit-code 1 || exit 0
+          docker scout cves --only-severity=critical --exit-code 1 gestaotccs-backend:latest
 
       - name: Push Docker image
         run: |
