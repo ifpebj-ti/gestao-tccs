@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/gestao-frontend:latest -f Dockerfile .
+          docker build -t ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest -f Dockerfile .
 
       - name: Install Docker Scout
         run: |
@@ -59,11 +59,11 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves ghcr.io/${{ github.repository_owner }}/gestao-frontend:latest --only-severity critical --exit-code 1 || exit 0
+          docker scout cves ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest --only-severity critical --exit-code 1 || exit 0
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/gestao-frontend:latest
+          docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest
 
   backend:
     name: Backend CI/CD
@@ -97,7 +97,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/gestao-backend:latest -f Dockerfile .
+          docker build -t ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:latest -f Dockerfile .
 
       - name: Install Docker Scout
         run: |
@@ -106,8 +106,8 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves ghcr.io/${{ github.repository_owner }}/gestao-backend:latest --only-severity critical --exit-code 1 || exit 0
+          docker scout cves ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:latest --only-severity critical --exit-code 1 || exit 0
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/gestao-backend:latest
+          docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:latest
