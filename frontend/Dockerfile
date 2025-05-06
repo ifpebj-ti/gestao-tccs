@@ -13,9 +13,6 @@ RUN npm install
 # Copia o restante da aplicação
 COPY . ./
 
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-
 # Compila o projeto Next.js para produção
 RUN npm run build
 

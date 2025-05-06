@@ -17,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     const fetchForecasts = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/weatherForecast`);
+        const response = await fetch("http://localhost:8080/api/weatherForecast");
         if (!response.ok) {
           throw new Error("Erro ao buscar dados da API");
         }
