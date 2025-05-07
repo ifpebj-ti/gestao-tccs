@@ -5,17 +5,27 @@ services:
     image: ghcr.io/ifpebj-ti/gestaotccs-backend:latest
     container_name: gestao-backend
     ports:
-      - "${PORT_MACHINE_BACKEND}:${PORT_CONTAINER_BACKEND}"
+      - "${PORT_MACHINE_BACKEND}:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+    restart: unless-stopped
+    networks:
+      - front_net
+      - back_net
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   frontend:
     image: ghcr.io/ifpebj-ti/gestaotccs-frontend:latest
     container_name: gestao-frontend
     ports:
-      - "${PORT_MACHINE_FRONTEND}:${PORT_CONTAINER_FRONTEND}"
+      - "${PORT_MACHINE_FRONTEND}:3000"
+    restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - front_net
 
   postgres:
     image: postgres:15
@@ -27,7 +37,20 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${PORT_MACHINE_POSTGRES}:${PORT_CONTAINER_POSTGRES}"
+      - "${PORT_MACHINE_POSTGRES}:5432"
+    restart: unless-stopped
+    networks:
+      - back_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
+
+networks:
+  front_net:
+  back_net:
