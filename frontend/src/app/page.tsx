@@ -26,17 +26,23 @@ export default function Login() {
     setShowAlert(false);
   };
 
+  const handleRedirectToFirstAccess = () => {
+    window.location.href = '/firstAccess';
+  };
+
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between max-h-screen py-40 px-6 lg:px-10">
       {/* image */}
-      <div className="sm:w-2/3">
-        <Image src={LoginImage} alt="Login Image" className="w-full h-auto" />
-      </div>
+      <Image
+        src={LoginImage}
+        alt="Login Image"
+        className="w-full h-auto sm:w-2/3"
+      />
 
       {/* content */}
       <div className="w-full lg:w-1/3 flex flex-col items-center justify-center gap-10">
         <div className="flex flex-col w-full gap-6">
-          <h1 className="text-2xl lg:text-4xl font-medium text-center mb-6">
+          <h1 className="text-2xl lg:text-4xl font-medium mb-6">
             Acesso à Gestão de TCCs
           </h1>
           <div className="flex flex-col gap-4">
@@ -81,7 +87,9 @@ export default function Login() {
               </Link>
             </div>
             <Button onClick={handleLogin}>Entrar</Button>
-            <Button variant={'ghost'}>Primeiro acesso?</Button>
+            <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
+              Primeiro acesso?
+            </Button>
           </div>
         </div>
 
