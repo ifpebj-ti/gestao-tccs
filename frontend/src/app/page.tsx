@@ -51,7 +51,7 @@ export default function Login() {
                 Email
               </Label>
               <Input
-                placeholder="Email"
+                placeholder="Digite seu email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 icon={faUser}
@@ -62,7 +62,7 @@ export default function Login() {
                 Senha
               </Label>
               <Input
-                placeholder="Senha"
+                placeholder="Digite sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 icon={faLock}

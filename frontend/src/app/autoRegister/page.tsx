@@ -24,6 +24,10 @@ export default function AutoRegister() {
     window.location.href = '/';
   };
 
+  const handleRedirectToNewPassword = () => {
+    window.location.href = '/newPassword';
+  };
+
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between max-h-screen py-40 px-6 lg:px-10">
       {/* image */}
@@ -78,7 +82,7 @@ export default function AutoRegister() {
               />
             </div>
 
-            <Button>Continuar</Button>
+            <Button onClick={handleRedirectToNewPassword}>Continuar</Button>
           </div>
         </div>
 

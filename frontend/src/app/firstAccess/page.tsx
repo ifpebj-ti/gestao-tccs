@@ -46,7 +46,7 @@ export default function FirstAccess() {
                 Código
               </Label>
               <Input
-                placeholder="Código"
+                placeholder="Digite o código"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 icon={faTag}
