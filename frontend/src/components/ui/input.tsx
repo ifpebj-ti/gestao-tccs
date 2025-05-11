@@ -32,7 +32,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {isPassword && (
           <button
             type="button"
-            className="ml-2 text-gray-500 focus:outline-none"
+            className="ml-2 text-gray-500 cursor-pointer focus:outline-none"
             onClick={handleTogglePassword}
           >
             <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
