@@ -9,15 +9,21 @@ import { faLock, faUser } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../public/login image.svg';
 import IFPELogo from '../../public/IFPE Logo.png';
+import WellcomeImage from '../../public/wellcome.png';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert } from '@/components/AlertModal';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleLogin = async () => {
-    console.log('Email:', email);
-    console.log('Senha:', password);
+    setShowAlert(true);
+  };
+
+  const handleCloseAlert = () => {
+    setShowAlert(false);
   };
 
   return (
@@ -28,8 +34,8 @@ export default function Login() {
       </div>
 
       {/* content */}
-      <div className='w-full lg:w-1/3 flex flex-col items-center justify-center gap-10'>
-        <div className='flex flex-col w-full gap-6'>
+      <div className="w-full lg:w-1/3 flex flex-col items-center justify-center gap-10">
+        <div className="flex flex-col w-full gap-6">
           <h1 className="text-2xl lg:text-4xl font-medium text-center mb-6">
             Acesso à Gestão de TCCs
           </h1>
@@ -58,7 +64,7 @@ export default function Login() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <div className='flex items-center space-x-2'>
+              <div className="flex items-center space-x-2">
                 <Checkbox id="terms" />
                 <label
                   htmlFor="terms"
@@ -67,7 +73,10 @@ export default function Login() {
                   Manter-me conectado
                 </label>
               </div>
-              <Link href="/" className="text-[#1351B4] text-xs font-semibold underline">
+              <Link
+                href="/"
+                className="text-[#1351B4] text-xs font-semibold underline"
+              >
                 Esqueceu a senha?
               </Link>
             </div>
@@ -75,18 +84,33 @@ export default function Login() {
             <Button variant={'ghost'}>Primeiro acesso?</Button>
           </div>
         </div>
+
         {/* footer */}
-        <div className='flex items-center justify-between w-full'>
+        <div className="flex items-center justify-between w-full">
           <Image
             src={IFPELogo}
             alt="Logo IFPE"
             className="w-32 lg:w-40 h-auto"
           />
-          <Link href="/" className="text-[#1351B4] text-xs font-semibold underline">
+          <Link
+            href="/"
+            className="text-[#1351B4] text-xs font-semibold underline"
+          >
             Precisa de ajuda?
           </Link>
         </div>
       </div>
+
+      {/* Alert */}
+      {showAlert && (
+        <Alert
+          imageUrl={WellcomeImage.src}
+          title="Bem vindo ao sistema de TCCs"
+          showCloseButton={true}
+          closeButtonText="Entrar"
+          onClose={handleCloseAlert}
+        />
+      )}
     </div>
   );
 }
