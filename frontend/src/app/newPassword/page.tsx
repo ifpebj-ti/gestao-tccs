@@ -7,25 +7,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   faArrowLeft,
-  faUser,
-  faEnvelope,
-  faPhone
+  faLock,
+  faUnlock
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
+import { Alert } from '@/components/AlertModal';
 
-export default function AutoRegister() {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+export default function NewPassword() {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleRedirectToLogin = () => {
     window.location.href = '/';
   };
 
-  const handleRedirectToNewPassword = () => {
-    window.location.href = '/newPassword';
+  const handleCloseAlert = () => {
+    setShowAlert(false);
+    handleRedirectToLogin();
+  };
+
+  const handleAlert = () => {
+    setShowAlert(true);
   };
 
   return (
@@ -44,45 +49,37 @@ export default function AutoRegister() {
           >
             Voltar para Login
           </Button>
-          <h1 className="text-2xl lg:text-4xl font-medium mb-6">Cadastro</h1>
+          <h1 className="text-2xl lg:text-4xl font-medium mb-6">Nova senha</h1>
           <div className="flex flex-col gap-4">
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="fullName">
-                Nome Completo
+              <Label className="font-semibold" htmlFor="password">
+                Senha
               </Label>
               <Input
-                placeholder="Digite seu nome completo"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                icon={faUser}
+                type="password"
+                placeholder="Digite sua senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={faLock}
+                isPassword={true}
               />
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="email">
-                Email
+              <Label className="font-semibold" htmlFor="confirmPassword">
+                Confirmar Senha
               </Label>
               <Input
-                placeholder="Digite seu email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={faEnvelope}
+                type="password"
+                placeholder="Confirme sua senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                icon={faUnlock}
+                isPassword={true}
               />
             </div>
 
-            <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="phone">
-                Telefone
-              </Label>
-              <Input
-                placeholder="Digite seu telefone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                icon={faPhone}
-              />
-            </div>
-
-            <Button onClick={handleRedirectToNewPassword}>Continuar</Button>
+            <Button onClick={handleAlert}>Finalizar</Button>
           </div>
         </div>
 
@@ -101,6 +98,16 @@ export default function AutoRegister() {
           </Link>
         </div>
       </div>
+
+      {/* Alert */}
+      {showAlert && (
+        <Alert
+          title="Cadastro realizado com sucesso!"
+          description="Agora você pode acessar o sistema Gestão de TCCs com sua nova senha."
+          closeButtonText="Voltar para Login"
+          onClose={handleCloseAlert}
+        />
+      )}
     </div>
   );
 }
