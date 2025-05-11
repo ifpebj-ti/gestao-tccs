@@ -31,18 +31,14 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between max-h-screen py-40 px-6 lg:px-10">
+    <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen lg:max-h-screen py-10 lg:py-40 px-6 lg:px-10">
       {/* image */}
-      <Image
-        src={LoginImage}
-        alt="Login Image"
-        className="w-full h-auto sm:w-2/3"
-      />
+      <Image src={LoginImage} alt="Login Image" className="w-full md:w-2/3" />
 
       {/* content */}
-      <div className="w-full lg:w-1/3 flex flex-col items-center justify-center gap-10">
+      <div className="w-full lg:w-1/3 flex flex-col justify-between gap-10">
         <div className="flex flex-col w-full gap-6">
-          <h1 className="text-2xl lg:text-4xl font-medium mb-6">
+          <h1 className="text-2xl lg:text-4xl font-medium my-6">
             Acesso à Gestão de TCCs
           </h1>
           <div className="flex flex-col gap-4">
@@ -80,7 +76,7 @@ export default function Login() {
                 </label>
               </div>
               <Link
-                href="/"
+                href="/forgotPassword"
                 className="text-[#1351B4] text-xs font-semibold underline"
               >
                 Esqueceu a senha?
@@ -92,9 +88,8 @@ export default function Login() {
             </Button>
           </div>
         </div>
-
-        {/* footer */}
-        <div className="flex items-center justify-between w-full">
+        {/* footer desktop */}
+        <div className="lg:flex hidden items-center justify-between w-full">
           <Image
             src={IFPELogo}
             alt="Logo IFPE"
@@ -107,6 +102,16 @@ export default function Login() {
             Precisa de ajuda?
           </Link>
         </div>
+      </div>
+      {/* footer mobile */}
+      <div className="flex lg:hidden items-center justify-between w-full">
+        <Image src={IFPELogo} alt="Logo IFPE" className="w-32 lg:w-40 h-auto" />
+        <Link
+          href="/"
+          className="text-[#1351B4] text-xs font-semibold underline"
+        >
+          Precisa de ajuda?
+        </Link>
       </div>
 
       {/* Alert */}
