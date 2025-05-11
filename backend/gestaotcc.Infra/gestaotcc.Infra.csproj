@@ -26,4 +26,8 @@
       <ProjectReference Include="..\gestaotcc.Domain\gestaotcc.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Database\PostgresSql\Migrations\" />
+    </ItemGroup>
+
 </Project>
