@@ -1,62 +1,92 @@
-'use client'; // necessário se estiver usando App Router
+'use client';
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { faLock, faUser } from '@fortawesome/free-solid-svg-icons';
+import Image from 'next/image';
+import LoginImage from '../../public/login image.svg';
+import IFPELogo from '../../public/IFPE Logo.png';
+import { Checkbox } from '@/components/ui/checkbox';
 
-type WeatherForecast = {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-};
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-export default function Home() {
-  const [forecasts, setForecasts] = useState<WeatherForecast[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchForecasts = async () => {
-      try {
-        const response = await fetch("http://localhost:8080/api/weatherForecast");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar dados da API");
-        }
-        const data = await response.json();
-        setForecasts(data);
-      } catch (error) {
-        console.error("Erro ao buscar dados da previsão do tempo:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchForecasts();
-  }, []);
+  const handleLogin = async () => {
+    console.log('Email:', email);
+    console.log('Senha:', password);
+  };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
+    <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between max-h-screen py-40 px-6 lg:px-10">
+      {/* image */}
+      <div className="sm:w-2/3">
+        <Image src={LoginImage} alt="Login Image" className="w-full h-auto" />
+      </div>
 
-        {loading ? (
-          <p>Carregando previsão do tempo...</p>
-        ) : (
-          <ul className="text-sm">
-            {forecasts.map((forecast, index) => (
-              <li key={index} className="mb-2">
-                {forecast.date}: {forecast.temperatureC}°C - {forecast.summary}
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
+      {/* content */}
+      <div className='w-full lg:w-1/3 flex flex-col items-center justify-center gap-10'>
+        <div className='flex flex-col w-full gap-6'>
+          <h1 className="text-2xl lg:text-4xl font-medium text-center mb-6">
+            Acesso à Gestão de TCCs
+          </h1>
+          <div className="flex flex-col gap-4">
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="email">
+                Email
+              </Label>
+              <Input
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                icon={faUser}
+              />
+            </div>
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="password">
+                Senha
+              </Label>
+              <Input
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={faLock}
+                isPassword={true}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className='flex items-center space-x-2'>
+                <Checkbox id="terms" />
+                <label
+                  htmlFor="terms"
+                  className="text-sm font-regular leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Manter-me conectado
+                </label>
+              </div>
+              <Link href="/" className="text-[#1351B4] text-xs font-semibold underline">
+                Esqueceu a senha?
+              </Link>
+            </div>
+            <Button onClick={handleLogin}>Entrar</Button>
+            <Button variant={'ghost'}>Primeiro acesso?</Button>
+          </div>
+        </div>
+        {/* footer */}
+        <div className='flex items-center justify-between w-full'>
+          <Image
+            src={IFPELogo}
+            alt="Logo IFPE"
+            className="w-32 lg:w-40 h-auto"
+          />
+          <Link href="/" className="text-[#1351B4] text-xs font-semibold underline">
+            Precisa de ajuda?
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
