@@ -4,8 +4,10 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-      <UserSecretsId>56485712-d04d-4257-8e2a-49e42cdf00b5</UserSecretsId>
-  </PropertyGroup>
+        <UserSecretsId>56485712-d04d-4257-8e2a-49e42cdf00b5</UserSecretsId>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="11.11.0" />
@@ -23,6 +25,10 @@
       <ProjectReference Include="..\gestaotcc.Application\gestaotcc.Application.csproj" />
       <ProjectReference Include="..\gestaotcc.Domain\gestaotcc.Domain.csproj" />
       <ProjectReference Include="..\gestaotcc.Infra\gestaotcc.Infra.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="ResponseModels\User\" />
     </ItemGroup>
 
 </Project>
