@@ -81,3 +81,5 @@ backend/*.db-wal
 
 # Rider / JetBrains
 backend/.idea
+
+backend/appsettings.Production.json
