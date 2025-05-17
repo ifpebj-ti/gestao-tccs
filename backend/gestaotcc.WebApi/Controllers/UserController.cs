@@ -1,6 +1,7 @@
 ﻿using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.WebApi.ResponseModels;
+using gestaotcc.WebApi.ResponseModels.User;
 using gestaotcc.WebApi.Validators;
 using gestaotcc.WebApi.Validators.User;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +24,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// <response code="401">Acesso não autorizado</response>
     /// <response code="404">Recurso não existe</response>
     /// <response code="409">Erro de conflito</response>
-    //[Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -58,41 +59,37 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
 
-    ///// <summary>
-    ///// Busca um usuário por meio de filtros
-    ///// </summary>
-    ///// <remarks>
-    ///// Para o filtro, pode ser as seguintes opções: Email, Id
-    ///// </remarks>
-    ///// <returns>Usuário filtrado</returns>
-    ///// <response code="200">Usuário filtrado com Sucesso</response>
-    ///// <response code="401">Acesso não autorizado</response>
-    ///// <response code="404">Recurso não existe</response>
-    ///// <response code="409">Erro de conflito</response>
-    //[Authorize(Roles = "ADMINSYSTEM, ADMINUSER")]
-    //[HttpGet("filter")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
-    //[ProducesResponseType(StatusCodes.Status409Conflict)]
-    //public async Task<ActionResult<List<UserResponse>>> FindUserByFilter([FromQuery] string filter, [FromServices] FindUserByFilterUseCase findUserByFilterUseCase)
-    //{
-    //    var useCaseResult = await findUserByFilterUseCase.Execute(filter);
-    //    if (useCaseResult.IsFailure)
-    //    {
-    //        logger.LogError("Erro ao filtrar usuário");
+    /// <summary>
+    /// Busca um usuário por meio de filtros
+    /// </summary>
+    /// <returns>Usuário filtrado</returns>
+    /// <response code="200">Usuário filtrado com Sucesso</response>
+    /// <response code="401">Acesso não autorizado</response>
+    /// <response code="404">Recurso não existe</response>
+    /// <response code="409">Erro de conflito</response>
+    [HttpGet("email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<UserResponse>> FindUserByEmail([FromQuery] string email, [FromServices] FindUserByEmailUseCase findUserByEmailUseCase)
+    {
+        var useCaseResult = await findUserByEmailUseCase.Execute(email);
+        if (useCaseResult.IsFailure)
+        {
+            logger.LogError("Erro ao filtrar usuário");
 
-    //        // Construindo a URL dinamicamente
-    //        var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
-    //        useCaseResult.ErrorDetails!.Type = endpointUrl;
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
 
-    //        // Retornando erro apropriado
-    //        return useCaseResult.ErrorDetails?.Status is 409
-    //            ? Conflict(useCaseResult.ErrorDetails)
-    //            : NotFound(useCaseResult.ErrorDetails);
-    //    }
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
 
-    //    logger.LogInformation("Usuário filtrado com sucesso");
-    //    return Ok(useCaseResult.Data.Select(UserResponseMethods.CreateUserResponse));
-    //}
+        logger.LogInformation("Usuário filtrado com sucesso");
+        return Ok(UserResponseMethods.CreateUserResponse(useCaseResult.Data));
+    }
 }

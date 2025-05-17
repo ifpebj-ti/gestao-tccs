@@ -18,5 +18,6 @@ public static class IocDependencyExtensions
         // UseCases
         services.AddScoped<CreateAccessCodeUseCase>();
         services.AddScoped<CreateUserUseCase>();
+        services.AddScoped<FindUserByEmailUseCase>();
     }
 }

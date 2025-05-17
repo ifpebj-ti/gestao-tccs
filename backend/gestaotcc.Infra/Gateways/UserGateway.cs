@@ -15,6 +15,7 @@ public class UserGateway(AppDbContext context) : IUserGateway
     {
         return await context.Users
             .Include(x => x.Profile)
+            .Include(x => x.Course)
             .Include(x => x.AccessCode)
             .FirstOrDefaultAsync(x => x.Email == email);
     }
