@@ -1,36 +1,29 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   faArrowLeft,
-  faLock,
-  faUnlock
+  faEnvelope,
+  faLock
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
-import { Alert } from '@/components/AlertModal';
+import { useUpdatePassword } from '@/app/hooks/useUpdatePassword';
 
 export default function NewPassword() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showAlert, setShowAlert] = useState(false);
+  const { form, submitForm } = useUpdatePassword();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = form;
 
   const handleRedirectToLogin = () => {
     window.location.href = '/';
-  };
-
-  const handleCloseAlert = () => {
-    setShowAlert(false);
-    handleRedirectToLogin();
-  };
-
-  const handleAlert = () => {
-    setShowAlert(true);
   };
 
   return (
@@ -49,7 +42,21 @@ export default function NewPassword() {
             Voltar para Login
           </Button>
           <h1 className="text-2xl lg:text-4xl font-medium my-6">Nova senha</h1>
-          <div className="flex flex-col gap-4">
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(submitForm)}
+          >
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="userEmail">
+                Email
+              </Label>
+              <Input
+                placeholder="Digite seu email institucional"
+                icon={faEnvelope}
+                errorText={errors.userEmail?.message?.toString()}
+                {...register('userEmail')}
+              />
+            </div>
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="password">
                 Senha
@@ -57,10 +64,10 @@ export default function NewPassword() {
               <Input
                 type="password"
                 placeholder="Digite sua senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 icon={faLock}
                 isPassword={true}
+                errorText={errors.userPassword?.message?.toString()}
+                {...register('userPassword')}
               />
             </div>
             <div className="grid items-center gap-1.5">
@@ -70,22 +77,22 @@ export default function NewPassword() {
               <Input
                 type="password"
                 placeholder="Confirme sua senha"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                icon={faUnlock}
+                icon={faLock}
                 isPassword={true}
+                errorText={errors.userPassword?.message?.toString()}
+                {...register('userPassword')}
               />
             </div>
-            <Button onClick={handleAlert}>Finalizar</Button>
-            <Button
-              icon={faArrowLeft}
-              className="lg:hidden block"
-              onClick={handleRedirectToLogin}
-              variant={'ghost'}
-            >
-              Voltar para Login
-            </Button>
-          </div>
+            <Button type="submit">Finalizar</Button>
+          </form>
+          <Button
+            icon={faArrowLeft}
+            className="lg:hidden block"
+            onClick={handleRedirectToLogin}
+            variant={'ghost'}
+          >
+            Voltar para Login
+          </Button>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">
@@ -112,16 +119,6 @@ export default function NewPassword() {
           Precisa de ajuda?
         </Link>
       </div>
-
-      {/* Alert */}
-      {showAlert && (
-        <Alert
-          title="Cadastro realizado com sucesso!"
-          description="Agora você pode acessar o sistema Gestão de TCCs com sua nova senha."
-          closeButtonText="Voltar para Login"
-          onClose={handleCloseAlert}
-        />
-      )}
     </div>
   );
 }
