@@ -20,6 +20,8 @@ public static class IocDependencyExtensions
 
         //AccessCode
         services.AddScoped<CreateAccessCodeUseCase>();
+        services.AddScoped<VerifyAccessCodeUseCase>();
+        services.AddScoped<ResendAccessCodeUseCase>();
 
         //Auth
         services.AddScoped<LoginUseCase>();
