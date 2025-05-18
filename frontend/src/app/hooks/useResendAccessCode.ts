@@ -1,27 +1,25 @@
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { verifyAccessCodeSchema, VerifyAccessCodeSchemaType } from '@/app/schemas/verifyAccessCodeSchema';
+import { resendAccessCodeSchema, ResendAccessCodeSchemaType } from '@/app/schemas/resendAccessCodeSchema';
 import { toast } from 'react-toastify';
 
-export function useVerifyAccessCode() {
-  const form = useForm<VerifyAccessCodeSchemaType>({
-    resolver: zodResolver(verifyAccessCodeSchema),
+export function useResendAccessCode() {
+  const form = useForm<ResendAccessCodeSchemaType>({
+    resolver: zodResolver(resendAccessCodeSchema),
     defaultValues: {
       userEmail: '',
-      accessCode: ''
     }
   });
 
-  const submitForm: SubmitHandler<VerifyAccessCodeSchemaType> = async (data) => {
+  const submitForm: SubmitHandler<ResendAccessCodeSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/AccessCode/verify', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/AccessCode/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           userEmail: data.userEmail,
-          accessCode: data.accessCode
         })
       });
 
@@ -29,15 +27,10 @@ export function useVerifyAccessCode() {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const result = await response.json();
-          toast.success('Código de acesso verificado com sucesso!');
-          if (window.location.pathname === '/firstAccess') {
-            window.location.href = '/autoRegister';
-          } else if (window.location.pathname === '/forgotPassword') {
-            window.location.href = '/newPassword';
-          }
+          toast.success('Código de acesso enviado com sucesso!');
           console.log('Resposta JSON do servidor:', result);
         } else {
-          toast.success('Código de acesso verificado com sucesso!');
+          toast.success('Código de acesso enviado com sucesso!');
         }
       } else {
         toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);

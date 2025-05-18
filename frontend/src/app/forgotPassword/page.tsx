@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,38 +14,49 @@ import {
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
-import { Alert } from '@/components/AlertModal';
+import { useResendAccessCode } from '@/app/hooks/useResendAccessCode';
+import { useVerifyAccessCode } from '@/app/hooks/useVerifyAccessCode';
 
 export default function ForgotPassword() {
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [showAlert, setShowAlert] = useState(false);
 
-  const handleRedirectToLogin = () => {
-    window.location.href = '/';
-  };
+  const { register, handleSubmit, reset } = useForm<{
+    userEmail: string;
+    accessCode?: string;
+  }>();
 
-  const handleRedirectToNewPassword = () => {
-    window.location.href = '/newPassword';
-  };
+  const { submitForm: resendSubmit } = useResendAccessCode();
+  const { submitForm: verifySubmit } = useVerifyAccessCode();
 
-  const handleSendCode = () => {
-    setIsCodeSent(true);
+  const onSubmit = async (data: { userEmail: string; accessCode?: string }) => {
+    if (!isCodeSent) {
+      // Resend code
+      try {
+        await resendSubmit({ userEmail: data.userEmail });
+        setIsCodeSent(true);
+      } catch (error) {
+        console.error('Erro ao enviar o código:', error);
+      }
+    } else {
+      // Verify code
+      try {
+        await verifySubmit({
+          userEmail: data.userEmail,
+          accessCode: data.accessCode!
+        });
+      } catch (error) {
+        console.error('Erro ao verificar o código:', error);
+      }
+    }
   };
 
   const handleChangeEmail = () => {
+    reset();
     setIsCodeSent(false);
-    setEmail('');
   };
 
-  const handleAlert = () => {
-    setShowAlert(true);
-  };
-
-  const handleCloseAlert = () => {
-    setShowAlert(false);
-    handleRedirectToNewPassword();
+  const handleRedirectToLogin = () => {
+    window.location.href = '/';
   };
 
   return (
@@ -66,47 +78,48 @@ export default function ForgotPassword() {
           <h1 className="text-2xl lg:text-4xl font-medium my-6">
             Recuperar Senha
           </h1>
-          <div className="flex flex-col">
-            {!isCodeSent ? (
-              <div className="grid items-center gap-4">
-                <Label className="font-semibold" htmlFor="email">
-                  Email
-                </Label>
-                <Input
-                  placeholder="Digite seu email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  icon={faEnvelope}
-                  helperText="Um código de verificação será enviado para o seu email"
-                />
-                <Button onClick={handleSendCode}>Enviar código</Button>
-              </div>
-            ) : (
-              <div className="grid items-center gap-4">
-                <Label className="font-semibold" htmlFor="code">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="grid items-center gap-4"
+          >
+            <Label htmlFor="email" className="font-semibold">
+              Email
+            </Label>
+            <Input
+              placeholder="Digite seu email"
+              icon={faEnvelope}
+              {...register('userEmail', { required: true })}
+              readOnly={isCodeSent}
+              className={isCodeSent ? 'cursor-not-allowed select-none' : ''}
+            />
+            {isCodeSent && (
+              <>
+                <Label htmlFor="accessCode" className="font-semibold">
                   Código
                 </Label>
                 <Input
                   placeholder="Digite o código"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
                   icon={faTag}
+                  {...register('accessCode', { required: true })}
                 />
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={handleChangeEmail}
-                    variant={'outline'}
-                    className="w-full"
-                  >
-                    Modificar email
-                  </Button>
-                  <Button onClick={handleAlert} className="w-full">
-                    Verificar
-                  </Button>
-                </div>
-              </div>
+              </>
             )}
-          </div>
+            <div className="flex items-center gap-2">
+              {isCodeSent && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleChangeEmail}
+                  className="w-full"
+                >
+                  Modificar email
+                </Button>
+              )}
+              <Button type="submit" className="w-full">
+                {isCodeSent ? 'Verificar' : 'Enviar código'}
+              </Button>
+            </div>
+          </form>
           <Button
             icon={faArrowLeft}
             className="lg:hidden block"
@@ -116,8 +129,6 @@ export default function ForgotPassword() {
             Voltar para Login
           </Button>
         </div>
-
-        {/* footer */}
         <div className="flex items-center justify-between w-full">
           <Image
             src={IFPELogo}
@@ -132,16 +143,6 @@ export default function ForgotPassword() {
           </Link>
         </div>
       </div>
-
-      {/* Alert */}
-      {showAlert && (
-        <Alert
-          title="Sucesso!"
-          description="Agora você pode cadastrar sua nova senha."
-          closeButtonText="Cadastrar nova senha"
-          onClose={handleCloseAlert}
-        />
-      )}
     </div>
   );
 }
