@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,22 +8,16 @@ import { faLock, faUser } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../public/login image.svg';
 import IFPELogo from '../../public/IFPE Logo.png';
-import WellcomeImage from '../../public/wellcome.png';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Alert } from '@/components/AlertModal';
+import { useLogin } from '@/app/hooks/useLogin';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showAlert, setShowAlert] = useState(false);
-
-  const handleLogin = async () => {
-    setShowAlert(true);
-  };
-
-  const handleCloseAlert = () => {
-    setShowAlert(false);
-  };
+  const { form, submitForm } = useLogin();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = form;
 
   const handleRedirectToFirstAccess = () => {
     window.location.href = '/firstAccess';
@@ -41,16 +34,20 @@ export default function Login() {
           <h1 className="text-2xl lg:text-4xl font-medium my-6">
             Acesso à Gestão de TCCs
           </h1>
-          <div className="flex flex-col gap-4">
+          {/* form */}
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(submitForm)}
+          >
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="email">
                 Email
               </Label>
               <Input
                 placeholder="Digite seu email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 icon={faUser}
+                errorText={errors.email?.message?.toString()}
+                {...register('email')}
               />
             </div>
             <div className="grid items-center gap-1.5">
@@ -59,10 +56,10 @@ export default function Login() {
               </Label>
               <Input
                 placeholder="Digite sua senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 icon={faLock}
                 isPassword={true}
+                errorText={errors.password?.message?.toString()}
+                {...register('password')}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -82,11 +79,11 @@ export default function Login() {
                 Esqueceu a senha?
               </Link>
             </div>
-            <Button onClick={handleLogin}>Entrar</Button>
+            <Button type="submit">Entrar</Button>
             <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
               Primeiro acesso?
             </Button>
-          </div>
+          </form>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">
@@ -113,17 +110,6 @@ export default function Login() {
           Precisa de ajuda?
         </Link>
       </div>
-
-      {/* Alert */}
-      {showAlert && (
-        <Alert
-          imageUrl={WellcomeImage.src}
-          title="Bem vindo ao sistema de TCCs"
-          showCloseButton={true}
-          closeButtonText="Entrar"
-          onClose={handleCloseAlert}
-        />
-      )}
     </div>
   );
 }
