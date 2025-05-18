@@ -1,4 +1,5 @@
 using gestaotcc.WebApi.Config;
+using gestaotcc.WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddCorsExtension();
 builder.Services.AddSwaggerExtension();
 builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
+builder.Host.AddSerilogExtension();
 
 var app = builder.Build();
 
@@ -30,6 +32,9 @@ if (app.Environment.IsDevelopment())
 app.UseCors("CorsPolicy");
 
 app.UseHttpsRedirection();
+
+// Middlewares
+app.UseMiddleware<LogMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

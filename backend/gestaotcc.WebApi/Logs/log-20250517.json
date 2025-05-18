@@ -1,0 +1,2 @@
+{"Timestamp":"2025-05-18T00:42:43.0745420Z","Level":"Warning","Message":"Failed to determine the https port for redirect.","UserId":null,"Application":"GestaoTccs","Endpoint":null}
+{"Timestamp":"2025-05-18T00:42:43.2805115Z","Level":"Information","Message":"Iniciando operação","UserId":"anonymous","Application":"GestaoTccs","Endpoint":"gestaotcc.WebApi.Controllers.WeatherForecastController.Get (gestaotcc.WebApi)"}
