@@ -1,24 +1,25 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { faArrowLeft, faTag } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
+import { useFirstAccess } from '@/app/hooks/useFirstAccess';
 
 export default function FirstAccess() {
-  const [code, setCode] = useState('');
+  const { form, submitForm } = useFirstAccess();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = form;
 
   const handleRedirectToLogin = () => {
     window.location.href = '/';
-  };
-
-  const handleRedirectToAutoRegister = () => {
-    window.location.href = '/autoRegister';
   };
 
   return (
@@ -40,29 +41,43 @@ export default function FirstAccess() {
           <h1 className="text-2xl lg:text-4xl font-medium my-6">
             Primeiro acesso
           </h1>
-          <div className="flex flex-col gap-4">
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(submitForm)}
+          >
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="code">
+              <Label className="font-semibold" htmlFor="userEmail">
+                Email
+              </Label>
+              <Input
+                placeholder="Digite seu email institucional"
+                icon={faUser}
+                errorText={errors.userEmail?.message?.toString()}
+                {...register('userEmail')}
+              />
+            </div>
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="accessCode">
                 Código
               </Label>
               <Input
                 placeholder="Digite o código"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
                 icon={faTag}
                 helperText="Solicite o código ao coordenador ou orientador"
+                errorText={errors.accessCode?.message?.toString()}
+                {...register('accessCode')}
               />
             </div>
-            <Button onClick={handleRedirectToAutoRegister}>Continuar</Button>
-            <Button
-              icon={faArrowLeft}
-              className="lg:hidden block"
-              onClick={handleRedirectToLogin}
-              variant={'ghost'}
-            >
-              Voltar para Login
-            </Button>
-          </div>
+            <Button type="submit">Continuar</Button>
+          </form>
+          <Button
+            icon={faArrowLeft}
+            className="lg:hidden block"
+            onClick={handleRedirectToLogin}
+            variant={'ghost'}
+          >
+            Voltar para Login
+          </Button>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">

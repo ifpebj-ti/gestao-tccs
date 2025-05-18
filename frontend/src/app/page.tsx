@@ -80,10 +80,10 @@ export default function Login() {
               </Link>
             </div>
             <Button type="submit">Entrar</Button>
-            <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
-              Primeiro acesso?
-            </Button>
           </form>
+          <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
+            Primeiro acesso?
+          </Button>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">
