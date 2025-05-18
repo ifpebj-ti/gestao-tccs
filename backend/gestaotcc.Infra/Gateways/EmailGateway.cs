@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Email;
+using gestaotcc.Domain.Errors;
 using Microsoft.Extensions.Configuration;
 using Scriban;
 
@@ -9,7 +10,7 @@ namespace gestaotcc.Infra.Gateways;
 
 public class EmailGateway(IConfiguration configuration) : IEmailGateway
 {
-    public async Task Send(SendEmailDTO emailDto)
+    public async Task<ResultPattern<bool>> Send(SendEmailDTO emailDto)
     {
         var client = InitializeClient();
 
@@ -17,8 +18,17 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         emailDto.EmailBody = body;
 
         var message = CreateMessage(emailDto);
-        
-        await client.SendMailAsync(message);
+
+        try
+        {
+            await client.SendMailAsync(message);
+        }
+        catch (Exception ex)
+        {
+            return ResultPattern<bool>.FailureResult(ex.Message, 500);
+        }
+
+        return ResultPattern<bool>.SuccessResult();
     }
 
     private SmtpClient InitializeClient()

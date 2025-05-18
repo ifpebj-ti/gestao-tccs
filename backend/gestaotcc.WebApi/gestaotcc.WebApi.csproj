@@ -4,10 +4,10 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-      <UserSecretsId>56485712-d04d-4257-8e2a-49e42cdf00b5</UserSecretsId>
+        <UserSecretsId>56485712-d04d-4257-8e2a-49e42cdf00b5</UserSecretsId>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>$(NoWarn);1591,1573</NoWarn>
-  </PropertyGroup>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="FluentValidation" Version="11.11.0" />
