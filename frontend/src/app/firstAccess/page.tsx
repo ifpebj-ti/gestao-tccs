@@ -4,7 +4,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { faArrowLeft, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowLeft,
+  faEnvelope,
+  faTag
+} from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
@@ -51,7 +55,7 @@ export default function FirstAccess() {
               </Label>
               <Input
                 placeholder="Digite seu email institucional"
-                icon={faUser}
+                icon={faEnvelope}
                 errorText={errors.userEmail?.message?.toString()}
                 {...register('userEmail')}
               />

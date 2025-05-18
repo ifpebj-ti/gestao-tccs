@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { faLock, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../public/login image.svg';
 import IFPELogo from '../../public/IFPE Logo.png';
@@ -45,7 +45,7 @@ export default function Login() {
               </Label>
               <Input
                 placeholder="Digite seu email"
-                icon={faUser}
+                icon={faEnvelope}
                 errorText={errors.email?.message?.toString()}
                 {...register('email')}
               />
