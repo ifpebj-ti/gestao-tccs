@@ -1,18 +1,18 @@
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { firstAccessSchema, FirstAccessSchemaType } from '@/app/schemas/firstAccessSchema';
+import { verifyAccessCodeSchema, VerifyAccessCodeSchemaType } from '@/app/schemas/verifyAccessCodeSchema';
 import { toast } from 'react-toastify';
 
-export function useFirstAccess() {
-  const form = useForm<FirstAccessSchemaType>({
-    resolver: zodResolver(firstAccessSchema),
+export function useVerifyAccessCode() {
+  const form = useForm<VerifyAccessCodeSchemaType>({
+    resolver: zodResolver(verifyAccessCodeSchema),
     defaultValues: {
       userEmail: '',
       accessCode: ''
     }
   });
 
-  const submitForm: SubmitHandler<FirstAccessSchemaType> = async (data) => {
+  const submitForm: SubmitHandler<VerifyAccessCodeSchemaType> = async (data) => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/AccessCode/verify', {
         method: 'POST',

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const firstAccessSchema = z.object({
+export const verifyAccessCodeSchema = z.object({
   userEmail: z
     .string()
     .min(1, { message: 'Campo obrigatório' })
@@ -10,4 +10,4 @@ export const firstAccessSchema = z.object({
     .min(1, { message: 'Campo obrigatório' })
 }).required();
 
-export type FirstAccessSchemaType = z.infer<typeof firstAccessSchema>;
+export type VerifyAccessCodeSchemaType = z.infer<typeof verifyAccessCodeSchema>;
