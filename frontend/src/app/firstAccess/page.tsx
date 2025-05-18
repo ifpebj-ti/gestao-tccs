@@ -8,10 +8,10 @@ import { faArrowLeft, faTag, faUser } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
-import { useFirstAccess } from '@/app/hooks/useFirstAccess';
+import { useVerifyAccessCode } from '@/app/hooks/useVerifyAccessCode';
 
 export default function FirstAccess() {
-  const { form, submitForm } = useFirstAccess();
+  const { form, submitForm } = useVerifyAccessCode();
   const {
     register,
     handleSubmit,
