@@ -5,18 +5,28 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCircleInfo,
   faEye,
-  faEyeSlash
+  faEyeSlash,
+  faCircleXmark
 } from '@fortawesome/free-solid-svg-icons';
 
 interface InputProps extends React.ComponentProps<'input'> {
   icon?: IconDefinition;
   isPassword?: boolean;
   helperText?: string;
+  errorText?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    { className, type, icon, isPassword = false, helperText, ...props },
+    {
+      className,
+      type,
+      icon,
+      isPassword = false,
+      helperText,
+      errorText,
+      ...props
+    },
     ref
   ) => {
     const [showPassword, setShowPassword] = React.useState(false);
@@ -55,6 +65,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <div className="flex items-center bg-[#155BCB] text-white w-min text-nowrap text-sm p-1 gap-1">
             <FontAwesomeIcon icon={faCircleInfo} />
             {helperText}
+          </div>
+        )}
+
+        {errorText && (
+          <div className="flex items-center bg-red-500 text-white w-min text-nowrap text-sm p-1 gap-1">
+            <FontAwesomeIcon icon={faCircleXmark} />
+            {errorText}
           </div>
         )}
       </div>
