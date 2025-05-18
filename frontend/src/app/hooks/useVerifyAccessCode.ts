@@ -25,19 +25,16 @@ export function useVerifyAccessCode() {
         })
       });
 
-      console.log('Dados enviados:', {
-        userEmail: data.userEmail,
-        accessCode: data.accessCode
-        });
-
-        console.log('Resposta do servidor:', response);
-
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const result = await response.json();
           toast.success('Código de acesso verificado com sucesso!');
+          if (window.location.pathname === '/firstAccess') {
             window.location.href = '/autoRegister';
+          } else if (window.location.pathname === '/forgotPassword') {
+            window.location.href = '/newPassword';
+          }
           console.log('Resposta JSON do servidor:', result);
         } else {
           toast.success('Código de acesso verificado com sucesso!');
