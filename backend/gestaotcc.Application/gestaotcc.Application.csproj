@@ -10,8 +10,4 @@
       <ProjectReference Include="..\gestaotcc.Domain\gestaotcc.Domain.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="UseCases\Auth\" />
-    </ItemGroup>
-
 </Project>

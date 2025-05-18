@@ -20,9 +20,23 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .FirstOrDefaultAsync(x => x.Email == email);
     }
 
+    public async Task<UserEntity?> FindById(long id)
+    {
+        return await context.Users
+            .Include(x => x.Profile)
+            .Include(x => x.Course)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
     public async Task Save(UserEntity user)
     {
         context.Users.Add(user);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task Update(UserEntity user)
+    {
+        context.Users.Update(user);
         await context.SaveChangesAsync();
     }
 }
