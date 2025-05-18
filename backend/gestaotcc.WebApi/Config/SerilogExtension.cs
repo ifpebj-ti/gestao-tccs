@@ -12,7 +12,7 @@ public static class SerilogExtension
             configuration.ReadFrom.Configuration(context.Configuration)
                 .Enrich.FromLogContext()
                 .WriteTo.Console(new SimpleJsonLogFormatter())
-                .WriteTo.File(new SimpleJsonLogFormatter(), "Logs/log-.txt", rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true);
+                .WriteTo.File(new SimpleJsonLogFormatter(), "Logs/log.txt", rollOnFileSizeLimit: true);
         });
     }
 }
