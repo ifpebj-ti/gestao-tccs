@@ -1,4 +1,5 @@
 using gestaotcc.WebApi.Config;
+using gestaotcc.WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,10 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddSwaggerGen();
 
 // Extension methods
+builder.Services.AddDbContextExtension(builder.Configuration);
 builder.Services.AddCorsExtension();
+builder.Services.AddSwaggerExtension();
+builder.Services.AddIocDependencies();
+builder.Services.AddAuthenticationExtension(builder.Configuration);
+builder.Host.AddSerilogExtension();
 
 var app = builder.Build();
 
@@ -25,6 +33,10 @@ app.UseCors("CorsPolicy");
 
 app.UseHttpsRedirection();
 
+// Middlewares
+app.UseMiddleware<LogMiddleware>();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,0 +1,23 @@
+﻿using gestaotcc.Domain.Dtos.User;
+using gestaotcc.Domain.Entities.AccessCode;
+using gestaotcc.Domain.Entities.Course;
+using gestaotcc.Domain.Entities.Profile;
+using gestaotcc.Domain.Entities.User;
+
+namespace gestaotcc.Application.Factories;
+public class UserFactory
+{
+    public static UserEntity CreateUser(CreateUserDTO data, List<ProfileEntity> profile, CourseEntity course, AccessCodeEntity accessCode)
+    {
+        var genericPassword = $"{data.Name}_{data.Email}";
+
+        return new UserEntityBuilder()
+            .WithName(data.Name)
+            .WithEmail(data.Email)
+            .WithPassword(genericPassword)
+            .WithProfile(profile)
+            .WithCourse(course)
+            .WithAccessCode(accessCode)
+            .Build();
+    }
+}

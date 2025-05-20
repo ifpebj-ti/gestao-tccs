@@ -1,5 +1,6 @@
 # --- GENERAL ---
 .env
+.vs
 
 # --- FRONTEND ---
 
@@ -54,6 +55,7 @@ backend/.vscode
 # User-specific files
 backend/*.suo
 backend/*.user
+backend/**/*.user
 backend/*.userosscache
 backend/*.sln.docstates
 
@@ -81,3 +83,5 @@ backend/*.db-wal
 
 # Rider / JetBrains
 backend/.idea
+
+backend/**/appsettings.Production.json

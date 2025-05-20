@@ -1,0 +1,33 @@
+using gestaotcc.Domain.Entities.User;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace gestaotcc.Infra.Database.PostgresSql.Configuration;
+
+public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
+{
+    public void Configure(EntityTypeBuilder<UserEntity> builder)
+    {
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+        
+        builder.Property(x => x.Email)
+            .HasMaxLength(100)
+            .IsRequired();
+        
+        builder.Property(x => x.Password)
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(x => x.Status)
+            .HasMaxLength(15)
+            .IsRequired();
+        
+        builder.HasMany(x => x.Profile)
+            .WithMany(x => x.Users)
+            .UsingEntity(x => x.ToTable("user_profile"));
+    }
+}
