@@ -1,6 +1,8 @@
+using System.Collections;
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
+using gestaotcc.Domain.Entities.UserTcc;
 
 namespace gestaotcc.Domain.Entities.User;
 
@@ -14,6 +16,7 @@ public class UserEntityBuilder
     private ICollection<ProfileEntity> _profile = new List<ProfileEntity>();
     private CourseEntity _course = null!;
     private AccessCodeEntity _accessCode = null!;
+    private ICollection<UserTccEntity> _userTccs = new List<UserTccEntity>();
 
     public UserEntityBuilder WithId(long id)
     {
@@ -63,8 +66,14 @@ public class UserEntityBuilder
         return this;
     }
 
+    public UserEntityBuilder WithUserTcc(ICollection<UserTccEntity> userTccs)
+    {
+        _userTccs = userTccs;
+        return this;
+    }
+
     public UserEntity Build()
     {
-        return new UserEntity(_id, _name, _email, _password, _status, _profile, _course, _accessCode);
+        return new UserEntity(_id, _name, _email, _password, _status, _profile, _course, _accessCode, _userTccs);
     }
 }
