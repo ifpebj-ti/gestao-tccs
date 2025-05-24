@@ -1,6 +1,7 @@
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
+using gestaotcc.Domain.Entities.UserTcc;
 
 namespace gestaotcc.Domain.Entities.User;
 
@@ -15,9 +16,19 @@ public class UserEntity
     public CourseEntity Course { get; set; } = null!;
     public long CourseId { get; set; }
     public AccessCodeEntity AccessCode { get; set; } = null!;
+    public ICollection<UserTccEntity> UserTccs { get; set; } = null!;
     public UserEntity() { }
 
-    public UserEntity(long id, string name, string email, string password, string status, ICollection<ProfileEntity> profile, CourseEntity course, AccessCodeEntity accessCode)
+    public UserEntity(
+        long id, 
+        string name, 
+        string email, 
+        string password, 
+        string status, 
+        ICollection<ProfileEntity> profile, 
+        CourseEntity course, 
+        AccessCodeEntity accessCode, 
+        ICollection<UserTccEntity> userTccs)
     {
         Id = id;
         Name = name;
@@ -27,5 +38,6 @@ public class UserEntity
         Profile = profile;
         Course = course;
         AccessCode = accessCode;
+        UserTccs = userTccs;
     }
 }
