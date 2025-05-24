@@ -29,12 +29,19 @@ export function useVerifyAccessCode() {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const result = await response.json();
+
+          // Cookie que expira em 5 minutos
+          const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
+          document.cookie = `access_token_temp=${result.token}; expires=${expires}; path=/; secure; samesite=Strict`;
+
           toast.success('Código de acesso verificado com sucesso!');
+
           if (window.location.pathname === '/firstAccess') {
             window.location.href = '/autoRegister';
           } else if (window.location.pathname === '/forgotPassword') {
             window.location.href = '/newPassword';
           }
+
           console.log('Resposta JSON do servidor:', result);
         } else {
           toast.success('Código de acesso verificado com sucesso!');
