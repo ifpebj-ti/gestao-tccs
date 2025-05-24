@@ -9,7 +9,8 @@ import {
   faArrowLeft,
   faUser,
   faEnvelope,
-  faPhone
+  faGraduationCap,
+  faAddressCard
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
@@ -18,7 +19,8 @@ import IFPELogo from '../../../public/IFPE Logo.png';
 export default function AutoRegister() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [registration, setRegistration] = useState('');
+  const [cpf, setCpf] = useState('');
 
   const handleRedirectToLogin = () => {
     window.location.href = '/';
@@ -59,7 +61,7 @@ export default function AutoRegister() {
             </div>
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="email">
-                Email
+                Email discente
               </Label>
               <Input
                 placeholder="Digite seu email"
@@ -68,15 +70,28 @@ export default function AutoRegister() {
                 icon={faEnvelope}
               />
             </div>
+            {/* campo matrícula */}
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="phone">
-                Telefone
+              <Label className="font-semibold" htmlFor="registration">
+                Matrícula
               </Label>
               <Input
-                placeholder="Digite seu telefone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                icon={faPhone}
+                placeholder="Digite sua matrícula"
+                value={registration}
+                onChange={(e) => setRegistration(e.target.value)}
+                icon={faGraduationCap}
+              />
+            </div>
+            {/* campo CPF */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="cpf">
+                CPF
+              </Label>
+              <Input
+                placeholder="Digite seu CPF"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                icon={faAddressCard}
               />
             </div>
             <Button onClick={handleRedirectToNewPassword}>Continuar</Button>

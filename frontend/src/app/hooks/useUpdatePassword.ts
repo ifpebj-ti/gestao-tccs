@@ -30,8 +30,8 @@ export function useUpdatePassword() {
         if (contentType && contentType.includes('application/json')) {
           const result = await response.json();
           toast.success('Senha atualizada com sucesso!');
-          // aqui pode redirecionar ou salvar token etc
           console.log('Resposta JSON do servidor:', result);
+          window.location.href = '/';
         } else {
           toast.success('Senha atualizada com sucesso!');
         }
