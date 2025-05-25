@@ -17,7 +17,19 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
         builder.Property(x => x.Email)
             .HasMaxLength(100)
             .IsRequired();
-        
+
+        builder.Property(x => x.Registration)
+            .HasMaxLength(50)
+            .IsRequired(false);
+
+        builder.Property(x => x.CPF)
+            .HasMaxLength(14)
+            .IsRequired();
+
+        builder.Property(x => x.SIAPE)
+            .HasMaxLength(50)
+            .IsRequired(false);
+
         builder.Property(x => x.Password)
             .HasMaxLength(255)
             .IsRequired();

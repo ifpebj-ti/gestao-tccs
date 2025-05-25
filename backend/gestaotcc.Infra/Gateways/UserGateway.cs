@@ -59,7 +59,9 @@ public class UserGateway(AppDbContext context) : IUserGateway
         if (!string.IsNullOrEmpty(filter.Profile))
             query = query.Where(u => u.Profile.Any(x => x.Role == filter.Profile));
 
-        // Adicionar matricula
+        if (!string.IsNullOrEmpty(filter.Registration))
+            query = query.Where(u => u.Registration.Contains(filter.Registration));
+
 
         return await query
             .Include(x => x.Profile)

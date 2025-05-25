@@ -10,6 +10,9 @@ public class UserEntity
     public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? Registration { get; set; } = string.Empty;
+    public string CPF { get; set; } = string.Empty;
+    public string? SIAPE { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public ICollection<ProfileEntity> Profile { get; set; } = null!;
@@ -22,7 +25,10 @@ public class UserEntity
     public UserEntity(
         long id, 
         string name, 
-        string email, 
+        string email,
+        string registration,
+        string cpf,
+        string siape,
         string password, 
         string status, 
         ICollection<ProfileEntity> profile, 
@@ -33,6 +39,9 @@ public class UserEntity
         Id = id;
         Name = name;
         Email = email;
+        Registration = registration;
+        CPF = cpf;
+        SIAPE = siape;
         Password = password;
         Status = status;
         Profile = profile;
