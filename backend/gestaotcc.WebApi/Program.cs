@@ -19,6 +19,7 @@ builder.Services.AddSwaggerExtension();
 builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
 builder.Host.AddSerilogExtension();
+builder.Services.AddHangfireExtension(builder.Configuration);
 
 var app = builder.Build();
 
@@ -28,6 +29,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHangfireExtension(app.Services);
 
 app.UseCors("CorsPolicy");
 
