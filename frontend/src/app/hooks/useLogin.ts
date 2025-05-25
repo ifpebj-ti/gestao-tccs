@@ -30,7 +30,7 @@ export function useLogin() {
         if (contentType && contentType.includes('application/json')) {
           const result = await response.json();
           toast.success('Login realizado com sucesso!');
-          // aqui pode redirecionar ou salvar token etc
+          window.location.href = '/homePage';
           console.log('Resposta JSON do servidor:', result);
         } else {
           toast.success('Login realizado com sucesso!');
