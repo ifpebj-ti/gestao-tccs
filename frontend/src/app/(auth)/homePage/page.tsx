@@ -9,15 +9,16 @@ import {
   faGraduationCap,
   faUserPlus
 } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
     <div className="flex flex-col">
       <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold text-gray-800">
+      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
         Página Inicial
       </h1>
-      <div className="grid grid-cols-6 gap-6 mt-8">
+      <div className="grid grid-cols-6 gap-6">
         <CardHome
           title="Assinaturas pendentes"
           icon={faFileSignature}
@@ -37,11 +38,9 @@ export default function HomePage() {
           icon={faFileCircleCheck}
           className="col-span-2"
         />
-        <CardHome
-          title="Cadastrar nova proposta"
-          icon={faFileCirclePlus}
-          className="col-span-2 col-start-2"
-        />
+        <Link href={'/newTCC'} className="col-span-2 col-start-2">
+          <CardHome title="Cadastrar nova proposta" icon={faFileCirclePlus} />
+        </Link>
         <CardHome
           title="Cadastrar novo usuário"
           icon={faUserPlus}
