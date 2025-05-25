@@ -16,7 +16,18 @@ public class TccGateway(AppDbContext context) : ITccGateway
 
     public async Task<List<TccInviteEntity>> FindAllInviteTcc()
     {
-        return await context.TccInvites.ToListAsync();
+        return await context.TccInvites.Where(x => x.IsValidCode).ToListAsync();
+    }
+
+    public async Task<TccInviteEntity?> FindInviteTccByEmail(string email)
+    {
+        return await context.TccInvites.FirstOrDefaultAsync(x => x.Email == email);
+    }
+
+    public async Task UpdateTccInvite(TccInviteEntity tccInvite)
+    {
+        context.Update(tccInvite);
+        await context.SaveChangesAsync();
     }
 
     public async Task<TccEntity?> FindTccById(long id)
