@@ -10,7 +10,7 @@ public class EmailFactory
     {
         Dictionary<string, Object> variables = new Dictionary<string, Object>();
         variables.Add("username", user.Name);
-        variables.Add("accesscode", user.AccessCode.Code);
+        variables.Add("accesscode", user.AccessCode != null ?  user.AccessCode.Code : "");
 
         var chooseSubject = typeSend == "CREATE-USER" ? "Bem-vindo(a) ao Gestão tcc" 
             : typeSend == "INVITE-USER" ? "Solicitação de inclusão de Discente" 

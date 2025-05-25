@@ -8,8 +8,10 @@ public class VerifyCodeInviteValidator : AbstractValidator<VerifyCodeInviteTccDT
     public VerifyCodeInviteValidator()
     {
         RuleFor(x => x.UserEmail)
-            .NotEmpty().WithMessage("O e-mail do usuário é obrigatório.")
-            .EmailAddress().WithMessage("O e-mail informado não é válido.");
+            .NotNull().WithMessage("O campo Email não pode ser nulo.")
+            .NotEmpty().WithMessage("O campo Email é obrigatório.")
+            .EmailAddress().WithMessage("O campo Email deve conter um endereço de e-mail válido.")
+            .Must(email => email?.Trim().ToLower().EndsWith(".ifpe.edu.br") == true).WithMessage("O e-mail deve pertencer ao domínio ifpe.edu.br.");
 
         RuleFor(x => x.Code)
             .NotEmpty().WithMessage("O código de convite é obrigatório.")

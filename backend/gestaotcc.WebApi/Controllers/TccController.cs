@@ -70,7 +70,7 @@ public class TccController : ControllerBase
             // Retornando erro apropriado
             return result.ErrorDetails?.Status is 409
                 ? Conflict(result.ErrorDetails)
-                : NotFound();
+                : NotFound(result.ErrorDetails);
         }
 
         Log.Information("Código verificado com sucesso");

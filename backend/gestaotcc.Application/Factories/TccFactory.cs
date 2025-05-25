@@ -26,12 +26,13 @@ public class TccFactory
             .WithSummary(data.Summary)
             .WithStatus(invites.Count > 0 ? StatusTccType.PROPOSAL_REGISTRATION.ToString() : StatusTccType.START_AND_ORGANIZATION.ToString())
             .WithTccInvites(invites)
-            .WithCreationDate(DateTime.Now)
+            .WithCreationDate(DateTime.UtcNow)
             .Build();
 
         tcc.UserTccs = users.Select(u => new UserTccEntityBuilder()
                 .WithTcc(tcc)
                 .WithUser(u)
+                .WithBindingDate(DateTime.UtcNow)
             .Build())
             .ToList();
         

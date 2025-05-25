@@ -10,20 +10,20 @@ public class VerifyCodeInviteTccUseCase(IUserGateway userGateway, ITccGateway tc
     {
         var user = await userGateway.FindByEmail(data.UserEmail);
 
-        if (user is null)
+        if (user is not null)
             return ResultPattern<bool>.FailureResult("Erro ao verificar código", 404);
+
+        var tccInvite = await tccGateway.FindInviteTccByEmail(data.UserEmail);
         
-        var tccInvite = user.UserTccs
-            .SelectMany(utc => utc.Tcc.TccInvites)
-            .FirstOrDefault(invite => invite.Email == user.Email);
+        if(!tccInvite!.IsValidCode)
+            return ResultPattern<bool>.FailureResult("Erro ao verificar código", 409);
 
-
-        if (tccInvite.Code != data.Code)
+        if (tccInvite!.Code != data.Code)
             return ResultPattern<bool>.FailureResult("Erro ao verificar código", 409);
         
-        tccInvite.IsValidCode = true;
+        tccInvite.IsValidCode = false;
 
-        await userGateway.Update(user);
+        await tccGateway.UpdateTccInvite(tccInvite);
         
         return ResultPattern<bool>.SuccessResult();
     }
