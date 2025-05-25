@@ -12,4 +12,11 @@ public class UserTccEntity
     public long TccId { get; set; }
     public DateTime BindingDate { get; set; }
     public UserTccEntity() { }
+
+    public UserTccEntity(UserEntity user, TccEntity tcc, DateTime bindingDate)
+    {
+        this.User = user;
+        this.Tcc = tcc;
+        this.BindingDate = bindingDate;
+    }
 }

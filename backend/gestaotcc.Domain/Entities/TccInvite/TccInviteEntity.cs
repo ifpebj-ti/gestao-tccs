@@ -7,7 +7,7 @@ public class TccInviteEntity
     public long Id { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
-    public bool IsValidCode { get; set; } = false;
+    public bool IsValidCode { get; set; } = true;
     public TccEntity Tcc { get; set; } = null!;
     public long TccId { get; set; }
     public TccInviteEntity() { }
