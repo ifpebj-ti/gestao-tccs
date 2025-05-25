@@ -8,7 +8,7 @@ export default function AuthRoutesLayout({
   return (
     <>
       <Header />
-      <main className="mt-30 md:mt-24 px-5">{children}</main>
+      <main className="mt-30 md:mt-24 px-5 md:px-10">{children}</main>
     </>
   );
 }
