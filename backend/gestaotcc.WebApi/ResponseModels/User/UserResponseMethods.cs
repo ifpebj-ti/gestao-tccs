@@ -12,7 +12,6 @@ public class UserResponseMethods
             .WithId(user.Id)
             .WithName(user.Name)
             .WithEmail(user.Email)
-            .WithPassword(user.Password)
             .WithStatus(user.Status)
             .WithProfile(ProfileResponseMethods.CreateProfileResponse(user.Profile))
             .WithCourse(CourseResponseMethods.CreateCourseResponse(user.Course))

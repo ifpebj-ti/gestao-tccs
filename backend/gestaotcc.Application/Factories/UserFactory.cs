@@ -20,4 +20,15 @@ public class UserFactory
             .WithAccessCode(accessCode)
             .Build();
     }
+
+    public static FindAllUserByFilterDTO CreateFindAllUserByFilterDTO(UserEntity user)
+    {
+        return new FindAllUserByFilterDTO(
+            user.Id,
+            user.Name,
+            user.Email,
+            user.Profile.FirstOrDefault(x => x.Users.Any(x => x.Id == user.Id)).Role,
+            user.Course.Name
+            );
+    }
 }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using gestaotcc.Domain.Dtos.User;
 
 namespace gestaotcc.Infra.Gateways;
 public class UserGateway(AppDbContext context) : IUserGateway
@@ -38,5 +39,31 @@ public class UserGateway(AppDbContext context) : IUserGateway
     {
         context.Users.Update(user);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<List<UserEntity>> FindAllByEmail(List<string> emails)
+    {
+        return await context.Users.Where(x => emails.Contains(x.Email)).ToListAsync();
+    }
+
+    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter)
+    {
+        var query = context.Users.AsQueryable();
+
+        if (!string.IsNullOrEmpty(filter.Name))
+            query = query.Where(u => u.Name.Contains(filter.Name));
+
+        if (!string.IsNullOrEmpty(filter.Email))
+            query = query.Where(u => u.Email.Contains(filter.Email));
+        
+        if (!string.IsNullOrEmpty(filter.Profile))
+            query = query.Where(u => u.Profile.Any(x => x.Role == filter.Profile));
+
+        // Adicionar matricula
+
+        return await query
+            .Include(x => x.Profile)
+            .Include(x => x.Course)
+            .ToListAsync();
     }
 }
