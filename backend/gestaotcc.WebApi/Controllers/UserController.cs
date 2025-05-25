@@ -6,6 +6,7 @@ using gestaotcc.WebApi.Validators;
 using gestaotcc.WebApi.Validators.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace gestaotcc.WebApi.Controllers;
 
@@ -91,5 +92,19 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
 
         logger.LogInformation("Usuário filtrado com sucesso");
         return Ok(UserResponseMethods.CreateUserResponse(useCaseResult.Data));
+    }
+
+    /// <summary>
+    /// Buscar usuários por um filtro
+    /// </summary>
+    [HttpGet("filter")]
+    public async Task<ActionResult<List<FindAllUserByFilterDTO>>> FindAllByFilter([FromQuery] UserFilterDTO data,
+        [FromServices] FindAllUserByFilterUseCase findAllUserByFilterUseCase)
+    {
+        var useCaseResult = await findAllUserByFilterUseCase.Execute(data);
+        
+        Log.Information("Usuários retonados com sucesso");
+
+        return Ok(useCaseResult.Data);
     }
 }
