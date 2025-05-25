@@ -79,7 +79,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             ? Path.Combine(directory, "Templates", "create-user-template.html")
             : typeTemplate == "RESEND-INVITE-TCC" ? Path.Combine(directory, "Templates", "resend-invite-tcc-template.html")
             : typeTemplate == "ADD-USER-TCC" ? Path.Combine(directory, "Templates", "add-user-tcc-template.html")
-            : typeTemplate == "INVITE-USER" ? Path.Combine(directory, "Templates", "invite-user-template.html") 
+            : typeTemplate == "INVITE-USER" ? Path.Combine(directory, "Templates", "invite-tcc-template.html") 
             : Path.Combine(directory, "Templates", "update-password-template.html");
         return File.ReadAllText(filePath);
     }
