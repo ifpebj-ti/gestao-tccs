@@ -29,5 +29,10 @@ public class CreateUserValidator : AbstractValidator<CreateUserDTO>
                 role == "BANKING" ||
                 role == "LIBRARY"))
             .WithMessage("Todos os perfis devem ser ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT, BANKING ou LIBRARY.");
+
+        RuleFor(x => x.CPF)
+            .NotEmpty().WithMessage("O campo CPF é obrigatório.")
+            .Matches(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$").WithMessage("O CPF deve estar no formato XXX.XXX.XXX-XX.")
+            .Must(cpf => cpf.Length == 14).WithMessage("O CPF deve ter 14 caracteres, incluindo os pontos e o traço.");
     }
 }

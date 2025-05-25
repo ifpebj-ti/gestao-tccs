@@ -18,7 +18,7 @@ public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profile
         var course = await courseGateway.FindByName(data.Course);
         var accessCode = createAccessCodeUseCase.Execute(combination);
 
-        var newUser = UserFactory.CreateUser(data, profile, course, accessCode.Data);
+        var newUser = UserFactory.CreateUser(data, profile, course, accessCode.Data /*Colocar parametro de senha aleatoria aqui caso seja usuario docente*/);
         await userGateway.Save(newUser);
 
 
