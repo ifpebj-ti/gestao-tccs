@@ -3,9 +3,7 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Application.Helpers;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Domain.Dtos.User;
-using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.User;
-using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.User;
@@ -26,7 +24,7 @@ public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profile
         var newUser = UserFactory.CreateUser(data, profile, course, accessCode.Data);
         await userGateway.Save(newUser);
 
-        var isOnlyAluno = expandedProfileRoles.Count == 1 && expandedProfileRoles.Contains("ALUNO");
+        var isOnlyAluno = expandedProfileRoles.Count == 1 && expandedProfileRoles.Contains("STUDENT");
 
         if (isOnlyAluno)
         {
