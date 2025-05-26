@@ -13,4 +13,9 @@ public class ProfileGateway(AppDbContext context): IProfileGateway
             .ToListAsync();
         return profiles;
     }
+
+    public async Task<List<ProfileEntity>> FindAll()
+    {
+        return await context.Profiles.ToListAsync();
+    }
 }
