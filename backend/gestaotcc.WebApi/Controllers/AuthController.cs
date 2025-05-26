@@ -48,7 +48,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         }
 
         logger.LogInformation($"Login realizado com sucesso");
-        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken, useCaseResult.Data.RefreshToken));
+        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken));
     }
 
     /// <summary>
