@@ -1,4 +1,5 @@
-﻿using gestaotcc.Domain.Dtos.User;
+﻿using gestaotcc.Application.Helpers;
+using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
@@ -7,9 +8,9 @@ using gestaotcc.Domain.Entities.User;
 namespace gestaotcc.Application.Factories;
 public class UserFactory
 {
-    public static UserEntity CreateUser(CreateUserDTO data, List<ProfileEntity> profile, CourseEntity course, AccessCodeEntity accessCode /*Colocar parametro de senha aleatoria aqui*/)
+    public static UserEntity CreateUser(CreateUserDTO data, List<ProfileEntity> profile, CourseEntity course, AccessCodeEntity accessCode)
     {
-        var genericPassword = $"{data.Name}_{data.Email}";
+        var randomPassword = PasswordHelper.GenerateRandomPassword();
 
         return new UserEntityBuilder()
             .WithName(data.Name)
@@ -17,7 +18,7 @@ public class UserFactory
             .WithRegistration(data.Registration ?? "")
             .WithCpf(data.CPF)
             .WithSiape(data.SIAPE ?? "")
-            .WithPassword(genericPassword)
+            .WithPassword(randomPassword)
             .WithProfile(profile)
             .WithCourse(course)
             .WithAccessCode(accessCode)

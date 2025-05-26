@@ -77,6 +77,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         var directory = Directory.GetCurrentDirectory();
         var filePath = typeTemplate == "CREATE-USER" 
             ? Path.Combine(directory, "Templates", "create-user-template.html")
+            : typeTemplate == "AUTO-REGISTER-USER" ? Path.Combine(directory, "Templates", "auto-register-user-template.html")
             : typeTemplate == "RESEND-INVITE-TCC" ? Path.Combine(directory, "Templates", "resend-invite-tcc-template.html")
             : typeTemplate == "ADD-USER-TCC" ? Path.Combine(directory, "Templates", "add-user-tcc-template.html")
             : typeTemplate == "INVITE-USER" ? Path.Combine(directory, "Templates", "invite-tcc-template.html") 

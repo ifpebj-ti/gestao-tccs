@@ -6,6 +6,7 @@ namespace gestaotcc.Application.Gateways;
 public interface ITccGateway
 {
     Task Save(TccEntity tcc);
+    Task Update(TccEntity tcc);
     Task<List<TccInviteEntity>> FindAllInviteTcc();
     Task<TccInviteEntity?> FindInviteTccByEmail(string email);
     Task UpdateTccInvite(TccInviteEntity tccInvite);
