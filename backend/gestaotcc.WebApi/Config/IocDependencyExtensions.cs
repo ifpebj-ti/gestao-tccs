@@ -1,6 +1,7 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Application.UseCases.Auth;
+using gestaotcc.Application.UseCases.Profile;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
 using gestaotcc.Infra.Gateways;
@@ -20,16 +21,16 @@ public static class IocDependencyExtensions
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
 
-        //AccessCode
+        // AccessCode
         services.AddScoped<CreateAccessCodeUseCase>();
         services.AddScoped<VerifyAccessCodeUseCase>();
         services.AddScoped<ResendAccessCodeUseCase>();
 
-        //Auth
+        // Auth
         services.AddScoped<LoginUseCase>();
         services.AddScoped<UpdatePasswordUseCase>();
 
-        //User
+        // User
         services.AddScoped<CreateUserUseCase>();
         services.AddScoped<FindUserByEmailUseCase>();
         services.AddScoped<FindUserByIdUseCase>();
@@ -39,5 +40,8 @@ public static class IocDependencyExtensions
         services.AddScoped<CreateTccUseCase>();
         services.AddScoped<ResendInvitationTccEmailUseCase>();
         services.AddScoped<VerifyCodeInviteTccUseCase>();
+
+        // Profile
+        services.AddScoped<FindAllProfilesUseCase>();
     }
 }
