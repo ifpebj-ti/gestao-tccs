@@ -14,6 +14,12 @@ public class TccGateway(AppDbContext context) : ITccGateway
         await context.SaveChangesAsync();
     }
 
+    public async Task Update(TccEntity tcc)
+    {
+        context.Tccs.Update(tcc);
+        await context.SaveChangesAsync();
+    }
+
     public async Task<List<TccInviteEntity>> FindAllInviteTcc()
     {
         return await context.TccInvites.Where(x => x.IsValidCode).ToListAsync();

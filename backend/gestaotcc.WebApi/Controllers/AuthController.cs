@@ -48,7 +48,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         }
 
         logger.LogInformation($"Login realizado com sucesso");
-        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken, useCaseResult.Data.RefreshToken));
+        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken));
     }
 
     /// <summary>
@@ -89,5 +89,45 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
 
         logger.LogInformation($"Senha alterada com sucesso");
         return Ok(new MessageSuccessResponseModel("Senha alterada com sucesso"));
+    }
+
+    /// <summary>
+    /// Criar nova senha do primeiro acesso de usuário Aluno
+    /// </summary>
+    /// <returns>Mensagem de sucesso na operação</returns>
+    /// <response code="200">Senha criada com sucesso</response>
+    /// <response code="401">Acesso não autorizado</response>
+    /// <response code="404">Recurso não encontrado</response>
+    /// <response code="409">Erro de conflito</response>
+    [AllowAnonymous]
+    [HttpPost("new-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<MessageSuccessResponseModel>> NewPassword([FromBody] NewPasswordDTO data, [FromServices] NewPasswordUseCase newPasswordUseCase)
+    {
+        var validator = new NewPasswordValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+            throw new ValidationException(validationResult.ToString());
+        var useCaseResult = await newPasswordUseCase.Execute(data);
+
+        if (useCaseResult.IsFailure)
+        {
+            logger.LogError($"Erro ao criar a nova senha");
+
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+
+        logger.LogInformation($"Senha criada com sucesso");
+        return Ok(new MessageSuccessResponseModel("Senha criada com sucesso"));
     }
 }

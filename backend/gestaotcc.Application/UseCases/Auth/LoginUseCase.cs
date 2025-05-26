@@ -17,11 +17,10 @@ public class LoginUseCase(IUserGateway userGateway, IBcryptGateway bcryptGateway
             return ResultPattern<TokenDTO>.FailureResult(result.Message, 409);
 
         var accessToken = tokenGateway.CreateAccessToken(user);
-        var refreshToken = tokenGateway.CreateRefreshToken(user);
-        if (accessToken is null || refreshToken is null)
+        if (accessToken is null)
             return ResultPattern<TokenDTO>.FailureResult("Erro ao realizar login, verifique os dados e tente novamente", 409);
 
-        return ResultPattern<TokenDTO>.SuccessResult(new TokenDTO(accessToken, refreshToken));
+        return ResultPattern<TokenDTO>.SuccessResult(new TokenDTO(accessToken));
     }
 
     private ResultPattern<TokenDTO> ValidateTypeLogin(UserEntity user, string userEmail, string userPassword)

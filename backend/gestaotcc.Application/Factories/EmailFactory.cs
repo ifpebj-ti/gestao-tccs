@@ -12,9 +12,9 @@ public class EmailFactory
         variables.Add("username", user.Name);
         variables.Add("accesscode", user.AccessCode != null ?  user.AccessCode.Code : "");
 
-        var chooseSubject = typeSend == "CREATE-USER" ? "Bem-vindo(a) ao Gestão tcc" 
+        var chooseSubject = (typeSend == "CREATE-USER" || typeSend == "AUTO-REGISTER-USER") ? "Bem-vindo(a) ao Gestão TCC" 
             : typeSend == "INVITE-USER" ? "Solicitação de inclusão de Discente" 
-            : typeSend == "ADD-USER-TCC" ? "Adição ao tcc com sucesso"
+            : typeSend == "ADD-USER-TCC" ? "Adição ao TCC com sucesso"
             : "Alteração de senha";
 
         var emailDTO = new SendEmailDTO("", chooseSubject, user.Email, typeSend, variables);
