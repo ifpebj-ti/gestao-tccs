@@ -10,7 +10,10 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
     public async Task<ResultPattern<string>> Execute(CreateTccDTO data)
     {
         var users = await userGateway.FindAllByEmail(data.StudentEmails);
-        
+        var advisor = await userGateway.FindById(data.AdvisorId);
+        if (advisor is null)
+            return ResultPattern<string>.FailureResult("Erro ao criar tcc", 404);
+
         var allEmails = users.Select(u => u.Email).ToHashSet();
 
         var usersInviteEmails = data.StudentEmails
@@ -24,6 +27,8 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         var usersNotInvite = users
             .Where(u => usersNotInviteEmails.Contains(u.Email))
             .ToList();
+        
+        usersNotInvite.Add(advisor);
         
         var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails);
 
