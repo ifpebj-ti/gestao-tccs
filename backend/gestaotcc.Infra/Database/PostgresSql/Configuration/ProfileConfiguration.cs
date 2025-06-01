@@ -13,5 +13,9 @@ public class ProfileConfiguration : IEntityTypeConfiguration<ProfileEntity>
         builder.Property(x => x.Role)
             .HasMaxLength(15)
             .IsRequired();
+        
+        builder.HasMany(x => x.DocumentTypes)
+            .WithMany(x => x.Profiles)
+            .UsingEntity(x => x.ToTable("documentType_profile"));
     }
 }
