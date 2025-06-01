@@ -16,14 +16,22 @@ export const newUserSchema = z.object({
       }
       return { message: ctx.defaultError };
     }
-  }),
-  // siape, caso profile = 'COORDINATOR' | 'SUPERVISOR' | 'ADVISOR'
-  siape: z.string().optional().refine(value => value === undefined || value.length >= 3, {
-    message: 'SIAPE inválido',
-  }),
+  }).array().min(1, 'Selecione pelo menos um perfil'),
+  // siape obrigatorio caso profile = 'COORDINATOR' | 'SUPERVISOR' | 'ADVISOR'
+  siape: z.string().optional(),
   course: z.string().min(1, 'Curso é obrigatório').refine(value => value !== 'Selecione um curso', {
     message: 'Selecione um curso válido',
   }),
+}).superRefine((data, ctx) => {
+  const profilesThatNeedSiape = ['COORDINATOR', 'SUPERVISOR', 'ADVISOR'];
+
+  if (profilesThatNeedSiape.includes(data.profile[0]) && (!data.siape || data.siape.trim().length < 3)) {
+    ctx.addIssue({
+      path: ['siape'],
+      code: z.ZodIssueCode.custom,
+      message: 'SIAPE é obrigatório para esse perfil',
+    });
+  }
 });
 
 export type NewUserSchemaSchemaType = z.infer<typeof newUserSchema>;

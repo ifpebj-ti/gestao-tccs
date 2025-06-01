@@ -4,22 +4,23 @@ import { newUserSchema, NewUserSchemaSchemaType } from '@/app/schemas/newUserSch
 import { toast } from 'react-toastify';
 
 export function useNewUserForm() {
-  const form = useForm<NewUserSchemaSchemaType>({
+  const {handleSubmit, register, formState: {errors}, reset} = useForm<NewUserSchemaSchemaType>({
     resolver: zodResolver(newUserSchema),
     defaultValues: {
       name: '',
       email: '',
       registration: '',
       cpf: '',
-      profile: 'STUDENT',
+      profile: ['STUDENT'],
       siape: '',
       course: 'ENGENHARIA DE SOFTWARE'
     }
   });
 
   const submitForm: SubmitHandler<NewUserSchemaSchemaType> = async (data) => {
+    console.log('Dados do formulário:', data);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/User`, {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/User', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -31,7 +32,10 @@ export function useNewUserForm() {
       console.log('Resposta do servidor:', response);
       if (response.ok) {
         toast.success('Usuário registrado com sucesso!');
-        form.reset();
+        reset();
+        const result = await response.json();
+        const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
+        document.cookie = `access_token_temp=${result.token}; expires=${expires}; path=/; secure; samesite=Strict`;
         window.location.href = '/newPassword';
       } else {
         const errorText = await response.text();
@@ -43,5 +47,5 @@ export function useNewUserForm() {
     }
   };
 
-  return { form, submitForm };
+  return { register, submitForm, handleSubmit, errors};
 }

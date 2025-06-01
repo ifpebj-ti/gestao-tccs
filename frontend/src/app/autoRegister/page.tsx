@@ -17,12 +17,7 @@ import IFPELogo from '../../../public/IFPE Logo.png';
 import { useNewUserForm } from '@/app/hooks/useNewUser';
 
 export default function AutoRegister() {
-  const { form, submitForm } = useNewUserForm();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = form;
+  const { errors, handleSubmit, register, submitForm } = useNewUserForm();
 
   const handleRedirectToLogin = () => {
     window.location.href = '/';
@@ -89,22 +84,22 @@ export default function AutoRegister() {
                 CPF
               </Label>
               <Input
-                placeholder="Digite seu CPF"
+                placeholder="Digite seu CPF no formato XXX.XXX.XXX-XX"
                 icon={faAddressCard}
                 errorText={errors.cpf?.message?.toString()}
                 {...register('cpf')}
               />
             </div>
             <Button type="submit">Continuar</Button>
-            <Button
-              icon={faArrowLeft}
-              className="lg:hidden block"
-              onClick={handleRedirectToLogin}
-              variant={'ghost'}
-            >
-              Voltar para Login
-            </Button>
           </form>
+          <Button
+            icon={faArrowLeft}
+            className="lg:hidden block"
+            onClick={handleRedirectToLogin}
+            variant={'ghost'}
+          >
+            Voltar para Login
+          </Button>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">
