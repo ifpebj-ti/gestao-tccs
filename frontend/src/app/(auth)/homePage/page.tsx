@@ -41,11 +41,13 @@ export default function HomePage() {
         <Link href={'/newTCC'} className="col-span-2 col-start-2">
           <CardHome title="Cadastrar nova proposta" icon={faFileCirclePlus} />
         </Link>
-        <CardHome
-          title="Cadastrar novo usuário"
-          icon={faUserPlus}
-          className="col-span-2"
-        />
+        <Link href={'/newUser'} className="col-span-2">
+          <CardHome
+            title="Cadastrar novo usuário"
+            icon={faUserPlus}
+            className="col-span-2"
+          />
+        </Link>
       </div>
     </div>
   );
