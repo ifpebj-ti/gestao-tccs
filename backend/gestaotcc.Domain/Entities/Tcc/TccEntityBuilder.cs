@@ -1,3 +1,4 @@
+using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.UserTcc;
 
@@ -9,9 +10,11 @@ public class TccEntityBuilder
     private string? _title;
     private string? _summary;
     private string _status = string.Empty;
+    private string _step = string.Empty;
     private DateTime _creationDate;
     private ICollection<UserTccEntity> _userTccs = new List<UserTccEntity>();
     private ICollection<TccInviteEntity> _tccInvites = new List<TccInviteEntity>();
+    private ICollection<DocumentEntity> _documents = new List<DocumentEntity>();
 
     public TccEntityBuilder WithId(long id)
     {
@@ -37,6 +40,12 @@ public class TccEntityBuilder
         return this;
     }
 
+    public TccEntityBuilder WithStep(string step)
+    {
+        _step = step;
+        return this;
+    }
+
     public TccEntityBuilder WithCreationDate(DateTime creationDate)
     {
         _creationDate = creationDate;
@@ -55,8 +64,14 @@ public class TccEntityBuilder
         return this;
     }
 
+    public TccEntityBuilder WithDocuments(ICollection<DocumentEntity> documents)
+    {
+        _documents = documents;
+        return this;
+    }
+
     public TccEntity Build()
     {
-        return new TccEntity(_id, _title, _summary, _status, _creationDate, _userTccs, _tccInvites);
+        return new TccEntity(_id, _title, _summary, _status, _step, _creationDate, _userTccs, _tccInvites, _documents);
     }
 }
