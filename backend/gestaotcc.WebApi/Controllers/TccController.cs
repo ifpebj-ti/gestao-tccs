@@ -3,6 +3,7 @@ using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.WebApi.ResponseModels;
 using gestaotcc.WebApi.Validators.Tcc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -15,6 +16,7 @@ public class TccController : ControllerBase
     /// <summary>
     /// Criar uma nova proposta de tcc
     /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPost]
     public async Task<ActionResult<MessageSuccessResponseModel>> Create([FromBody] CreateTccDTO data,
         [FromServices] CreateTccUseCase createTccUseCase)
@@ -47,6 +49,7 @@ public class TccController : ControllerBase
     /// <summary>
     /// Verificar código de primeiro acesso enviado no cadastro de proposta
     /// </summary>
+    [AllowAnonymous]
     [HttpPost("code/verify")]
     public async Task<ActionResult<MessageSuccessResponseModel>> VerifyCode([FromBody] VerifyCodeInviteTccDTO data,
         [FromServices] VerifyCodeInviteTccUseCase verifyCodeInviteTccUseCase)
@@ -75,5 +78,29 @@ public class TccController : ControllerBase
 
         Log.Information("Código verificado com sucesso");
         return Ok(new MessageSuccessResponseModel("Código verificado com sucesso"));
+    }
+
+    /// <summary>
+    /// Busca todos os tccs baseado no filtro
+    /// </summary>
+    /// <remarks>
+    /// O filter pode ser: COMPLETED e IN_PROGRESS.
+    /// Caso deseje retornar por id de usuário basta enviar o filter vazio ou null
+    /// </remarks>
+    /// <param name="filter"></param>
+    /// <returns></returns>
+    [Authorize]
+    [HttpGet("filter")]
+    public async Task<ActionResult<List<FindAllTccByStatusOrUserIdDTO>>> FindAllTccByFilter([FromQuery] string filter,
+        [FromServices] FindAllTccByFilterUseCase findAllTccByFilterUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        
+        Log.Information("Tccs Retornados com sucesso");
+
+        var useCaseResult = await findAllTccByFilterUseCase.Execute(filter, long.Parse(userIdClaim));
+        
+        return Ok(useCaseResult.Data);
     }
 }

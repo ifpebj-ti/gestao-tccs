@@ -4,6 +4,7 @@ using gestaotcc.Application.UseCases.Auth;
 using gestaotcc.Application.UseCases.Profile;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
+using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Infra.Gateways;
 
 namespace gestaotcc.WebApi.Config;
@@ -41,6 +42,7 @@ public static class IocDependencyExtensions
         services.AddScoped<CreateTccUseCase>();
         services.AddScoped<ResendInvitationTccEmailUseCase>();
         services.AddScoped<VerifyCodeInviteTccUseCase>();
+        services.AddScoped<FindAllTccByFilterUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();

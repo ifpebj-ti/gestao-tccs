@@ -42,4 +42,15 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.TccInvites)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
+
+    public async Task<List<TccEntity>> FindAllTccByFilter(string filter)
+    {
+        bool isUserId = long.TryParse(filter, out long userId);
+
+        return await context.Tccs
+            .Where(x => x.Status.ToLower() == filter.ToLower() || 
+                        (isUserId && x.UserTccs.Any(u => u.UserId == userId)))
+            .Include(x => x.UserTccs).ThenInclude(x => x.User).ThenInclude(x => x.Profile)
+            .ToListAsync();
+    }
 }

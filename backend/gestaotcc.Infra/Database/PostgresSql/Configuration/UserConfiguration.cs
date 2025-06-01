@@ -41,5 +41,9 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
         builder.HasMany(x => x.Profile)
             .WithMany(x => x.Users)
             .UsingEntity(x => x.ToTable("user_profile"));
+
+        builder.HasMany(x => x.Signatures)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId);
     }
 }

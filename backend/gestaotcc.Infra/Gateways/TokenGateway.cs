@@ -28,7 +28,7 @@ public class TokenGateway(IConfiguration configuration) : ITokenGateway
                 new Claim("userId", user.Id.ToString()),
             }.Concat(user.Profile.Select(p => new Claim(ClaimTypes.Role, p.Role)))
             ),
-            Expires = DateTime.UtcNow.AddMinutes(expirationTime),
+            Expires = DateTime.UtcNow.AddHours(expirationTime),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyEncoded), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
