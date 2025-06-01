@@ -12,10 +12,10 @@ import {
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
-import { useVerifyAccessCode } from '@/app/hooks/useVerifyAccessCode';
+import { useVerifyTccCode } from '@/app/hooks/useVerifyTccCode';
 
 export default function FirstAccess() {
-  const { form, submitForm } = useVerifyAccessCode();
+  const { form, submitForm } = useVerifyTccCode();
   const {
     register,
     handleSubmit,
@@ -68,8 +68,8 @@ export default function FirstAccess() {
                 placeholder="Digite o código"
                 icon={faTag}
                 helperText="Solicite o código ao coordenador ou orientador"
-                errorText={errors.accessCode?.message?.toString()}
-                {...register('accessCode')}
+                errorText={errors.code?.message?.toString()}
+                {...register('code')}
               />
             </div>
             <Button type="submit">Continuar</Button>
