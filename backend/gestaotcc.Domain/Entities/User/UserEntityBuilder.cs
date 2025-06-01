@@ -2,6 +2,7 @@ using System.Collections;
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
+using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.UserTcc;
 
 namespace gestaotcc.Domain.Entities.User;
@@ -20,6 +21,7 @@ public class UserEntityBuilder
     private CourseEntity _course = null!;
     private AccessCodeEntity _accessCode = null!;
     private ICollection<UserTccEntity> _userTccs = new List<UserTccEntity>();
+    private ICollection<SignatureEntity> _signatures = new List<SignatureEntity>();
 
     public UserEntityBuilder WithId(long id)
     {
@@ -93,8 +95,13 @@ public class UserEntityBuilder
         return this;
     }
 
+    public UserEntityBuilder WithSignature(ICollection<SignatureEntity> signatures)
+    {
+        _signatures = signatures;
+        return this;
+    }
     public UserEntity Build()
     {
-        return new UserEntity(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _course, _accessCode, _userTccs);
+        return new UserEntity(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _course, _accessCode, _userTccs, _signatures);
     }
 }

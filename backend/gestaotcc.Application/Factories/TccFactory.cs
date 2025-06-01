@@ -25,7 +25,8 @@ public class TccFactory
         var tcc = new TccEntityBuilder()
             .WithTitle(data.Title)
             .WithSummary(data.Summary)
-            .WithStatus(invites.Count > 0 ? StatusTccType.PROPOSAL_REGISTRATION.ToString() : StatusTccType.START_AND_ORGANIZATION.ToString())
+            .WithStatus(StatusTccType.IN_PROGRESS.ToString())
+            .WithStep(invites.Count > 0 ? StepTccType.PROPOSAL_REGISTRATION.ToString() : StepTccType.START_AND_ORGANIZATION.ToString())
             .WithTccInvites(invites)
             .WithCreationDate(DateTime.UtcNow)
             .Build();
@@ -54,5 +55,17 @@ public class TccFactory
         }
 
         return tcc;
+    }
+
+    public static FindAllTccByStatusOrUserIdDTO CreateFindAllTccByStatusOrUserIdDTO(TccEntity tcc)
+    {
+        var studentRole = RoleType.STUDENT.ToString();
+
+        var studentNames = tcc.UserTccs
+            .Where(ut => ut.User.Profile.Any(p => p.Role == studentRole))
+            .Select(ut => ut.User.Name)
+            .ToList();
+
+        return new FindAllTccByStatusOrUserIdDTO(tcc.Id, studentNames);
     }
 }

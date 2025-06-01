@@ -93,6 +93,57 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.ToTable("Courses");
                 });
 
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("DocumentTypeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("File")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<bool>("IsSigned")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("TccId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex("TccId");
+
+                    b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("SignatureOrder")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentTypes");
+                });
+
             modelBuilder.Entity("gestaotcc.Domain.Entities.Profile.ProfileEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -111,6 +162,32 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.ToTable("Profiles");
                 });
 
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("DocumentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("SignatureDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Signatures");
+                });
+
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -124,7 +201,13 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Step")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<string>("Summary")
                         .HasMaxLength(255)
@@ -273,6 +356,44 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
+                {
+                    b.HasOne("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", "DocumentType")
+                        .WithMany("Documents")
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("gestaotcc.Domain.Entities.Tcc.TccEntity", "Tcc")
+                        .WithMany("Documents")
+                        .HasForeignKey("TccId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocumentType");
+
+                    b.Navigation("Tcc");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
+                {
+                    b.HasOne("gestaotcc.Domain.Entities.Document.DocumentEntity", "Document")
+                        .WithMany("Signatures")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "User")
+                        .WithMany("Signatures")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccInvite.TccInviteEntity", b =>
                 {
                     b.HasOne("gestaotcc.Domain.Entities.Tcc.TccEntity", "Tcc")
@@ -319,8 +440,20 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
+                {
+                    b.Navigation("Signatures");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", b =>
+                {
+                    b.Navigation("Documents");
+                });
+
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
                 {
+                    b.Navigation("Documents");
+
                     b.Navigation("TccInvites");
 
                     b.Navigation("UserTccs");
@@ -330,6 +463,8 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                 {
                     b.Navigation("AccessCode")
                         .IsRequired();
+
+                    b.Navigation("Signatures");
 
                     b.Navigation("UserTccs");
                 });

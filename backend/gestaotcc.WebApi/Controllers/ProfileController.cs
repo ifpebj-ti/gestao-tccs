@@ -1,5 +1,6 @@
 ﻿using gestaotcc.Application.UseCases.Profile;
 using gestaotcc.Domain.Dtos.Profile;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gestaotcc.WebApi.Controllers;
@@ -16,6 +17,7 @@ public class ProfileController(ILogger<UserController> logger, IConfiguration co
     /// <response code="401">Acesso não autorizado</response>
     /// <response code="404">Recurso não existe</response>
     /// <response code="409">Erro de conflito</response>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpGet]
     public async Task<ActionResult<List<FindAllProfilesDTO>>> FindAllProfiles([FromServices] FindAllProfilesUseCase findAllProfilesUseCase)
     {

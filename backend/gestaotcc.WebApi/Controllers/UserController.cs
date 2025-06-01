@@ -99,8 +99,9 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// </summary>
     /// <remarks>
     /// Para o profile temos: 1 = PROPOSAL_REGISTRATION, 2 = START_AND_ORGANIZATION, 3 = DEVELOPMENT_AND_MONITORING, 4 = PREPARATION_FOR_PRESENTATION
-    /// 5 = PRESENTATION_AND_EVALUATION, 6 = FINALIZATION_AND_PUBLICATION, 7 = COMPLETED, 8 = CANCELED
+    /// 5 = PRESENTATION_AND_EVALUATION, 6 = FINALIZATION_AND_PUBLICATION
     /// </remarks>
+    [Authorize]
     [HttpGet("filter")]
     public async Task<ActionResult<List<FindAllUserByFilterDTO>>> FindAllByFilter([FromQuery] UserFilterDTO data,
         [FromServices] FindAllUserByFilterUseCase findAllUserByFilterUseCase)

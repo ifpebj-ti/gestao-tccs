@@ -18,10 +18,22 @@ public class TccConfiguration : IEntityTypeConfiguration<TccEntity>
             .IsRequired(false)
             .HasMaxLength(255);
 
+        builder.Property(x => x.Status)
+            .IsRequired()
+            .HasMaxLength(30);
+
+        builder.Property(x => x.Step)
+            .IsRequired()
+            .HasMaxLength(40);
+
         builder.Property(x => x.CreationDate)
             .IsRequired();
 
         builder.HasMany(x => x.TccInvites)
+            .WithOne(x => x.Tcc)
+            .HasForeignKey(x => x.TccId);
+        
+        builder.HasMany(x => x.Documents)
             .WithOne(x => x.Tcc)
             .HasForeignKey(x => x.TccId);
     }
