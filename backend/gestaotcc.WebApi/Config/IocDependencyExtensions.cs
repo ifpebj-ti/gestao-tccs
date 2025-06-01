@@ -43,8 +43,12 @@ public static class IocDependencyExtensions
         services.AddScoped<ResendInvitationTccEmailUseCase>();
         services.AddScoped<VerifyCodeInviteTccUseCase>();
         services.AddScoped<FindAllTccByFilterUseCase>();
+        services.AddScoped<FindTccWorkflowUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
+        
+        //Documents Type
+        services.AddScoped<IDocumentTypeGateway, DocumentTypeGateway>();
     }
 }
