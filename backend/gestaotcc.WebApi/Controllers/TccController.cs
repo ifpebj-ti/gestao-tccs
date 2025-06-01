@@ -103,4 +103,22 @@ public class TccController : ControllerBase
         
         return Ok(useCaseResult.Data);
     }
+
+    /// <summary>
+    /// Busca workflow de assinaturas de um tcc
+    /// </summary>
+    /// <remarks>Caso deseje retornar o workflow do tcc do usuário não mande o tccId</remarks>
+    /// <param name="tccId"></param>
+    [Authorize]
+    [HttpGet("workflow")]
+    public async Task<ActionResult<FindTccWorkflowDTO>> FindTccWorkflow([FromServices] FindTccWorkflowUseCase findWorkflowUseCase,
+        [FromQuery] long tccId = 0)
+        {
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            if (userIdClaim == null) return Unauthorized();
+
+            var usecaseResult = await findWorkflowUseCase.Execute(tccId, long.Parse(userIdClaim));
+            Log.Information("Workflow do tcc retornado com sucesso");
+            return Ok(usecaseResult.Data);
+        }
 }

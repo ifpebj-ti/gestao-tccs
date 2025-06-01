@@ -43,6 +43,21 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
+    public async Task<TccEntity?> FindTccWorkflow(long tccId, long userId)
+    {
+        return await context.Tccs
+            .Include(x => x.TccInvites)
+            .Include(x => x.UserTccs)
+            .ThenInclude(x => x.User)
+            .ThenInclude(x => x.Profile)
+            .ThenInclude(x => x.DocumentTypes)
+            .Include(x => x.Documents)
+            .ThenInclude(x => x.DocumentType)
+            .ThenInclude(x => x.Documents)
+            .ThenInclude(x => x.Signatures)
+            .FirstOrDefaultAsync(x => x.Id == tccId || x.UserTccs.Any(x => x.UserId == userId));
+    }
+
     public async Task<List<TccEntity>> FindAllTccByFilter(string filter)
     {
         bool isUserId = long.TryParse(filter, out long userId);
