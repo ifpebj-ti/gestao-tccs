@@ -1,4 +1,5 @@
 using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
 
 namespace gestaotcc.Application.Gateways;
