@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { newUserSchema, NewUserSchemaSchemaType } from '@/app/schemas/newUserSchema';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export function useNewUserForm() {
   const { push } = useRouter();
@@ -33,18 +34,15 @@ export function useNewUserForm() {
         toast.success('Usuário registrado com sucesso!');
         reset();
         const result = await response.json();
-        const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-        document.cookie = `access_token_temp=${result.token}; expires=${expires}; path=/; secure; samesite=Strict`;
+        Cookies.set('access_token_temp', result.token, { expires: 5 / 1440 }); // 5 minutes
         if (data.profile === 'STUDENT') {
           push('/newPassword');
         }
       } else {
-        const errorText = await response.text();
-        toast.error(`Erro: ${response.status} - ${errorText}`);
+        toast.error("Erro ao registrar usuário. Verifique os dados e tente novamente.");
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao registrar usuário. Tente novamente mais tarde.');
-      console.error('Erro no cadastro:', error);
     }
   };
 

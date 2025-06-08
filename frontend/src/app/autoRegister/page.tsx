@@ -15,12 +15,14 @@ import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
 import { useNewUserForm } from '@/app/hooks/useNewUser';
+import { useRouter } from 'next/navigation';
 
 export default function AutoRegister() {
+  const { push } = useRouter();
   const { errors, handleSubmit, register, submitForm } = useNewUserForm();
 
   const handleRedirectToLogin = () => {
-    window.location.href = '/';
+    push('/');
   };
 
   return (
@@ -42,7 +44,9 @@ export default function AutoRegister() {
           <h1 className="text-2xl lg:text-4xl font-medium my-6">Cadastro</h1>
           <form
             className="flex flex-col gap-4"
-            onSubmit={handleSubmit(submitForm)}
+            onSubmit={handleSubmit((data) =>
+              submitForm({ ...data, profile: 'STUDENT' })
+            )}
           >
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="name">
