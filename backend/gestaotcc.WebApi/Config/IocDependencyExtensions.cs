@@ -2,6 +2,7 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Application.UseCases.Auth;
 using gestaotcc.Application.UseCases.Profile;
+using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Dtos.Tcc;
@@ -50,5 +51,8 @@ public static class IocDependencyExtensions
         
         //Documents Type
         services.AddScoped<IDocumentTypeGateway, DocumentTypeGateway>();
+        
+        // Signature
+        services.AddScoped<SendPendingSignatureUseCase>();
     }
 }

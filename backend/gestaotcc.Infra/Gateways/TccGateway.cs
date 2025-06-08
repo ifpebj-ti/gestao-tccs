@@ -66,6 +66,8 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Where(x => x.Status.ToLower() == filter.ToLower() || 
                         (isUserId && x.UserTccs.Any(u => u.UserId == userId)))
             .Include(x => x.UserTccs).ThenInclude(x => x.User).ThenInclude(x => x.Profile)
+            .Include(x => x.Documents).ThenInclude(x => x.DocumentType)
+            .Include(x => x.Documents).ThenInclude(x => x.Signatures)
             .ToListAsync();
     }
 }
