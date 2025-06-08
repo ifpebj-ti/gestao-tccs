@@ -2,8 +2,11 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginSchemaType } from '@/app/schemas/loginSchema';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 export function useLogin() {
+  const { push } = useRouter();
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -30,17 +33,20 @@ export function useLogin() {
         if (contentType && contentType.includes('application/json')) {
           const result = await response.json();
           toast.success('Login realizado com sucesso!');
-          window.location.href = '/homePage';
-          console.log('Resposta JSON do servidor:', result);
+          const token = result.accessToken;
+
+          if (token) {
+            Cookies.set('token', token, { expires: 1 }); // Define o cookie para expirar em 1 dia
+            push('/homePage');
+          }
         } else {
           toast.success('Login realizado com sucesso!');
         }
       } else {
-        toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
+        toast.error('Senha ou email incorretos. Tente novamente.');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar o login. Tente novamente mais tarde.');
-      console.error('Erro ao enviar o login:', error);
     }
   };
 
