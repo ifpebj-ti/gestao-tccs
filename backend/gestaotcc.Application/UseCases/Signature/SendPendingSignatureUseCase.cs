@@ -3,13 +3,12 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
-using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Signature;
-
 public class SendPendingSignatureUseCase(
     ITccGateway tccGateway,
     IEmailGateway emailGateway,
@@ -37,109 +36,99 @@ public class SendPendingSignatureUseCase(
             if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep)) continue;
             if (tccStep == StepTccType.PROPOSAL_REGISTRATION) continue;
 
-            ProcessTcc(tcc, tccStep, documentTypes, usersToNotify);
+            var currentOrder = _stepSignatureOrderMap[tccStep];
+            var userIdsInTcc = tcc.UserTccs.Select(ut => ut.User.Id).ToHashSet();
+
+            var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userIdsInTcc, currentOrder);
+            var documentsInStep = tcc.Documents.Where(d => d.DocumentType.SignatureOrder == currentOrder).ToList();
+            var orderedUsers = tcc.UserTccs
+                .OrderBy(ut => ut.User.Profile.MinBy(p => p.Id).Id)
+                .ThenBy(ut => ut.Id)
+                .ToList();
+
+            if (!documentsInStep.Any())
+            {
+                NotifyUser(usersToNotify, orderedUsers.First().User, tcc.Title!, expectedDocTypes.Select(dt => dt.Name));
+                continue;
+            }
+
+            foreach (var docType in expectedDocTypes)
+            {
+                HandleSignatureWorkflow(docType, documentsInStep, orderedUsers, tcc.Title!, usersToNotify);
+            }
         }
 
-        await SendNotifications(usersToNotify);
-
+        await NotifyAllUsers(usersToNotify);
         return ResultPattern<string>.SuccessResult();
     }
 
-    private void ProcessTcc(
-        TccEntity tcc,
-        StepTccType tccStep,
-        List<DocumentTypeEntity> allDocumentTypes,
-        Dictionary<string, SendPendingSignatureDTO> usersToNotify)
+    private List<DocumentTypeEntity> GetExpectedDocumentTypes(
+        List<DocumentTypeEntity> allDocTypes,
+        HashSet<long> userIds,
+        int stepOrder)
     {
-        var currentStepOrder = _stepSignatureOrderMap[tccStep];
-
-        var expectedDocTypes = allDocumentTypes
-            .Where(dt => dt.SignatureOrder == currentStepOrder)
+        return allDocTypes
+            .Where(dt => dt.SignatureOrder == stepOrder &&
+                         dt.Profiles.Any(p => p.Users.Any(u => userIds.Contains(u.Id))))
             .ToList();
-
-        var documents = tcc.Documents
-            .Where(d => d.DocumentType.SignatureOrder == currentStepOrder)
-            .ToList();
-
-        var orderedUsers = tcc.UserTccs
-            .OrderBy(ut => ut.User.Profile.MinBy(p => p.Id).Id)
-            .ThenBy(ut => ut.Id)
-            .ToList();
-
-        if (!documents.Any())
-        {
-            var firstUser = orderedUsers.First().User;
-            AddOrUpdateUser(usersToNotify, firstUser.Email, firstUser.Name, tcc.Title!, expectedDocTypes.Select(dt => dt.Name));
-            return;
-        }
-
-        foreach (var docType in expectedDocTypes)
-        {
-            HandleDocumentType(docType, documents, orderedUsers, tcc.Title!, usersToNotify);
-        }
     }
 
-    private void HandleDocumentType(
+    private void HandleSignatureWorkflow(
         DocumentTypeEntity docType,
-        List<DocumentEntity> documents,
+        List<DocumentEntity> stepDocuments,
         List<UserTccEntity> orderedUsers,
         string tccTitle,
         Dictionary<string, SendPendingSignatureDTO> usersToNotify)
     {
-        var document = documents.FirstOrDefault(d => d.DocumentType.Id == docType.Id);
+        var document = stepDocuments.FirstOrDefault(d => d.DocumentType.Id == docType.Id);
 
         if (document == null)
         {
-            var firstUser = orderedUsers.First().User;
-            AddOrUpdateUser(usersToNotify, firstUser.Email, firstUser.Name, tccTitle, new List<string> { docType.Name });
+            NotifyUser(usersToNotify, orderedUsers.First().User, tccTitle, new List<string> { docType.Name });
             return;
         }
 
-        foreach (var userTcc in orderedUsers)
+        for (int i = 0; i < orderedUsers.Count; i++)
         {
-            var user = userTcc.User;
+            var user = orderedUsers[i].User;
 
-            if (document.Signatures.Any(s => s.UserId == user.Id))
-                continue;
+            if (document.Signatures.Any(s => s.UserId == user.Id)) continue;
 
-            var index = orderedUsers.IndexOf(userTcc);
-            var allPreviousSigned = orderedUsers.Take(index).All(prev =>
-                document.Signatures.Any(sig => sig.UserId == prev.User.Id));
+            var allPreviousSigned = orderedUsers.Take(i)
+                .All(prev => document.Signatures.Any(sig => sig.UserId == prev.User.Id));
 
             if (allPreviousSigned)
             {
-                AddOrUpdateUser(usersToNotify, user.Email, user.Name, tccTitle, new List<string> { docType.Name });
+                NotifyUser(usersToNotify, user, tccTitle, new List<string> { docType.Name });
             }
 
-            break;
+            break; // após encontrar o usuário responsável, não verifica os próximos
         }
     }
 
-    private async Task SendNotifications(Dictionary<string, SendPendingSignatureDTO> usersToNotify)
+    private void NotifyUser(
+        Dictionary<string, SendPendingSignatureDTO> usersToNotify,
+        UserEntity user,
+        string tccTitle,
+        IEnumerable<string> docNames)
+    {
+        if (usersToNotify.TryGetValue(user.Email, out var existing))
+        {
+            var updatedDocs = existing.DocumentNames.Union(docNames).Distinct().ToList();
+            usersToNotify[user.Email] = new SendPendingSignatureDTO(user.Email, user.Name, updatedDocs, tccTitle);
+        }
+        else
+        {
+            usersToNotify[user.Email] = new SendPendingSignatureDTO(user.Email, user.Name, docNames.ToList(), tccTitle);
+        }
+    }
+
+    private async Task NotifyAllUsers(Dictionary<string, SendPendingSignatureDTO> usersToNotify)
     {
         foreach (var dto in usersToNotify.Values)
         {
             var emailDto = EmailFactory.CreateSendEmailDTO(dto);
             await emailGateway.Send(emailDto);
-        }
-    }
-
-    private void AddOrUpdateUser(
-        Dictionary<string, SendPendingSignatureDTO> map,
-        string email,
-        string name,
-        string tccTitle,
-        IEnumerable<string> docNames)
-    {
-        if (map.ContainsKey(email))
-        {
-            var existing = map[email];
-            var updatedList = existing.DocumentNames.Union(docNames).Distinct().ToList();
-            map[email] = new SendPendingSignatureDTO(email, name, updatedList, tccTitle);
-        }
-        else
-        {
-            map[email] = new SendPendingSignatureDTO(email, name, docNames.ToList(), tccTitle);
         }
     }
 }
