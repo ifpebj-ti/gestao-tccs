@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviso assinatura pendente</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 30px 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+        }
+
+        .content {
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .content h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .content p {
+            font-size: 16px;
+            margin: 12px 0;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        .footer p {
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="content">
+        <h2>Olá, {{username}}</h2>
+        <p>
+            Identificamos que os seguintes documentos precisam da sua assinatura:
+        </p>
+        <ul>
+            {{ for doc in documentNames }}
+            <li class="highlight">{{ doc }}</li>
+            {{ end }}
+        </ul>
+
+        <p>
+            Estes documentos pertencem ao TCC:
+        </p>
+        <p class="highlight">"{{tccTitle}}"</p>
+        <p>
+            Acesse a plataforma para realizar a assinatura e dar continuidade ao processo.
+        </p>
+    </div>
+    <div class="footer">
+        <p>Se você não sabe o que está acontecendo, entre em contato com seu orientador ou supervisor dos projetos TCC.</p>
+        <p>Obrigado por usar nossos serviços.</p>
+    </div>
+</div>
+
+</body>
+</html>

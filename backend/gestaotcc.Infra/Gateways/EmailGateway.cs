@@ -81,6 +81,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "RESEND-INVITE-TCC" ? Path.Combine(directory, "Templates", "resend-invite-tcc-template.html")
             : typeTemplate == "ADD-USER-TCC" ? Path.Combine(directory, "Templates", "add-user-tcc-template.html")
             : typeTemplate == "INVITE-USER" ? Path.Combine(directory, "Templates", "invite-tcc-template.html") 
+            : typeTemplate == "SEND-PENDING-SIGNATURE" ? Path.Combine(directory, "Templates", "send-pending-signature-template.html") 
             : Path.Combine(directory, "Templates", "update-password-template.html");
         return File.ReadAllText(filePath);
     }
