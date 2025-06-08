@@ -123,6 +123,30 @@ public class TccController : ControllerBase
     }
 
     /// <summary>
+    /// Vincular usuário de banca para o TCC
+    /// </summary>
+    //[Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPost("banking")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> LinkBankingUser([FromBody] LinkBankingUserDTO data,
+        [FromServices] LinkBankingUserUseCase linkBankingUserUseCase)
+    {
+        var result = await linkBankingUserUseCase.Execute(data);
+        if (result.IsFailure)
+        {
+            Log.Error("Erro ao vincular usuário de banca");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            // Retornando erro apropriado
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+        Log.Information("Usuário de banca vinculado com sucesso");
+        return Ok(new MessageSuccessResponseModel("Usuário de banca vinculado com sucesso"));
+    }
+
+    /// <summary>
     /// Solicitar cancelamento do TCC
     /// </summary>
     [Authorize(Roles = "STUDENT")]
@@ -159,7 +183,7 @@ public class TccController : ControllerBase
     /// <summary>
     /// Aprovar cancelamento do TCC
     /// </summary>
-    //[Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpPost("cancellation/approve")]
     public async Task<ActionResult<MessageSuccessResponseModel>> ApproveCancellation([FromQuery] long tccId,
         [FromServices] ApproveCancellationTccUseCase approveCancellationTccUseCase)

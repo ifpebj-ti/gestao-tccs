@@ -42,6 +42,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await context.Tccs
             .Include(x => x.TccInvites)
             .Include(x => x.TccCancellation)
+            .Include(x => x.UserTccs)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

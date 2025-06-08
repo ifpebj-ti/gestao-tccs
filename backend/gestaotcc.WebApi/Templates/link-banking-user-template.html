@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinculação à Banca de TCC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+            .content h2 {
+                color: #333;
+            }
+
+            .content p {
+                color: #666;
+            }
+
+        .highlight-box {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border: 2px dashed #2e86de; /* Azul */
+            color: #2e86de;
+            border-radius: 8px;
+        }
+
+        .button {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+            .button a {
+                background-color: #ffd700;
+                color: #333;
+                padding: 15px 25px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+
+                .button a:hover {
+                    background-color: #ffcc00;
+                }
+
+        .footer {
+            text-align: center;
+            color: #888;
+            padding: 20px 0;
+        }
+
+            .footer p {
+                margin: 0;
+                font-size: 14px;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h2>Olá, {{username}}</h2>
+            <p>Você foi adicionado como <strong>participante da banca avaliadora</strong> de um Trabalho de Conclusão de Curso (TCC).</p>
+            <p>Agora você pode acessar a plataforma para visualizar os detalhes do projeto, consultar documentos e acompanhar o andamento do TCC.</p>
+
+            <div class="highlight-box">
+                Título do TCC: <br><strong>{{tituloTcc}}</strong>
+            </div>
+
+            <div class="button">
+                <a href="#" target="_blank">Acessar Plataforma</a><!--Colocar o link do site quando finalizar-->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Se você não reconhece esta ação, entre em contato com o orientador ou a coordenação dos TCCs.</p>
+            <p>Obrigado por contribuir com nosso processo de avaliação acadêmica.</p>
+        </div>
+    </div>
+</body>
+</html>

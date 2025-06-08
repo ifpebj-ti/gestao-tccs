@@ -14,6 +14,12 @@ public class ProfileGateway(AppDbContext context): IProfileGateway
         return profiles;
     }
 
+    public async Task<ProfileEntity?> FindByRole(string role)
+    {
+        return await context.Profiles
+            .FirstOrDefaultAsync(p => p.Role == role);
+    }
+
     public async Task<List<ProfileEntity>> FindAll()
     {
         return await context.Profiles.ToListAsync();

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gestaotcc.Infra.Database;
@@ -11,9 +12,11 @@ using gestaotcc.Infra.Database;
 namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250608211336_updateUserTccs")]
+    partial class updateUserTccs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,7 +85,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("AccessCodes", (string)null);
+                    b.ToTable("AccessCodes");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Course.CourseEntity", b =>
@@ -105,7 +108,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
@@ -135,7 +138,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("TccId");
 
-                    b.ToTable("Documents", (string)null);
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", b =>
@@ -156,7 +159,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DocumentTypes", (string)null);
+                    b.ToTable("DocumentTypes");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Profile.ProfileEntity", b =>
@@ -174,7 +177,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Profiles", (string)null);
+                    b.ToTable("Profiles");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
@@ -200,7 +203,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Signatures", (string)null);
+                    b.ToTable("Signatures");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
@@ -234,7 +237,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tccs", (string)null);
+                    b.ToTable("Tccs");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccCancellation.TccCancellationEntity", b =>
@@ -265,7 +268,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccCancellations", (string)null);
+                    b.ToTable("TccCancellations");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccInvite.TccInviteEntity", b =>
@@ -296,7 +299,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("TccId");
 
-                    b.ToTable("TccInvites", (string)null);
+                    b.ToTable("TccInvites");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
@@ -347,7 +350,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.UserTcc.UserTccEntity", b =>
@@ -378,7 +381,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserTccs", (string)null);
+                    b.ToTable("UserTccs");
                 });
 
             modelBuilder.Entity("DocumentTypeEntityProfileEntity", b =>

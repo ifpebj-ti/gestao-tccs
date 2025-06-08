@@ -1,5 +1,6 @@
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.DocumentType;
+using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
@@ -42,15 +43,16 @@ public class TccFactory
         return tcc;
     }
 
-    public static TccEntity UpdateUsersTcc(TccEntity tcc, UserEntity user)
+    public static TccEntity UpdateUsersTcc(TccEntity tcc, UserEntity user, ProfileEntity profile)
     {
-        var alreadyAdded = tcc.UserTccs.Any(ut => ut.User.Id == user.Id);
+        var alreadyAdded = tcc.UserTccs.Any(ut => ut.UserId == user.Id);
         
         if (!alreadyAdded)
         {
             tcc.UserTccs.Add(new UserTccEntityBuilder()
                 .WithUser(user)
                 .WithTcc(tcc)
+                .WithProfile(profile)
                 .WithBindingDate(DateTime.UtcNow)
                 .Build());
         }

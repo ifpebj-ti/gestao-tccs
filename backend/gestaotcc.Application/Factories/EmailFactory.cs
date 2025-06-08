@@ -1,4 +1,5 @@
 using gestaotcc.Domain.Dtos.Email;
+using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.User;
 
@@ -15,6 +16,7 @@ public class EmailFactory
         var chooseSubject = (typeSend == "CREATE-USER" || typeSend == "AUTO-REGISTER-USER") ? "Bem-vindo(a) ao Gestão TCC" 
             : typeSend == "INVITE-USER" ? "Solicitação de inclusão de Discente" 
             : typeSend == "ADD-USER-TCC" ? "Adição ao TCC com sucesso"
+            : typeSend == "LINK-BANKING-USER" ? "Vinculação de usuário de banca"
             : "Alteração de senha";
 
         var emailDTO = new SendEmailDTO("", chooseSubject, user.Email, typeSend, variables);
@@ -30,6 +32,19 @@ public class EmailFactory
         var chooseSubject = "Solicitação de inclusão de Discente"; 
 
         var emailDTO = new SendEmailDTO("", chooseSubject, tccInvite.Email, typeSend, variables);
+
+        return emailDTO;
+    }
+
+    public static SendEmailDTO CreateSendEmailDTO(UserEntity user, TccEntity tcc, string typeSend)
+    {
+        Dictionary<string, Object> variables = new Dictionary<string, Object>();
+        variables.Add("username", user.Name);
+        variables.Add("tituloTcc", tcc.Title!);
+
+        var chooseSubject = "Vinculação de usuário de banca";
+
+        var emailDTO = new SendEmailDTO("", chooseSubject, user.Email, typeSend, variables);
 
         return emailDTO;
     }
