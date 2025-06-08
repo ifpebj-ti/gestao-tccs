@@ -9,6 +9,8 @@ public class DocumentTypeGateway(AppDbContext context) : IDocumentTypeGateway
 {
     public async Task<List<DocumentTypeEntity>> FindAll()
     {
-        return await context.DocumentTypes.ToListAsync();
+        return await context.DocumentTypes
+            .Include(x => x.Profiles)
+            .ToListAsync();
     }
 }
