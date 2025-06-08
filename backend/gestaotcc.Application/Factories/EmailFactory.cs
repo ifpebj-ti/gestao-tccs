@@ -44,7 +44,7 @@ public class EmailFactory
         variables.Add("tccTitle", data.TccTitle);
         variables.Add("documentNames", data.DocumentNames);
 
-        var chooseSubject = "Solicitação de inclusão de Discente"; 
+        var chooseSubject = "Assinatura pendente"; 
 
         var emailDTO = new SendEmailDTO("", chooseSubject, data.UserEmail, "SEND-PENDING-SIGNATURE", variables);
 
