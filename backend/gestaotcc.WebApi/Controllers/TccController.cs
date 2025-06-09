@@ -125,11 +125,14 @@ public class TccController : ControllerBase
     /// <summary>
     /// Vincular usuário de banca para o TCC
     /// </summary>
-    //[Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpPost("banking")]
     public async Task<ActionResult<MessageSuccessResponseModel>> LinkBankingUser([FromBody] LinkBankingUserDTO data,
         [FromServices] LinkBankingUserUseCase linkBankingUserUseCase)
     {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
         var result = await linkBankingUserUseCase.Execute(data);
         if (result.IsFailure)
         {
@@ -188,8 +191,8 @@ public class TccController : ControllerBase
     public async Task<ActionResult<MessageSuccessResponseModel>> ApproveCancellation([FromQuery] long tccId,
         [FromServices] ApproveCancellationTccUseCase approveCancellationTccUseCase)
     {
-        //var userIdClaim = User.FindFirst("userId")?.Value;
-        //if (userIdClaim == null) return Unauthorized();
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
 
         var result = await approveCancellationTccUseCase.Execute(tccId);
         if (result.IsFailure)
@@ -207,4 +210,29 @@ public class TccController : ControllerBase
         return Ok(new MessageSuccessResponseModel("Cancelamento do TCC aprovado com sucesso"));
     }
 
+    /// <summary>
+    /// Visualizar solicitação de cancelamento do TCC
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpGet("cancellation")]
+    public async Task<ActionResult<FindTccCancellationDTO>> FindTccCancellation([FromQuery] long tccId,
+        [FromServices] FindTccCancellationUseCase findTccCancellationUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        var result = await findTccCancellationUseCase.Execute(tccId);
+        if (result.IsFailure)
+        {
+            Log.Error("Erro ao buscar solicitação de cancelamento do TCC");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            // Retornando erro apropriado
+            return NotFound(result.ErrorDetails);
+        }
+
+        Log.Information("Solicitação de cancelamento do TCC encontrada com sucesso");
+        return Ok(result.Data);
+    }
 }

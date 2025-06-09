@@ -47,6 +47,7 @@ public static class IocDependencyExtensions
         services.AddScoped<RequestCancellationTccUseCase>();
         services.AddScoped<ApproveCancellationTccUseCase>();
         services.AddScoped<LinkBankingUserUseCase>();
+        services.AddScoped<FindTccCancellationUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();

@@ -46,6 +46,16 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
+    public async Task<TccEntity?> FindTccCancellation(long id)
+    {
+        return await context.Tccs
+            .Include(x => x.TccCancellation)
+            .Include(x => x.UserTccs)
+            .ThenInclude(x => x.User)
+            .ThenInclude(x => x.Profile)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
     public async Task<TccEntity?> FindTccWorkflow(long tccId, long userId)
     {
         return await context.Tccs

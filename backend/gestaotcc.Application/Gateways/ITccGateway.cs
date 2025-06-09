@@ -14,4 +14,5 @@ public interface ITccGateway
     Task<TccEntity?> FindTccById(long id);
     Task<TccEntity?> FindTccWorkflow(long tccId, long userId);
     Task<List<TccEntity>> FindAllTccByFilter(string filter);
+    Task<TccEntity?> FindTccCancellation(long id);
 }
