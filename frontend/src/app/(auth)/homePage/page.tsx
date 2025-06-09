@@ -1,7 +1,7 @@
 'use client';
 
 import { CardHome } from '@/components/CardHome';
-import { CollapseCardMobile } from '@/components/CollapseCardMobile'; // novo componente
+import { CollapseCardMobile } from '@/components/CollapseCardMobile';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import {
   faFileCircleCheck,
@@ -59,7 +59,7 @@ export default function HomePage() {
             icon={faFileSignature}
             indicatorNumber={3}
             indicatorColor="bg-red-600"
-            onClick={() => push('/PendingSignatures')}
+            onClick={() => push('/pendingSignatures')}
           />
         )}
 
@@ -76,7 +76,7 @@ export default function HomePage() {
             icon={faGraduationCap}
             indicatorNumber={7}
             indicatorColor="bg-blue-600"
-            onClick={() => push('/OngoingTCCs')}
+            onClick={() => push('/ongoingTCCs')}
           />
         )}
 
@@ -90,7 +90,7 @@ export default function HomePage() {
           <CollapseCardMobile
             title="TCCs concluídos"
             icon={faFileCircleCheck}
-            onClick={() => push('/CompletedTCCs')}
+            onClick={() => push('/completedTCCs')}
           ></CollapseCardMobile>
         )}
 
@@ -141,7 +141,7 @@ export default function HomePage() {
             icon={faFileSignature}
             indicatorNumber={3}
             indicatorColor="bg-red-600"
-            onClick={() => push('/PendingSignatures')}
+            onClick={() => push('/pendingSignatures')}
           />
         )}
 
@@ -158,7 +158,7 @@ export default function HomePage() {
             icon={faGraduationCap}
             indicatorNumber={7}
             indicatorColor="bg-blue-600"
-            onClick={() => push('/OngoingTCCs')}
+            onClick={() => push('/ongoingTCCs')}
           />
         )}
 
@@ -172,7 +172,7 @@ export default function HomePage() {
           <CardHome
             title="TCCs concluídos"
             icon={faFileCircleCheck}
-            onClick={() => push('/CompletedTCCs')}
+            onClick={() => push('/completedTCCs')}
           />
         )}
 
