@@ -34,8 +34,8 @@ export function middleware(request: NextRequest) {
         try {
           const decoded = jwtDecode<DecodedToken>(token);
           if (!allowedProfiles.includes(decoded.role)) {
-            return NextResponse.redirect(new URL('/homePage', request.url));
-          }
+            return NextResponse.redirect(new URL('/unauthorized', request.url));
+          }          
         } catch (err) {
           console.error('Erro ao decodificar token:', err);
           return NextResponse.redirect(new URL('/', request.url));
