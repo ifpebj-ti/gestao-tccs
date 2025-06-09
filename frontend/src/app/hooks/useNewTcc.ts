@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { newTccSchema, NewTccSchemaType } from '@/app/schemas/newTccSchema';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 
 export function useNewTccForm() {
   const [advisors, setAdvisors] = useState<{ id: number; name: string }[]>([]);
@@ -21,8 +22,16 @@ export function useNewTccForm() {
 
   useEffect(() => {
     const fetchAdvisors = async () => {
+      const token = Cookies.get('token');
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/User/filter?Profile=ADVISOR');
+        const res = await fetch(
+          process.env.NEXT_PUBLIC_API_URL + '/api/User/filter?Profile=ADVISOR',
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
         if (!res.ok) throw new Error('Erro ao buscar orientadores');
         const data = await res.json();
         setAdvisors(data);
@@ -41,6 +50,7 @@ export function useNewTccForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Cookies.get('token')}`,
         },
         body: JSON.stringify({
           studentEmails: data.studentEmails,
