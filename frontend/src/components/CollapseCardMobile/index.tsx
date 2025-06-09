@@ -35,7 +35,7 @@ export function CollapseCardMobile({
   };
 
   return (
-    <div className="border rounded-xl shadow-sm mb-3 md:hidden">
+    <div className="border rounded-xl shadow-sm mb-3">
       <button
         className="flex items-center justify-between w-full p-4 text-left text-gray-800 font-medium focus:outline-none hover:cursor-pointer hover:shadow-xl transition-shadow duration-300 ease-in-out"
         onClick={handleClick}
