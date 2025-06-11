@@ -18,14 +18,25 @@ services:
       - MailSettings__EmailId=${MAILSETTINGS_EMAILID}
       - MailSettings__UserName=${MAILSETTINGS_USERNAME}
       - MailSettings__Password=${MAILSETTINGS_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - front_net
+      - back_net
+      - observability-net
+    depends_on:
+      postgres:
+        condition: service_healthy
   frontend:
     build:
       context: ./frontend
     container_name: gestao-frontend
     ports:
       - "${PORT_MACHINE_FRONTEND}:3000"
+    restart: unless-stopped
     depends_on:
       - backend
+    networks:
+      - front_net
 
   postgres:
     image: postgres:15
@@ -38,5 +49,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "${PORT_MACHINE_POSTGRES}:5432"
+    restart: unless-stopped
+    networks:
+      - back_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 volumes:
   postgres_data:
+
+networks:
+  front_net:
+  back_net:
+  observability-net:
+    external: true
