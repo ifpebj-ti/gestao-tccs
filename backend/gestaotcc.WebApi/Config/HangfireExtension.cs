@@ -1,3 +1,4 @@
+using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Application.UseCases.Tcc;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -22,10 +23,17 @@ public static class HangfireExtension
 
         using var scope = serviceProvider.CreateScope();
         var resendInvitationUseCase = scope.ServiceProvider.GetRequiredService<ResendInvitationTccEmailUseCase>();
+        var sendPendingsignatures = scope.ServiceProvider.GetRequiredService<SendPendingSignatureUseCase>();
 
         RecurringJob.AddOrUpdate(
             "resend-invite-tcc",
             () => resendInvitationUseCase.Execute(),
+            "0 5 * * *" // Executar diariamente às 5:00
+        );
+        
+        RecurringJob.AddOrUpdate(
+            "send-pending-signatures",
+            () => sendPendingsignatures.Execute(),
             "0 5 * * *" // Executar diariamente às 5:00
         );
 

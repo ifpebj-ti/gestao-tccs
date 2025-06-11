@@ -29,12 +29,13 @@ public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profile
         if (isOnlyAluno)
         {
             var tccInvite = await tccGateway.FindInviteTccByEmail(data.Email);
+            var profileEntity = await profileGateway.FindByRole("STUDENT"); // "ALUNO"
             if (tccInvite is not null)
             {
                 var tcc = await tccGateway.FindTccById(tccInvite.TccId);
                 if (tcc is not null)
                 {
-                    TccFactory.UpdateUsersTcc(tcc, newUser);
+                    TccFactory.UpdateUsersTcc(tcc, newUser, profileEntity!);
                     await tccGateway.Update(tcc);
                 }
             }

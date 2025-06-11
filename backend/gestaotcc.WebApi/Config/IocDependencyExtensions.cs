@@ -2,8 +2,10 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Application.UseCases.Auth;
 using gestaotcc.Application.UseCases.Profile;
+using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
+using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Infra.Gateways;
 
 namespace gestaotcc.WebApi.Config;
@@ -41,8 +43,20 @@ public static class IocDependencyExtensions
         services.AddScoped<CreateTccUseCase>();
         services.AddScoped<ResendInvitationTccEmailUseCase>();
         services.AddScoped<VerifyCodeInviteTccUseCase>();
+        services.AddScoped<FindAllTccByFilterUseCase>();
+        services.AddScoped<FindTccWorkflowUseCase>();
+        services.AddScoped<RequestCancellationTccUseCase>();
+        services.AddScoped<ApproveCancellationTccUseCase>();
+        services.AddScoped<LinkBankingUserUseCase>();
+        services.AddScoped<FindTccCancellationUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
+        
+        //Documents Type
+        services.AddScoped<IDocumentTypeGateway, DocumentTypeGateway>();
+        
+        // Signature
+        services.AddScoped<SendPendingSignatureUseCase>();
     }
 }

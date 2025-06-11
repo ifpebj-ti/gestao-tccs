@@ -1,14 +1,51 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtDecode } from "jwt-decode";
+interface DecodedToken {
+  unique_name: string;
+  userId: string;
+  role: string;
+}
+
+// Rotas protegidas com perfis permitidos (token principal)
+const protectedRoutes: Record<string, string[]> = {
+  '/homePage': [], // Qualquer usuário logado pode acessar
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
+};
+
+// Rotas temporárias com token temporário
+const tempProtectedRoutes = ['/autoRegister', '/newPassword'];
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('access_token_temp')?.value;
+  const path = request.nextUrl.pathname;
+  const token = request.cookies.get('token')?.value;
+  const tempToken = request.cookies.get('access_token_temp')?.value;
 
-  // bloqueia acesso se não tiver o cookie
-  if (
-    (request.nextUrl.pathname.startsWith('/autoRegister') || request.nextUrl.pathname.startsWith('/newPassword')) &&
-    !token
-  ) {
+  // Verificação de rotas com autenticação principal
+  for (const route in protectedRoutes) {
+    if (path.startsWith(route)) {
+      if (!token) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+
+      const allowedProfiles = protectedRoutes[route];
+      if (allowedProfiles.length > 0) {
+        try {
+          const decoded = jwtDecode<DecodedToken>(token);
+          if (!allowedProfiles.includes(decoded.role)) {
+            return NextResponse.redirect(new URL('/unauthorized', request.url));
+          }          
+        } catch (err) {
+          console.error('Erro ao decodificar token:', err);
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+      }
+    }
+  }
+
+  // Verificação de rotas com autenticação temporária
+  if (tempProtectedRoutes.some((r) => path.startsWith(r)) && !tempToken) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
@@ -16,5 +53,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/autoRegister', '/newPassword'],
+  matcher: [
+    '/homePage',
+    '/newTCC',
+    '/newUser',
+    '/autoRegister',
+    '/newPassword',
+  ],
 };

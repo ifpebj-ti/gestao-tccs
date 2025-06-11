@@ -10,6 +10,7 @@ interface CardHomeProps {
   indicatorNumber?: number;
   indicatorColor?: string; // classes tailwind, ex: 'bg-red-500'
   className?: string;
+  onClick?: () => void;
 }
 
 export function CardHome({
@@ -17,12 +18,23 @@ export function CardHome({
   icon,
   indicatorNumber,
   indicatorColor = 'bg-red-500',
-  className = ''
+  className = '',
+  onClick
 }: CardHomeProps) {
   return (
     <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className={cn(
-        'relative p-10 bg-white border-1 border-gray-100 rounded-sm shadow-md flex flex-col items-center hover:shadow-xl transition-shadow duration-300 ease-in-out cursor-pointer',
+        'relative p-10 bg-white border-1 border-gray-100 rounded-sm shadow-md flex flex-col items-center hover:shadow-xl transition-shadow duration-300 ease-in-out',
+        onClick ? 'cursor-pointer' : '',
         className
       )}
     >

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,19 +14,15 @@ import {
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
+import { useNewUserForm } from '@/app/hooks/useNewUser';
+import { useRouter } from 'next/navigation';
 
 export default function AutoRegister() {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [registration, setRegistration] = useState('');
-  const [cpf, setCpf] = useState('');
+  const { push } = useRouter();
+  const { errors, handleSubmit, register, submitForm } = useNewUserForm();
 
   const handleRedirectToLogin = () => {
-    window.location.href = '/';
-  };
-
-  const handleRedirectToNewPassword = () => {
-    window.location.href = '/newPassword';
+    push('/');
   };
 
   return (
@@ -47,16 +42,21 @@ export default function AutoRegister() {
             Voltar para Login
           </Button>
           <h1 className="text-2xl lg:text-4xl font-medium my-6">Cadastro</h1>
-          <div className="flex flex-col gap-4">
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit((data) =>
+              submitForm({ ...data, profile: 'STUDENT' })
+            )}
+          >
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="fullName">
+              <Label className="font-semibold" htmlFor="name">
                 Nome Completo
               </Label>
               <Input
                 placeholder="Digite seu nome completo"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
                 icon={faUser}
+                errorText={errors.name?.message?.toString()}
+                {...register('name')}
               />
             </div>
             <div className="grid items-center gap-1.5">
@@ -65,9 +65,9 @@ export default function AutoRegister() {
               </Label>
               <Input
                 placeholder="Digite seu email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 icon={faEnvelope}
+                errorText={errors.email?.message?.toString()}
+                {...register('email')}
               />
             </div>
             {/* campo matrícula */}
@@ -77,9 +77,9 @@ export default function AutoRegister() {
               </Label>
               <Input
                 placeholder="Digite sua matrícula"
-                value={registration}
-                onChange={(e) => setRegistration(e.target.value)}
                 icon={faGraduationCap}
+                errorText={errors.registration?.message?.toString()}
+                {...register('registration')}
               />
             </div>
             {/* campo CPF */}
@@ -88,22 +88,22 @@ export default function AutoRegister() {
                 CPF
               </Label>
               <Input
-                placeholder="Digite seu CPF"
-                value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                placeholder="Digite seu CPF no formato XXX.XXX.XXX-XX"
                 icon={faAddressCard}
+                errorText={errors.cpf?.message?.toString()}
+                {...register('cpf')}
               />
             </div>
-            <Button onClick={handleRedirectToNewPassword}>Continuar</Button>
-            <Button
-              icon={faArrowLeft}
-              className="lg:hidden block"
-              onClick={handleRedirectToLogin}
-              variant={'ghost'}
-            >
-              Voltar para Login
-            </Button>
-          </div>
+            <Button type="submit">Continuar</Button>
+          </form>
+          <Button
+            icon={faArrowLeft}
+            className="lg:hidden block"
+            onClick={handleRedirectToLogin}
+            variant={'ghost'}
+          >
+            Voltar para Login
+          </Button>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">

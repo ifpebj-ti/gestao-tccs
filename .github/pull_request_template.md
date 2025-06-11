@@ -1,8 +1,8 @@
-## 📌 Tipo de mudança
+## 📑 Tipo de mudança
 
 <!-- Selecione UMA das opções abaixo -->
-(Selecione apenas uma opção dentre as listadas abaixo)
-tipo:
+> Selecione **apenas uma** das opções abaixo, marcando com um `x`.
+
 - [ ] novo-marco
 - [ ] nova-feature-refactor
 - [ ] bug-fix
@@ -10,5 +10,18 @@ tipo:
 
 ---
 
-> _A opção "outros" não incrementa em tag de release._
-> _Preencha todos os campos de forma clara. Este template é lido automaticamente por nossa pipeline._
+> ℹ️ A opção **"outros"** não gera nova tag de release.  
+> 🛠️ **Preencha todos os campos de forma clara.** Este template é lido automaticamente pela nossa pipeline de CI/CD.
+
+---
+
+## 📝 Descrição
+
+> Explique de forma objetiva **o que foi feito** neste PR, incluindo contexto, propósito da mudança e possíveis impactos.
+
+[COLOQUE SUA DESCRIÇÃO AQUI]
+
+Exemplo:
+Este PR adiciona a validação de e-mail no cadastro de orientadores. Também refatora a estrutura do formulário para uso de componentes reutilizáveis.
+
+---

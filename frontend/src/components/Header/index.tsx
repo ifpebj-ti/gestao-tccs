@@ -8,8 +8,14 @@ import {
 import Link from 'next/link';
 import IFPELogo from '../../../public/IFPE Logo.png';
 import Image from 'next/image';
+import Cookies from 'js-cookie';
 
 export default function Header() {
+  // Função para lidar com o clique no botão de sair
+  const handleLogout = () => {
+    Cookies.remove('token');
+    window.location.href = '/';
+  };
   return (
     <header className="fixed top-0 left-0 w-full bg-white shadow z-50">
       <div className="mx-auto px-4 md:px-10 py-3 flex flex-col md:flex-row md:items-center gap-2 w-full">
@@ -47,8 +53,12 @@ export default function Header() {
         {/* Botões desktop */}
         <nav className="hidden md:flex justify-end items-center gap-4 w-1/3">
           <Button variant="ghost" icon={faBell} aria-label="Notificações" />
-          <Button variant="ghost" icon={faArrowRightFromBracket}>
-            <Link href="/">Sair</Link>
+          <Button
+            variant="ghost"
+            icon={faArrowRightFromBracket}
+            onClick={handleLogout}
+          >
+            Sair
           </Button>
         </nav>
       </div>

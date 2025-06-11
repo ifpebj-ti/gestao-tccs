@@ -48,6 +48,7 @@ backend/*.*~
 backend/project.lock.json
 backend/.DS_Store
 backend/*.pyc
+backend/gestaotcc.WebApi/Logs/log.txt
 
 # VSCode
 backend/.vscode
