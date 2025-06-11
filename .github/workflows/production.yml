@@ -128,8 +128,7 @@ jobs:
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
     if: >
-      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch') &&
-      needs.tag-creation.outputs.changed_backend == 'true'
+      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')
     permissions:
       contents: read
       packages: write
@@ -139,6 +138,14 @@ jobs:
         working-directory: backend
 
     steps:
+      - name: Check if backend changed
+        id: check-backend-change
+        run: |
+          if [ "${{ needs.tag-creation.outputs.changed_backend }}" != "true" ]; then
+            echo "No backend changes detected, skipping backend build."
+            exit 0
+          fi
+      
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -193,8 +200,7 @@ jobs:
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
     if: >
-      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch') &&
-      needs.tag-creation.outputs.changed_frontend == 'true'
+      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')
     permissions:
       contents: read
       packages: write
@@ -204,6 +210,14 @@ jobs:
         working-directory: frontend
 
     steps:
+      - name: Check if frontend changed
+        id: check-frontend-change
+        run: |
+          if [ "${{ needs.tag-creation.outputs.changed_frontend }}" != "true" ]; then
+            echo "No frontend changes detected, skipping frontend build."
+            exit 0
+          fi
+      
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -262,8 +276,8 @@ jobs:
       github.event.pull_request.merged == true &&
       needs.tag-creation.outputs.should_release == 'true' &&
       (
-        (needs.tag-creation.outputs.changed_backend == 'true' && needs.backend-docker.result == 'success') ||
-        (needs.tag-creation.outputs.changed_frontend == 'true' && needs.frontend-docker.result == 'success')
+        needs.backend-docker.result == 'success' ||
+        needs.frontend-docker.result == 'success'
       )
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
