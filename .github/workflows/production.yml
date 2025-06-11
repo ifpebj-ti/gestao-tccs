@@ -257,7 +257,7 @@ jobs:
   release-creation:
     name: 3. Automatic Creation Process of New Releases
     runs-on: ubuntu-latest
-    needs: [tag-creation, backend-docker, frontend-docker]
+    needs: [tag-creation]
     if: >
       github.event.pull_request.merged == true &&
       needs.tag-creation.outputs.should_release == 'true'
