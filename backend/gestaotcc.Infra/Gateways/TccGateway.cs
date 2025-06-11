@@ -1,5 +1,6 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Infra.Database;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,18 @@ public class TccGateway(AppDbContext context) : ITccGateway
     {
         return await context.Tccs
             .Include(x => x.TccInvites)
+            .Include(x => x.TccCancellation)
+            .Include(x => x.UserTccs)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task<TccEntity?> FindTccCancellation(long id)
+    {
+        return await context.Tccs
+            .Include(x => x.TccCancellation)
+            .Include(x => x.UserTccs)
+            .ThenInclude(x => x.User)
+            .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

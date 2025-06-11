@@ -1,4 +1,5 @@
 using gestaotcc.Domain.Dtos.Email;
+using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.TccInvite;
@@ -18,6 +19,7 @@ public class EmailFactory
         var chooseSubject = (typeSend == "CREATE-USER" || typeSend == "AUTO-REGISTER-USER") ? "Bem-vindo(a) ao Gestão TCC" 
             : typeSend == "INVITE-USER" ? "Solicitação de inclusão de Discente" 
             : typeSend == "ADD-USER-TCC" ? "Adição ao TCC com sucesso"
+            : typeSend == "LINK-BANKING-USER" ? "Vinculação de usuário de banca"
             : typeSend == "SEND-PENDING-SIGNATURE" ? "Pendência de assinatura"
             : "Alteração de senha";
 
@@ -25,6 +27,7 @@ public class EmailFactory
 
         return emailDTO;
     }
+  
     public static SendEmailDTO CreateSendEmailDTO(TccInviteEntity tccInvite, string typeSend)
     {
         Dictionary<string, Object> variables = new Dictionary<string, Object>();
@@ -37,6 +40,20 @@ public class EmailFactory
 
         return emailDTO;
     }
+
+    public static SendEmailDTO CreateSendEmailDTO(UserEntity user, TccEntity tcc, string typeSend)
+    {
+        Dictionary<string, Object> variables = new Dictionary<string, Object>();
+        variables.Add("username", user.Name);
+        variables.Add("tituloTcc", tcc.Title!);
+
+        var chooseSubject = "Vinculação de usuário de banca";
+
+        var emailDTO = new SendEmailDTO("", chooseSubject, user.Email, typeSend, variables);
+      
+        return emailDTO;
+    }
+
     public static SendEmailDTO CreateSendEmailDTO(SendPendingSignatureDTO data)
     {
         Dictionary<string, Object> variables = new Dictionary<string, Object>();

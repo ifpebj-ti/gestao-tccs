@@ -45,6 +45,10 @@ public static class IocDependencyExtensions
         services.AddScoped<VerifyCodeInviteTccUseCase>();
         services.AddScoped<FindAllTccByFilterUseCase>();
         services.AddScoped<FindTccWorkflowUseCase>();
+        services.AddScoped<RequestCancellationTccUseCase>();
+        services.AddScoped<ApproveCancellationTccUseCase>();
+        services.AddScoped<LinkBankingUserUseCase>();
+        services.AddScoped<FindTccCancellationUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
