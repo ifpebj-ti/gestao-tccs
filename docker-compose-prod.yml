@@ -21,6 +21,7 @@ services:
     networks:
       - front_net
       - back_net
+      - observability-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,3 +64,5 @@ volumes:
 networks:
   front_net:
   back_net:
+  observability-net:
+    external: true
