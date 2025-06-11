@@ -22,6 +22,7 @@ jobs:
       change_type: ${{ steps.change_type.outputs.change_type }}
       changed_backend: ${{ steps.changed-dirs.outputs.changed_backend }}
       changed_frontend: ${{ steps.changed-dirs.outputs.changed_frontend }}
+      should_release: ${{ steps.changed-dirs.outputs.should_release }}
 
     steps:
       - uses: actions/checkout@v4
@@ -105,8 +106,14 @@ jobs:
             changed_frontend=true
           fi
 
+          should_release=false
+          if $changed_backend || $changed_frontend; then
+            should_release=true
+          fi
+
           echo "changed_backend=$changed_backend" >> "$GITHUB_OUTPUT"
           echo "changed_frontend=$changed_frontend" >> "$GITHUB_OUTPUT"
+          echo "should_release=$should_release" >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
 
@@ -251,12 +258,9 @@ jobs:
     name: 3. Automatic Creation Process of New Releases
     runs-on: ubuntu-latest
     needs: [tag-creation, backend-docker, frontend-docker]
-    if: |
+    if: >
       github.event.pull_request.merged == true &&
-      (
-        needs.backend-docker.result == 'success' ||
-        needs.frontend-docker.result == 'success'
-      )
+      needs.tag-creation.outputs.should_release == 'true'
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
       CHANGE_TYPE:    ${{ needs.tag-creation.outputs.change_type }}
