@@ -1,3 +1,4 @@
+using gestaotcc.Application.UseCases.Signature;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -30,5 +31,12 @@ public class WeatherForecastController : ControllerBase
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+    }
+
+    [HttpGet("teste")]
+    public async Task<ActionResult> Teste([FromServices] SendPendingSignatureUseCase useCase)
+    {
+        await useCase.Execute();
+        return Ok();
     }
 }
