@@ -138,6 +138,9 @@ jobs:
         working-directory: backend
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Check if backend changed
         id: check-backend-change
         run: |
@@ -146,9 +149,6 @@ jobs:
             exit 0
           fi
       
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -210,6 +210,9 @@ jobs:
         working-directory: frontend
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Check if frontend changed
         id: check-frontend-change
         run: |
@@ -217,9 +220,6 @@ jobs:
             echo "No frontend changes detected, skipping frontend build."
             exit 0
           fi
-      
-      - name: Checkout repository
-        uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
