@@ -12,6 +12,8 @@ public static class OpenTelemetryExtension
                 .AddService(serviceName: environment.EnvironmentName))
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
+                .AddProcessInstrumentation()
+                .AddRuntimeInstrumentation()
                 .AddMeter("Microsoft.AspNetCore.Hosting")
                 .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
                 .AddMeter("System.Net.Http")
