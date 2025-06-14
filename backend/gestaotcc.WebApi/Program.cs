@@ -20,6 +20,7 @@ builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
 builder.Host.AddSerilogExtension();
 builder.Services.AddHangfireExtension(builder.Configuration);
+builder.Services.AddOpenTelemetryExtension(builder.Environment);
 
 var app = builder.Build();
 
@@ -38,6 +39,8 @@ app.UseHttpsRedirection();
 
 // Middlewares
 app.UseMiddleware<LogMiddleware>();
+
+app.MapPrometheusScrapingEndpoint();
 
 app.UseAuthentication();
 app.UseAuthorization();
