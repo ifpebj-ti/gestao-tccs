@@ -11,16 +11,13 @@ public static class SerilogExtension
         
         hostBuilder.UseSerilog((context, services, configuration) =>
         {
-            var environment = context.HostingEnvironment.EnvironmentName ?? "unknown";
-            
             configuration.ReadFrom.Configuration(context.Configuration)
+                .MinimumLevel.Information()
                 .Enrich.FromLogContext()
-                .WriteTo.Console(new SimpleJsonLogFormatter())
-                .WriteTo.GrafanaLoki("http://loki:3100", labels: new[]
-                {
-                    new LokiLabel { Key = "app", Value = "gestao-backend" },
-                    new LokiLabel { Key = "env", Value = environment }
-                });
+                .Filter.ByExcluding(logEvent =>
+                    logEvent.Properties.TryGetValue("SourceContext", out var source)
+                    && source.ToString().Contains("Microsoft.AspNetCore"))
+                .WriteTo.Console(new SimpleJsonLogFormatter());
         });
     }
 }
