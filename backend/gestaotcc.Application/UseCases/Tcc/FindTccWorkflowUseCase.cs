@@ -1,9 +1,11 @@
 using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Tcc;
+using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
+using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
 
@@ -37,12 +39,12 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
             return null!;
 
         // Pegar apenas os usuários que podem assinar os documentos do step (signatureOrder) atual
-        var users = FindUsersForStep(tcc, signatureOrder);
+        var userTccs = FindUsersForStep(tcc, signatureOrder);
 
         // Para caso estejamos no step de cadastro de estudantes
         if (tccStep == StepTccType.PROPOSAL_REGISTRATION)
         {
-            var details = CreateStudentRegistrationDetails(tcc, users);
+            var details = CreateStudentRegistrationDetails(tcc, userTccs);
             return new FindTccWorkflowDTO(tcc.Id, signatureOrder, tcc.TccInvites
                 .Select(x => new FindTccWorkflowSignatureDTO(1, "CADASTRO DE ESTUDANTES", details))
                 .ToList());
@@ -57,7 +59,7 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         // Para caso não tenha nenhum documento assinado. Logo isSigned é falso para todos
         if (!documentsType.Any())
         {
-            var details = CreateUnsignedUserDetails(users);
+            var details = CreateUnsignedUserDetails(userTccs);
             var signatures = allDocumentsType
                 .Where(x => x.SignatureOrder == signatureOrder)
                 .Select(x => new FindTccWorkflowSignatureDTO(x.Id, x.Name, details))
@@ -69,29 +71,27 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
 
         var workflowSignatures = allDocumentsType
             .Where(x => x.SignatureOrder == signatureOrder)
-            .Select(documentType => CreateSignatureDto(documentType, documentsType, users))
+            .Select(documentType => CreateSignatureDto(documentType, documentsType, userTccs, tcc.Id))
             .OrderBy(x => x.DocumentId)
             .ToList();
 
         return new FindTccWorkflowDTO(tcc.Id, signatureOrder, workflowSignatures);
     }
 
-    private List<UserEntity> FindUsersForStep(TccEntity tcc, int signatureOrder)
+    private List<UserTccEntity> FindUsersForStep(TccEntity tcc, int signatureOrder)
     {
         return tcc.UserTccs
-            .Where(x => x.User.Profile
-                .Any(p => p.DocumentTypes
-                    .Any(d => d.SignatureOrder == signatureOrder)))
-            .Select(u => u.User)
+            .Where(x => x.Profile.DocumentTypes
+                .Any(documentType => documentType.SignatureOrder == signatureOrder))
             .ToList();
     }
 
-    private List<FindTccWorkflowSignatureDetailsDTO> CreateStudentRegistrationDetails(TccEntity tcc, List<UserEntity> users)
+    private List<FindTccWorkflowSignatureDetailsDTO> CreateStudentRegistrationDetails(TccEntity tcc, List<UserTccEntity> userTccs)
     {
         return tcc.TccInvites
             .Select(x =>
             {
-                var user = users.FirstOrDefault(u => u.Email == x.Email);
+                var user = userTccs.FirstOrDefault(u => u.User.Email == x.Email);
                 var accepted = user is not null;
                 return new FindTccWorkflowSignatureDetailsDTO(
                     user?.Id ?? 0,
@@ -104,13 +104,13 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
             .ToList();
     }
 
-    private List<FindTccWorkflowSignatureDetailsDTO> CreateUnsignedUserDetails(List<UserEntity> users)
+    private List<FindTccWorkflowSignatureDetailsDTO> CreateUnsignedUserDetails(List<UserTccEntity> usersTccs)
     {
-        return users
-            .Select(user =>
+        return usersTccs
+            .Select(userTcc =>
             {
-                var role = user.Profile.MinBy(p => p.Id).Role;
-                return new FindTccWorkflowSignatureDetailsDTO(user.Id, role, user.Name, false);
+                var role = userTcc.Profile.Role;
+                return new FindTccWorkflowSignatureDetailsDTO(userTcc.Id, role, userTcc.User.Name, false);
             })
             .OrderBy(x => x.UserName)
             .ToList();
@@ -119,9 +119,15 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
     private FindTccWorkflowSignatureDTO CreateSignatureDto(
         DocumentTypeEntity documentType,
         List<DocumentTypeEntity> tccDocumentsType,
-        List<UserEntity> users)
+        List<UserTccEntity> userTccs,
+        long tccId)
     {
         List<FindTccWorkflowSignatureDetailsDTO> details;
+        
+        // Filtra apenas os documentos do TCC atual
+        var tccDocuments = documentType.Documents?
+            .Where(d => d.TccId == tccId)
+            .ToList() ?? new List<DocumentEntity>();
 
         var isAssociated = tccDocumentsType.Any(d => d.Id == documentType.Id);
         var hasDocuments = documentType.Documents?.Any() == true;
@@ -129,32 +135,52 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         // Construindo o objeto para caso haja documento assinado.
         if (isAssociated && hasDocuments)
         {
-            details = documentType.Documents
-                .SelectMany(d => d.Signatures)
-                .Select(signature =>
-                {
-                    var role = signature.User.Profile.MinBy(p => p.Id).Role;
-                    var isSigned = users.Contains(signature.User);
-                    return new FindTccWorkflowSignatureDetailsDTO(
-                        signature.User.Id,
-                        role,
-                        signature.User.Name,
-                        isSigned
-                    );
-                })
-                .ToList();
+            if (tccDocuments.Count != 0)
+            {
+                details = tccDocuments
+                    .SelectMany(d => d.Signatures)
+                    .Select(signature =>
+                    {
+                        var role = userTccs.FirstOrDefault(u => u.User.Id == signature.User.Id)!.Profile.Role;
+                        var isSigned = userTccs.Any(userTcc => userTcc.User.Id == signature.User.Id);
+                        return new FindTccWorkflowSignatureDetailsDTO(
+                            signature.User.Id,
+                            role,
+                            signature.User.Name,
+                            isSigned
+                        );
+                    })
+                    .ToList();
+            }
+            else
+            {
+                details = documentType.Documents!
+                    .SelectMany(d => d.Signatures)
+                    .Select(signature =>
+                    {
+                        var role = userTccs.FirstOrDefault(u => u.User.Id == signature.User.Id)!.Profile.Role;
+                        var isSigned = userTccs.Any(userTcc => userTcc.User.Id == signature.User.Id);
+                        return new FindTccWorkflowSignatureDetailsDTO(
+                            signature.User.Id,
+                            role,
+                            signature.User.Name,
+                            isSigned
+                        );
+                    })
+                    .ToList();
+            }
 
             // Adicionando usuários que não assinaram esse documento
-            foreach (var user in users)
+            foreach (var userTcc in userTccs)
             {
-                var alreadyExists = details.Any(d => d.UserId == user.Id);
+                var alreadyExists = details.Any(d => d.UserId == userTcc.User.Id);
                 if (!alreadyExists)
                 {
-                    var role = user.Profile.MinBy(p => p.Id).Role;
+                    var role = userTcc.Profile.Role;
                     details.Add(new FindTccWorkflowSignatureDetailsDTO(
-                        user.Id,
+                        userTcc.User.Id,
                         role,
-                        user.Name,
+                        userTcc.User.Name,
                         false
                     ));
                 }
@@ -163,7 +189,7 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         // Construindo o objeto para caso não haja documento assinado.
         else
         {
-            details = CreateUnsignedUserDetails(users);
+            details = CreateUnsignedUserDetails(userTccs);
         }
 
         var orderedDetails = details.OrderBy(x => x.UserName).ToList();

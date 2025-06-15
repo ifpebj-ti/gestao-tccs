@@ -27,6 +27,8 @@ public class SendPendingSignatureUseCase(
     public async Task<ResultPattern<string>> Execute()
     {
         var tccs = await tccGateway.FindAllTccByFilter("IN_PROGRESS");
+        if (!tccs.Any())
+            return ResultPattern<string>.SuccessResult();
         var documentTypes = await documentTypeGateway.FindAll();
 
         var usersToNotify = new Dictionary<string, SendPendingSignatureDTO>();
@@ -37,12 +39,12 @@ public class SendPendingSignatureUseCase(
             if (tccStep == StepTccType.PROPOSAL_REGISTRATION) continue;
 
             var currentOrder = _stepSignatureOrderMap[tccStep];
-            var userIdsInTcc = tcc.UserTccs.Select(ut => ut.User.Id).ToHashSet();
+            var userTccs = tcc.UserTccs.ToList();
 
-            var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userIdsInTcc, currentOrder);
+            var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userTccs, currentOrder);
             var documentsInStep = tcc.Documents.Where(d => d.DocumentType.SignatureOrder == currentOrder).ToList();
             var orderedUsers = tcc.UserTccs
-                .OrderBy(ut => ut.User.Profile.MinBy(p => p.Id).Id)
+                .OrderBy(ut => ut.Profile.Id)
                 .ThenBy(ut => ut.Id)
                 .ToList();
 
@@ -64,12 +66,12 @@ public class SendPendingSignatureUseCase(
 
     private List<DocumentTypeEntity> GetExpectedDocumentTypes(
         List<DocumentTypeEntity> allDocTypes,
-        HashSet<long> userIds,
+        List<UserTccEntity> userTccs,
         int stepOrder)
     {
         return allDocTypes
             .Where(dt => dt.SignatureOrder == stepOrder &&
-                         dt.Profiles.Any(p => p.Users.Any(u => userIds.Contains(u.Id))))
+                         dt.Profiles.Any(p => userTccs.Any(u => u.Profile.Id == p.Id)))
             .ToList();
     }
 
