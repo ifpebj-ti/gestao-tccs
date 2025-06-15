@@ -10,6 +10,7 @@ services:
       - "${PORT_MACHINE_PROMETHEUS}:9090"
     networks:
       - observability-net
+    restart: unless-stopped
 
   loki:
     image: grafana/loki
@@ -19,6 +20,7 @@ services:
       - "${PORT_MACHINE_LOKI}:3100"
     networks:
       - observability-net
+    restart: unless-stopped
 
   promtail:
     image: grafana/promtail
@@ -32,6 +34,7 @@ services:
       - loki
     networks:
       - observability-net
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana
@@ -45,6 +48,7 @@ services:
       - loki
     networks:
       - observability-net
+    restart: unless-stopped
 
 volumes:
   grafana_data:
