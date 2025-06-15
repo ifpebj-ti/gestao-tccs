@@ -28,19 +28,16 @@ export function useUpdatePassword() {
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
-          const result = await response.json();
           toast.success('Senha atualizada com sucesso!');
-          console.log('Resposta JSON do servidor:', result);
           window.location.href = '/';
         } else {
           toast.success('Senha atualizada com sucesso!');
         }
       } else {
-        toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
+        toast.error('Erro na requisição:');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar a senha. Tente novamente mais tarde.');
-      console.error('Erro ao enviar a senha:', error);
     }
   };
 

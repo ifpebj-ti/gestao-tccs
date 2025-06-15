@@ -26,18 +26,15 @@ export function useResendAccessCode() {
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
-          const result = await response.json();
           toast.success('Código de acesso enviado com sucesso!');
-          console.log('Resposta JSON do servidor:', result);
         } else {
           toast.success('Código de acesso enviado com sucesso!');
         }
       } else {
         toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar o código de acesso. Tente novamente mais tarde.');
-      console.error('Erro ao enviar o código de acesso:', error);
     }
   };
 

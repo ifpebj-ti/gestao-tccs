@@ -1,7 +1,7 @@
 'use client';
 
 import { CardHome } from '@/components/CardHome';
-import { CollapseCardMobile } from '@/components/CollapseCardMobile';
+import { CollapseCard } from '@/components/CollapseCard';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import {
   faFileCircleCheck,
@@ -15,6 +15,7 @@ import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 interface DecodedToken {
   unique_name: string;
@@ -22,9 +23,15 @@ interface DecodedToken {
   role: string;
 }
 
+interface TCCFromApi {
+  tccId: number;
+  studanteNames: string[];
+}
+
 export default function HomePage() {
   const { push } = useRouter();
   const [profile, setProfile] = useState<string | null>(null);
+  const [tccs, setTccs] = useState<TCCFromApi[]>([]);
 
   useEffect(() => {
     const token = Cookies.get('token');
@@ -32,6 +39,38 @@ export default function HomePage() {
       const decodedToken = jwtDecode<DecodedToken>(token);
       setProfile(decodedToken.role);
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchTccs = async () => {
+      try {
+        const token = Cookies.get('token');
+        if (!token) {
+          toast.error('Token de autenticação não encontrado.');
+          return;
+        }
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/Tcc/filter?filter=IN_PROGRESS`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error('Erro ao buscar TCCs');
+        }
+
+        const data: TCCFromApi[] = await res.json();
+        setTccs(data);
+      } catch {
+        toast.error('Erro ao carregar TCCs em andamento.');
+      }
+    };
+
+    fetchTccs();
   }, []);
 
   const canView = (roles: string[]) => roles.includes(profile ?? '');
@@ -54,7 +93,7 @@ export default function HomePage() {
           'BANKING',
           'STUDENT'
         ]) && (
-          <CollapseCardMobile
+          <CollapseCard
             title="Assinaturas pendentes"
             icon={faFileSignature}
             indicatorNumber={3}
@@ -71,10 +110,10 @@ export default function HomePage() {
           'LIBRARY',
           'BANKING'
         ]) && (
-          <CollapseCardMobile
+          <CollapseCard
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={7}
+            indicatorNumber={tccs.length}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
@@ -87,35 +126,35 @@ export default function HomePage() {
           'ADVISOR',
           'LIBRARY'
         ]) && (
-          <CollapseCardMobile
+          <CollapseCard
             title="TCCs concluídos"
             icon={faFileCircleCheck}
             onClick={() => push('/completedTCCs')}
-          ></CollapseCardMobile>
+          ></CollapseCard>
         )}
 
         {canView(['STUDENT']) && (
-          <CollapseCardMobile
+          <CollapseCard
             title="Meu TCC"
             icon={faGraduationCap}
             onClick={() => push('/TCC/{id}')}
-          ></CollapseCardMobile>
+          ></CollapseCard>
         )}
 
         {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
-          <CollapseCardMobile
+          <CollapseCard
             title="Cadastrar nova proposta"
             icon={faFileCirclePlus}
             onClick={() => push('/newTCC')}
-          ></CollapseCardMobile>
+          ></CollapseCard>
         )}
 
         {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
-          <CollapseCardMobile
+          <CollapseCard
             title="Cadastrar novo usuário"
             icon={faUserPlus}
             onClick={() => push('/newUser')}
-          ></CollapseCardMobile>
+          ></CollapseCard>
         )}
       </div>
 
@@ -156,7 +195,7 @@ export default function HomePage() {
           <CardHome
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={7}
+            indicatorNumber={tccs.length}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
