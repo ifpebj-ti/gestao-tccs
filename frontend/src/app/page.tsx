@@ -16,7 +16,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = form;
 
   const handleRedirectToFirstAccess = () => {
@@ -79,7 +79,9 @@ export default function Login() {
                 Esqueceu a senha?
               </Link>
             </div>
-            <Button type="submit">Entrar</Button>
+            <Button type="submit">
+              {isSubmitting ? 'Carregando...' : 'Entrar'}
+            </Button>
           </form>
           <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
             Primeiro acesso?
