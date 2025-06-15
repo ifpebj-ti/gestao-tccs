@@ -23,6 +23,7 @@ public class UserTccConfiguration : IEntityTypeConfiguration<UserTccEntity>
 
         builder.HasOne(x => x.Profile)
             .WithMany(x => x.UserTccs)
-            .HasForeignKey(x => x.ProfileId);
+            .HasForeignKey(x => x.ProfileId)
+            .IsRequired(false);
     }
 }

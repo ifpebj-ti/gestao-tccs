@@ -12,7 +12,7 @@ public class UserTccEntity
     public TccEntity Tcc { get; set; }
     public long TccId { get; set; }
     public ProfileEntity Profile { get; set; }
-    public long ProfileId { get; set; }
+    public long? ProfileId { get; set; }
     public DateTime BindingDate { get; set; }
     public UserTccEntity() { }
 
