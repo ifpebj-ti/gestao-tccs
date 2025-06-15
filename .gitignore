@@ -1,5 +1,6 @@
 # --- GENERAL ---
-.env
+.env.prod
+.env.dev
 .vs
 
 # --- FRONTEND ---
