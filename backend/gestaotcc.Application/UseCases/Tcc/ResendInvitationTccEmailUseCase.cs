@@ -9,7 +9,9 @@ public class ResendInvitationTccEmailUseCase(IUserGateway userGateway, ITccGatew
     public async Task<ResultPattern<bool>> Execute()
     {
         var tccInvites = await tccGateway.FindAllInviteTcc();
-        
+        if (!tccInvites.Any())
+            return ResultPattern<bool>.SuccessResult();
+
         foreach (var item in tccInvites)
         {
             var emailDto = EmailFactory.CreateSendEmailDTO(item, "RESEND-INVITE-TCC");

@@ -43,7 +43,10 @@ public class UserGateway(AppDbContext context) : IUserGateway
 
     public async Task<List<UserEntity>> FindAllByEmail(List<string> emails)
     {
-        return await context.Users.Where(x => emails.Contains(x.Email)).ToListAsync();
+        return await context.Users
+            .Include(x => x.Profile)
+            .Where(x => emails.Contains(x.Email))
+            .ToListAsync();
     }
 
     public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter)

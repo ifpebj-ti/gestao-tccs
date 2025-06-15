@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { faEnvelope, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useRouter } from 'next/navigation';
 import { useNewTccForm } from '@/app/hooks/useNewTcc';
 
 export default function NewTcc() {
-  const { form, submitForm, advisors } = useNewTccForm();
+  const { push } = useRouter();
+  const { form, submitForm, advisors, isSubmitting } = useNewTccForm();
   const {
     register,
     handleSubmit,
@@ -195,11 +197,15 @@ export default function NewTcc() {
         </div>
 
         <div className="flex gap-2 md:self-end">
-          <Button variant="outline" className="w-full md:w-fit">
+          <Button
+            onClick={() => push('/homePage')}
+            variant="outline"
+            className="w-full md:w-fit"
+          >
             Cancelar
           </Button>
           <Button type="submit" className="w-full md:w-fit">
-            Submeter
+            {isSubmitting ? 'Submetendo...' : 'Submeter Proposta'}
           </Button>
         </div>
       </form>

@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { faAngleRight } from '@fortawesome/free-solid-svg-icons'; // importa o ícone
+import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
 
-interface CollapseCardMobileProps {
+interface CollapseCardProps {
   title: string;
   icon: IconDefinition;
   indicatorNumber?: number;
@@ -14,14 +14,14 @@ interface CollapseCardMobileProps {
   onClick?: () => void; // ação quando não tiver filhos, tipo direcionar
 }
 
-export function CollapseCardMobile({
+export function CollapseCard({
   title,
   icon,
   indicatorNumber,
   indicatorColor = 'bg-blue-500',
   children,
   onClick
-}: CollapseCardMobileProps) {
+}: CollapseCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const hasChildren = !!children;
@@ -58,7 +58,7 @@ export function CollapseCardMobile({
           <FontAwesomeIcon
             icon={faAngleRight}
             className={`w-4 h-4 transition-transform text-[#1351B4] ${
-              hasChildren && isOpen ? 'rotate-90' : 'rotate-0'
+              hasChildren && isOpen ? 'rotate-270' : 'rotate-90'
             }`}
           />
         </div>
