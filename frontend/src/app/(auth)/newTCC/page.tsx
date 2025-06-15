@@ -9,7 +9,7 @@ import { faEnvelope, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNewTccForm } from '@/app/hooks/useNewTcc';
 
 export default function NewTcc() {
-  const { form, submitForm, advisors } = useNewTccForm();
+  const { form, submitForm, advisors, isSubmitting } = useNewTccForm();
   const {
     register,
     handleSubmit,
@@ -199,7 +199,7 @@ export default function NewTcc() {
             Cancelar
           </Button>
           <Button type="submit" className="w-full md:w-fit">
-            Submeter
+            {isSubmitting ? 'Submetendo...' : 'Submeter Proposta'}
           </Button>
         </div>
       </form>
