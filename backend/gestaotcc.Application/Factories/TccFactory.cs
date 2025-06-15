@@ -33,9 +33,17 @@ public class TccFactory
             .WithCreationDate(DateTime.UtcNow)
             .Build();
 
+        var studentUsers =
+            users.Where(user => user.Profile.Any(profile => profile.Role == RoleType.STUDENT.ToString()));
+        
         tcc.UserTccs = users.Select(u => new UserTccEntityBuilder()
                 .WithTcc(tcc)
                 .WithUser(u)
+                .WithProfile(
+                    studentUsers.Contains(u) 
+                        ? u.Profile.FirstOrDefault(profile => profile.Role == RoleType.STUDENT.ToString())! 
+                        : u.Profile.FirstOrDefault(profile => profile.Role == RoleType.ADVISOR.ToString())!
+                        )
                 .WithBindingDate(DateTime.UtcNow)
             .Build())
             .ToList();
@@ -68,6 +76,9 @@ public class TccFactory
             .Where(ut => ut.User.Profile.Any(p => p.Role == studentRole))
             .Select(ut => ut.User.Name)
             .ToList();
+
+        if (!studentNames.Any())
+            studentNames = tcc.TccInvites.Select(x => x.Email).ToList();
 
         return new FindAllTccByStatusOrUserIdDTO(tcc.Id, studentNames);
     }
