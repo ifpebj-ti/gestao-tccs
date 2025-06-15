@@ -2,6 +2,7 @@ using gestaotcc.Infra.Database;
 using gestaotcc.WebApi.Config;
 using gestaotcc.WebApi.Middlewares;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,7 @@ if (app.Environment.IsDevelopment())
 
 if (app.Environment.IsProduction())
 {
+    Log.Information("Executando Migrations");
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
