@@ -19,7 +19,7 @@ export default function FirstAccess() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = form;
 
   const handleRedirectToLogin = () => {
@@ -72,7 +72,9 @@ export default function FirstAccess() {
                 {...register('code')}
               />
             </div>
-            <Button type="submit">Continuar</Button>
+            <Button type="submit">
+              {isSubmitting ? 'Carregando...' : 'Continuar'}
+            </Button>
           </form>
           <Button
             icon={faArrowLeft}
