@@ -18,7 +18,7 @@ export default function TccTabs({ id }: TccTabsProps) {
   const isActive = (slug: string) => pathname.endsWith(`/${slug}`);
 
   return (
-    <div className="w-full border-b border-gray-200 overflow-x-auto">
+    <div className="w-full border-b border-gray-200 overflow-x-auto hidden lg:block">
       <ul className="flex min-w-full whitespace-nowrap">
         {tabs.map((tab) => (
           <li key={tab.slug} className="flex-shrink-0">
