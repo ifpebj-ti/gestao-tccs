@@ -19,7 +19,7 @@ export default function NewPassword() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = form;
 
   const handleRedirectToLogin = () => {
@@ -83,7 +83,9 @@ export default function NewPassword() {
                 {...register('userPassword')}
               />
             </div>
-            <Button type="submit">Finalizar</Button>
+            <Button type="submit">
+              {isSubmitting ? 'Carregando...' : 'Finalizar'}
+            </Button>
           </form>
           <Button
             icon={faArrowLeft}

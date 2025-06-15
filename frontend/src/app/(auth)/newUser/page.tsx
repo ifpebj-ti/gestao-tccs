@@ -10,9 +10,11 @@ import {
   faIdCard,
   faUser
 } from '@fortawesome/free-solid-svg-icons';
+import { useRouter } from 'next/navigation';
 import { useNewUserForm } from '@/app/hooks/useNewUser';
 
 export default function NewUser() {
+  const { push } = useRouter();
   const { errors, handleSubmit, register, submitForm, isSubmitting } =
     useNewUserForm();
 
@@ -105,7 +107,11 @@ export default function NewUser() {
           </div>
         </div>
         <div className="flex gap-2 md:self-end">
-          <Button variant="outline" className="w-full md:w-fit">
+          <Button
+            onClick={() => push('/homePage')}
+            variant="outline"
+            className="w-full md:w-fit"
+          >
             Cancelar
           </Button>
           <Button type="submit" className="w-full md:w-fit">

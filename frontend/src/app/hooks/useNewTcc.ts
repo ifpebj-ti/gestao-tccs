@@ -70,5 +70,5 @@ export function useNewTccForm() {
     }
   };
 
-  return { form, submitForm, advisors };
+  return { form, submitForm, advisors, isSubmitting: form.formState.isSubmitting};
 }

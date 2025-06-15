@@ -38,5 +38,5 @@ export function useResendAccessCode() {
     }
   };
 
-  return { form, submitForm };
+  return { form, submitForm, isSubmitting: form.formState.isSubmitting};
 }

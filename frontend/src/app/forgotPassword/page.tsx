@@ -25,8 +25,10 @@ export default function ForgotPassword() {
     accessCode?: string;
   }>();
 
-  const { submitForm: resendSubmit } = useResendAccessCode();
-  const { submitForm: verifySubmit } = useVerifyAccessCode();
+  const { submitForm: resendSubmit, isSubmitting: isResending } =
+    useResendAccessCode();
+  const { submitForm: verifySubmit, isSubmitting: isVerifying } =
+    useVerifyAccessCode();
 
   const onSubmit = async (data: { userEmail: string; accessCode?: string }) => {
     if (!isCodeSent) {
@@ -116,7 +118,13 @@ export default function ForgotPassword() {
                 </Button>
               )}
               <Button type="submit" className="w-full">
-                {isCodeSent ? 'Verificar' : 'Enviar código'}
+                {isCodeSent
+                  ? isVerifying
+                    ? 'Verificando...'
+                    : 'Verificar Código'
+                  : isResending
+                    ? 'Enviando...'
+                    : 'Enviar Código'}
               </Button>
             </div>
           </form>

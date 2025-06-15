@@ -19,7 +19,8 @@ import { useRouter } from 'next/navigation';
 
 export default function AutoRegister() {
   const { push } = useRouter();
-  const { errors, handleSubmit, register, submitForm } = useNewUserForm();
+  const { errors, handleSubmit, register, submitForm, isSubmitting } =
+    useNewUserForm();
 
   const handleRedirectToLogin = () => {
     push('/');
@@ -94,7 +95,9 @@ export default function AutoRegister() {
                 {...register('cpf')}
               />
             </div>
-            <Button type="submit">Continuar</Button>
+            <Button type="submit">
+              {isSubmitting ? 'Carregando...' : 'Continuar'}
+            </Button>
           </form>
           <Button
             icon={faArrowLeft}

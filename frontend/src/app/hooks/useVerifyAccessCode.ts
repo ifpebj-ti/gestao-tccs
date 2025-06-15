@@ -55,5 +55,5 @@ export function useVerifyAccessCode() {
     }
   };
 
-  return { form, submitForm };
+  return { form, submitForm, isSubmitting: form.formState.isSubmitting};
 }
