@@ -11,6 +11,8 @@ using Serilog;
 
 namespace gestaotcc.WebApi.Controllers;
 
+[Route("api/[controller]")]
+[ApiController]
 public class AuthController(ILogger<AuthController> logger) : ControllerBase
 {
     /// <summary>
