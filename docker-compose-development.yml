@@ -18,6 +18,7 @@ services:
       - MailSettings__EmailId=${MAILSETTINGS_EMAILID}
       - MailSettings__UserName=${MAILSETTINGS_USERNAME}
       - MailSettings__Password=${MAILSETTINGS_PASSWORD}
+      - COMBINATION_STRING_FOR_ACCESSCODE=${COMBINATION_STRING_FOR_ACCESSCODE}
     restart: unless-stopped
     networks:
       - front_net
