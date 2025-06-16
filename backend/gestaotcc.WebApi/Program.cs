@@ -1,5 +1,6 @@
 using gestaotcc.WebApi.Config;
 using gestaotcc.WebApi.Middlewares;
+using gestaotcc.WebApi.SchemaFilters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +11,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SchemaFilter<DateAndTimeOnlySchemaFilter>(); // Filtro de esquema personalizado para os tipos de dateOnly e TimeOnly
+});
 
 // Extension methods
 builder.Services.AddDbContextExtension(builder.Configuration);
