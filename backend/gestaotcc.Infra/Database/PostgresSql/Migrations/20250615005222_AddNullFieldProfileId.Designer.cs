@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gestaotcc.Infra.Database;
@@ -11,9 +12,11 @@ using gestaotcc.Infra.Database;
 namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250615005222_AddNullFieldProfileId")]
+    partial class AddNullFieldProfileId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -299,33 +302,6 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.ToTable("TccInvites");
                 });
 
-            modelBuilder.Entity("gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime>("ScheduledDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("TccId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TccId")
-                        .IsUnique();
-
-                    b.ToTable("TccSchedules");
-                });
-
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -509,17 +485,6 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Navigation("Tcc");
                 });
 
-            modelBuilder.Entity("gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity", b =>
-                {
-                    b.HasOne("gestaotcc.Domain.Entities.Tcc.TccEntity", "Tcc")
-                        .WithOne("TccSchedule")
-                        .HasForeignKey("gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity", "TccId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tcc");
-                });
-
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
                 {
                     b.HasOne("gestaotcc.Domain.Entities.Course.CourseEntity", "Course")
@@ -583,8 +548,6 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Navigation("TccCancellation");
 
                     b.Navigation("TccInvites");
-
-                    b.Navigation("TccSchedule");
 
                     b.Navigation("UserTccs");
                 });

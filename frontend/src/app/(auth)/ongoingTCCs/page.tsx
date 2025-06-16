@@ -1,6 +1,6 @@
 'use client';
 
-import { CollapseCardMobile } from '@/components/CollapseCardMobile';
+import { CollapseCard } from '@/components/CollapseCard';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import {
   faGraduationCap,
@@ -46,8 +46,7 @@ export default function OngoingTCCsPage() {
 
         const data: TCCFromApi[] = await res.json();
         setTccs(data);
-      } catch (error) {
-        console.error(error);
+      } catch {
         toast.error('Erro ao carregar TCCs em andamento.');
       }
     };
@@ -72,7 +71,7 @@ export default function OngoingTCCsPage() {
           <div className="md:hidden flex flex-col gap-2">
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
-                <CollapseCardMobile
+                <CollapseCard
                   title={tcc.studanteNames.join(', ')}
                   icon={faGraduationCap}
                   indicatorColor="bg-red-600"
@@ -101,7 +100,7 @@ export default function OngoingTCCsPage() {
                       <span>TCC</span>
                     </button>
                   </div>
-                </CollapseCardMobile>
+                </CollapseCard>
               </div>
             ))}
           </div>
@@ -110,7 +109,7 @@ export default function OngoingTCCsPage() {
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
-                <CollapseCardMobile
+                <CollapseCard
                   title={tcc.studanteNames.join(', ')}
                   icon={faGraduationCap}
                   indicatorColor="bg-red-600"

@@ -84,13 +84,15 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await context.Tccs
             .Include(x => x.TccInvites)
             .Include(x => x.UserTccs)
-            .ThenInclude(x => x.User)
-            .ThenInclude(x => x.Profile)
-            .ThenInclude(x => x.DocumentTypes)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
+                        .ThenInclude(x => x.DocumentTypes)
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.Profile)
             .Include(x => x.Documents)
-            .ThenInclude(x => x.DocumentType)
-            .ThenInclude(x => x.Documents)
-            .ThenInclude(x => x.Signatures)
+                .ThenInclude(x => x.DocumentType)
+                    .ThenInclude(dt => dt.Documents)
+                        .ThenInclude(doc => doc.Signatures)
             .FirstOrDefaultAsync(x => x.Id == tccId || x.UserTccs.Any(x => x.UserId == userId));
     }
 

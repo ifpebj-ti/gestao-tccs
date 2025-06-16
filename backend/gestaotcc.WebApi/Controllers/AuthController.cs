@@ -6,9 +6,13 @@ using gestaotcc.WebApi.Validators;
 using gestaotcc.WebApi.Validators.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
+
 
 namespace gestaotcc.WebApi.Controllers;
 
+[Route("api/[controller]")]
+[ApiController]
 public class AuthController(ILogger<AuthController> logger) : ControllerBase
 {
     /// <summary>
@@ -35,7 +39,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
 
         if (!useCaseResult.IsSuccess)
         {
-            logger.LogError($"Erro ao realizar login");
+            Log.Error($"Erro ao realizar login");
 
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -47,7 +51,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        logger.LogInformation($"Login realizado com sucesso");
+        Log.Information($"Login realizado com sucesso");
         return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken));
     }
 

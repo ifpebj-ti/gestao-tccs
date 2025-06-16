@@ -1,6 +1,9 @@
+using gestaotcc.Infra.Database;
 using gestaotcc.WebApi.Config;
 using gestaotcc.WebApi.Middlewares;
 using gestaotcc.WebApi.SchemaFilters;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +27,7 @@ builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
 builder.Host.AddSerilogExtension();
 builder.Services.AddHangfireExtension(builder.Configuration);
+builder.Services.AddOpenTelemetryExtension(builder.Environment);
 
 var app = builder.Build();
 
@@ -34,6 +38,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+if (app.Environment.IsProduction())
+{
+    Log.Information("Executando Migrations");
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.UseHangfireExtension(app.Services);
 
 app.UseCors("CorsPolicy");
@@ -42,6 +54,8 @@ app.UseHttpsRedirection();
 
 // Middlewares
 app.UseMiddleware<LogMiddleware>();
+
+app.MapPrometheusScrapingEndpoint();
 
 app.UseAuthentication();
 app.UseAuthorization();

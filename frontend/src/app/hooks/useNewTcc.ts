@@ -59,18 +59,16 @@ export function useNewTccForm() {
           advisorId: data.advisorId,
         }),
       });
-      console.log('Resposta do servidor:', response);
 
       if (response.ok) {
         toast.success('Proposta de TCC enviada com sucesso!');
       } else {
         toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar a proposta de TCC.');
-      console.error(error);
     }
   };
 
-  return { form, submitForm, advisors };
+  return { form, submitForm, advisors, isSubmitting: form.formState.isSubmitting};
 }

@@ -105,11 +105,16 @@ function BreadcrumbEllipsis({
 export function BreadcrumbAuto({ map = {} }: { map?: Record<string, string> }) {
   const pathname = usePathname();
 
-  const cleanPath = pathname.startsWith('/homePage')
-    ? pathname.slice('/homePage'.length)
-    : pathname;
+  const breadcrumbMap: Record<string, string> = {
+    homePage: 'Início',
+    newTCC: 'Novo TCC',
+    newUser: 'Novo Usuário',
+    ongoingTCCs: 'TCCs em Andamento',
+    signatures: 'Assinaturas',
+    details: 'Detalhes'
+  };
 
-  const segments = cleanPath.split('/').filter(Boolean);
+  const segments = pathname.split('/').filter(Boolean);
 
   return (
     <Breadcrumb className="mb-4">
@@ -121,19 +126,20 @@ export function BreadcrumbAuto({ map = {} }: { map?: Record<string, string> }) {
         </BreadcrumbItem>
 
         {segments.map((segment, index) => {
-          const fullPath = ['/homePage', ...segments.slice(0, index + 1)].join(
-            '/'
-          );
+          const fullPath = '/' + segments.slice(0, index + 1).join('/');
           const isLast = index === segments.length - 1;
           const label =
-            map[segment] || toTitleCase(decodeURIComponent(segment));
+            breadcrumbMap[segment] || toTitleCase(decodeURIComponent(segment));
+          const isIDPage = segments[index - 1] === 'ongoingTCCs' && !isLast;
 
           return (
             <React.Fragment key={fullPath}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                {isLast ? (
-                  <BreadcrumbPage>{label}</BreadcrumbPage>
+                {isLast || isIDPage ? (
+                  <BreadcrumbPage className="text-gray-500 select-none">
+                    {label}
+                  </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink href={fullPath}>{label}</BreadcrumbLink>
                 )}
