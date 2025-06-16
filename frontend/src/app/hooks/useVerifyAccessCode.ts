@@ -14,7 +14,7 @@ export function useVerifyAccessCode() {
 
   const submitForm: SubmitHandler<VerifyAccessCodeSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/AccessCode/verify', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/AccessCode/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
