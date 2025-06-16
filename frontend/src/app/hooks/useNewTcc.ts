@@ -25,7 +25,7 @@ export function useNewTccForm() {
       const token = Cookies.get('token');
       try {
         const res = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + '/api/User/filter?Profile=ADVISOR',
+          process.env.NEXT_PUBLIC_API_URL + '/User/filter?Profile=ADVISOR',
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -46,7 +46,7 @@ export function useNewTccForm() {
 
   const submitForm: SubmitHandler<NewTccSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/Tcc', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Tcc', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

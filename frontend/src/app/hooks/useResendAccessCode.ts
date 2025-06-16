@@ -13,7 +13,7 @@ export function useResendAccessCode() {
 
   const submitForm: SubmitHandler<ResendAccessCodeSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/AccessCode/resend', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/AccessCode/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
