@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gestaotcc.Infra.Database;
@@ -11,9 +12,11 @@ using gestaotcc.Infra.Database;
 namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250615153058_TccScheduleTable")]
+    partial class TccScheduleTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -323,7 +326,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccSchedules");
+                    b.ToTable("TccScheduleEntity");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
@@ -388,7 +391,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Property<DateTime>("BindingDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("ProfileId")
+                    b.Property<long>("ProfileId")
                         .HasColumnType("bigint");
 
                     b.Property<long>("TccId")
@@ -535,7 +538,9 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                 {
                     b.HasOne("gestaotcc.Domain.Entities.Profile.ProfileEntity", "Profile")
                         .WithMany("UserTccs")
-                        .HasForeignKey("ProfileId");
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("gestaotcc.Domain.Entities.Tcc.TccEntity", "Tcc")
                         .WithMany("UserTccs")

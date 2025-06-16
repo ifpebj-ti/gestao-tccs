@@ -17,7 +17,7 @@ export function useLogin() {
 
   const submitForm: SubmitHandler<LoginSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/login', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

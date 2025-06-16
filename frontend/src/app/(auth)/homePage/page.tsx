@@ -51,7 +51,7 @@ export default function HomePage() {
         }
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/Tcc/filter?filter=IN_PROGRESS`,
+          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?filter=IN_PROGRESS`,
           {
             headers: {
               Authorization: `Bearer ${token}`

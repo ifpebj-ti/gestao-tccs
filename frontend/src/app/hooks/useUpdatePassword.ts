@@ -14,7 +14,7 @@ export function useUpdatePassword() {
 
   const submitForm: SubmitHandler<UpdatePasswordSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/update-password', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Auth/update-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

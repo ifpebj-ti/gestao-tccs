@@ -105,6 +105,30 @@ public class TccController : ControllerBase
     }
 
     /// <summary>
+    /// Busca as informações de um tcc
+    /// </summary>
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult<FindTccDTO>> FindTcc([FromQuery] long tccId,
+        [FromServices] FindTccUseCase findTccUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        var result = await findTccUseCase.Execute(tccId);
+        if (result.IsFailure)
+        {
+            Log.Error("Erro ao buscar TCC");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return NotFound(result.ErrorDetails);
+        }
+        Log.Information("TCC encontrado com sucesso");
+        return Ok(result.Data);
+    }
+
+    /// <summary>
     /// Busca workflow de assinaturas de um tcc
     /// </summary>
     /// <remarks>Caso deseje retornar o workflow do tcc do usuário não mande o tccId</remarks>
@@ -234,5 +258,102 @@ public class TccController : ControllerBase
 
         Log.Information("Solicitação de cancelamento do TCC encontrada com sucesso");
         return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Criar o agendamento de defesa do TCC
+    /// </summary>
+    /// <remarks>A localização do agendamento pode ser tanto uma sala física quanto um link de reunião online.</remarks>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPost("schedule")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> CreateSchedule([FromBody] ScheduleTccDTO data,
+        [FromServices] CreateScheduleTccUseCase createScheduleTccUseCase)
+    {
+        var validator = new CreateScheduleTccValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        
+        var result = await createScheduleTccUseCase.Execute(data);
+        if (result.IsFailure)
+        {
+            Log.Error("Erro ao criar agendamento de defesa do TCC");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            // Retornando erro apropriado
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+        Log.Information("Agendamento de defesa do TCC criado com sucesso");
+        return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC criado com sucesso"));
+    }
+
+    /// <summary>
+    /// Editar o agendamento de defesa do TCC
+    /// </summary>
+    /// <remarks>A localização do agendamento pode ser tanto uma sala física quanto um link de reunião online.</remarks>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPut("schedule")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> EditSchedule([FromBody] ScheduleTccDTO data,
+        [FromServices] EditScheduleTccUseCase editScheduleTccUseCase)
+    {
+        var validator = new EditScheduleTccValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        
+        var result = await editScheduleTccUseCase.Execute(data);
+        if (result.IsFailure)
+        {
+            Log.Error("Erro ao editar agendamento de defesa do TCC");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            // Retornando erro apropriado
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+        Log.Information("Agendamento de defesa do TCC editado com sucesso");
+        return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC editado com sucesso"));
+    }
+
+    /// <summary>
+    /// Enviar email com os dados do agendamento de defesa do TCC para os usuários vinculados
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPost("schedule/email")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> SendScheduleEmail([FromQuery] long tccId,
+        [FromServices] SendScheduleEmailUseCase sendScheduleEmailUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        
+        var result = await sendScheduleEmailUseCase.Execute(tccId);
+        if (result.IsFailure)
+        {
+            Log.Error("Erro ao enviar email de agendamento de defesa do TCC");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            // Retornando erro apropriado
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+        Log.Information("Email de agendamento de defesa do TCC enviado com sucesso");
+        return Ok(new MessageSuccessResponseModel("Email de agendamento de defesa do TCC enviado com sucesso"));
     }
 }

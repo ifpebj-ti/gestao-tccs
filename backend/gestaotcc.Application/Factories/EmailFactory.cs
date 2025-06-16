@@ -4,6 +4,7 @@ using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.User;
+using gestaotcc.Domain.Entities.TccSchedule;
 
 namespace gestaotcc.Application.Factories;
 
@@ -65,6 +66,22 @@ public class EmailFactory
 
         var emailDTO = new SendEmailDTO("", chooseSubject, data.UserEmail, "SEND-PENDING-SIGNATURE", variables);
 
+        return emailDTO;
+    }
+
+    public static SendEmailDTO CreateSendEmailDTO(UserEntity user, TccEntity tcc, TccScheduleEntity tccSchedule)
+    {
+        Dictionary<string, Object> variables = new Dictionary<string, Object>();
+        variables.Add("username", user.Name);
+        variables.Add("titulo_tcc", tcc.Title!);
+        variables.Add("resumo_tcc", tcc.Summary!);
+        variables.Add("data_horario", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm"));
+        variables.Add("local", tccSchedule.Location);
+        
+        var chooseSubject = "Agendamento de defesa do TCC"; 
+        
+        var emailDTO = new SendEmailDTO("", chooseSubject, user.Email, "SCHEDULE-TCC", variables);
+        
         return emailDTO;
     }
 }

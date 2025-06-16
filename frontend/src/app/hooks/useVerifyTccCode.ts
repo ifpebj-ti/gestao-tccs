@@ -14,7 +14,7 @@ export function useVerifyTccCode() {
 
   const submitForm: SubmitHandler<VerifyTccCodeSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/api/Tcc/code/verify', {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Tcc/code/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
