@@ -227,20 +227,4 @@ public class TccFactory
 
         return workflow;
     }
-
-    public static FindTccCancellationDTO CreateFindTccCancellationDTO(TccEntity tcc)
-    {
-        return new FindTccCancellationDTO(
-            tcc.Title!,
-            tcc.UserTccs
-                .Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString())
-                .Select(ut => ut.User.Name)
-                .ToList(),
-            tcc.UserTccs
-                .Where(ut => ut.Profile.Role == RoleType.ADVISOR.ToString())
-                .Select(ut => ut.User.Name)
-                .FirstOrDefault()!,
-            tcc.TccCancellation?.Reason ?? "Motivo de cancelamento não informado"
-        );
-    }
 }
