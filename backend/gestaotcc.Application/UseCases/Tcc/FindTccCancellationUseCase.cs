@@ -14,7 +14,7 @@ public class FindTccCancellationUseCase(ITccGateway tccGateway)
             return ResultPattern<FindTccCancellationDTO?>.FailureResult("Cancelamento do TCC não encontrado.", 404);
         }
 
-        var cancellationDTO = TccFactory.CreateFindTccCancellationDTO(tcc);
+        var cancellationDTO = TccCancellationFactory.CreateFindTccCancellationDTO(tcc);
 
         return ResultPattern<FindTccCancellationDTO?>.SuccessResult(cancellationDTO);
     }

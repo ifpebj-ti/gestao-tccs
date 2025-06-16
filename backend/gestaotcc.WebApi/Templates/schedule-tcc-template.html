@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defesa do TCC Agendada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+            .content h2 {
+                color: #333;
+            }
+
+            .content p {
+                color: #666;
+            }
+
+        .info-box {
+            background-color: #eef6ff;
+            border-left: 4px solid #0056b3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+
+            .info-box strong {
+                display: block;
+                margin-bottom: 5px;
+                color: #0056b3;
+            }
+
+        .button {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+            .button a {
+                background-color: #0056b3;
+                color: white;
+                padding: 15px 25px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+
+                .button a:hover {
+                    background-color: #004a9c;
+                }
+
+        .footer {
+            text-align: center;
+            color: #888;
+            padding: 20px 0;
+        }
+
+            .footer p {
+                margin: 0;
+                font-size: 14px;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h2>Olá, {{username}}</h2>
+            <p>A defesa do Trabalho de Conclusão de Curso (TCC) que você está associado foi agendada com sucesso. Confira os detalhes abaixo:</p>
+
+            <div class="info-box">
+                <strong>Título do TCC:</strong>
+                <p>{{titulo_tcc}}</p>
+
+                <strong>Resumo:</strong>
+                <p>{{resumo_tcc}}</p>
+
+                <strong>Data e Horário:</strong>
+                <p>{{data_horario}}</p>
+
+                <strong>Local:</strong>
+                <p>{{local}}</p>
+            </div>
+
+            <div class="button">
+                <a href="#">Acessar a Plataforma</a><!--Colocar o link do site quando finalizar-->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Se você não reconhece essa ação, entre em contato com um dos administradores do sistema.</p>
+            <p>Obrigado por usar nossos serviços!</p>
+        </div>
+    </div>
+</body>
+</html>

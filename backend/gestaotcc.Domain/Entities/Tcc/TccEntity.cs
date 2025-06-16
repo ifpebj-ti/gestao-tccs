@@ -2,6 +2,7 @@ using System.Collections;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
+using gestaotcc.Domain.Entities.TccSchedule;
 using gestaotcc.Domain.Entities.UserTcc;
 
 namespace gestaotcc.Domain.Entities.Tcc;
@@ -18,6 +19,7 @@ public class TccEntity
     public ICollection<TccInviteEntity> TccInvites { get; set; } = new List<TccInviteEntity>();
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public TccCancellationEntity? TccCancellation { get; set; } = null;
+    public TccScheduleEntity? TccSchedule { get; set; } = null;
     public TccEntity() { }
 
     public TccEntity(
