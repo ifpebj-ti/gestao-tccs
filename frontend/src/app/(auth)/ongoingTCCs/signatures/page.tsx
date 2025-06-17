@@ -7,7 +7,7 @@ import {
   faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
@@ -73,7 +73,9 @@ export default function Signatures() {
 
   return (
     <div>
-      <TccTabs />
+      <Suspense fallback={null}>
+        <TccTabs />
+      </Suspense>{' '}
       <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
         TCC -{' '}
         {tccs.length > 0 ? tccs[0].studanteNames.join(', ') : 'Carregando...'}
