@@ -11,6 +11,7 @@ import React from 'react';
 import { useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
+import TccTabs from '@/components/TccTabs';
 
 export default function Signatures() {
   interface TCCFromApi {
@@ -72,6 +73,7 @@ export default function Signatures() {
 
   return (
     <div>
+      <TccTabs />
       <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
         TCC -{' '}
         {tccs.length > 0 ? tccs[0].studanteNames.join(', ') : 'Carregando...'}
