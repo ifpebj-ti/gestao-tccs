@@ -79,7 +79,7 @@ export default function OngoingTCCsPage() {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() =>
-                        push(`/ongoingTCCs/${tcc.tccId}/signatures`)
+                        push(`/ongoingTCCs/signatures?id=${tcc.tccId}`)
                       }
                       className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
                     >
@@ -90,7 +90,9 @@ export default function OngoingTCCsPage() {
                       <span>Assinaturas</span>
                     </button>
                     <button
-                      onClick={() => push(`/ongoingTCCs/${tcc.tccId}/details`)}
+                      onClick={() =>
+                        push(`/ongoingTCCs/details?id=${tcc.tccId}`)
+                      }
                       className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
                     >
                       <FontAwesomeIcon
@@ -113,7 +115,9 @@ export default function OngoingTCCsPage() {
                   title={tcc.studanteNames.join(', ')}
                   icon={faGraduationCap}
                   indicatorColor="bg-red-600"
-                  onClick={() => push(`/ongoingTCCs/${tcc.tccId}/signatures`)}
+                  onClick={() =>
+                    push(`/ongoingTCCs/signatures?id=${tcc.tccId}`)
+                  }
                 />
               </div>
             ))}
