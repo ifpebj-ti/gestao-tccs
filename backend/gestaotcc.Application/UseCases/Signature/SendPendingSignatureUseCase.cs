@@ -1,6 +1,7 @@
 using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
+using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.User;
@@ -26,7 +27,7 @@ public class SendPendingSignatureUseCase(
 
     public async Task<ResultPattern<string>> Execute()
     {
-        var tccs = await tccGateway.FindAllTccByFilter("IN_PROGRESS");
+        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, "IN_PROGRESS"));
         if (!tccs.Any())
             return ResultPattern<string>.SuccessResult();
         var documentTypes = await documentTypeGateway.FindAll();

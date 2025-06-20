@@ -62,5 +62,6 @@ public static class IocDependencyExtensions
         
         // Signature
         services.AddScoped<SendPendingSignatureUseCase>();
+        services.AddScoped<FindAllPendingSignaturesUseCase>();
     }
 }

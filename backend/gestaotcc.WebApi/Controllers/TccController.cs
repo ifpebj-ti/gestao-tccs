@@ -84,22 +84,16 @@ public class TccController : ControllerBase
     /// Busca todos os tccs baseado no filtro
     /// </summary>
     /// <remarks>
-    /// O filter pode ser: COMPLETED e IN_PROGRESS.
-    /// Caso deseje retornar por id de usuário basta enviar o filter vazio ou null
+    /// O StatusTcc pode ser: COMPLETED e IN_PROGRESS.
     /// </remarks>
-    /// <param name="filter"></param>
-    /// <returns></returns>
     [Authorize]
     [HttpGet("filter")]
-    public async Task<ActionResult<List<FindAllTccByStatusOrUserIdDTO>>> FindAllTccByFilter([FromQuery] string filter,
+    public async Task<ActionResult<List<FindAllTccByFilterDTO>>> FindAllTccByFilter([FromQuery] TccFilterDTO tccFilter,
         [FromServices] FindAllTccByFilterUseCase findAllTccByFilterUseCase)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
-
         Log.Information("Tccs Retornados com sucesso");
 
-        var useCaseResult = await findAllTccByFilterUseCase.Execute(filter, long.Parse(userIdClaim));
+        var useCaseResult = await findAllTccByFilterUseCase.Execute(tccFilter);
 
         return Ok(useCaseResult.Data);
     }

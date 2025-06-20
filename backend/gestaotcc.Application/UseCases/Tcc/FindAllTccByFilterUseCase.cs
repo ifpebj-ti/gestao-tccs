@@ -8,13 +8,11 @@ namespace gestaotcc.Application.UseCases.Tcc;
 
 public class FindAllTccByFilterUseCase(IUserGateway userGateway, ITccGateway tccGateway)
 {
-    public async Task<ResultPattern<List<FindAllTccByStatusOrUserIdDTO>>> Execute(string status, long userId)
+    public async Task<ResultPattern<List<FindAllTccByFilterDTO>>> Execute(TccFilterDTO tccFilter)
     {
-        var filter = !string.IsNullOrWhiteSpace(status) ? status : userId.ToString();
+        var tccs = await tccGateway.FindAllTccByFilter(tccFilter);
 
-        var tccs = await tccGateway.FindAllTccByFilter(filter);
-
-        return ResultPattern<List<FindAllTccByStatusOrUserIdDTO>>.SuccessResult(tccs.
+        return ResultPattern<List<FindAllTccByFilterDTO>>.SuccessResult(tccs.
             Select(TccFactory.CreateFindAllTccByStatusOrUserIdDTO)
             .ToList());
     }

@@ -1,4 +1,5 @@
 using gestaotcc.Application.Gateways;
+using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
@@ -96,16 +97,24 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == tccId || x.UserTccs.Any(x => x.UserId == userId));
     }
 
-    public async Task<List<TccEntity>> FindAllTccByFilter(string filter)
+    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter)
     {
-        bool isUserId = long.TryParse(filter, out long userId);
-
-        return await context.Tccs
-            .Where(x => x.Status.ToLower() == filter.ToLower() || 
-                        (isUserId && x.UserTccs.Any(u => u.UserId == userId)))
-            .Include(x => x.UserTccs).ThenInclude(x => x.User).ThenInclude(x => x.Profile)
-            .Include(x => x.Documents).ThenInclude(x => x.DocumentType)
-            .Include(x => x.Documents).ThenInclude(x => x.Signatures)
+        var query = context.Tccs.AsQueryable();
+        
+        if(!string.IsNullOrEmpty(tccFilter.UserId.ToString()))
+            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
+        
+        if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
+            query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
+        
+        return await query
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.DocumentType)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.Signatures)
             .ToListAsync();
     }
 }

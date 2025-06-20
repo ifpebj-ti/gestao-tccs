@@ -68,19 +68,19 @@ public class TccFactory
         return tcc;
     }
 
-    public static FindAllTccByStatusOrUserIdDTO CreateFindAllTccByStatusOrUserIdDTO(TccEntity tcc)
+    public static FindAllTccByFilterDTO CreateFindAllTccByStatusOrUserIdDTO(TccEntity tcc)
     {
         var studentRole = RoleType.STUDENT.ToString();
 
         var studentNames = tcc.UserTccs
-            .Where(ut => ut.User.Profile.Any(p => p.Role == studentRole))
+            .Where(ut => ut.Profile.Role == studentRole)
             .Select(ut => ut.User.Name)
             .ToList();
 
         if (!studentNames.Any())
             studentNames = tcc.TccInvites.Select(x => x.Email).ToList();
 
-        return new FindAllTccByStatusOrUserIdDTO(tcc.Id, studentNames);
+        return new FindAllTccByFilterDTO(tcc.Id, studentNames);
     }
 
     public static FindTccWorkflowDTO CreateFindTccWorkflowDTO(TccEntity tcc, List<DocumentTypeEntity> allDocumentsType)
