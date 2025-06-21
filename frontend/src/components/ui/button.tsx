@@ -14,7 +14,9 @@ const buttonVariants = cva(
         default: 'bg-[#1351B4] text-white hover:bg-[#5985CA]',
         outline:
           'border border-[#1351B4] bg-white text-[#1351B4] hover:bg-[#D9E3F3]',
-        ghost: 'bg-transparent text-[#1351B4] hover:bg-[#D9E3F3]'
+        ghost: 'bg-transparent text-[#1351B4] hover:bg-[#D9E3F3]',
+        destructive:
+          'bg-transparent border border-red-600 text-red-600 hover:bg-red-100 focus-visible:ring-red-500'
       },
       size: {
         default: 'h-10 px-4 py-2',
