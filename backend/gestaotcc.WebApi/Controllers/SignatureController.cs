@@ -1,5 +1,7 @@
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Domain.Dtos.Signature;
+using gestaotcc.WebApi.InputModel;
+using gestaotcc.WebApi.ResponseModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -27,4 +29,11 @@ public class SignatureController : ControllerBase
         
         return Ok(useCaseResult.Data);
     }
+
+    // [HttpPost]
+    // public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromBody] SignSignatureInputModel data,
+    //     [FromServices] SignSignatureUseCase signSignatureUseCase)
+    // {
+    //     
+    // }
 }

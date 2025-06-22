@@ -45,5 +45,10 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
         builder.HasMany(x => x.Signatures)
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId);
+
+        builder.HasMany(x => x.Documents)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId)
+            .IsRequired(false);
     }
 }

@@ -21,7 +21,13 @@ public class FindAllPendingSignaturesUseCase(
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
-        { StepTccType.FINALIZATION_AND_PUBLICATION, 6 }
+    };
+
+    private readonly List<string> _signatureQueueByProfile = new()
+    {
+        RoleType.ADVISOR.ToString(),
+        RoleType.BANKING.ToString(),
+        RoleType.STUDENT.ToString()
     };
 
     public async Task<ResultPattern<List<FindAllPendingSignatureDTO>>> Execute(long? userId)
@@ -41,21 +47,91 @@ public class FindAllPendingSignaturesUseCase(
 
             var userTccs = tcc.UserTccs.ToList();
             var studentNames = GetStudentNames(tcc, userTccs);
-
             var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userTccs, currentOrder);
             var documentsInStep = tcc.Documents.Where(d => d.DocumentType.SignatureOrder == currentOrder).ToList();
-            var orderedUsers = userTccs.OrderBy(ut => ut.Profile.Id).ThenBy(ut => ut.Id).ToList();
 
             var pendingDetails = new List<FindAllPendingSignatureDetailsDTO>();
 
             foreach (var docType in expectedDocTypes)
             {
-                var detail = HandleSignatureWorkflow(docType, documentsInStep, orderedUsers);
-                if (detail is not null)
-                    pendingDetails.Add(detail);
+                var methodType = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
+                var docs = documentsInStep.Where(d => d.DocumentTypeId == docType.Id).ToList();
+
+                // Ordenar UserTccs por perfil e ID, de acordo com a fila
+                var orderedUserTccs = userTccs
+                    .Where(u => docType.Profiles.Any(p => p.Id == u.Profile.Id))
+                    .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
+                    .ThenBy(u => u.Id)
+                    .ToList();
+
+                if (methodType == MethoSignatureType.ONLY_DOCS)
+                {
+                    foreach (var doc in docs)
+                    {
+                        if (doc.UserId != null)
+                        {
+                            // Documento individual
+                            var user = userTccs.FirstOrDefault(u => u.User.Id == doc.UserId);
+                            if (user != null && doc.Signatures.All(s => s.UserId != user.User.Id))
+                            {
+                                pendingDetails.Add(CreateDetail(doc, docType, user, methodType));
+                            }
+                        }
+                        else
+                        {
+                            // Documento compartilhado com perfil (fila por perfil)
+                            foreach (var currentUser in orderedUserTccs)
+                            {
+                                var alreadySigned = doc.Signatures.Any(s => s.UserId == currentUser.User.Id);
+                                if (alreadySigned) continue;
+
+                                var index = orderedUserTccs.IndexOf(currentUser);
+                                var allPreviousSigned = orderedUserTccs.Take(index)
+                                    .All(prev => doc.Signatures.Any(s => s.UserId == prev.User.Id));
+
+                                if (allPreviousSigned)
+                                {
+                                    pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
+                                }
+
+                                break; // só um usuário pode assinar por vez
+                            }
+                        }
+                    }
+                }
+                else if (methodType == MethoSignatureType.NOT_ONLY_DOCS)
+                {
+                    foreach (var doc in docs)
+                    {
+                        foreach (var currentUser in orderedUserTccs)
+                        {
+                            var alreadySigned = doc.Signatures.Any(s => s.UserId == currentUser.User.Id);
+                            if (alreadySigned) continue;
+
+                            // Verifica se esse usuário está autorizado a assinar esse tipo de documento
+                            var isEligible = docType.Profiles.Any(p => p.Id == currentUser.Profile.Id);
+                            if (!isEligible) continue;
+
+                            // Verifica se os usuários anteriores na fila já assinaram
+                            var currentProfileIndex = _signatureQueueByProfile.IndexOf(currentUser.Profile.Role);
+
+                            var allPreviousProfilesSigned = orderedUserTccs
+                                .Where(u =>
+                                    _signatureQueueByProfile.IndexOf(u.Profile.Role) < currentProfileIndex &&
+                                    docType.Profiles.Any(p => p.Id == u.Profile.Id)) // apenas perfis autorizados
+                                .All(prev =>
+                                    doc.Signatures.Any(sig => sig.UserId == prev.User.Id));
+
+                            if (allPreviousProfilesSigned)
+                            {
+                                pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
+                                break; // Apenas um usuário por vez da fila deve assinar
+                            }
+                        }
+                    }
+                }
             }
-            
-            // Filtrando apenas as assinaturas pendentes do usuário
+
             if (userId.HasValue)
             {
                 pendingDetails = pendingDetails
@@ -74,7 +150,6 @@ public class FindAllPendingSignaturesUseCase(
 
         return ResultPattern<List<FindAllPendingSignatureDTO>>.SuccessResult(results);
     }
-
 
     private static List<string> GetStudentNames(Domain.Entities.Tcc.TccEntity tcc, List<UserTccEntity> userTccs)
     {
@@ -97,49 +172,26 @@ public class FindAllPendingSignaturesUseCase(
             .ToList();
     }
 
-    private FindAllPendingSignatureDetailsDTO? HandleSignatureWorkflow(
+    private static FindAllPendingSignatureDetailsDTO CreateDetail(
+        DocumentEntity doc,
         DocumentTypeEntity docType,
-        List<DocumentEntity> stepDocuments,
-        List<UserTccEntity> orderedUsers)
+        UserTccEntity userTcc,
+        MethoSignatureType MethoSignature)
     {
-        var document = stepDocuments.FirstOrDefault(d => d.DocumentType.Id == docType.Id);
-
-        if (document == null)
-        {
-            var user = orderedUsers.First().User;
-            return new FindAllPendingSignatureDetailsDTO(
-                docType.Id,
-                docType.Name,
-                new List<FindAllPendignSignatureUserDetailsDTO>
-                {
-                    new(user.Id, user.Name, orderedUsers.First().Profile.Role)
-                });
-        }
-
-        for (int i = 0; i < orderedUsers.Count; i++)
-        {
-            var user = orderedUsers[i].User;
-
-            if (document.Signatures.Any(s => s.UserId == user.Id)) continue;
-
-            var allPreviousSigned = orderedUsers.Take(i)
-                .All(prev => document.Signatures.Any(sig => sig.UserId == prev.User.Id));
-
-            if (allPreviousSigned)
+        return new FindAllPendingSignatureDetailsDTO(
+            doc.Id,
+            docType.Name,
+            new List<FindAllPendignSignatureUserDetailsDTO>
             {
-                return new FindAllPendingSignatureDetailsDTO(
-                    docType.Id,
-                    docType.Name,
-                    new List<FindAllPendignSignatureUserDetailsDTO>
-                    {
-                        new(user.Id, user.Name, orderedUsers[i].Profile.Role)
-                    });
-            }
-
-            break;
-        }
-
-        return null;
+                new(
+                    userTcc.User.Id, 
+                    userTcc.User.Name, 
+                    userTcc.Profile.Role,
+                    MethoSignature == MethoSignatureType.NOT_ONLY_DOCS ? doc.User!.Name : null,
+                    MethoSignature == MethoSignatureType.NOT_ONLY_DOCS ? doc.User!.Id : null)
+            });
     }
 }
+
+
 

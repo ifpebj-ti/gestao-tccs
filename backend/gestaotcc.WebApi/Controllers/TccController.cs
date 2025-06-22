@@ -130,7 +130,7 @@ public class TccController : ControllerBase
     [Authorize]
     [HttpGet("workflow")]
     public async Task<ActionResult<FindTccWorkflowDTO>> FindTccWorkflow([FromServices] FindTccWorkflowUseCase findWorkflowUseCase,
-        [FromQuery] long tccId = 0)
+        [FromQuery] long? tccId)
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();

@@ -80,21 +80,32 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<TccEntity?> FindTccWorkflow(long tccId, long userId)
+    public async Task<TccEntity?> FindTccWorkflow(long? tccId, long userId)
     {
-        return await context.Tccs
+        var query = context.Tccs
             .Include(x => x.TccInvites)
             .Include(x => x.UserTccs)
-                .ThenInclude(x => x.User)
-                    .ThenInclude(x => x.Profile)
-                        .ThenInclude(x => x.DocumentTypes)
+                .ThenInclude(ut => ut.User)
+                    .ThenInclude(u => u.Profile)
+                        .ThenInclude(p => p.DocumentTypes)
             .Include(x => x.UserTccs)
-                .ThenInclude(x => x.Profile)
+                .ThenInclude(ut => ut.Profile)
             .Include(x => x.Documents)
-                .ThenInclude(x => x.DocumentType)
-                    .ThenInclude(dt => dt.Documents)
-                        .ThenInclude(doc => doc.Signatures)
-            .FirstOrDefaultAsync(x => x.Id == tccId || x.UserTccs.Any(x => x.UserId == userId));
+                .ThenInclude(d => d.DocumentType)
+            .Include(x => x.Documents)
+                .ThenInclude(d => d.Signatures)
+            .AsQueryable();
+
+        if (tccId.HasValue)
+        {
+            query = query.Where(x => x.Id == tccId.Value);
+        }
+        else
+        {
+            query = query.Where(x => x.UserTccs.Any(ut => ut.UserId == userId));
+        }
+
+        return await query.FirstOrDefaultAsync();
     }
 
     public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter)

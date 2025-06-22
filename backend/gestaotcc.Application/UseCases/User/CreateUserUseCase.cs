@@ -3,11 +3,21 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Application.Helpers;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Domain.Dtos.User;
+using gestaotcc.Domain.Entities.Document;
+using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.User;
+using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.User;
-public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, ICourseGateway courseGateway, ITccGateway tccGateway, CreateAccessCodeUseCase createAccessCodeUseCase)
+public class CreateUserUseCase(
+    IUserGateway userGateway, 
+    IProfileGateway profileGateway, 
+    IEmailGateway emailGateway, 
+    ICourseGateway courseGateway, 
+    ITccGateway tccGateway,
+    IDocumentTypeGateway documentTypeGateway,
+    CreateAccessCodeUseCase createAccessCodeUseCase)
 {
     public async Task<ResultPattern<UserEntity>> Execute(CreateUserDTO data, string combination)
     {
@@ -15,6 +25,8 @@ public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profile
         if (user is not null)
             return ResultPattern<UserEntity>.FailureResult("Erro ao cadastrar usuário; Por favor verifique as informações e tente novamente", 404);
 
+        var documentTypes = await documentTypeGateway.FindAll();
+        
         var expandedProfileRoles = ProfileHelper.ExpandProfiles(data.Profile);
 
         var profile = await profileGateway.FindByRole(expandedProfileRoles);
@@ -36,6 +48,7 @@ public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profile
                 if (tcc is not null)
                 {
                     TccFactory.UpdateUsersTcc(tcc, newUser, profileEntity!);
+                    CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList());
                     await tccGateway.Update(tcc);
                 }
             }
@@ -52,5 +65,38 @@ public class CreateUserUseCase(IUserGateway userGateway, IProfileGateway profile
 
         }
         return ResultPattern<UserEntity>.SuccessResult(newUser);
+    }
+    
+    private void CreateDocumentForUser(UserEntity user, List<DocumentTypeEntity> documentTypes, List<DocumentEntity> documents)
+    {
+        foreach (var docType in documentTypes)
+        {
+            var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
+            var method = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
+
+            var hasAcceptedProfile = user.Profile.Any(p => acceptedRoles.Contains(p.Role));
+
+            if (!hasAcceptedProfile)
+                continue;
+
+            if (method == MethoSignatureType.ONLY_DOCS)
+            {
+                if (docType.Profiles.Count > 1)
+                {
+                    // Cria 1 documento com User = null
+                    documents.Add(DocumentFactory.CreateDocument(docType, null));
+                }
+                else if (docType.Profiles.Count == 1)
+                {
+                    // Cria 1 documento com o próprio usuário
+                    documents.Add(DocumentFactory.CreateDocument(docType, user));
+                }
+            }
+            else if (method == MethoSignatureType.NOT_ONLY_DOCS)
+            {
+                // Cria 1 documento com o próprio usuário
+                documents.Add(DocumentFactory.CreateDocument(docType, user));
+            }
+        }
     }
 }
