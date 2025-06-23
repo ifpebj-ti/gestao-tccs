@@ -96,7 +96,7 @@ export default function TCCDetails() {
         <TccTabs />
       </Suspense>
 
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10 truncate max-w-full">
+      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-10 truncate max-w-full">
         TCC -{' '}
         <span
           title={
