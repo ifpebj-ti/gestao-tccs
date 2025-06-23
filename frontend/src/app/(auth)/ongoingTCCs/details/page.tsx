@@ -2,30 +2,71 @@
 import TccTabs from '@/components/TccTabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { useSearchParams } from 'next/navigation';
 
 export default function TCCDetails() {
-  interface TCCFromApi {
-    tccId: number;
-    studanteNames: string[];
+  interface InfoTcc {
+    title: string;
+    summary: string;
+    presentationDate: string;
+    presentationTime: string;
+    presentationLocation: string;
   }
-  const [tccs, setTccs] = React.useState<TCCFromApi[]>([]);
+
+  interface InfoStudent {
+    name: string;
+    registration: string;
+    cpf: string;
+    course: string;
+    email: string;
+  }
+
+  interface InfoAdvisor {
+    name: string;
+    email: string;
+  }
+
+  interface InfoBanking {
+    nameInternal: string;
+    emailInternal: string;
+    nameExternal: string;
+    emailExternal: string;
+  }
+
+  interface TccDetailsResponse {
+    infoTcc: InfoTcc;
+    infoStudent: InfoStudent[];
+    infoAdvisor: InfoAdvisor;
+    infoBanking: InfoBanking;
+    cancellationRequest: boolean;
+  }
+
+  const formatStudentName = (fullName: string) => {
+    const [first, second] = fullName.trim().split(' ');
+    return `${first ?? ''} ${second ?? ''}`;
+  };
+
+  const [tccData, setTccData] = useState<TccDetailsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const tccId = Number(searchParams.get('id'));
 
   useEffect(() => {
-    const fetchTccs = async () => {
-      try {
-        const token = Cookies.get('token');
-        if (!token) {
-          toast.error('Token de autenticação não encontrado.');
-          return;
-        }
+    const fetchTccDetails = async () => {
+      const token = Cookies.get('token');
+      if (!token) {
+        toast.error('Token de autenticação não encontrado.');
+        return;
+      }
 
+      try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?filter=IN_PROGRESS`,
+          `${process.env.NEXT_PUBLIC_API_URL}/Tcc?tccId=${tccId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -33,140 +74,174 @@ export default function TCCDetails() {
           }
         );
 
-        if (!res.ok) {
-          throw new Error('Erro ao buscar TCCs');
-        }
+        if (!res.ok) throw new Error('Erro ao buscar dados do TCC.');
 
-        const data: TCCFromApi[] = await res.json();
-        setTccs(data);
+        const result = await res.json();
+        setTccData(result);
+        console.log('TCC Data:', result);
       } catch {
-        toast.error('Erro ao carregar TCCs em andamento.');
+        toast.error('Erro ao carregar dados do TCC.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchTccs();
-  }, []);
+    if (tccId) fetchTccDetails();
+  }, [tccId]);
 
   return (
     <div className="flex flex-col">
       <Suspense fallback={null}>
         <TccTabs />
-      </Suspense>{' '}
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
+      </Suspense>
+
+      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10 truncate max-w-full">
         TCC -{' '}
-        {tccs.length > 0 ? tccs[0].studanteNames.join(', ') : 'Carregando...'}
+        <span
+          title={
+            tccData?.infoStudent?.map((s) => s.name).join(', ') ||
+            'Carregando...'
+          }
+        >
+          {tccData?.infoStudent?.length
+            ? tccData.infoStudent
+                .map((s) => formatStudentName(s.name))
+                .join(', ')
+            : 'Aguardando cadastro do estudante'}
+        </span>
       </h1>
-      <div className="flex flex-col gap-5">
-        <h2 className="text-lg font-extrabold uppercase">Informações do TCC</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="name">
-              Título da proposta
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Digite o nome do usuário"
-            />
+
+      {!loading && tccData && (
+        <div className="flex flex-col gap-5">
+          <h2 className="text-lg font-extrabold uppercase">
+            Informações do TCC
+          </h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold">Título da proposta</Label>
+              <Input value={tccData.infoTcc.title} readOnly />
+            </div>
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold">Resumo da proposta</Label>
+              <Input value={tccData.infoTcc.summary} readOnly />
+            </div>
           </div>
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="name">
-              Resumo da proposta
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Digite o nome do usuário"
-            />
-          </div>
+
+          <h2 className="text-lg font-extrabold uppercase mt-6">
+            Informações do(s) estudante(s)
+          </h2>
+          {tccData.infoStudent.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {tccData.infoStudent.map((student, i) => (
+                <React.Fragment key={i}>
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">Nome do estudante</Label>
+                    <Input value={student.name} readOnly />
+                  </div>
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">Matrícula</Label>
+                    <Input value={student.registration} readOnly />
+                  </div>
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">CPF</Label>
+                    <Input value={student.cpf} readOnly />
+                  </div>
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">Curso</Label>
+                    <Input value={student.course} readOnly />
+                  </div>
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">Email</Label>
+                    <Input value={student.email} readOnly />
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 italic">
+              Estudante ainda não se cadastrou na plataforma.
+            </p>
+          )}
+
+          {tccData.infoAdvisor.name && tccData.infoAdvisor.email && (
+            <>
+              <h2 className="text-lg font-extrabold uppercase mt-6">
+                Informações do orientador
+              </h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid items-center gap-1.5">
+                  <Label className="font-semibold">Nome do orientador</Label>
+                  <Input value={tccData.infoAdvisor.name} readOnly />
+                </div>
+                <div className="grid items-center gap-1.5">
+                  <Label className="font-semibold">Email do orientador</Label>
+                  <Input value={tccData.infoAdvisor.email} readOnly />
+                </div>
+              </div>
+            </>
+          )}
+
+          {tccData.infoBanking.nameInternal && (
+            <>
+              <h2 className="text-lg font-extrabold uppercase mt-6">
+                Informações da Banca
+              </h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid items-center gap-1.5">
+                  <Label className="font-semibold">Membro Interno</Label>
+                  <Input value={tccData.infoBanking.nameInternal} readOnly />
+                </div>
+                <div className="grid items-center gap-1.5">
+                  <Label className="font-semibold">Email Interno</Label>
+                  <Input value={tccData.infoBanking.emailInternal} readOnly />
+                </div>
+                <div className="grid items-center gap-1.5">
+                  <Label className="font-semibold">Membro Externo</Label>
+                  <Input value={tccData.infoBanking.nameExternal} readOnly />
+                </div>
+                <div className="grid items-center gap-1.5">
+                  <Label className="font-semibold">Email Externo</Label>
+                  <Input value={tccData.infoBanking.emailExternal} readOnly />
+                </div>
+              </div>
+            </>
+          )}
+
+          {tccData.infoTcc.presentationDate &&
+            tccData.infoTcc.presentationTime &&
+            tccData.infoTcc.presentationLocation && (
+              <>
+                <h2 className="text-lg font-extrabold uppercase mt-6">
+                  Agendamento da Apresentação
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">Data</Label>
+                    <Input value={tccData.infoTcc.presentationDate} readOnly />
+                  </div>
+                  <div className="grid items-center gap-1.5">
+                    <Label className="font-semibold">Hora</Label>
+                    <Input value={tccData.infoTcc.presentationTime} readOnly />
+                  </div>
+                  <div className="grid items-center gap-1.5 md:col-span-2">
+                    <Label className="font-semibold">Local</Label>
+                    <Input
+                      value={tccData.infoTcc.presentationLocation}
+                      readOnly
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+          <Button
+            className="md:w-fit w-full mt-6 md:self-end"
+            variant="destructive"
+          >
+            Solicitar cancelamento de proposta
+          </Button>
         </div>
-        <h2 className="text-lg font-extrabold uppercase">
-          Informações do(s) estudante(s)
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="name">
-              Nome do estudante
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Digite o nome do estudante"
-            />
-          </div>
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="matricula">
-              Matrícula
-            </Label>
-            <Input
-              id="matricula"
-              type="text"
-              placeholder="Digite a matrícula do estudante"
-            />
-          </div>
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="cpf">
-              CPF
-            </Label>
-            <Input
-              id="cpf"
-              type="text"
-              placeholder="Digite o CPF do estudante"
-            />
-          </div>
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="curso">
-              Curso
-            </Label>
-            <Input
-              id="curso"
-              type="text"
-              placeholder="Digite o curso do estudante"
-            />
-          </div>
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="email">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Digite o email do estudante"
-            />
-          </div>
-        </div>
-        <h2 className="text-lg font-extrabold uppercase">
-          Informações do orientador
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="orientadorNome">
-              Nome do orientador
-            </Label>
-            <Input
-              id="orientadorNome"
-              type="text"
-              placeholder="Digite o nome do orientador"
-            />
-          </div>
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="orientadorEmail">
-              Email do orientador
-            </Label>
-            <Input
-              id="orientadorEmail"
-              type="email"
-              placeholder="Digite o email do orientador"
-            />
-          </div>
-        </div>
-      </div>
-      <Button
-        className="md:w-fit w-full mt-6 md:self-end"
-        variant="destructive"
-      >
-        Solicitar cancelamento de proposta
-      </Button>
+      )}
     </div>
   );
 }
