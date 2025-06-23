@@ -78,7 +78,6 @@ export default function TCCDetails() {
 
         const result = await res.json();
         setTccData(result);
-        console.log('TCC Data:', result);
       } catch {
         toast.error('Erro ao carregar dados do TCC.');
       } finally {
