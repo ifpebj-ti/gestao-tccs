@@ -81,6 +81,9 @@ export default function Signatures() {
         {tccs.length > 0 ? tccs[0].studanteNames.join(', ') : 'Carregando...'}
       </h1>
       <Step currentStep={currentStep} />
+      <h2 className="text-lg font-extrabold uppercase mt-6 mb-4">
+        Documentos e Assinaturas
+      </h2>
       <div className="flex flex-col">
         {documentos.map((doc, index) => (
           <CollapseCard
