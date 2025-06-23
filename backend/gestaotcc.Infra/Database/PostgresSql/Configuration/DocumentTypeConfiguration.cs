@@ -17,6 +17,9 @@ public class DocumentTypeConfiguration : IEntityTypeConfiguration<DocumentTypeEn
         builder.Property(x => x.SignatureOrder)
             .IsRequired();
 
+        builder.Property(x => x.MethodSignature)
+            .IsRequired();
+
         builder.HasMany(x => x.Documents)
             .WithOne(x => x.DocumentType)
             .HasForeignKey(x => x.DocumentTypeId);

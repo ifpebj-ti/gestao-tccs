@@ -5,7 +5,7 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
-public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway)
+public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway)
 {
     public async Task<ResultPattern<string>> Execute(CreateTccDTO data)
     {
@@ -13,6 +13,7 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         var advisor = await userGateway.FindById(data.AdvisorId);
         if (advisor is null)
             return ResultPattern<string>.FailureResult("Erro ao criar tcc", 404);
+        var documentTypes = await documentTypeGateway.FindAll();
 
         var allEmails = users.Select(u => u.Email).ToHashSet();
 
@@ -30,7 +31,7 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         
         usersNotInvite.Add(advisor);
         
-        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails);
+        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes);
 
         await tccGateway.Save(tcc);
         

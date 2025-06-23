@@ -10,12 +10,8 @@ public class DocumentConfiguration : IEntityTypeConfiguration<DocumentEntity>
     {
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.IsSigned)
+        builder.Property(x => x.FileName)
             .IsRequired();
-        
-        builder.Property(x => x.File)
-            .IsRequired()
-            .HasColumnType("bytea");
 
         builder.HasMany(x => x.Signatures)
             .WithOne(x => x.Document)

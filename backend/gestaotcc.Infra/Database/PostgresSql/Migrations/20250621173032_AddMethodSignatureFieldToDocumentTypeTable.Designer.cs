@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gestaotcc.Infra.Database;
@@ -11,9 +12,11 @@ using gestaotcc.Infra.Database;
 namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250621173032_AddMethodSignatureFieldToDocumentTypeTable")]
+    partial class AddMethodSignatureFieldToDocumentTypeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -119,14 +122,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Property<long>("DocumentTypeId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<long>("TccId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -134,8 +130,6 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("DocumentTypeId");
 
                     b.HasIndex("TccId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Documents");
                 });
@@ -469,15 +463,9 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "User")
-                        .WithMany("Documents")
-                        .HasForeignKey("UserId");
-
                     b.Navigation("DocumentType");
 
                     b.Navigation("Tcc");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
@@ -605,8 +593,6 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                 {
                     b.Navigation("AccessCode")
                         .IsRequired();
-
-                    b.Navigation("Documents");
 
                     b.Navigation("Signatures");
 

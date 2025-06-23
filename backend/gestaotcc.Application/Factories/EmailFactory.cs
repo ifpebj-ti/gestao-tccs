@@ -57,17 +57,18 @@ public class EmailFactory
 
     public static SendEmailDTO CreateSendEmailDTO(SendPendingSignatureDTO data)
     {
-        Dictionary<string, Object> variables = new Dictionary<string, Object>();
+        Dictionary<string, object> variables = new Dictionary<string, object>();
         variables.Add("username", data.UserName);
         variables.Add("tccTitle", data.TccTitle);
-        variables.Add("documentNames", data.DocumentNames);
+        variables.Add("details", data.Details);  // Passa a lista de detalhes para o template
 
-        var chooseSubject = "Assinatura pendente"; 
+        var chooseSubject = "Assinatura pendente";
 
         var emailDTO = new SendEmailDTO("", chooseSubject, data.UserEmail, "SEND-PENDING-SIGNATURE", variables);
 
         return emailDTO;
     }
+
 
     public static SendEmailDTO CreateSendEmailDTO(UserEntity user, TccEntity tcc, TccScheduleEntity tccSchedule)
     {
