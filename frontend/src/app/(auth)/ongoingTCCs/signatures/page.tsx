@@ -1,10 +1,13 @@
 'use client';
+
 import { CollapseCard } from '@/components/CollapseCard';
 import Step from '@/components/Steps';
 import {
   faCheckCircle,
   faFileAlt,
-  faClock
+  faClock,
+  faInfoCircle,
+  faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { Suspense, useEffect, useState } from 'react';
@@ -40,12 +43,14 @@ export default function Signatures() {
     userProfile: string;
     userName: string;
     isSigned: boolean;
+    otherSignatures?: SignatureDetail[];
   }
 
   interface Signature {
     documentId: number;
     attachmentName: string;
-    details: SignatureDetail[];
+    detailsOnlyDocs: SignatureDetail[];
+    detailsNotOnlyDocs: SignatureDetail[];
   }
 
   interface WorkflowResponse {
@@ -92,7 +97,6 @@ export default function Signatures() {
       }
     };
 
-    // Função para buscar detalhes do TCC para obter os nomes dos alunos
     const fetchTccDetails = async () => {
       try {
         const res = await fetch(
@@ -124,7 +128,7 @@ export default function Signatures() {
         <TccTabs />
       </Suspense>
 
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10 truncate max-w-full">
+      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-10 truncate max-w-full">
         {data?.step === 1 ? (
           <>Aguardando cadastro do estudante</>
         ) : (
@@ -154,12 +158,21 @@ export default function Signatures() {
               key={index}
               title={doc.attachmentName}
               icon={faFileAlt}
-              indicatorNumber={doc.details.length}
+              indicatorNumber={
+                (doc.detailsOnlyDocs?.length ?? 0) +
+                (doc.detailsNotOnlyDocs?.reduce((acc, detail) => {
+                  return acc + 1 + (detail.otherSignatures?.length ?? 0);
+                }, 0) ?? 0)
+              }
             >
               <ul className="text-gray-700 space-y-2">
-                {doc.details.map((assinante, idx) => (
-                  <li key={idx} className="flex items-center justify-between">
-                    <span>
+                {/* detailsOnlyDocs → normal */}
+                {(doc.detailsOnlyDocs ?? []).map((assinante, idx) => (
+                  <li
+                    key={`only-${idx}`}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-1">
                       {assinante.userName}{' '}
                       <span className="text-gray-500">
                         (
@@ -169,7 +182,11 @@ export default function Signatures() {
                       </span>
                     </span>
                     <span
-                      className={`flex items-center font-semibold gap-1 ${assinante.isSigned ? 'text-green-600' : 'text-yellow-600'}`}
+                      className={`flex items-center font-semibold gap-1 ${
+                        assinante.isSigned
+                          ? 'text-green-600'
+                          : 'text-yellow-600'
+                      }`}
                     >
                       <FontAwesomeIcon
                         icon={assinante.isSigned ? faCheckCircle : faClock}
@@ -178,6 +195,81 @@ export default function Signatures() {
                       {assinante.isSigned ? 'Assinado' : 'Pendente'}
                     </span>
                   </li>
+                ))}
+
+                {/* detailsNotOnlyDocs → normal */}
+                {(doc.detailsNotOnlyDocs ?? []).map((assinante, idx) => (
+                  <React.Fragment key={`notOnly-${idx}`}>
+                    <li className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        {assinante.userName}{' '}
+                        <span className="text-gray-500">
+                          (
+                          {profileLabels[assinante.userProfile] ||
+                            assinante.userProfile}
+                          )
+                        </span>
+                        {/* Ícone de informação se tiver filhos */}
+                        {assinante.otherSignatures &&
+                          assinante.otherSignatures.length > 0 && (
+                            <div className="group relative">
+                              <FontAwesomeIcon
+                                icon={faInfoCircle}
+                                className="text-blue-500 ml-1"
+                              />
+                              <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-64 bg-white p-2 text-sm text-gray-700 rounded shadow-lg z-10 hidden group-hover:block">
+                                Esse anexo precisa ser separado em documentos
+                                individuais.
+                              </div>
+                            </div>
+                          )}
+                      </span>
+                      <span
+                        className={`flex items-center font-semibold gap-1 ${
+                          assinante.isSigned
+                            ? 'text-green-600'
+                            : 'text-yellow-600'
+                        }`}
+                      >
+                        <FontAwesomeIcon
+                          icon={assinante.isSigned ? faCheckCircle : faClock}
+                          className="h-4 w-4"
+                        />
+                        {assinante.isSigned ? 'Assinado' : 'Pendente'}
+                      </span>
+                    </li>
+
+                    {/* Assinaturas filhas */}
+                    {(assinante.otherSignatures ?? []).map((sub, subIdx) => (
+                      <li
+                        key={`sub-${idx}-${subIdx}`}
+                        className="flex items-center justify-between pl-8 border-l-2 border-[#1351B4]/30 ml-2"
+                      >
+                        <span className="flex items-center gap-1">
+                          <FontAwesomeIcon
+                            icon={faArrowRight}
+                            className="text-xs text-[#1351B4]"
+                          />
+                          {sub.userName}{' '}
+                          <span className="text-gray-500">
+                            ({profileLabels[sub.userProfile] || sub.userProfile}
+                            )
+                          </span>
+                        </span>
+                        <span
+                          className={`flex items-center font-semibold gap-1 ${
+                            sub.isSigned ? 'text-green-600' : 'text-yellow-600'
+                          }`}
+                        >
+                          <FontAwesomeIcon
+                            icon={sub.isSigned ? faCheckCircle : faClock}
+                            className="h-4 w-4"
+                          />
+                          {sub.isSigned ? 'Assinado' : 'Pendente'}
+                        </span>
+                      </li>
+                    ))}
+                  </React.Fragment>
                 ))}
               </ul>
             </CollapseCard>
