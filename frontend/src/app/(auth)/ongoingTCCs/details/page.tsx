@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'next/navigation';
+import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 
 export default function TCCDetails() {
   interface InfoTcc {
@@ -90,6 +91,7 @@ export default function TCCDetails() {
 
   return (
     <div className="flex flex-col">
+      <BreadcrumbAuto />
       <Suspense fallback={null}>
         <TccTabs />
       </Suspense>
@@ -124,6 +126,24 @@ export default function TCCDetails() {
               <Label className="font-semibold">Resumo da proposta</Label>
               <Input value={tccData.infoTcc.summary} readOnly />
             </div>
+            {tccData.infoTcc.presentationDate && (
+              <div className="grid items-center gap-1.5">
+                <Label className="font-semibold">Data da apresentação</Label>
+                <Input value={tccData.infoTcc.presentationDate} />
+              </div>
+            )}
+            {tccData.infoTcc.presentationTime && (
+              <div className="grid items-center gap-1.5">
+                <Label className="font-semibold">Hora da apresentação</Label>
+                <Input value={tccData.infoTcc.presentationTime} />
+              </div>
+            )}
+            {tccData.infoTcc.presentationLocation && (
+              <div className="grid items-center gap-1.5 md:col-span-2">
+                <Label className="font-semibold">Local da apresentação</Label>
+                <Input value={tccData.infoTcc.presentationLocation} />
+              </div>
+            )}
           </div>
 
           <h2 className="text-lg font-extrabold uppercase mt-6">
@@ -205,33 +225,6 @@ export default function TCCDetails() {
               </div>
             </>
           )}
-
-          {tccData.infoTcc.presentationDate &&
-            tccData.infoTcc.presentationTime &&
-            tccData.infoTcc.presentationLocation && (
-              <>
-                <h2 className="text-lg font-extrabold uppercase mt-6">
-                  Agendamento da Apresentação
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="grid items-center gap-1.5">
-                    <Label className="font-semibold">Data</Label>
-                    <Input value={tccData.infoTcc.presentationDate} readOnly />
-                  </div>
-                  <div className="grid items-center gap-1.5">
-                    <Label className="font-semibold">Hora</Label>
-                    <Input value={tccData.infoTcc.presentationTime} readOnly />
-                  </div>
-                  <div className="grid items-center gap-1.5 md:col-span-2">
-                    <Label className="font-semibold">Local</Label>
-                    <Input
-                      value={tccData.infoTcc.presentationLocation}
-                      readOnly
-                    />
-                  </div>
-                </div>
-              </>
-            )}
 
           <Button
             className="md:w-fit w-full mt-6 md:self-end"

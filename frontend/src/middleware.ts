@@ -12,6 +12,9 @@ const protectedRoutes: Record<string, string[]> = {
   '/homePage': [], // Qualquer usuário logado pode acessar
   '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
+  '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANK', 'LIBRARY'],
+  '/ongoingTCCs/signatures': [],
+  '/ongoingTCCs/details': [],
 };
 
 // Rotas temporárias com token temporário
@@ -59,5 +62,6 @@ export const config = {
     '/newUser',
     '/autoRegister',
     '/newPassword',
+    '/ongoingTCCs',
   ],
 };
