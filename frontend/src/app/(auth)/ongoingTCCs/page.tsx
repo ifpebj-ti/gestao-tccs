@@ -21,6 +21,7 @@ interface TCCFromApi {
 export default function OngoingTCCsPage() {
   const { push } = useRouter();
   const [tccs, setTccs] = useState<TCCFromApi[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTccs = async () => {
@@ -32,7 +33,7 @@ export default function OngoingTCCsPage() {
         }
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?filter=IN_PROGRESS`,
+          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter`,
           {
             headers: {
               Authorization: `Bearer ${token}`
@@ -48,6 +49,8 @@ export default function OngoingTCCsPage() {
         setTccs(data);
       } catch {
         toast.error('Erro ao carregar TCCs em andamento.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -61,7 +64,9 @@ export default function OngoingTCCsPage() {
         TCCs em andamento
       </h1>
 
-      {tccs.length === 0 ? (
+      {isLoading ? (
+        <p className="text-center text-gray-500 mt-4">Carregando...</p>
+      ) : tccs.length === 0 ? (
         <p className="text-center text-gray-500 mt-4">
           Nenhum TCC em andamento encontrado.
         </p>
@@ -107,7 +112,7 @@ export default function OngoingTCCsPage() {
             ))}
           </div>
 
-          {/* Desktop - igual ao mobile, mas sem filhos */}
+          {/* Desktop - sem filhos */}
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
