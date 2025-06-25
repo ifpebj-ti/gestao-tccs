@@ -100,6 +100,9 @@ public class TccFactory
         
         if (!alreadyAdded)
         {
+            var invite = tcc.TccInvites.FirstOrDefault(inv => inv.Email == user.Email);
+            invite.IsValidCode = false;
+            
             tcc.UserTccs.Add(new UserTccEntityBuilder()
                 .WithUser(user)
                 .WithTcc(tcc)

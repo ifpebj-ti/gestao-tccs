@@ -47,8 +47,14 @@ public class CreateUserUseCase(
                 var tcc = await tccGateway.FindTccById(tccInvite.TccId);
                 if (tcc is not null)
                 {
+                    
                     TccFactory.UpdateUsersTcc(tcc, newUser, profileEntity!);
                     CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList());
+                    
+                    var allIAlreadyAdded = tcc.TccInvites.Any(inv => !inv.IsValidCode);
+                    if(!allIAlreadyAdded)
+                        tcc.Step = StepTccType.START_AND_ORGANIZATION.ToString();
+                    
                     await tccGateway.Update(tcc);
                 }
             }
