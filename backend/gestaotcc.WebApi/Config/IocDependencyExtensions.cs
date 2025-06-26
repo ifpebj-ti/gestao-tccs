@@ -22,6 +22,7 @@ public static class IocDependencyExtensions
         services.AddScoped<IBcryptGateway, BcryptGateway>();
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
+        services.AddScoped<IMinioGateway, MinioGateway>();
 
         // AccessCode
         services.AddScoped<CreateAccessCodeUseCase>();
@@ -63,5 +64,6 @@ public static class IocDependencyExtensions
         // Signature
         services.AddScoped<SendPendingSignatureUseCase>();
         services.AddScoped<FindAllPendingSignaturesUseCase>();
+        services.AddScoped<SignSignatureUseCase>();
     }
 }

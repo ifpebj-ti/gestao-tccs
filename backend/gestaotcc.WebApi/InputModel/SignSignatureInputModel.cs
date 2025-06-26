@@ -1,3 +1,3 @@
 namespace gestaotcc.WebApi.InputModel;
 
-public record SignSignatureInputModel(long TccId, long DocumentTypeId, long UserId, IFormFile File);
+public record SignSignatureInputModel(long TccId, long DocumentId, long UserId, IFormFile File);

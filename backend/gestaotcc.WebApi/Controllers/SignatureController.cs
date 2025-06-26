@@ -30,10 +30,46 @@ public class SignatureController : ControllerBase
         return Ok(useCaseResult.Data);
     }
 
-    // [HttpPost]
-    // public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromBody] SignSignatureInputModel data,
-    //     [FromServices] SignSignatureUseCase signSignatureUseCase)
-    // {
-    //     
-    // }
+    /// <summary>
+    /// Assinar um documento
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromForm] SignSignatureInputModel data,
+        [FromServices] SignSignatureUseCase signSignatureUseCase)
+    {
+        using Stream fileStream = data.File.OpenReadStream();
+        var fileBuffer = new byte[fileStream.Length];
+
+        using (fileStream)
+        {
+            await fileStream.ReadAsync(fileBuffer, 0, (int)fileStream.Length);
+        }
+        
+        var dto = new SignSignatureDTO(
+            data.TccId, 
+            data.DocumentId, 
+            data.UserId, 
+            fileBuffer,
+            (double)fileStream.Length / (1024 * 1024),
+            data.File.ContentType
+            );
+        
+        var useCaseResult = await signSignatureUseCase.Execute(dto);
+        if (useCaseResult.IsFailure)
+        {
+            Log.Error(useCaseResult.ErrorDetails!.Detail);
+            
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+        
+        Log.Information("Operação realizada com sucesso");
+        return Ok(new MessageSuccessResponseModel("Operação realizada com sucesso"));
+    }
 }

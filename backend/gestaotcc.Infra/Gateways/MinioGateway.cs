@@ -8,15 +8,15 @@ namespace gestaotcc.Infra.Gateways;
 public class MinioGateway : IMinioGateway
 {
     private readonly IConfiguration _configuration;
-    private readonly MinioClient _minioClient;
+    private readonly IMinioClient _minioClient;
     private readonly string _bucketName;
     
-    public MinioGateway(IConfiguration configuration, MinioClient minioClient)
+    public MinioGateway(IConfiguration configuration, IMinioClient minioClient)
     {
         _configuration = configuration;
         _minioClient = minioClient;
         
-        var minioSettings = configuration.GetSection("MINIO_SETTINGS");
+        var minioSettings = _configuration.GetSection("MINIO_SETTINGS");
         var bucketName = minioSettings.GetValue<string>("BUCKET_NAME");
 
         _bucketName = bucketName;
@@ -30,10 +30,12 @@ public class MinioGateway : IMinioGateway
             await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucketName));
         }
         
+        var objectName = $"signatures/{fileName}";
+        
         using var byteStream = new MemoryStream(file);
         await _minioClient.PutObjectAsync(new PutObjectArgs()
             .WithBucket(_bucketName)
-            .WithObject(fileName)
+            .WithObject(objectName)
             .WithStreamData(byteStream)
             .WithObjectSize(byteStream.Length)
             .WithContentType(contentType)
