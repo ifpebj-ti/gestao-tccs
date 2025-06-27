@@ -33,6 +33,7 @@ public class SignatureController : ControllerBase
     /// <summary>
     /// Assinar um documento
     /// </summary>
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromForm] SignSignatureInputModel data,
         [FromServices] SignSignatureUseCase signSignatureUseCase)
@@ -71,5 +72,63 @@ public class SignatureController : ControllerBase
         
         Log.Information("Operação realizada com sucesso");
         return Ok(new MessageSuccessResponseModel("Operação realizada com sucesso"));
+    }
+
+    /// <summary>
+    /// Faz o download do documento
+    /// </summary>
+    /// <param name="tccId"> Id do tcc</param>
+    /// <param name="documentId">Id do documento</param>
+    [Authorize]
+    [HttpGet("document/download")]
+    public async Task<ActionResult> DownloaDocument([FromQuery] long tccId, [FromQuery] long documentId,
+        [FromServices] DownloadDocumentUseCase downloadDocumentUseCase)
+    {
+        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId);
+        if (useCaseResult.IsFailure)
+        {
+            Log.Error(useCaseResult.ErrorDetails!.Detail);
+            
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+        
+        Log.Information("Operação realizado com sucesso");
+        return File(useCaseResult.Data.File, "application/octet-stream", useCaseResult.Data.FileName);
+    }
+
+    /// <summary>
+    /// Buscar um documento
+    /// </summary>
+    /// <param name="tccId">Id do tcc</param>
+    /// <param name="documentId">Id do documento</param>
+    [Authorize]
+    [HttpGet("document")]
+    public async Task<ActionResult<FindDocumentDTO>> FindDocument([FromQuery] long tccId, [FromQuery] long documentId,
+        [FromServices] FindDocumentUseCase findDocumentUseCase)
+    {
+        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId);
+        if (useCaseResult.IsFailure)
+        {
+            Log.Error(useCaseResult.ErrorDetails!.Detail);
+            
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+        
+        Log.Information("Url retornada com sucesso");
+        return Ok(useCaseResult.Data);
     }
 }
