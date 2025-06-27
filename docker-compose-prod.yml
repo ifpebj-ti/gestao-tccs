@@ -18,6 +18,11 @@ services:
       - MailSettings__UserName=${MAILSETTINGS_USERNAME}
       - MailSettings__Password=${MAILSETTINGS_PASSWORD}
       - COMBINATION_STRING_FOR_ACCESSCODE=${COMBINATION_STRING_FOR_ACCESSCODE}
+      - MINIO_SETTINGS__ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_SETTINGS__DOMAIN=${MINIO_DOMAIN}
+      - MINIO_SETTINGS__ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SETTINGS__SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_SETTINGS__BUCKET_NAME=${MINIO_BUCKET_NAME}
     restart: unless-stopped
     networks:
       - front_net
@@ -59,8 +64,26 @@ services:
       retries: 5
       start_period: 10s
 
+  minio:
+    image: minio/minio
+    container_name: gestao-minio
+    ports:
+      - "${PORT_MACHINE_API_MINIO}:9000"
+      - "${PORT_MACHINE_WEB_MINIO}:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - back_net
+      - observability-net
+
 volumes:
   postgres_data:
+  minio_data:
 
 networks:
   front_net:
