@@ -106,6 +106,9 @@ public class SignatureController : ControllerBase
     /// <summary>
     /// Buscar um documento
     /// </summary>
+    /// <remarks>
+    /// Obs: A Url tem um tempo de experição de 60 segundos
+    /// </remarks>
     /// <param name="tccId">Id do tcc</param>
     /// <param name="documentId">Id do documento</param>
     [Authorize]
