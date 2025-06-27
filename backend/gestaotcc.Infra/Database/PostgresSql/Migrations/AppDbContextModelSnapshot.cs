@@ -82,7 +82,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("AccessCodes");
+                    b.ToTable("AccessCodes", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Course.CourseEntity", b =>
@@ -105,7 +105,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
@@ -137,7 +137,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Documents");
+                    b.ToTable("Documents", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", b =>
@@ -162,7 +162,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DocumentTypes");
+                    b.ToTable("DocumentTypes", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Profile.ProfileEntity", b =>
@@ -180,7 +180,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Profiles");
+                    b.ToTable("Profiles", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
@@ -206,7 +206,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Signatures");
+                    b.ToTable("Signatures", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
@@ -240,7 +240,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tccs");
+                    b.ToTable("Tccs", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccCancellation.TccCancellationEntity", b =>
@@ -271,7 +271,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccCancellations");
+                    b.ToTable("TccCancellations", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccInvite.TccInviteEntity", b =>
@@ -302,7 +302,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("TccId");
 
-                    b.ToTable("TccInvites");
+                    b.ToTable("TccInvites", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity", b =>
@@ -329,7 +329,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccSchedules");
+                    b.ToTable("TccSchedules", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
@@ -380,7 +380,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.UserTcc.UserTccEntity", b =>
@@ -411,7 +411,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserTccs");
+                    b.ToTable("UserTccs", (string)null);
                 });
 
             modelBuilder.Entity("DocumentTypeEntityProfileEntity", b =>

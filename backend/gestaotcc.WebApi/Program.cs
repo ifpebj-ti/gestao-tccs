@@ -1,4 +1,5 @@
 using gestaotcc.Infra.Database;
+using gestaotcc.Infra.Database.PostgresSql;
 using gestaotcc.WebApi.Config;
 using gestaotcc.WebApi.Middlewares;
 using gestaotcc.WebApi.SchemaFilters;
@@ -39,13 +40,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-if (app.Environment.IsProduction())
-{
-    Log.Information("Executando Migrations");
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-}
+// Carregar migrations e Seeds
+Log.Information("Executando Migrations");
+using var scope = app.Services.CreateScope();
+var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+dbContext.Database.Migrate();
+DbInitializer.Initialize(dbContext);
 
 app.UseHangfireExtension(app.Services);
 
