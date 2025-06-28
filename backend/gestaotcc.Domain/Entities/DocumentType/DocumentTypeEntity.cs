@@ -8,6 +8,7 @@ public class DocumentTypeEntity
     public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public long SignatureOrder { get; set; }
+    public string MethodSignature { get; set; } = string.Empty;
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public ICollection<ProfileEntity> Profiles { get; set; } = new List<ProfileEntity>();
     public DocumentTypeEntity() {}

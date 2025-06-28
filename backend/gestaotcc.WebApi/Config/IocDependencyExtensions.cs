@@ -1,10 +1,12 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Application.UseCases.Auth;
+using gestaotcc.Application.UseCases.Home;
 using gestaotcc.Application.UseCases.Profile;
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
+using gestaotcc.Domain.Dtos.Home;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Infra.Gateways;
 
@@ -22,6 +24,7 @@ public static class IocDependencyExtensions
         services.AddScoped<IBcryptGateway, BcryptGateway>();
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
+        services.AddScoped<IMinioGateway, MinioGateway>();
 
         // AccessCode
         services.AddScoped<CreateAccessCodeUseCase>();
@@ -62,5 +65,12 @@ public static class IocDependencyExtensions
         
         // Signature
         services.AddScoped<SendPendingSignatureUseCase>();
+        services.AddScoped<FindAllPendingSignaturesUseCase>();
+        services.AddScoped<SignSignatureUseCase>();
+        services.AddScoped<DownloadDocumentUseCase>();
+        services.AddScoped<FindDocumentUseCase>();
+        
+        // Home
+        services.AddScoped<GetInfoHomeUseCase>();
     }
 }

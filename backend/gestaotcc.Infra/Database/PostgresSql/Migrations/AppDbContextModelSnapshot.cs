@@ -82,7 +82,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("AccessCodes");
+                    b.ToTable("AccessCodes", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Course.CourseEntity", b =>
@@ -105,7 +105,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
@@ -119,14 +119,14 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Property<long>("DocumentTypeId")
                         .HasColumnType("bigint");
 
-                    b.Property<byte[]>("File")
+                    b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("bytea");
-
-                    b.Property<bool>("IsSigned")
-                        .HasColumnType("boolean");
+                        .HasColumnType("text");
 
                     b.Property<long>("TccId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -135,7 +135,9 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("TccId");
 
-                    b.ToTable("Documents");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Documents", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", b =>
@@ -145,6 +147,10 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                         .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("MethodSignature")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -156,7 +162,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DocumentTypes");
+                    b.ToTable("DocumentTypes", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Profile.ProfileEntity", b =>
@@ -174,7 +180,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Profiles");
+                    b.ToTable("Profiles", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
@@ -200,7 +206,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Signatures");
+                    b.ToTable("Signatures", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
@@ -234,7 +240,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tccs");
+                    b.ToTable("Tccs", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccCancellation.TccCancellationEntity", b =>
@@ -265,7 +271,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccCancellations");
+                    b.ToTable("TccCancellations", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccInvite.TccInviteEntity", b =>
@@ -296,7 +302,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("TccId");
 
-                    b.ToTable("TccInvites");
+                    b.ToTable("TccInvites", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity", b =>
@@ -323,7 +329,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccSchedules");
+                    b.ToTable("TccSchedules", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
@@ -374,7 +380,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.UserTcc.UserTccEntity", b =>
@@ -405,7 +411,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserTccs");
+                    b.ToTable("UserTccs", (string)null);
                 });
 
             modelBuilder.Entity("DocumentTypeEntityProfileEntity", b =>
@@ -463,9 +469,15 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "User")
+                        .WithMany("Documents")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("DocumentType");
 
                     b.Navigation("Tcc");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
@@ -593,6 +605,8 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                 {
                     b.Navigation("AccessCode")
                         .IsRequired();
+
+                    b.Navigation("Documents");
 
                     b.Navigation("Signatures");
 

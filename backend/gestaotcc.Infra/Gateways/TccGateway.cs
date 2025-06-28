@@ -1,4 +1,5 @@
 using gestaotcc.Application.Gateways;
+using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
@@ -43,6 +44,11 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.TccInvites)
             .Include(x => x.TccCancellation)
             .Include(x => x.UserTccs)
+                .ThenInclude(x => x.User)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.Signatures)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.DocumentType)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -79,33 +85,52 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<TccEntity?> FindTccWorkflow(long tccId, long userId)
+    public async Task<TccEntity?> FindTccWorkflow(long? tccId, long userId)
     {
-        return await context.Tccs
+        var query = context.Tccs
             .Include(x => x.TccInvites)
+            .Include(x => x.UserTccs)
+                .ThenInclude(ut => ut.User)
+                    .ThenInclude(u => u.Profile)
+                        .ThenInclude(p => p.DocumentTypes)
+            .Include(x => x.UserTccs)
+                .ThenInclude(ut => ut.Profile)
+            .Include(x => x.Documents)
+                .ThenInclude(d => d.DocumentType)
+            .Include(x => x.Documents)
+                .ThenInclude(d => d.Signatures)
+            .AsQueryable();
+
+        if (tccId.HasValue)
+        {
+            query = query.Where(x => x.Id == tccId.Value);
+        }
+        else
+        {
+            query = query.Where(x => x.UserTccs.Any(ut => ut.UserId == userId));
+        }
+
+        return await query.FirstOrDefaultAsync();
+    }
+
+    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter)
+    {
+        var query = context.Tccs.AsQueryable();
+        
+        if(!string.IsNullOrEmpty(tccFilter.UserId.ToString()))
+            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
+        
+        if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
+            query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
+        
+        return await query
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)
                     .ThenInclude(x => x.Profile)
-                        .ThenInclude(x => x.DocumentTypes)
-            .Include(x => x.UserTccs)
-                .ThenInclude(x => x.Profile)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.DocumentType)
-                    .ThenInclude(dt => dt.Documents)
-                        .ThenInclude(doc => doc.Signatures)
-            .FirstOrDefaultAsync(x => x.Id == tccId || x.UserTccs.Any(x => x.UserId == userId));
-    }
-
-    public async Task<List<TccEntity>> FindAllTccByFilter(string filter)
-    {
-        bool isUserId = long.TryParse(filter, out long userId);
-
-        return await context.Tccs
-            .Where(x => x.Status.ToLower() == filter.ToLower() || 
-                        (isUserId && x.UserTccs.Any(u => u.UserId == userId)))
-            .Include(x => x.UserTccs).ThenInclude(x => x.User).ThenInclude(x => x.Profile)
-            .Include(x => x.Documents).ThenInclude(x => x.DocumentType)
-            .Include(x => x.Documents).ThenInclude(x => x.Signatures)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.Signatures)
             .ToListAsync();
     }
 }

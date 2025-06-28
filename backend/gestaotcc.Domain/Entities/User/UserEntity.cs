@@ -1,5 +1,6 @@
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.Course;
+using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.UserTcc;
@@ -22,6 +23,7 @@ public class UserEntity
     public AccessCodeEntity AccessCode { get; set; } = null!;
     public ICollection<UserTccEntity> UserTccs { get; set; } = null!;
     public ICollection<SignatureEntity> Signatures { get; set; } = null!;
+    public ICollection<DocumentEntity>? Documents { get; set; } = null!;
     public UserEntity() { }
 
     public UserEntity(
