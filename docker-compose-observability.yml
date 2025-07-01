@@ -48,6 +48,7 @@ services:
       - loki
     networks:
       - observability-net
+      - management-net
     restart: unless-stopped
 
 volumes:
@@ -55,4 +56,6 @@ volumes:
 
 networks:
   observability-net:
+    external: true
+  management-net:
     external: true

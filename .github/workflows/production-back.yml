@@ -6,6 +6,8 @@ on:
       - main
     types:
       - closed
+    paths:
+      - 'backend/**'
 
   workflow_dispatch:
 
@@ -20,9 +22,6 @@ jobs:
     outputs:
       created_tag: ${{ steps.created_tag.outputs.created_tag }}
       change_type: ${{ steps.change_type.outputs.change_type }}
-      changed_backend: ${{ steps.changed-dirs.outputs.changed_backend }}
-      changed_frontend: ${{ steps.changed-dirs.outputs.changed_frontend }}
-      should_release: ${{ steps.changed-dirs.outputs.should_release }}
 
     steps:
       - uses: actions/checkout@v4
@@ -85,38 +84,7 @@ jobs:
           created_tag="${major}.${minor}.${patch}"
           echo "New tag: $created_tag"
           echo "created_tag=$created_tag" >> "$GITHUB_OUTPUT"
-
-      - name: Check changed directories
-        id: changed-dirs
-        run: |
-          echo "Checking changed files in PR..."
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          FILES=$(gh pr view $PR_NUMBER --json files --jq '.files[].path')
-
-          echo "FILES CHANGED:"
-          echo "$FILES"
-
-          changed_backend=false
-          changed_frontend=false
-
-          if echo "$FILES" | grep -q "^backend/"; then
-            changed_backend=true
-          fi
-          if echo "$FILES" | grep -q "^frontend/"; then
-            changed_frontend=true
-          fi
-
-          should_release=false
-          if $changed_backend || $changed_frontend; then
-            should_release=true
-          fi
-
-          echo "changed_backend=$changed_backend" >> "$GITHUB_OUTPUT"
-          echo "changed_frontend=$changed_frontend" >> "$GITHUB_OUTPUT"
-          echo "should_release=$should_release" >> "$GITHUB_OUTPUT"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
-
+  
   # --------------------------------------------------------------------
   # 1) BACKEND DOCKER --------------------------------------------------
   # --------------------------------------------------------------------
@@ -139,14 +107,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Check if backend changed
-        id: check-backend-change
-        run: |
-          if [ "${{ needs.tag-creation.outputs.changed_backend }}" != "true" ]; then
-            echo "No backend changes detected, skipping backend build."
-            exit 0
-          fi
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
@@ -190,95 +150,12 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:$CREATED_TAG
 
   # --------------------------------------------------------------------
-  # 2) FRONTEND DOCKER -------------------------------------------------
-  # --------------------------------------------------------------------
-  frontend-docker:
-    name: 2. Frontend CI/CD
-    runs-on: ubuntu-latest
-    needs: tag-creation
-    env:
-      CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
-    if: >
-      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')
-    permissions:
-      contents: read
-      packages: write
-      security-events: write
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Check if frontend changed
-        id: check-frontend-change
-        run: |
-          if [ "${{ needs.tag-creation.outputs.changed_frontend }}" != "true" ]; then
-            echo "No frontend changes detected, skipping frontend build."
-            exit 0
-          fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Lint
-        run: npm run lint
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ secrets.GHCR_USER }}
-          password: ${{ secrets.GHCR_TOKEN }}
-
-      - name: Build Docker image
-        run: |
-          docker build \
-            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
-            -t ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG \
-            -f Dockerfile .
-
-      - name: Docker Login
-        uses: docker/login-action@v3.4.0
-        with:
-          username: ${{ secrets.GHCR_USER }}
-          password: ${{ secrets.DOCKERHUB_TOKEN  }}
-
-      - name: Install Docker Scout
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
-          sh install-scout.sh
-
-      - name: Scan image for critical vulnerabilities
-        run: |
-          docker scout cves "--only-severity=critical --exit-code 1 ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG"
-          docker scout quickview ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG
-
-      - name: Push Docker image
-        run: |
-          docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG
-
-  # --------------------------------------------------------------------
   # 3) RELEASE CREATION ------------------------------------------------
   # --------------------------------------------------------------------
   release-creation:
     name: 3. Automatic Creation Process of New Releases
     runs-on: ubuntu-latest
-    needs: [tag-creation, backend-docker, frontend-docker]
-    if: >
-      github.event.pull_request.merged == true &&
-      needs.tag-creation.outputs.should_release == 'true' &&
-      (
-        needs.backend-docker.result == 'success' ||
-        needs.frontend-docker.result == 'success'
-      )
+    needs: [tag-creation, backend-docker]
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
       CHANGE_TYPE: ${{ needs.tag-creation.outputs.change_type }}
