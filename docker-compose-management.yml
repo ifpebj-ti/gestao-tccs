@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  portainer:
+    image: portainer/portainer-ee:latest # Usando a business edition do Portainer
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "9443:9443" # Interface web HTTPS do Portainer
+      - "8000:8000" # Agente do Portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - management-net
+
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - "80:80" # Tráfego HTTP público
+      - "443:443" # Tráfego HTTPS público
+      - "81:81" # Interface de administração do NPM
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - management-net
+
+networks:
+  management-net:
+    name: management-net
+
+volumes:
+  portainer_data:
+  npm_data:
+  npm_letsencrypt:

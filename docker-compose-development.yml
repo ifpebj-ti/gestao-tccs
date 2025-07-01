@@ -48,6 +48,7 @@ services:
       - backend
     networks:
       - front_net
+      - management-net
 
   postgres:
     image: postgres:15
@@ -95,4 +96,6 @@ networks:
   front_net:
   back_net:
   observability-net:
+    external: true
+  management-net:
     external: true
