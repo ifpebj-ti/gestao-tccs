@@ -17,7 +17,7 @@ import TccTabs from '@/components/TccTabs';
 import { useSearchParams } from 'next/navigation';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 
-export default function Signatures() {
+export default function ReusableSignaturesPage() {
   const profileLabels: Record<string, string> = {
     STUDENT: 'Aluno',
     ADVISOR: 'Orientador',

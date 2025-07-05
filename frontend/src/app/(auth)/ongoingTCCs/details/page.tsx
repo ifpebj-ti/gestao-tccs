@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'next/navigation';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 
-export default function TCCDetails() {
+export default function ReusableTccDetailsPage() {
   interface InfoTcc {
     title: string;
     summary: string;
