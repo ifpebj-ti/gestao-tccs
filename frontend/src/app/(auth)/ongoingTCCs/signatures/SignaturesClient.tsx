@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import TccTabs from '@/components/TccTabs';
 import { useSearchParams } from 'next/navigation';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
+import { Badge } from '@/components/ui/badge';
 
 export default function SignaturesClient() {
   const profileLabels: Record<string, string> = {
@@ -36,6 +37,7 @@ export default function SignaturesClient() {
 
   interface TccDetailsResponse {
     infoStudent: Student[];
+    cancellationRequest: boolean;
   }
 
   interface SignatureDetail {
@@ -67,6 +69,7 @@ export default function SignaturesClient() {
   const [students, setStudents] = useState<string[]>([]);
   const [data, setData] = useState<WorkflowResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancellationRequested, setCancellationRequested] = useState(false);
   const searchParams = useSearchParams();
 
   const tccId = Number(searchParams.get('id'));
@@ -110,6 +113,7 @@ export default function SignaturesClient() {
         const result: TccDetailsResponse = await res.json();
         const names = result.infoStudent.map((s) => s.name);
         setStudents(names);
+        setCancellationRequested(result.cancellationRequest);
       } catch {
         toast.error('Erro ao carregar dados dos alunos.');
       }
@@ -128,24 +132,31 @@ export default function SignaturesClient() {
         <TccTabs />
       </Suspense>
 
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-10 truncate max-w-full">
-        {data?.step === 1 ? (
-          <>Aguardando cadastro do estudante</>
-        ) : (
-          <>
-            TCC -{' '}
-            <span title={students.join(', ')}>
-              {students.length > 0
-                ? students.map(formatStudentName).join(', ')
-                : 'Carregando...'}
-            </span>
-          </>
+      <div className="flex flex-col md:flex-row md:items-center md:gap-4">
+        <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-2 truncate max-w-full">
+          {data?.step === 1 ? (
+            <>Aguardando cadastro do estudante</>
+          ) : (
+            <>
+              TCC -{' '}
+              <span title={students.join(', ')}>
+                {students.length > 0
+                  ? students.map(formatStudentName).join(', ')
+                  : 'Carregando...'}
+              </span>
+            </>
+          )}
+        </h1>
+        {cancellationRequested && (
+          <Badge variant="destructive" className="text-sm w-fit mt-2 md:mt-0">
+            Cancelamento solicitado
+          </Badge>
         )}
-      </h1>
+      </div>
 
       {data && <Step currentStep={data.step} />}
 
-      <h2 className="text-lg font-extrabold uppercase mt-6 mb-4">
+      <h2 className="text-lg font-extrabold uppercase md:mt-6 mb-4">
         Documentos e Assinaturas
       </h2>
 
@@ -166,7 +177,6 @@ export default function SignaturesClient() {
               }
             >
               <ul className="text-gray-700 space-y-2">
-                {/* detailsOnlyDocs → normal */}
                 {(doc.detailsOnlyDocs ?? []).map((assinante, idx) => (
                   <li
                     key={`only-${idx}`}
@@ -197,7 +207,6 @@ export default function SignaturesClient() {
                   </li>
                 ))}
 
-                {/* detailsNotOnlyDocs → normal */}
                 {(doc.detailsNotOnlyDocs ?? []).map((assinante, idx) => (
                   <React.Fragment key={`notOnly-${idx}`}>
                     <li className="flex items-center justify-between">
@@ -209,7 +218,6 @@ export default function SignaturesClient() {
                             assinante.userProfile}
                           )
                         </span>
-                        {/* Ícone de informação se tiver filhos */}
                         {assinante.otherSignatures &&
                           assinante.otherSignatures.length > 0 && (
                             <div className="group relative">
@@ -239,7 +247,6 @@ export default function SignaturesClient() {
                       </span>
                     </li>
 
-                    {/* Assinaturas filhas */}
                     {(assinante.otherSignatures ?? []).map((sub, subIdx) => (
                       <li
                         key={`sub-${idx}-${subIdx}`}

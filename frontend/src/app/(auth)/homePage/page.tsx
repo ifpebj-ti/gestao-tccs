@@ -36,7 +36,7 @@ interface UserTCCs {
 export default function HomePage() {
   const { push } = useRouter();
   const [profile, setProfile] = useState<string | null>(null);
-  const [tccs, setTccs] = useState<TCCsInformation[]>([]);
+  const [tccs, setTccs] = useState<TCCsInformation | null>(null);
   const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
 
   const fetchUserTCCs = async () => {
@@ -97,7 +97,7 @@ export default function HomePage() {
           throw new Error('Erro ao buscar informações dos TCCs.');
         }
 
-        const data: TCCsInformation[] = await res.json();
+        const data: TCCsInformation = await res.json();
         setTccs(data);
       } catch {
         toast.error('Erro ao carregar informações dos TCCs.');
@@ -130,7 +130,7 @@ export default function HomePage() {
           <CollapseCard
             title="Assinaturas pendentes"
             icon={faFileSignature}
-            indicatorNumber={tccs[0]?.pendingSignature || 0}
+            indicatorNumber={tccs?.pendingSignature || 0}
             indicatorColor="bg-red-600"
             onClick={() => push('/pendingSignatures')}
           />
@@ -147,7 +147,7 @@ export default function HomePage() {
           <CollapseCard
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={tccs[0]?.tccInprogress || 0}
+            indicatorNumber={tccs?.tccInprogress || 0}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
@@ -212,7 +212,7 @@ export default function HomePage() {
           <CardHome
             title="Assinaturas pendentes"
             icon={faFileSignature}
-            indicatorNumber={tccs[0]?.pendingSignature || 0}
+            indicatorNumber={tccs?.pendingSignature || 0}
             indicatorColor="bg-red-600"
             onClick={() => push('/pendingSignatures')}
           />
@@ -229,7 +229,7 @@ export default function HomePage() {
           <CardHome
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={tccs[0]?.tccInprogress || 0}
+            indicatorNumber={tccs?.tccInprogress || 0}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />

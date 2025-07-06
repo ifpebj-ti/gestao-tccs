@@ -1,119 +1,83 @@
 'use client';
+
+import { Suspense } from 'react';
+import { useTccCancellation } from '@/app/hooks/useTccCancellation';
+import { FormProvider } from 'react-hook-form';
+import React from 'react';
 import TccTabs from '@/components/TccTabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Suspense, useEffect, useState } from 'react';
-import Cookies from 'js-cookie';
-import { toast } from 'react-toastify';
-import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useSearchParams } from 'next/navigation';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 export default function DetailsClient() {
-  interface InfoTcc {
-    title: string;
-    summary: string;
-    presentationDate: string;
-    presentationTime: string;
-    presentationLocation: string;
-  }
-
-  interface InfoStudent {
-    name: string;
-    registration: string;
-    cpf: string;
-    course: string;
-    email: string;
-  }
-
-  interface InfoAdvisor {
-    name: string;
-    email: string;
-  }
-
-  interface InfoBanking {
-    nameInternal: string;
-    emailInternal: string;
-    nameExternal: string;
-    emailExternal: string;
-  }
-
-  interface TccDetailsResponse {
-    infoTcc: InfoTcc;
-    infoStudent: InfoStudent[];
-    infoAdvisor: InfoAdvisor;
-    infoBanking: InfoBanking;
-    cancellationRequest: boolean;
-  }
+  const {
+    tccData,
+    cancellationDetails,
+    loading,
+    profile,
+    isModalOpen,
+    setIsModalOpen,
+    cancellationForm,
+    handleRequestCancellation,
+    handleApproveCancellation
+  } = useTccCancellation();
 
   const formatStudentName = (fullName: string) => {
     const [first, second] = fullName.trim().split(' ');
     return `${first ?? ''} ${second ?? ''}`;
   };
 
-  const [tccData, setTccData] = useState<TccDetailsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const tccId = Number(searchParams.get('id'));
+  if (loading) {
+    return <div className="p-4">Carregando...</div>;
+  }
 
-  useEffect(() => {
-    const fetchTccDetails = async () => {
-      const token = Cookies.get('token');
-      if (!token) {
-        toast.error('Token de autenticação não encontrado.');
-        return;
-      }
-
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc?tccId=${tccId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
-        if (!res.ok) throw new Error('Erro ao buscar dados do TCC.');
-
-        const result = await res.json();
-        setTccData(result);
-      } catch {
-        toast.error('Erro ao carregar dados do TCC.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (tccId) fetchTccDetails();
-  }, [tccId]);
+  if (!tccData) {
+    return <div className="p-4">TCC não encontrado.</div>;
+  }
 
   return (
-    <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <Suspense fallback={null}>
-        <TccTabs />
-      </Suspense>
+    <FormProvider {...cancellationForm}>
+      <div className="flex flex-col">
+        <BreadcrumbAuto />
+        <Suspense fallback={null}>
+          <TccTabs />
+        </Suspense>
 
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-10 truncate max-w-full">
-        TCC -{' '}
-        <span
-          title={
-            tccData?.infoStudent?.map((s) => s.name).join(', ') ||
-            'Carregando...'
-          }
-        >
-          {tccData?.infoStudent?.length
-            ? tccData.infoStudent
-                .map((s) => formatStudentName(s.name))
-                .join(', ')
-            : 'Aguardando cadastro do estudante'}
-        </span>
-      </h1>
+        <div className="flex flex-col md:flex-row md:items-center md:gap-4">
+          <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-2 truncate max-w-full">
+            TCC -{' '}
+            <span
+              title={
+                tccData.infoStudent?.map((s) => s.name).join(', ') ||
+                'Carregando...'
+              }
+            >
+              {tccData.infoStudent?.length
+                ? tccData.infoStudent
+                    .map((s) => formatStudentName(s.name))
+                    .join(', ')
+                : 'Aguardando cadastro do estudante'}
+            </span>
+          </h1>
+          {tccData.cancellationRequest && (
+            <Badge variant="destructive" className="text-sm w-fit mt-2 md:mt-0">
+              Cancelamento solicitado
+            </Badge>
+          )}
+        </div>
 
-      {!loading && tccData && (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 mt-10">
           <h2 className="text-lg font-extrabold uppercase">
             Informações do TCC
           </h2>
@@ -129,19 +93,28 @@ export default function DetailsClient() {
             {tccData.infoTcc.presentationDate && (
               <div className="grid items-center gap-1.5">
                 <Label className="font-semibold">Data da apresentação</Label>
-                <Input value={tccData.infoTcc.presentationDate} />
+                <Input
+                  value={tccData.infoTcc.presentationDate}
+                  readOnly={profile === 'STUDENT'}
+                />
               </div>
             )}
             {tccData.infoTcc.presentationTime && (
               <div className="grid items-center gap-1.5">
                 <Label className="font-semibold">Hora da apresentação</Label>
-                <Input value={tccData.infoTcc.presentationTime} />
+                <Input
+                  value={tccData.infoTcc.presentationTime}
+                  readOnly={profile === 'STUDENT'}
+                />
               </div>
             )}
             {tccData.infoTcc.presentationLocation && (
               <div className="grid items-center gap-1.5 md:col-span-2">
                 <Label className="font-semibold">Local da apresentação</Label>
-                <Input value={tccData.infoTcc.presentationLocation} />
+                <Input
+                  value={tccData.infoTcc.presentationLocation}
+                  readOnly={profile === 'STUDENT'}
+                />
               </div>
             )}
           </div>
@@ -169,7 +142,7 @@ export default function DetailsClient() {
                     <Label className="font-semibold">Curso</Label>
                     <Input value={student.course} readOnly />
                   </div>
-                  <div className="grid items-center gap-1.5">
+                  <div className="grid items-center gap-1.5 md:col-span-2">
                     <Label className="font-semibold">Email</Label>
                     <Input value={student.email} readOnly />
                   </div>
@@ -225,15 +198,108 @@ export default function DetailsClient() {
               </div>
             </>
           )}
-
-          <Button
-            className="md:w-fit w-full mt-6 md:self-end"
-            variant="destructive"
-          >
-            Solicitar cancelamento de proposta
-          </Button>
         </div>
-      )}
-    </div>
+
+        <div className="flex flex-col md:flex-row justify-end gap-4 mt-6">
+          {tccData.cancellationRequest &&
+            ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'].includes(
+              profile ?? ''
+            ) && (
+              <div className="flex-1 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md">
+                <p className="font-bold text-lg md:text-regular">
+                  Solicitação de Cancelamento Pendente
+                </p>
+
+                {cancellationDetails ? (
+                  <div className="mt-2 text-sm">
+                    <p>
+                      <strong>Motivo apresentado:</strong>
+                    </p>
+                    <blockquote className="mt-1 border-l-4 border-yellow-600 pl-4 italic">
+                      {cancellationDetails.reasonCancellation}
+                    </blockquote>
+                  </div>
+                ) : (
+                  <p className="text-sm italic mt-2">Carregando motivo...</p>
+                )}
+
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    size="default"
+                    onClick={handleApproveCancellation}
+                    className="w-full md:w-fit"
+                  >
+                    Aprovar Cancelamento
+                  </Button>
+                </div>
+              </div>
+            )}
+
+          {profile === 'STUDENT' && !tccData.cancellationRequest && (
+            <Button
+              className="md:w-fit w-full"
+              variant="destructive"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Solicitar cancelamento de proposta
+            </Button>
+          )}
+
+          {profile === 'STUDENT' && tccData.cancellationRequest && (
+            <p className="text-right text-yellow-600 font-semibold italic">
+              Sua solicitação de cancelamento está em análise.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <form
+            onSubmit={cancellationForm.handleSubmit(handleRequestCancellation)}
+          >
+            <DialogHeader>
+              <DialogTitle>Solicitar Cancelamento do TCC</DialogTitle>
+              <DialogDescription>
+                Descreva o motivo pelo qual você está solicitando o
+                cancelamento.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Label htmlFor="reason">Motivo</Label>
+              <Textarea
+                id="reason"
+                {...cancellationForm.register('reason')}
+                placeholder="Explique detalhadamente o motivo aqui..."
+                className="min-h-[100px]"
+              />
+              {cancellationForm.formState.errors.reason && (
+                <p className="text-sm text-red-600">
+                  {cancellationForm.formState.errors.reason.message}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Fechar
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                disabled={cancellationForm.formState.isSubmitting}
+              >
+                {cancellationForm.formState.isSubmitting
+                  ? 'Enviando...'
+                  : 'Enviar Solicitação'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </FormProvider>
   );
 }
