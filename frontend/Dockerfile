@@ -20,7 +20,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 # Etapa 2: Imagem leve para rodar a aplicação
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
 
 # Define diretório de trabalho
 WORKDIR /app
