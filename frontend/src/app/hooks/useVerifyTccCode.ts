@@ -42,7 +42,6 @@ export function useVerifyTccCode() {
             window.location.href = '/newPassword';
           }
 
-          console.log('Resposta JSON do servidor:', result);
         } else {
           toast.success('Código de acesso verificado com sucesso!');
         }
