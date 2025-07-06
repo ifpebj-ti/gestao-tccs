@@ -7,7 +7,7 @@ on:
     types:
       - closed
     paths:
-      - 'backend/**'
+      - "backend/**"
 
   workflow_dispatch:
 
@@ -84,7 +84,7 @@ jobs:
           created_tag="${major}.${minor}.${patch}"
           echo "New tag: $created_tag"
           echo "created_tag=$created_tag" >> "$GITHUB_OUTPUT"
-  
+
   # --------------------------------------------------------------------
   # 1) BACKEND DOCKER --------------------------------------------------
   # --------------------------------------------------------------------
@@ -115,6 +115,9 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+
+      - name: Run Tests
+        run: dotnet test --no-build --verbosity normal
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
