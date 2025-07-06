@@ -87,6 +87,7 @@ services:
     networks:
       - back_net
       - observability-net
+      - management-net
 
 volumes:
   postgres_data:
