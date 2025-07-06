@@ -13,8 +13,11 @@ const protectedRoutes: Record<string, string[]> = {
   '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANK', 'LIBRARY'],
-  '/ongoingTCCs/signatures': [],
-  '/ongoingTCCs/details': [],
+  '/ongoingTCCs/signatures': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANK', 'LIBRARY'],
+  '/ongoingTCCs/details': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANK', 'LIBRARY'],
+  '/myTCC': ['STUDENT'],
+  '/myTCC/signatures': ['STUDENT'],
+  '/myTCC/details': ['STUDENT'],
 };
 
 // Rotas temporárias com token temporário
@@ -63,5 +66,10 @@ export const config = {
     '/autoRegister',
     '/newPassword',
     '/ongoingTCCs',
+    '/ongoingTCCs/signatures',
+    '/ongoingTCCs/details',
+    '/myTCC',
+    '/myTCC/signatures',
+    '/myTCC/details',
   ],
 };
