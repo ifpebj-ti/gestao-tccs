@@ -33,7 +33,7 @@ export default function OngoingTCCsPage() {
         }
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter`,
+          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?StatusTcc=IN_PROGRESS`,
           {
             headers: {
               Authorization: `Bearer ${token}`
