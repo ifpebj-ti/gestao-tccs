@@ -23,7 +23,12 @@ interface DecodedToken {
   role: string;
 }
 
-interface TCCFromApi {
+interface TCCsInformation {
+  pendingSignature: number;
+  tccInprogress: number;
+}
+
+interface UserTCCs {
   tccId: number;
   studanteNames: string[];
 }
@@ -31,13 +36,45 @@ interface TCCFromApi {
 export default function HomePage() {
   const { push } = useRouter();
   const [profile, setProfile] = useState<string | null>(null);
-  const [tccs, setTccs] = useState<TCCFromApi[]>([]);
+  const [tccs, setTccs] = useState<TCCsInformation[]>([]);
+  const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
+
+  const fetchUserTCCs = async () => {
+    try {
+      const token = Cookies.get('token');
+      if (!token) {
+        toast.error('Token de autenticação não encontrado.');
+        return;
+      }
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error('Erro ao buscar TCCs do usuário.');
+      }
+
+      const data = await res.json();
+      setUserTCCs(data);
+    } catch {
+      toast.error('Erro ao carregar TCCs do usuário.');
+    }
+  };
 
   useEffect(() => {
     const token = Cookies.get('token');
     if (token) {
       const decodedToken = jwtDecode<DecodedToken>(token);
       setProfile(decodedToken.role);
+      if (decodedToken.role === 'STUDENT') {
+        fetchUserTCCs();
+      }
     }
   }, []);
 
@@ -50,23 +87,20 @@ export default function HomePage() {
           return;
         }
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?filter=IN_PROGRESS`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Home`, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        );
+        });
 
         if (!res.ok) {
-          throw new Error('Erro ao buscar TCCs');
+          throw new Error('Erro ao buscar informações dos TCCs.');
         }
 
-        const data: TCCFromApi[] = await res.json();
+        const data: TCCsInformation[] = await res.json();
         setTccs(data);
       } catch {
-        toast.error('Erro ao carregar TCCs em andamento.');
+        toast.error('Erro ao carregar informações dos TCCs.');
       }
     };
 
@@ -96,7 +130,7 @@ export default function HomePage() {
           <CollapseCard
             title="Assinaturas pendentes"
             icon={faFileSignature}
-            indicatorNumber={3}
+            indicatorNumber={tccs[0]?.pendingSignature || 0}
             indicatorColor="bg-red-600"
             onClick={() => push('/pendingSignatures')}
           />
@@ -113,7 +147,7 @@ export default function HomePage() {
           <CollapseCard
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={tccs.length}
+            indicatorNumber={tccs[0]?.tccInprogress || 0}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
@@ -137,7 +171,7 @@ export default function HomePage() {
           <CollapseCard
             title="Meu TCC"
             icon={faGraduationCap}
-            onClick={() => push('/TCC/{id}')}
+            onClick={() => push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)}
           ></CollapseCard>
         )}
 
@@ -178,7 +212,7 @@ export default function HomePage() {
           <CardHome
             title="Assinaturas pendentes"
             icon={faFileSignature}
-            indicatorNumber={3}
+            indicatorNumber={tccs[0]?.pendingSignature || 0}
             indicatorColor="bg-red-600"
             onClick={() => push('/pendingSignatures')}
           />
@@ -195,7 +229,7 @@ export default function HomePage() {
           <CardHome
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={tccs.length}
+            indicatorNumber={tccs[0]?.tccInprogress || 0}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
@@ -216,13 +250,11 @@ export default function HomePage() {
         )}
 
         {canView(['STUDENT']) && (
-          <Link href="/meuTCC">
-            <CardHome
-              title="Meu TCC"
-              icon={faGraduationCap}
-              onClick={() => push('/TCC/{id}')}
-            />
-          </Link>
+          <CardHome
+            title="Meu TCC"
+            icon={faGraduationCap}
+            onClick={() => push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)}
+          />
         )}
 
         {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (

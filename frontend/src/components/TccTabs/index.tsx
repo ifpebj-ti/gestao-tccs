@@ -13,7 +13,9 @@ export default function TccTabs() {
     { label: 'Informações', slug: 'details' }
   ];
 
-  if (!id) return null; // se não tem id, não mostra nada
+  if (!id) return null;
+
+  const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
 
   const isActive = (slug: string) => pathname.endsWith(`/${slug}`);
 
@@ -23,7 +25,7 @@ export default function TccTabs() {
         {tabs.map((tab) => (
           <li key={tab.slug} className="flex-shrink-0">
             <Link
-              href={`/ongoingTCCs/${tab.slug}?id=${id}`}
+              href={`${basePath}/${tab.slug}?id=${id}`}
               className={`inline-block px-4 py-3 text-sm font-medium border-b-4
                 transition-all duration-200
                 ${
