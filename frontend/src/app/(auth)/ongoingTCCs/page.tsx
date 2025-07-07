@@ -12,6 +12,12 @@ import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  role: string | string[];
+  userId: string;
+}
 
 interface TCCFromApi {
   tccId: number;
@@ -32,14 +38,31 @@ export default function OngoingTCCsPage() {
           return;
         }
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?StatusTcc=IN_PROGRESS`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+        const decodedToken = jwtDecode<DecodedToken>(token);
+        const { role, userId } = decodedToken;
+
+        const wideViewRoles = ['ADMIN', 'COORDINATOR', 'LIBRARY', 'SUPERVISOR'];
+        let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter`;
+
+        // Variável para determinar o tipo de visão (ampla ou restrita)
+        let userHasWideView = false;
+        if (typeof role === 'string') {
+          userHasWideView = wideViewRoles.includes(role);
+        } else if (Array.isArray(role)) {
+          userHasWideView = role.some((r) => wideViewRoles.includes(r));
+        }
+
+        if (userHasWideView) {
+          endpoint += '?StatusTcc=IN_PROGRESS';
+        } else {
+          endpoint += `?UserId=${userId}&StatusTcc=IN_PROGRESS`;
+        }
+
+        const res = await fetch(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        );
+        });
 
         if (!res.ok) {
           throw new Error('Erro ao buscar TCCs');
@@ -72,7 +95,7 @@ export default function OngoingTCCsPage() {
         </p>
       ) : (
         <>
-          {/* Mobile - com filhos */}
+          {/* Mobile */}
           <div className="md:hidden flex flex-col gap-2">
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
@@ -112,7 +135,7 @@ export default function OngoingTCCsPage() {
             ))}
           </div>
 
-          {/* Desktop - sem filhos */}
+          {/* Desktop */}
           <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
