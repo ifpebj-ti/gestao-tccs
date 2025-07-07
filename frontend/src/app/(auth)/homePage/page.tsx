@@ -20,7 +20,7 @@ import { toast } from 'react-toastify';
 interface DecodedToken {
   unique_name: string;
   userId: string;
-  role: string;
+  role: string | string[];
 }
 
 interface TCCsInformation {
@@ -35,7 +35,7 @@ interface UserTCCs {
 
 export default function HomePage() {
   const { push } = useRouter();
-  const [profile, setProfile] = useState<string | null>(null);
+  const [profile, setProfile] = useState<string | string[] | null>(null);
   const [tccs, setTccs] = useState<TCCsInformation | null>(null);
   const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
 
@@ -48,7 +48,7 @@ export default function HomePage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}&StatusTcc=IN_PROGRESS`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -72,7 +72,12 @@ export default function HomePage() {
     if (token) {
       const decodedToken = jwtDecode<DecodedToken>(token);
       setProfile(decodedToken.role);
-      if (decodedToken.role === 'STUDENT') {
+
+      const userHasStudentRole = Array.isArray(decodedToken.role)
+        ? decodedToken.role.includes('STUDENT')
+        : decodedToken.role === 'STUDENT';
+
+      if (userHasStudentRole) {
         fetchUserTCCs();
       }
     }
@@ -107,7 +112,30 @@ export default function HomePage() {
     fetchTccs();
   }, []);
 
-  const canView = (roles: string[]) => roles.includes(profile ?? '');
+  // A função 'canView' agora verifica se o perfil é string ou array. Para perfis de usuário com múltiplas roles, como 'ADMIN', 'COORDINATOR', etc., a verificação é feita para qualquer uma das roles.
+  const canView = (allowedRoles: string[]) => {
+    if (!profile) {
+      return false;
+    }
+    if (typeof profile === 'string') {
+      return allowedRoles.includes(profile);
+    }
+    if (Array.isArray(profile)) {
+      return profile.some((userRole) => allowedRoles.includes(userRole));
+    }
+    return false;
+  };
+
+  const isLimitedView = () => {
+    if (!profile) return false;
+    if (typeof profile === 'string') {
+      return profile === 'STUDENT' || profile === 'BANKING';
+    }
+    if (Array.isArray(profile)) {
+      return false; // Usuários com múltiplos perfis (como admin) têm visão completa.
+    }
+    return false;
+  };
 
   return (
     <div className="flex flex-col">
@@ -171,7 +199,9 @@ export default function HomePage() {
           <CollapseCard
             title="Meu TCC"
             icon={faGraduationCap}
-            onClick={() => push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)}
+            onClick={() =>
+              userTCCs[0] && push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)
+            }
           ></CollapseCard>
         )}
 
@@ -195,9 +225,7 @@ export default function HomePage() {
       {/* Desktop (Grid Cards) */}
       <div
         className={`hidden md:grid gap-6 ${
-          profile === 'STUDENT' || profile === 'BANKING'
-            ? 'grid-cols-2'
-            : 'md:grid-cols-2 lg:grid-cols-3'
+          isLimitedView() ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
         }`}
       >
         {canView([
@@ -253,7 +281,9 @@ export default function HomePage() {
           <CardHome
             title="Meu TCC"
             icon={faGraduationCap}
-            onClick={() => push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)}
+            onClick={() =>
+              userTCCs[0] && push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)
+            }
           />
         )}
 
