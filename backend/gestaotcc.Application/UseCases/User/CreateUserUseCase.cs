@@ -48,7 +48,7 @@ public class CreateUserUseCase(
                 if (tcc is not null)
                 {
                     
-                    TccFactory.UpdateUsersTcc(tcc, newUser, profileEntity!);
+                    TccFactory.UpdateUsersTccToCreateUser(tcc, newUser, profileEntity!);
                     CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList());
                     
                     var allIAlreadyAdded = tcc.TccInvites.Any(inv => !inv.IsValidCode);
