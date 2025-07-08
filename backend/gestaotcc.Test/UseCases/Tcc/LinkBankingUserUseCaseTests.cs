@@ -72,9 +72,14 @@ public class LinkBankingUserUseCaseTests
         _userGateway.FindById(dto.idInternalBanking).Returns(user1);
         _userGateway.FindById(dto.idExternalBanking).Returns(user2);
         _profileGateway.FindByRole("BANKING").Returns((ProfileEntity?)null);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<NullReferenceException>(() => _useCase.Execute(dto));
+        
+        // Act
+        var result = await _useCase.Execute(dto);
+        
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Erro ao buscar perfil.", result.Message);
+        Assert.Equal(404, result.ErrorDetails?.Status);
     }
 
     [Fact]
