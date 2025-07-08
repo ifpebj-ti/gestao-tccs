@@ -8,6 +8,7 @@ COPY ./gestaotcc.WebApi/gestaotcc.WebApi.csproj ./gestaotcc.WebApi/
 COPY ./gestaotcc.Application/gestaotcc.Application.csproj ./gestaotcc.Application/
 COPY ./gestaotcc.Domain/gestaotcc.Domain.csproj ./gestaotcc.Domain/
 COPY ./gestaotcc.Infra/gestaotcc.Infra.csproj ./gestaotcc.Infra/
+COPY ./gestaotcc.Test/gestaotcc.Test.csproj ./gestaotcc.Test/
 
 # Restaura dependências
 RUN dotnet restore
