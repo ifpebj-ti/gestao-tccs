@@ -33,7 +33,7 @@ public class WeatherForecastController : ControllerBase
             .ToArray();
     }
 
-    [HttpGet("teste")]
+    [HttpGet("test")]
     public async Task<ActionResult> Teste([FromServices] SendPendingSignatureUseCase useCase)
     {
         await useCase.Execute();
