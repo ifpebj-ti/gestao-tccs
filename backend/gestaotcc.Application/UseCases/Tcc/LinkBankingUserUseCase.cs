@@ -24,8 +24,8 @@ public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGat
         }
         var profileEntity = await profileGateway.FindByRole("BANKING");
 
-        TccFactory.UpdateUsersTcc(tcc, userInternal, profileEntity!);
-        TccFactory.UpdateUsersTcc(tcc, userExternal, profileEntity!);
+        TccFactory.UpdateUsersTccToCreateBanking(tcc, userInternal, profileEntity!);
+        TccFactory.UpdateUsersTccToCreateBanking(tcc, userExternal, profileEntity!);
 
         await tccGateway.Update(tcc);
 
