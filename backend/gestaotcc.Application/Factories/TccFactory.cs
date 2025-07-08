@@ -94,7 +94,7 @@ public class TccFactory
     }
 
 
-    public static TccEntity UpdateUsersTcc(TccEntity tcc, UserEntity user, ProfileEntity profile)
+    public static TccEntity UpdateUsersTccToCreateUser(TccEntity tcc, UserEntity user, ProfileEntity profile)
     {
         var alreadyAdded = tcc.UserTccs.Any(ut => ut.UserId == user.Id);
         
@@ -103,6 +103,23 @@ public class TccFactory
             var invite = tcc.TccInvites.FirstOrDefault(inv => inv.Email == user.Email);
             invite.IsValidCode = false;
             
+            tcc.UserTccs.Add(new UserTccEntityBuilder()
+                .WithUser(user)
+                .WithTcc(tcc)
+                .WithProfile(profile)
+                .WithBindingDate(DateTime.UtcNow)
+                .Build());
+        }
+
+        return tcc;
+    }
+    
+    public static TccEntity UpdateUsersTccToCreateBanking(TccEntity tcc, UserEntity user, ProfileEntity profile)
+    {
+        var alreadyAdded = tcc.UserTccs.Any(ut => ut.UserId == user.Id);
+        
+        if (!alreadyAdded)
+        {
             tcc.UserTccs.Add(new UserTccEntityBuilder()
                 .WithUser(user)
                 .WithTcc(tcc)
