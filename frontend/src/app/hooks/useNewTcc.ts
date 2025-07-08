@@ -63,7 +63,7 @@ export function useNewTccForm() {
       if (response.ok) {
         toast.success('Proposta de TCC enviada com sucesso!');
       } else {
-        toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
+        toast.error('Erro ao enviar a proposta de TCC. Verifique os dados e tente novamente.');
       }
     } catch {
       toast.error('Erro ao enviar a proposta de TCC.');

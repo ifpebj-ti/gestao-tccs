@@ -18,7 +18,7 @@ const predefinedSteps = [
 
 export default function Step({ currentStep }: StepProps) {
   return (
-    <div className="flex items-center justify-between w-full overflow-x-auto py-2 pb-12 md:pb-20 lg:pb-20 select-none">
+    <div className="flex items-center justify-between w-full overflow-x-auto py-5 md:pr-0 pb-12 md:pb-20 lg:pb-20 select-none">
       {predefinedSteps.map((step, index) => {
         const isCompleted = step.id < currentStep;
         const isCurrent = step.id === currentStep;
@@ -39,7 +39,7 @@ export default function Step({ currentStep }: StepProps) {
 
             {/* Círculo do step */}
             <div
-              className={`z-10 flex items-center justify-center lg:w-12 lg:h-12 w-8 h-8 lg:text-2xl text-sm rounded-full border-2 relative transition-all
+              className={`z-10 flex items-center justify-center lg:w-12 lg:h-12 w-10 h-10 lg:text-2xl text-regular rounded-full border-2 relative transition-all
                 ${
                   isCompleted
                     ? 'bg-blue-100 border-[#1351B4] text-[#1351B4]'
@@ -86,7 +86,7 @@ export default function Step({ currentStep }: StepProps) {
 
             {/* Mobile label flutuante */}
             {isCurrent && (
-              <span className="absolute top-[38px] text-sm md:hidden text-center text-[#1351B4] font-semibold">
+              <span className="absolute top-[44px] text-regular md:hidden text-center text-[#1351B4] font-semibold">
                 {step.mobileLabel}
               </span>
             )}

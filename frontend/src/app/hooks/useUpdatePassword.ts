@@ -34,7 +34,7 @@ export function useUpdatePassword() {
           toast.success('Senha atualizada com sucesso!');
         }
       } else {
-        toast.error('Erro na requisição:');
+        toast.error('Erro ao atualizar a senha. Verifique se o e-mail está correto ou se a senha atende aos requisitos.');
       }
     } catch {
       toast.error('Erro ao enviar a senha. Tente novamente mais tarde.');

@@ -20,7 +20,7 @@ import { toast } from 'react-toastify';
 interface DecodedToken {
   unique_name: string;
   userId: string;
-  role: string;
+  role: string | string[];
 }
 
 interface TCCsInformation {
@@ -35,8 +35,8 @@ interface UserTCCs {
 
 export default function HomePage() {
   const { push } = useRouter();
-  const [profile, setProfile] = useState<string | null>(null);
-  const [tccs, setTccs] = useState<TCCsInformation[]>([]);
+  const [profile, setProfile] = useState<string | string[] | null>(null);
+  const [tccs, setTccs] = useState<TCCsInformation | null>(null);
   const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
 
   const fetchUserTCCs = async () => {
@@ -48,7 +48,7 @@ export default function HomePage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}&StatusTcc=IN_PROGRESS`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -72,7 +72,12 @@ export default function HomePage() {
     if (token) {
       const decodedToken = jwtDecode<DecodedToken>(token);
       setProfile(decodedToken.role);
-      if (decodedToken.role === 'STUDENT') {
+
+      const userHasStudentRole = Array.isArray(decodedToken.role)
+        ? decodedToken.role.includes('STUDENT')
+        : decodedToken.role === 'STUDENT';
+
+      if (userHasStudentRole) {
         fetchUserTCCs();
       }
     }
@@ -97,7 +102,7 @@ export default function HomePage() {
           throw new Error('Erro ao buscar informações dos TCCs.');
         }
 
-        const data: TCCsInformation[] = await res.json();
+        const data: TCCsInformation = await res.json();
         setTccs(data);
       } catch {
         toast.error('Erro ao carregar informações dos TCCs.');
@@ -107,7 +112,30 @@ export default function HomePage() {
     fetchTccs();
   }, []);
 
-  const canView = (roles: string[]) => roles.includes(profile ?? '');
+  // Permite verificar se o usuário tem uma única role ou múltiplas roles.
+  const canView = (allowedRoles: string[]) => {
+    if (!profile) {
+      return false;
+    }
+    if (typeof profile === 'string') {
+      return allowedRoles.includes(profile);
+    }
+    if (Array.isArray(profile)) {
+      return profile.some((userRole) => allowedRoles.includes(userRole));
+    }
+    return false;
+  };
+
+  const isLimitedView = () => {
+    if (!profile) return false;
+    if (typeof profile === 'string') {
+      return profile === 'STUDENT' || profile === 'BANKING';
+    }
+    if (Array.isArray(profile)) {
+      return false; // Usuários com múltiplos perfis (como admin) têm visão completa.
+    }
+    return false;
+  };
 
   return (
     <div className="flex flex-col">
@@ -130,7 +158,7 @@ export default function HomePage() {
           <CollapseCard
             title="Assinaturas pendentes"
             icon={faFileSignature}
-            indicatorNumber={tccs[0]?.pendingSignature || 0}
+            indicatorNumber={tccs?.pendingSignature || 0}
             indicatorColor="bg-red-600"
             onClick={() => push('/pendingSignatures')}
           />
@@ -147,7 +175,7 @@ export default function HomePage() {
           <CollapseCard
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={tccs[0]?.tccInprogress || 0}
+            indicatorNumber={tccs?.tccInprogress || 0}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
@@ -171,11 +199,13 @@ export default function HomePage() {
           <CollapseCard
             title="Meu TCC"
             icon={faGraduationCap}
-            onClick={() => push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)}
+            onClick={() =>
+              userTCCs[0] && push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)
+            }
           ></CollapseCard>
         )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
           <CollapseCard
             title="Cadastrar nova proposta"
             icon={faFileCirclePlus}
@@ -195,9 +225,7 @@ export default function HomePage() {
       {/* Desktop (Grid Cards) */}
       <div
         className={`hidden md:grid gap-6 ${
-          profile === 'STUDENT' || profile === 'BANKING'
-            ? 'grid-cols-2'
-            : 'md:grid-cols-2 lg:grid-cols-3'
+          isLimitedView() ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
         }`}
       >
         {canView([
@@ -212,7 +240,7 @@ export default function HomePage() {
           <CardHome
             title="Assinaturas pendentes"
             icon={faFileSignature}
-            indicatorNumber={tccs[0]?.pendingSignature || 0}
+            indicatorNumber={tccs?.pendingSignature || 0}
             indicatorColor="bg-red-600"
             onClick={() => push('/pendingSignatures')}
           />
@@ -229,7 +257,7 @@ export default function HomePage() {
           <CardHome
             title="TCCs em andamento"
             icon={faGraduationCap}
-            indicatorNumber={tccs[0]?.tccInprogress || 0}
+            indicatorNumber={tccs?.tccInprogress || 0}
             indicatorColor="bg-blue-600"
             onClick={() => push('/ongoingTCCs')}
           />
@@ -253,11 +281,13 @@ export default function HomePage() {
           <CardHome
             title="Meu TCC"
             icon={faGraduationCap}
-            onClick={() => push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)}
+            onClick={() =>
+              userTCCs[0] && push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)
+            }
           />
         )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
           <Link href="/newTCC">
             <CardHome
               title="Cadastrar nova proposta"

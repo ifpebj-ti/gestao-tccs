@@ -1,49 +1,65 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtDecode } from "jwt-decode";
+
 interface DecodedToken {
   unique_name: string;
   userId: string;
-  role: string;
+  role: string | string[];
 }
 
-// Rotas protegidas com perfis permitidos (token principal)
 const protectedRoutes: Record<string, string[]> = {
-  '/homePage': [], // Qualquer usuário logado pode acessar
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/homePage': [], 
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
-  '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANK', 'LIBRARY'],
-  '/ongoingTCCs/signatures': [],
-  '/ongoingTCCs/details': [],
+  '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
+  '/myTCC': ['STUDENT'],
 };
 
-// Rotas temporárias com token temporário
 const tempProtectedRoutes = ['/autoRegister', '/newPassword'];
+
+function hasPermission(userRoles: string | string[], allowedRoles: string[]): boolean {
+  // Se a rota não exige perfis específicos, o acesso é permitido.
+  if (allowedRoles.length === 0) {
+    return true;
+  }
+  
+  // Se o usuário tem uma única role (string)
+  if (typeof userRoles === 'string') {
+    return allowedRoles.includes(userRoles);
+  }
+
+  // Se o usuário tem múltiplas roles (array), verifica se pelo menos uma delas é permitida.
+  if (Array.isArray(userRoles)) {
+    return userRoles.some(role => allowedRoles.includes(role));
+  }
+
+  return false;
+}
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get('token')?.value;
   const tempToken = request.cookies.get('access_token_temp')?.value;
 
-  // Verificação de rotas com autenticação principal
-  for (const route in protectedRoutes) {
-    if (path.startsWith(route)) {
-      if (!token) {
-        return NextResponse.redirect(new URL('/', request.url));
-      }
+  const protectedRoute = Object.keys(protectedRoutes).find(route => path.startsWith(route));
 
-      const allowedProfiles = protectedRoutes[route];
-      if (allowedProfiles.length > 0) {
-        try {
-          const decoded = jwtDecode<DecodedToken>(token);
-          if (!allowedProfiles.includes(decoded.role)) {
-            return NextResponse.redirect(new URL('/unauthorized', request.url));
-          }          
-        } catch (err) {
-          console.error('Erro ao decodificar token:', err);
-          return NextResponse.redirect(new URL('/', request.url));
-        }
+  if (protectedRoute) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    const allowedProfiles = protectedRoutes[protectedRoute];
+
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      
+      if (!hasPermission(decoded.role, allowedProfiles)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
       }
+    } catch (err) {
+      console.error('Erro ao decodificar token:', err);
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 
@@ -62,6 +78,7 @@ export const config = {
     '/newUser',
     '/autoRegister',
     '/newPassword',
-    '/ongoingTCCs',
+    '/ongoingTCCs/:path*', // Usar :path* para cobrir sub-rotas como /signatures e /details
+    '/myTCC/:path*',
   ],
 };

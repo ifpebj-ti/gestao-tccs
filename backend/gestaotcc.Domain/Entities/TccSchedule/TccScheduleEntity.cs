@@ -8,6 +8,7 @@ public class TccScheduleEntity
     public string Location { get; set; } = string.Empty;
     public TccEntity Tcc { get; set; } = null!;
     public long TccId { get; set; }
+    public TccScheduleEntity() { }
     public TccScheduleEntity(long id, DateTime scheduledDate, string location, long tccId)
     {
         Id = id;

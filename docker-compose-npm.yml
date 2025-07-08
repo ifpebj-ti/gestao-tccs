@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - "80:80" # Tráfego HTTP público
+      - "443:443" # Tráfego HTTPS público
+      - "81:81" # Interface de administração do NPM
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - management-net
+
+networks:
+  management-net:
+    external: true
+
+volumes:
+  npm_data:
+  npm_letsencrypt:
