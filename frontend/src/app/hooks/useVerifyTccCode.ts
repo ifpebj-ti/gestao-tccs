@@ -46,7 +46,7 @@ export function useVerifyTccCode() {
           toast.success('Código de acesso verificado com sucesso!');
         }
       } else {
-        toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
+        toast.error('Código de acesso inválido ou expirado. Tente novamente.');
       }
     } catch (error) {
       toast.error('Erro ao enviar o código de acesso. Tente novamente mais tarde.');

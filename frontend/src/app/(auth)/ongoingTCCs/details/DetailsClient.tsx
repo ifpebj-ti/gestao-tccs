@@ -82,7 +82,6 @@ export default function DetailsClient() {
           />
         </div>
 
-        {/* CORREÇÃO 2: Adiciona as props que estavam faltando. */}
         <ActionPanel
           profile={profile}
           cancellationRequested={tccData.cancellationRequest}

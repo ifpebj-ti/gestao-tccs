@@ -112,7 +112,7 @@ export default function HomePage() {
     fetchTccs();
   }, []);
 
-  // A função 'canView' agora verifica se o perfil é string ou array. Para perfis de usuário com múltiplas roles, como 'ADMIN', 'COORDINATOR', etc., a verificação é feita para qualquer uma das roles.
+  // Permite verificar se o usuário tem uma única role ou múltiplas roles.
   const canView = (allowedRoles: string[]) => {
     if (!profile) {
       return false;
@@ -205,7 +205,7 @@ export default function HomePage() {
           ></CollapseCard>
         )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
           <CollapseCard
             title="Cadastrar nova proposta"
             icon={faFileCirclePlus}
@@ -287,7 +287,7 @@ export default function HomePage() {
           />
         )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
           <Link href="/newTCC">
             <CardHome
               title="Cadastrar nova proposta"

@@ -74,7 +74,7 @@ export function useTccDetails() {
       setTccData(result);
 
       if (result.cancellationRequest) {
-        const detailsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
+        const detailsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation?tccId=${tccId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (detailsRes.ok) {
@@ -134,10 +134,9 @@ export function useTccDetails() {
   const handleApproveCancellation = async () => {
     try {
       const token = Cookies.get('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/approve`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/approve?tccId=${tccId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ idTcc: tccId }),
       });
       if (!res.ok) throw new Error('Falha ao aprovar cancelamento.');
       toast.success('Cancelamento aprovado com sucesso!');

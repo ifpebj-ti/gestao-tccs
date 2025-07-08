@@ -31,7 +31,7 @@ export function useResendAccessCode() {
           toast.success('Código de acesso enviado com sucesso!');
         }
       } else {
-        toast.error(`Erro na requisição: ${response.status} ${response.statusText}`);
+        toast.error('Erro ao enviar o código de acesso. Verifique se o e-mail está correto.');
       }
     } catch {
       toast.error('Erro ao enviar o código de acesso. Tente novamente mais tarde.');
