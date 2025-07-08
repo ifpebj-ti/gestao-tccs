@@ -10,7 +10,7 @@ interface DecodedToken {
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [], 
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
   '/myTCC': ['STUDENT'],
