@@ -22,7 +22,7 @@ export default function Unauthorized() {
     <div className="flex flex-col items-center justify-center h-screen text-center p-4 gap-4">
       <Image alt="Not Found" src={notAllowedImage} className="h-1/2 mb-6" />
       <p className="text-xl mt-4 text-gray-700">
-        Você não tem permissão para acessar essa página
+        Você não tem permissão para acessar essa página.
       </p>
       <Button onClick={handleRedirect}>Voltar</Button>
     </div>
