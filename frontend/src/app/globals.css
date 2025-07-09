@@ -1,14 +1,126 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'tailwindcss';
+
 @font-face {
   font-family: 'Rawline';
-  src:
-    url('/fonts/rawline.woff2') format('woff2'),
-    url('/fonts/rawline.woff') format('woff');
-  font-weight: normal;
+  src: url('/rawline-cdnfonts/rawline-100.ttf') format('truetype');
+  font-weight: 100;
   font-style: normal;
 }
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-100i.ttf') format('truetype');
+  font-weight: 100;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-200.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-200i.ttf') format('truetype');
+  font-weight: 200;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-300.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-300i.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-400.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-400i.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-500.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-500i.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-600.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-600i.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-700.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-700i.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-800.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-800i.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Rawline';
+  src: url('/rawline-cdnfonts/rawline-900.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
 body {
   font-family: 'Rawline', sans-serif;
 }
