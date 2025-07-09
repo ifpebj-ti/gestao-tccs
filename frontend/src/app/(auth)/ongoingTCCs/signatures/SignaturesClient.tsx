@@ -89,7 +89,6 @@ export default function SignaturesClient() {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
-
         if (!res.ok) throw new Error('Erro ao buscar workflow do TCC.');
         const result: WorkflowResponse = await res.json();
         setData(result);
@@ -108,7 +107,6 @@ export default function SignaturesClient() {
             headers: { Authorization: `Bearer ${token}` }
           }
         );
-
         if (!res.ok) throw new Error('Erro ao buscar detalhes do TCC.');
         const result: TccDetailsResponse = await res.json();
         const names = result.infoStudent.map((s) => s.name);
