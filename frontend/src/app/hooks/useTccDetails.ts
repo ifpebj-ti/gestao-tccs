@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cancellationSchema, CancellationSchemaType } from '@/app/schemas/tccCancellationSchema';
@@ -10,8 +10,13 @@ import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
 
+interface Member {
+  id: number;
+  name: string;
+}
+
 interface TccDetailsResponse {
-  infoTcc: { title: string; summary: string; presentationDate: string; presentationTime: string; presentationLocation: string; };
+  infoTcc: { title: string; summary: string; presentationDate: string | null; presentationTime: string | null; presentationLocation: string; };
   infoStudent: { name: string; registration: string; cpf: string; course: string; email: string; }[];
   infoAdvisor: { name: string; email: string; };
   infoBanking: { nameInternal: string; emailInternal: string; nameExternal: string; emailExternal: string; };
@@ -30,12 +35,8 @@ interface DecodedToken {
   userId: string;
 }
 
-interface Member {
-  id: number;
-  name: string;
-}
-
 export function useTccDetails() {
+  const { push } = useRouter();
   const [tccData, setTccData] = useState<TccDetailsResponse | null>(null);
   const [cancellationDetails, setCancellationDetails] = useState<CancellationDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ export function useTccDetails() {
       setTccData(result);
 
       if (result.cancellationRequest) {
-        const detailsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation?tccId=${tccId}`, {
+        const detailsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (detailsRes.ok) {
@@ -100,12 +101,11 @@ export function useTccDetails() {
         const token = Cookies.get('token');
         if (!token) return;
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/User/filter?Profile=BANKING`, { headers: { Authorization: `Bearer ${token}` } });
-
-          if(res.ok) {
-            const data = await res.json();
-            setAllBankingMembers(data);
-          }
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/User/filter?Profile=BANKING`, { headers: { Authorization: `Bearer ${token}` } });
+            if(res.ok) {
+              const data = await res.json();
+              setAllBankingMembers(data);
+            }
         } catch {
             toast.error("Erro ao carregar lista de membros da banca.");
         }
@@ -132,20 +132,22 @@ export function useTccDetails() {
   };
 
   const handleApproveCancellation = async () => {
+    const token = Cookies.get('token');
+    if (!token) { toast.error('Autenticação necessária.'); return; }
     try {
-      const token = Cookies.get('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/approve?tccId=${tccId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Falha ao aprovar cancelamento.');
+      if (!res.ok) throw new Error('Falha ao aprovar o cancelamento.');
+      push('/ongoingTCCs');
       toast.success('Cancelamento aprovado com sucesso!');
       fetchTccDetails();
     } catch {
-      toast.error('Erro ao aprovar cancelamento.');
+      toast.error('Erro ao aprovar o cancelamento.');
     }
   };
-
+  
   const handleRegisterBanking: SubmitHandler<RegisterBankingSchemaType> = async (data) => {
     try {
         const token = Cookies.get('token');
