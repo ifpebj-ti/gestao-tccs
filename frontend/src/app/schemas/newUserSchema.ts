@@ -10,30 +10,30 @@ export const newUserSchema = z.object({
   cpf: z.string().min(11, 'CPF inválido').max(14, 'CPF inválido').refine(cpf => /^\d{11}$/.test(cpf) || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpf), {
     message: 'CPF inválido',
   }),
-  profile: z.enum(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'STUDENT', 'BANKING', 'LIBRARY'], {
-    errorMap: (issue, ctx) => {
-      if (issue.code === 'invalid_type') {
-        return { message: 'Perfil inválido' };
-      }
-      return { message: ctx.defaultError };
-    }
-  }),
-  // siape obrigatorio caso profile = 'COORDINATOR' | 'SUPERVISOR' | 'ADVISOR'
+  profile: z.enum(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'STUDENT', 'BANKING', 'LIBRARY']).optional(),
   siape: z.string().optional(),
   course: z.string().min(1, 'Curso é obrigatório').refine(value => value !== 'Selecione um curso', {
     message: 'Selecione um curso válido',
   }),
 }).superRefine((data, ctx) => {
-  const profilesThatNeedSiape = ['COORDINATOR', 'SUPERVISOR', 'ADVISOR'];
+  if (!data.profile) {
+    ctx.addIssue({
+      path: ['profile'],
+      code: z.ZodIssueCode.custom,
+      message: 'A seleção de um perfil é obrigatória.'
+    });
+    return;
+  }
 
-  if (profilesThatNeedSiape.includes(data.profile[0]) && (!data.siape || data.siape.trim().length < 3)) {
+  const profilesThatNeedSiape = ['COORDINATOR', 'SUPERVISOR', 'ADVISOR'];
+  if (profilesThatNeedSiape.includes(data.profile) && (!data.siape || data.siape.trim().length < 3)) {
     ctx.addIssue({
       path: ['siape'],
       code: z.ZodIssueCode.custom,
       message: 'SIAPE é obrigatório para o perfil selecionado.'
     });
   }
-
+  
   if (data.profile === 'STUDENT' && !data.registration) {
     ctx.addIssue({
       path: ['registration'],
