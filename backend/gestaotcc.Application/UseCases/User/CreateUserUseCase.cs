@@ -47,7 +47,6 @@ public class CreateUserUseCase(
                 var tcc = await tccGateway.FindTccById(tccInvite.TccId);
                 if (tcc is not null)
                 {
-                    
                     TccFactory.UpdateUsersTccToCreateUser(tcc, newUser, profileEntity!);
                     CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList());
                     
