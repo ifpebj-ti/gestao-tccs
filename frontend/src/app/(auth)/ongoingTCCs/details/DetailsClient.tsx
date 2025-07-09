@@ -5,7 +5,6 @@ import { useTccDetails } from '@/app/hooks/useTccDetails';
 import { FormProvider } from 'react-hook-form';
 import React from 'react';
 
-// Imports da UI e dos componentes de seção
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import TccTabs from '@/components/TccTabs';
 import { TccHeader } from '@/components/tcc-details/TccHeader';
@@ -42,7 +41,6 @@ export default function DetailsClient() {
     return <div className="p-4">TCC não encontrado.</div>;
   }
 
-  // CORREÇÃO 1: Garante que a variável seja sempre um booleano.
   const canRegisterBanking = !!(
     profile &&
     ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'].some((role) =>
@@ -86,11 +84,19 @@ export default function DetailsClient() {
           profile={profile}
           cancellationRequested={tccData.cancellationRequest}
           cancellationDetails={cancellationDetails}
+          hasBanking={
+            !!(
+              tccData.infoBanking?.nameInternal ||
+              tccData.infoBanking?.nameExternal
+            )
+          }
+          isBankingFormVisible={isBankingFormVisible}
           onApprove={handleApproveCancellation}
           onRequest={() => setIsCancellationModalOpen(true)}
-          hasBanking={!!tccData.infoBanking?.nameInternal}
-          isBankingFormVisible={isBankingFormVisible}
           onRegisterBankingClick={() => setIsBankingFormVisible(true)}
+          onScheduleClick={() => {
+            // feature not implemented yet
+          }}
         />
       </div>
 

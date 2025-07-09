@@ -15,6 +15,7 @@ interface ActionPanelProps {
   onApprove: () => void;
   onRequest: () => void;
   onRegisterBankingClick: () => void;
+  onScheduleClick: () => void;
 }
 
 export function ActionPanel({
@@ -25,7 +26,8 @@ export function ActionPanel({
   isBankingFormVisible,
   onApprove,
   onRequest,
-  onRegisterBankingClick
+  onRegisterBankingClick,
+  onScheduleClick
 }: ActionPanelProps) {
   const isApprover =
     profile &&
@@ -34,8 +36,7 @@ export function ActionPanel({
     );
 
   return (
-    <div className="flex flex-col md:flex-row justify-end gap-4">
-      {/* Botão para Cadastrar Banca */}
+    <div className="flex flex-col md:flex-row justify-end gap-4 mt-6">
       {isApprover &&
         !hasBanking &&
         !cancellationRequested &&
@@ -45,7 +46,12 @@ export function ActionPanel({
           </Button>
         )}
 
-      {/* Lógica para o painel de aprovação de cancelamento */}
+      {isApprover && hasBanking && !cancellationRequested && (
+        <Button onClick={onScheduleClick} className="md:w-fit w-full">
+          Agendar Apresentação
+        </Button>
+      )}
+
       {cancellationRequested && isApprover && (
         <div className="flex-1 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md">
           <p className="font-bold text-lg md:text-regular">
@@ -75,7 +81,6 @@ export function ActionPanel({
         </div>
       )}
 
-      {/* Lógica para o botão do estudante */}
       {profile === 'STUDENT' && !cancellationRequested && (
         <Button
           className="md:w-fit w-full"

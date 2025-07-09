@@ -24,7 +24,6 @@ export function useUpdatePassword() {
           userPassword: data.userPassword
         })
       });
-
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {

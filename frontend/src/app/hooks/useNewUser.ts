@@ -1,3 +1,5 @@
+'use client';
+
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { newUserSchema, NewUserSchemaSchemaType } from '@/app/schemas/newUserSchema';
@@ -7,17 +9,23 @@ import Cookies from 'js-cookie';
 
 export function useNewUserForm() {
   const { push } = useRouter();
+
+  const token = Cookies.get('token');
+  const isSelfRegistering = !token;
+
+  const defaultValues: NewUserSchemaSchemaType = {
+    name: '',
+    email: '',
+    registration: '',
+    cpf: '',
+    profile: isSelfRegistering ? 'STUDENT' : undefined,
+    siape: '',
+    course: 'ENGENHARIA_DE_SOFTWARE'
+  };
+
   const {handleSubmit, register, formState: {errors, isSubmitting}, reset} = useForm<NewUserSchemaSchemaType>({
     resolver: zodResolver(newUserSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      registration: '',
-      cpf: '',
-      profile: undefined,
-      siape: '',
-      course: 'ENGENHARIA DE SOFTWARE'
-    }
+    defaultValues: defaultValues
   });
 
   const submitForm: SubmitHandler<NewUserSchemaSchemaType> = async (data) => {
@@ -34,9 +42,11 @@ export function useNewUserForm() {
         toast.success('Usuário registrado com sucesso!');
         reset();
         const result = await response.json();
-        Cookies.set('access_token_temp', result.token, { expires: 5 / 1440 }); // 5 minutes
-        if (data.profile === 'STUDENT') {
+        if (isSelfRegistering) {
+          Cookies.set('access_token_temp', result.token, { expires: 5 / 1440 }); // 5 minutes
           push('/newPassword');
+        } else {
+          push('/homePage');
         }
       } else {
         toast.error("Erro ao registrar usuário. Verifique os dados e tente novamente.");
@@ -46,5 +56,5 @@ export function useNewUserForm() {
     }
   };
 
-  return { register, submitForm, handleSubmit, errors, isSubmitting};
+  return { register, submitForm, handleSubmit, errors, isSubmitting, isSelfRegistering};
 }

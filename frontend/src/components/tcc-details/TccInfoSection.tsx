@@ -7,15 +7,15 @@ interface TccInfoSectionProps {
   infoTcc: {
     title: string;
     summary: string;
-    presentationDate: string;
-    presentationTime: string;
+    presentationDate: string | null;
+    presentationTime: string | null;
     presentationLocation: string;
   };
 }
 
 export function TccInfoSection({ infoTcc }: TccInfoSectionProps) {
   return (
-    <div>
+    <section>
       <h2 className="text-lg font-extrabold uppercase">Informações do TCC</h2>
       <div className="grid md:grid-cols-2 gap-4 mt-4">
         <div className="grid items-center gap-1.5">
@@ -45,6 +45,6 @@ export function TccInfoSection({ infoTcc }: TccInfoSectionProps) {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }

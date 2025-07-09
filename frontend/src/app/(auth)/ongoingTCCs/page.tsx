@@ -100,7 +100,10 @@ export default function OngoingTCCsPage() {
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
                 <CollapseCard
-                  title={tcc.studanteNames.join(', ')}
+                  title={
+                    tcc.studanteNames.join(', ') ||
+                    'Aguardando cadastro do(s) estudante(s)'
+                  }
                   icon={faGraduationCap}
                   indicatorColor="bg-red-600"
                 >
@@ -140,7 +143,10 @@ export default function OngoingTCCsPage() {
             {tccs.map((tcc) => (
               <div key={tcc.tccId}>
                 <CollapseCard
-                  title={tcc.studanteNames.join(', ')}
+                  title={
+                    tcc.studanteNames.join(', ') ||
+                    'Aguardando cadastro do(s) estudante(s)'
+                  }
                   icon={faGraduationCap}
                   indicatorColor="bg-red-600"
                   onClick={() =>

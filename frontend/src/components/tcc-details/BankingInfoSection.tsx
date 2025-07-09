@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { UseFormReturn, SubmitHandler } from 'react-hook-form';
 import { RegisterBankingSchemaType } from '@/app/schemas/registerBankingSchema';
-// 1. Importar o ícone de informação e o componente FontAwesomeIcon
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -40,7 +39,8 @@ export function BankingInfoSection({
   onSubmit,
   allBankingMembers
 }: BankingInfoSectionProps) {
-  const hasBanking = bankingData && bankingData.nameInternal;
+  const hasBanking =
+    bankingData && (bankingData.nameInternal || bankingData.nameExternal);
   const {
     register,
     handleSubmit,
@@ -66,19 +66,31 @@ export function BankingInfoSection({
         <div className="grid md:grid-cols-2 gap-4 mt-4">
           <div className="grid items-center gap-1.5">
             <Label className="font-semibold">Membro Interno</Label>
-            <Input value={bankingData.nameInternal} readOnly />
+            <Input
+              value={bankingData.nameInternal || 'Não definido'}
+              readOnly
+            />
           </div>
           <div className="grid items-center gap-1.5">
             <Label className="font-semibold">Email Interno</Label>
-            <Input value={bankingData.emailInternal} readOnly />
+            <Input
+              value={bankingData.emailInternal || 'Não definido'}
+              readOnly
+            />
           </div>
           <div className="grid items-center gap-1.5">
             <Label className="font-semibold">Membro Externo</Label>
-            <Input value={bankingData.nameExternal} readOnly />
+            <Input
+              value={bankingData.nameExternal || 'Não definido'}
+              readOnly
+            />
           </div>
           <div className="grid items-center gap-1.5">
             <Label className="font-semibold">Email Externo</Label>
-            <Input value={bankingData.emailExternal} readOnly />
+            <Input
+              value={bankingData.emailExternal || 'Não definido'}
+              readOnly
+            />
           </div>
         </div>
       ) : isFormVisible && canRegister ? (
@@ -86,16 +98,14 @@ export function BankingInfoSection({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-4 mt-4"
         >
-          {/* 2. Adicionamos o indicativo aqui */}
           <div className="flex items-center gap-2 p-3 text-sm text-blue-800 rounded-lg bg-blue-50">
             <FontAwesomeIcon icon={faInfoCircle} className="h-5 w-5" />
             <div>
               <span className="font-medium">Atenção:</span> Para que um usuário
-              possa ser adicionado na banca, ele deve ter realizado o primeiro
-              acesso ao sistema.
+              apareça nas listas, ele deve ter realizado o primeiro acesso ao
+              sistema.
             </div>
           </div>
-
           <div className="grid md:grid-cols-2 gap-4">
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="idInternalBanking">
@@ -153,7 +163,7 @@ export function BankingInfoSection({
           </div>
         </form>
       ) : (
-        <p className="text-gray-600 italic my-4 lg:mt-4">
+        <p className="text-gray-600 italic mt-4">
           Aguardando cadastro da banca.
         </p>
       )}
