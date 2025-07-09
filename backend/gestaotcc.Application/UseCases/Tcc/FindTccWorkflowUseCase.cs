@@ -41,6 +41,7 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
 
         if (tccStep == StepTccType.PROPOSAL_REGISTRATION)
         {
+            userTccs = tcc.UserTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()).ToList();
             var details = CreateStudentRegistrationDetails(tcc, userTccs);
             return new FindTccWorkflowDTO(tcc.Id, signatureOrder, new List<string>(), new List<FindTccWorkflowSignatureDTO>()
             {
