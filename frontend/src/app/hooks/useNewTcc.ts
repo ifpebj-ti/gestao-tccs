@@ -6,8 +6,10 @@ import { newTccSchema, NewTccSchemaType } from '@/app/schemas/newTccSchema';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 export function useNewTccForm() {
+  const { push } = useRouter();
   const [advisors, setAdvisors] = useState<{ id: number; name: string }[]>([]);
 
   const form = useForm<NewTccSchemaType>({
@@ -61,6 +63,7 @@ export function useNewTccForm() {
       });
 
       if (response.ok) {
+        push('/ongoingTCCs');
         toast.success('Proposta de TCC enviada com sucesso!');
       } else {
         toast.error('Erro ao enviar a proposta de TCC. Verifique os dados e tente novamente.');
