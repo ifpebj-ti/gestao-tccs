@@ -350,4 +350,30 @@ public class TccController : ControllerBase
         Log.Information("Email de agendamento de defesa do TCC enviado com sucesso");
         return Ok(new MessageSuccessResponseModel("Email de agendamento de defesa do TCC enviado com sucesso"));
     }
+
+    /// <summary>
+    /// Reenviar código de convite para o tcc
+    /// </summary>
+    /// <param name="tccId">Id do tcc</param>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPut("invite/code/{tccId}")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ResendInvitationCode([FromRoute] long tccId, [FromBody] string userEmail,
+        [FromServices] ResendInvitationCodeTccUseCase resendInvitationCodeTccUseCase)
+    {
+        var useCaseResult = await resendInvitationCodeTccUseCase.Execute(userEmail, tccId);
+        if (useCaseResult.IsFailure)
+        {
+            Log.Error("Erro ao gerar novo código de convite");
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+
+        Log.Information("Novo código de convite gerado com sucesso");
+        return Ok(new MessageSuccessResponseModel(useCaseResult.Message));
+    }
 }

@@ -134,4 +134,32 @@ public class SignatureController : ControllerBase
         Log.Information("Url retornada com sucesso");
         return Ok(useCaseResult.Data);
     }
+
+    /// <summary>
+    /// Faz download de todos os documentos do tcc
+    /// </summary>
+    /// <param name="tccId">Id do tcc</param>
+    [Authorize]
+    [HttpGet("all/documents/download/{tccId}")]
+    public async Task<ActionResult> AllDownloadDocuments([FromRoute] long tccId,
+        [FromServices] AllDownloadDocumentsUseCase allDownloadDocumentsUseCase)
+    {
+        var useCaseResult = await allDownloadDocumentsUseCase.Execute(tccId);
+        if (useCaseResult.IsFailure)
+        {
+            Log.Error(useCaseResult.ErrorDetails!.Detail);
+            
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+        
+        Log.Information(useCaseResult.Message);
+        return File(useCaseResult.Data.File, "application/zip", $"{useCaseResult.Data.FolderName}.zip");
+    }
 }
