@@ -56,6 +56,7 @@ public static class IocDependencyExtensions
         services.AddScoped<EditScheduleTccUseCase>();
         services.AddScoped<SendScheduleEmailUseCase>();
         services.AddScoped<FindTccUseCase>();
+        services.AddScoped<ResendInvitationCodeTccUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
