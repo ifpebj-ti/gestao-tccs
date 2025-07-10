@@ -41,7 +41,7 @@ public class TccFactory
                 if (docType.Profiles.Count > 1)
                 {
                     // Cria 1 documento com User = null
-                    documents.Add(DocumentFactory.CreateDocument(docType, null));
+                    documents.Add(DocumentFactory.CreateDocument(docType, data.Title, null));
                 }
                 else if (docType.Profiles.Count == 1)
                 {
@@ -49,7 +49,7 @@ public class TccFactory
                     var user = usersWithAcceptedProfile.FirstOrDefault(u => u.Profile.Any(p => p.Role == profileRole));
                     if (user != null)
                     {
-                        documents.Add(DocumentFactory.CreateDocument(docType, user));
+                        documents.Add(DocumentFactory.CreateDocument(docType, data.Title, user));
                     }
                 }
             }
@@ -62,7 +62,7 @@ public class TccFactory
                     if(profile.Role != RoleType.STUDENT.ToString() && docType.Profiles.Count > 1)
                         continue;
                     
-                    documents.Add(DocumentFactory.CreateDocument(docType, user));
+                    documents.Add(DocumentFactory.CreateDocument(docType, data.Title, user));
                 }
             }
         }
