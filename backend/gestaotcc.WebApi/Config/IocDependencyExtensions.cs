@@ -70,6 +70,7 @@ public static class IocDependencyExtensions
         services.AddScoped<SignSignatureUseCase>();
         services.AddScoped<DownloadDocumentUseCase>();
         services.AddScoped<FindDocumentUseCase>();
+        services.AddScoped<AllDownloadDocumentsUseCase>();
         
         // Home
         services.AddScoped<GetInfoHomeUseCase>();
