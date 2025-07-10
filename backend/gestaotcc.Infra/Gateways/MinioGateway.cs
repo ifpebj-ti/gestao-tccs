@@ -72,12 +72,7 @@ public class MinioGateway : IMinioGateway
             .WithExpiry(60);
 
         var url = await _minioClient.PresignedGetObjectAsync(args);
-
-        // Substitui o host da URL gerada apenas se não estiver em Development
-        if (_env != "Development" && !string.IsNullOrEmpty(_publicDomain))
-        {
-            url = url.Replace($"http://{_endpoint}", _publicDomain);
-        }
+        url = url.Replace($"http://{_endpoint}", _publicDomain);
 
         return url;
     }
