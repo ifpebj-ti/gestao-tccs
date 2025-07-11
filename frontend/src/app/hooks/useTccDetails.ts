@@ -6,6 +6,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cancellationSchema, CancellationSchemaType } from '@/app/schemas/tccCancellationSchema';
 import { registerBankingSchema, RegisterBankingSchemaType } from '@/app/schemas/registerBankingSchema';
+import { scheduleSchema, ScheduleSchemaType } from '@/app/schemas/scheduleSchema';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
@@ -43,6 +44,7 @@ export function useTccDetails() {
   const [profile, setProfile] = useState<string | string[] | null>(null);
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
   const [isBankingFormVisible, setIsBankingFormVisible] = useState(false);
+  const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
   const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
 
   const searchParams = useSearchParams();
@@ -55,6 +57,10 @@ export function useTccDetails() {
 
   const bankingForm = useForm<RegisterBankingSchemaType>({
     resolver: zodResolver(registerBankingSchema),
+  });
+
+  const scheduleForm = useForm<ScheduleSchemaType>({
+    resolver: zodResolver(scheduleSchema),
   });
 
   const fetchTccDetails = useCallback(async () => {
@@ -165,6 +171,71 @@ export function useTccDetails() {
     }
   };
 
+  const handleScheduleSubmit: SubmitHandler<ScheduleSchemaType> = async (data) => {
+    const method = tccData?.infoTcc.presentationDate ? 'PUT' : 'POST';
+    try {
+        const token = Cookies.get('token');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/schedule`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ ...data, idTcc: tccId }),
+        });
+        if (!res.ok) throw new Error(`Falha ao ${method === 'POST' ? 'marcar' : 'editar'} apresentação.`);
+        toast.success(`Apresentação ${method === 'POST' ? 'marcada' : 'editada'} com sucesso!`);
+        setIsScheduleFormVisible(false);
+        fetchTccDetails();
+    } catch {
+        toast.error(`Erro ao ${method === 'POST' ? 'marcar' : 'editar'} apresentação.`);
+    }
+  };
+
+  const handleSendScheduleEmail = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+        toast.error('Autenticação necessária.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/schedule/email?tccId=${tccId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+            throw new Error('Falha ao enviar email de agendamento.');
+        }
+
+        toast.success('Agenda enviada por email para todos os envolvidos!');
+    } catch {
+        toast.error('Erro ao tentar enviar o email.');
+    }
+  };
+
+  const handleResendInvite = async (studentEmail: string) => {
+    const token = Cookies.get('token');
+    if (!token) {
+        toast.error('Autenticação necessária.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/invite/code/${tccId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ userEmail: studentEmail }),
+        });
+
+        if (!res.ok) {
+            throw new Error('Falha ao reenviar o convite.');
+        }
+
+        toast.success(`Convite reenviado com sucesso para ${studentEmail}!`);
+    } catch {
+        toast.error('Erro ao tentar reenviar o convite.');
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -174,11 +245,17 @@ export function useTccDetails() {
     setIsCancellationModalOpen,
     isBankingFormVisible,
     setIsBankingFormVisible,
+    isScheduleFormVisible,
+    setIsScheduleFormVisible,
     cancellationForm,
     bankingForm,
+    scheduleForm,
     allBankingMembers,
     handleRequestCancellation,
     handleApproveCancellation,
     handleRegisterBanking,
+    handleScheduleSubmit,
+    handleSendScheduleEmail,
+    handleResendInvite
   };
 }
