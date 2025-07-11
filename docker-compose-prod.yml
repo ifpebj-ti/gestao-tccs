@@ -28,6 +28,7 @@ services:
       - front_net
       - back_net
       - observability-net
+      - management-net
     depends_on:
       postgres:
         condition: service_healthy
