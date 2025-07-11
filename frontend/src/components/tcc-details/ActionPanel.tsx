@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { faEnvelope, faPen } from '@fortawesome/free-solid-svg-icons';
 
 interface CancellationDetails {
   reasonCancellation: string;
@@ -12,10 +13,13 @@ interface ActionPanelProps {
   cancellationDetails: CancellationDetails | null;
   hasBanking: boolean;
   isBankingFormVisible: boolean;
+  hasSchedule: boolean;
+  isScheduleFormVisible: boolean;
   onApprove: () => void;
   onRequest: () => void;
   onRegisterBankingClick: () => void;
   onScheduleClick: () => void;
+  onSendScheduleEmail: () => void;
 }
 
 export function ActionPanel({
@@ -24,16 +28,21 @@ export function ActionPanel({
   cancellationDetails,
   hasBanking,
   isBankingFormVisible,
+  hasSchedule,
+  isScheduleFormVisible,
   onApprove,
   onRequest,
   onRegisterBankingClick,
-  onScheduleClick
+  onScheduleClick,
+  onSendScheduleEmail
 }: ActionPanelProps) {
   const isApprover =
     profile &&
     ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'].some((role) =>
       Array.isArray(profile) ? profile.includes(role) : profile === role
     );
+
+  const canSchedule = isApprover && hasBanking && !cancellationRequested;
 
   return (
     <div className="flex flex-col md:flex-row justify-end gap-4 mt-6">
@@ -46,10 +55,27 @@ export function ActionPanel({
           </Button>
         )}
 
-      {isApprover && hasBanking && !cancellationRequested && (
-        <Button onClick={onScheduleClick} className="md:w-fit w-full">
-          Agendar Apresentação
-        </Button>
+      {canSchedule && !isBankingFormVisible && (
+        <div className="flex gap-2 justify-end">
+          <Button
+            onClick={onScheduleClick}
+            variant="outline"
+            className="md:w-fit w-full"
+            disabled={isScheduleFormVisible}
+            icon={hasSchedule ? faPen : undefined}
+          >
+            {hasSchedule ? 'Editar Apresentação' : 'Marcar Apresentação'}
+          </Button>
+          {hasSchedule && (
+            <Button
+              icon={faEnvelope}
+              onClick={onSendScheduleEmail}
+              className="md:w-fit w-full"
+            >
+              Enviar Agenda
+            </Button>
+          )}
+        </div>
       )}
 
       {cancellationRequested && isApprover && (

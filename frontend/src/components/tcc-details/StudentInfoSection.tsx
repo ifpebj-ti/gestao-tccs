@@ -1,9 +1,11 @@
-// app/components/tcc-details/StudentInfoSection.tsx
 'use client';
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 interface Student {
   name: string;
@@ -15,9 +17,15 @@ interface Student {
 
 interface StudentInfoSectionProps {
   students: Student[];
+  canResendInvite: boolean;
+  onResendInvite: (email: string) => void;
 }
 
-export function StudentInfoSection({ students }: StudentInfoSectionProps) {
+export function StudentInfoSection({
+  students,
+  canResendInvite,
+  onResendInvite
+}: StudentInfoSectionProps) {
   if (students.length === 0) {
     return (
       <section>
@@ -36,32 +44,45 @@ export function StudentInfoSection({ students }: StudentInfoSectionProps) {
       <h2 className="text-lg font-extrabold uppercase">
         Informações do(s) estudante(s)
       </h2>
-      <div className="grid md:grid-cols-2 gap-4 mt-4">
-        {students.map((student, i) => (
-          <React.Fragment key={i}>
+      {students.map((student, i) => (
+        <div key={i} className="mt-4 border-t pt-4 first:border-t-0 first:pt-0">
+          <div className="flex justify-between items-center mb-4">
+            <p className="font-semibold text-gray-700">Estudante {i + 1}</p>
+            {canResendInvite && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onResendInvite(student.email)}
+              >
+                <FontAwesomeIcon icon={faPaperPlane} />
+                Reenviar Convite
+              </Button>
+            )}
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold">Nome</Label>
+              <Label>Nome</Label>
               <Input value={student.name} readOnly />
             </div>
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold">Matrícula</Label>
+              <Label>Matrícula</Label>
               <Input value={student.registration} readOnly />
             </div>
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold">CPF</Label>
+              <Label>CPF</Label>
               <Input value={student.cpf} readOnly />
             </div>
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold">Curso</Label>
+              <Label>Curso</Label>
               <Input value={student.course} readOnly />
             </div>
             <div className="grid items-center gap-1.5 md:col-span-2">
-              <Label className="font-semibold">Email</Label>
+              <Label>Email</Label>
               <Input value={student.email} readOnly />
             </div>
-          </React.Fragment>
-        ))}
-      </div>
+          </div>
+        </div>
+      ))}
     </section>
   );
 }
