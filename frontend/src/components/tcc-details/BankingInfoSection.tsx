@@ -101,9 +101,9 @@ export function BankingInfoSection({
           <div className="flex items-center gap-2 p-3 text-sm text-blue-800 rounded-lg bg-blue-50">
             <FontAwesomeIcon icon={faInfoCircle} className="h-5 w-5" />
             <div>
-              <span className="font-medium">Atenção:</span> Para que um usuário
-              apareça nas listas, ele deve ter realizado o primeiro acesso ao
-              sistema.
+              <span className="font-semibold">Atenção:</span> Para que um
+              usuário participe de uma banca, ele deve ter realizado o primeiro
+              acesso ao sistema.
             </div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
