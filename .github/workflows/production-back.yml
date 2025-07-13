@@ -154,7 +154,7 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             /repos/${{ github.repository }}/contents/README.md \
             -f message="ci: atualizar badge de cobertura para ${{ steps.test-coverage.outputs.coverage_percentage }}%" \
-            -f content="$(base64 -w0 README.md)" \
+            -f content="$(base64 -w0 ../README.md)" \
             -f sha="$(gh api repos/${{ github.repository }}/contents/README.md --jq .sha)"
 
       - name: Set up JDK 17 for SonarQube analysis
