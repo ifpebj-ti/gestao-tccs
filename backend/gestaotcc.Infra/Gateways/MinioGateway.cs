@@ -1,6 +1,7 @@
 using gestaotcc.Application.Gateways;
 using Microsoft.Extensions.Configuration;
 using Minio;
+using Minio.DataModel;
 using Minio.DataModel.Args;
 
 namespace gestaotcc.Infra.Gateways;
@@ -71,13 +72,43 @@ public class MinioGateway : IMinioGateway
             .WithExpiry(60);
 
         var url = await _minioClient.PresignedGetObjectAsync(args);
-
-        // Substitui o host da URL gerada apenas se não estiver em Development
-        if (_env != "Development" && !string.IsNullOrEmpty(_publicDomain))
-        {
-            url = url.Replace($"http://{_endpoint}", _publicDomain);
-        }
+        url = url.Replace($"http://{_endpoint}", _publicDomain);
 
         return url;
+    }
+
+    public async Task<byte[]> DownloadFolderAsZip(string folderName)
+    {
+        var zipStream = new MemoryStream();
+
+        using (var archive = new System.IO.Compression.ZipArchive(zipStream, System.IO.Compression.ZipArchiveMode.Create, true))
+        {
+            var listArgs = new ListObjectsArgs()
+                .WithBucket(_bucketName)
+                .WithPrefix($"signatures/{folderName}/")
+                .WithRecursive(true);
+
+            await foreach (var item in _minioClient.ListObjectsEnumAsync(listArgs))
+            {
+                using var fileStream = new MemoryStream();
+
+                var getObjectArgs = new GetObjectArgs()
+                    .WithBucket(_bucketName)
+                    .WithObject(item.Key)
+                    .WithCallbackStream(stream => stream.CopyTo(fileStream));
+
+                await _minioClient.GetObjectAsync(getObjectArgs);
+                fileStream.Position = 0;
+
+                string fileNameInZip = item.Key.Replace($"signatures/{folderName}/", "");
+                var entry = archive.CreateEntry(fileNameInZip);
+
+                using var entryStream = entry.Open();
+                fileStream.CopyTo(entryStream);
+            }
+        }
+
+        zipStream.Position = 0;
+        return zipStream.ToArray();
     }
 }

@@ -106,7 +106,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Clones rasos devem ser desativados para uma melhor relevância da análise do SonarQube
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
@@ -116,8 +118,65 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Run Tests
-        run: dotnet test --verbosity normal
+      - name: Set up JDK 17 for SonarQube analysis
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'zulu' # Alternative distribution options are available.
+      
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~\.sonar\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      
+      - name: Cache SonarQube scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: .\.sonar\scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarQube scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ./.sonar/scanner
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+      
+      - name: SonarQube Build and analyze
+        working-directory: ./backend
+        run: |
+          ../.sonar/scanner/dotnet-sonarscanner begin /k:"gestao-tccs-back" /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
+          dotnet build --no-incremental
+          ../.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}"
+
+      - name: Run Tests and Code Coverage
+        id: coverage
+        run: |
+          dotnet test --collect:"XPlat Code Coverage" --results-directory "coverage"
+          
+          # Coverlet gera o relatório em um diretório com nome aleatório dentro de 'coverage'
+          # Este comando encontra o arquivo json, extrai a porcentagem e a define como output
+          COVERAGE_FILE=$(find coverage -name "coverage.cobertura.json" | head -n 1)
+          if [ -f "$COVERAGE_FILE" ]; then
+            COVERAGE_PERCENTAGE=$(jq '.Modules | map(.Value."Coverage") | add / map(.Value."Total") | add * 100' $COVERAGE_FILE | cut -d. -f1)
+            echo "coverage_percentage=$COVERAGE_PERCENTAGE" >> $GITHUB_OUTPUT
+            echo "Cobertura total: $COVERAGE_PERCENTAGE%"
+          else
+            echo "Arquivo de cobertura não encontrado!"
+            echo "coverage_percentage=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Code Coverage Badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          name: "Coverage"
+          label: "Coverage"
+          status: "${{ steps.coverage.outputs.coverage_percentage }}%"
+          color: "brightgreen"
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2

@@ -56,6 +56,7 @@ public static class IocDependencyExtensions
         services.AddScoped<EditScheduleTccUseCase>();
         services.AddScoped<SendScheduleEmailUseCase>();
         services.AddScoped<FindTccUseCase>();
+        services.AddScoped<ResendInvitationCodeTccUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
@@ -69,6 +70,7 @@ public static class IocDependencyExtensions
         services.AddScoped<SignSignatureUseCase>();
         services.AddScoped<DownloadDocumentUseCase>();
         services.AddScoped<FindDocumentUseCase>();
+        services.AddScoped<AllDownloadDocumentsUseCase>();
         
         // Home
         services.AddScoped<GetInfoHomeUseCase>();

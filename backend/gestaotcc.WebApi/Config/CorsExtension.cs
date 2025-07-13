@@ -2,14 +2,17 @@ namespace gestaotcc.WebApi.Config;
 
 public static class CorsExtension
 {
-    public static IServiceCollection AddCorsExtension(this IServiceCollection services)
+    public static IServiceCollection AddCorsExtension(this IServiceCollection services, IConfiguration configuration)
     {
+        var corsSettings = configuration.GetSection("CORS_SETTINGS");
+        var urlFront = corsSettings.GetValue<string>("URL_FRONT");
+        
         services.AddCors(options =>
         {
             options.AddPolicy(name: "CorsPolicy",
                 options =>
                 {
-                    options.WithOrigins("http://localhost:3000", "http://gestao-frontend:3000", "http://4.201.204.229:3000")
+                    options.WithOrigins(urlFront!)
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });

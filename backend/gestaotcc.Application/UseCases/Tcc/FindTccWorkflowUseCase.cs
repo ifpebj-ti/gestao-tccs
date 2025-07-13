@@ -41,10 +41,12 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
 
         if (tccStep == StepTccType.PROPOSAL_REGISTRATION)
         {
+            userTccs = tcc.UserTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()).ToList();
             var details = CreateStudentRegistrationDetails(tcc, userTccs);
-            return new FindTccWorkflowDTO(tcc.Id, signatureOrder, new List<string>(), tcc.TccInvites
-                .Select(x => new FindTccWorkflowSignatureDTO(1, "CADASTRO DE ESTUDANTES", null, details))
-                .ToList());
+            return new FindTccWorkflowDTO(tcc.Id, signatureOrder, new List<string>(), new List<FindTccWorkflowSignatureDTO>()
+            {
+                new FindTccWorkflowSignatureDTO(1, "CADASTRO DE ESTUDANTES", null, details)
+            });
         }
 
         var workflowSignatures = allDocumentsType

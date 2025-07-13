@@ -2,8 +2,10 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { verifyAccessCodeSchema, VerifyAccessCodeSchemaType } from '@/app/schemas/verifyAccessCodeSchema';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 
 export function useVerifyAccessCode() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const form = useForm<VerifyAccessCodeSchemaType>({
     resolver: zodResolver(verifyAccessCodeSchema),
     defaultValues: {
@@ -14,7 +16,7 @@ export function useVerifyAccessCode() {
 
   const submitForm: SubmitHandler<VerifyAccessCodeSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/AccessCode/verify', {
+      const response = await fetch(`${API_URL}/AccessCode/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

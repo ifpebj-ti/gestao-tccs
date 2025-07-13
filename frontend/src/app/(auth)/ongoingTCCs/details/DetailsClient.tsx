@@ -4,8 +4,6 @@ import { Suspense } from 'react';
 import { useTccDetails } from '@/app/hooks/useTccDetails';
 import { FormProvider } from 'react-hook-form';
 import React from 'react';
-
-// Imports da UI e dos componentes de seção
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import TccTabs from '@/components/TccTabs';
 import { TccHeader } from '@/components/tcc-details/TccHeader';
@@ -26,12 +24,18 @@ export default function DetailsClient() {
     setIsCancellationModalOpen,
     isBankingFormVisible,
     setIsBankingFormVisible,
+    isScheduleFormVisible,
+    setIsScheduleFormVisible,
     cancellationForm,
     bankingForm,
     allBankingMembers,
+    scheduleForm,
     handleRequestCancellation,
     handleApproveCancellation,
-    handleRegisterBanking
+    handleRegisterBanking,
+    handleScheduleSubmit,
+    handleSendScheduleEmail,
+    handleResendInvite
   } = useTccDetails();
 
   if (loading) {
@@ -42,8 +46,7 @@ export default function DetailsClient() {
     return <div className="p-4">TCC não encontrado.</div>;
   }
 
-  // CORREÇÃO 1: Garante que a variável seja sempre um booleano.
-  const canRegisterBanking = !!(
+  const canManageTcc = !!(
     profile &&
     ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'].some((role) =>
       Array.isArray(profile) ? profile.includes(role) : profile === role
@@ -64,8 +67,19 @@ export default function DetailsClient() {
         />
 
         <div className="flex flex-col gap-8 mt-10">
-          <TccInfoSection infoTcc={tccData.infoTcc} />
-          <StudentInfoSection students={tccData.infoStudent} />
+          <TccInfoSection
+            infoTcc={tccData.infoTcc}
+            isScheduleFormVisible={isScheduleFormVisible}
+            onScheduleCancel={() => setIsScheduleFormVisible(false)}
+            scheduleForm={scheduleForm}
+            onScheduleSubmit={handleScheduleSubmit}
+          />
+
+          <StudentInfoSection
+            students={tccData.infoStudent}
+            canResendInvite={canManageTcc && !tccData.cancellationRequest}
+            onResendInvite={handleResendInvite}
+          />
 
           {tccData.infoAdvisor.name && (
             <AdvisorInfoSection advisor={tccData.infoAdvisor} />
@@ -73,7 +87,7 @@ export default function DetailsClient() {
 
           <BankingInfoSection
             bankingData={tccData.infoBanking}
-            canRegister={canRegisterBanking && !tccData.cancellationRequest}
+            canRegister={canManageTcc && !tccData.cancellationRequest}
             isFormVisible={isBankingFormVisible}
             onCancel={() => setIsBankingFormVisible(false)}
             form={bankingForm}
@@ -86,11 +100,19 @@ export default function DetailsClient() {
           profile={profile}
           cancellationRequested={tccData.cancellationRequest}
           cancellationDetails={cancellationDetails}
+          hasBanking={
+            !!tccData.infoBanking?.nameInternal ||
+            !!tccData.infoBanking?.nameExternal
+          }
+          isBankingFormVisible={isBankingFormVisible}
+          hasSchedule={!!tccData.infoTcc.presentationDate}
+          // CORREÇÃO: Adicionando a propriedade que estava faltando
+          isScheduleFormVisible={isScheduleFormVisible}
           onApprove={handleApproveCancellation}
           onRequest={() => setIsCancellationModalOpen(true)}
-          hasBanking={!!tccData.infoBanking?.nameInternal}
-          isBankingFormVisible={isBankingFormVisible}
           onRegisterBankingClick={() => setIsBankingFormVisible(true)}
+          onScheduleClick={() => setIsScheduleFormVisible((prev) => !prev)}
+          onSendScheduleEmail={handleSendScheduleEmail}
         />
       </div>
 

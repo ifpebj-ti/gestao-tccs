@@ -23,11 +23,13 @@ services:
       - MINIO_SETTINGS__ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SETTINGS__SECRET_KEY=${MINIO_SECRET_KEY}
       - MINIO_SETTINGS__BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - CORS_SETTINGS__URL_FRONT=${CORS_SETTINGS_URL_FRONT}
     restart: unless-stopped
     networks:
       - front_net
       - back_net
       - observability-net
+      - management-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -37,6 +39,8 @@ services:
     container_name: gestao-frontend
     ports:
       - "${PORT_MACHINE_FRONTEND}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
     depends_on:
       - backend
@@ -76,6 +80,7 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+      - MINIO_BROWSER_REDIRECT_URL=${MINIO_REDIRECT}
     command: server /data --console-address ":9001"
     restart: unless-stopped
     networks:

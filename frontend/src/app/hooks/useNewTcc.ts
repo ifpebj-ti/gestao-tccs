@@ -6,8 +6,12 @@ import { newTccSchema, NewTccSchemaType } from '@/app/schemas/newTccSchema';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
+import { env } from 'next-runtime-env';
 
 export function useNewTccForm() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
+  const { push } = useRouter();
   const [advisors, setAdvisors] = useState<{ id: number; name: string }[]>([]);
 
   const form = useForm<NewTccSchemaType>({
@@ -25,7 +29,7 @@ export function useNewTccForm() {
       const token = Cookies.get('token');
       try {
         const res = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + '/User/filter?Profile=ADVISOR',
+          `${API_URL}/User/filter?Profile=ADVISOR`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -42,11 +46,11 @@ export function useNewTccForm() {
     };
 
     fetchAdvisors();
-  }, []);
+  }, [API_URL]);
 
   const submitForm: SubmitHandler<NewTccSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Tcc', {
+      const response = await fetch(`${API_URL}/Tcc`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,6 +65,7 @@ export function useNewTccForm() {
       });
 
       if (response.ok) {
+        push('/ongoingTCCs');
         toast.success('Proposta de TCC enviada com sucesso!');
       } else {
         toast.error('Erro ao enviar a proposta de TCC. Verifique os dados e tente novamente.');

@@ -1,17 +1,24 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cancellationSchema, CancellationSchemaType } from '@/app/schemas/tccCancellationSchema';
 import { registerBankingSchema, RegisterBankingSchemaType } from '@/app/schemas/registerBankingSchema';
+import { scheduleSchema, ScheduleSchemaType } from '@/app/schemas/scheduleSchema';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
+
+interface Member {
+  id: number;
+  name: string;
+}
 
 interface TccDetailsResponse {
-  infoTcc: { title: string; summary: string; presentationDate: string; presentationTime: string; presentationLocation: string; };
+  infoTcc: { title: string; summary: string; presentationDate: string | null; presentationTime: string | null; presentationLocation: string; };
   infoStudent: { name: string; registration: string; cpf: string; course: string; email: string; }[];
   infoAdvisor: { name: string; email: string; };
   infoBanking: { nameInternal: string; emailInternal: string; nameExternal: string; emailExternal: string; };
@@ -30,18 +37,16 @@ interface DecodedToken {
   userId: string;
 }
 
-interface Member {
-  id: number;
-  name: string;
-}
-
 export function useTccDetails() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
+  const { push } = useRouter();
   const [tccData, setTccData] = useState<TccDetailsResponse | null>(null);
   const [cancellationDetails, setCancellationDetails] = useState<CancellationDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<string | string[] | null>(null);
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
   const [isBankingFormVisible, setIsBankingFormVisible] = useState(false);
+  const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
   const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
 
   const searchParams = useSearchParams();
@@ -56,6 +61,10 @@ export function useTccDetails() {
     resolver: zodResolver(registerBankingSchema),
   });
 
+  const scheduleForm = useForm<ScheduleSchemaType>({
+    resolver: zodResolver(scheduleSchema),
+  });
+
   const fetchTccDetails = useCallback(async () => {
     setLoading(true);
     const token = Cookies.get('token');
@@ -66,7 +75,7 @@ export function useTccDetails() {
     setProfile(jwtDecode<DecodedToken>(token).role);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc?tccId=${tccId}`, {
+      const res = await fetch(`${API_URL}/Tcc?tccId=${tccId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Erro ao buscar dados do TCC.');
@@ -74,7 +83,7 @@ export function useTccDetails() {
       setTccData(result);
 
       if (result.cancellationRequest) {
-        const detailsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation?tccId=${tccId}`, {
+        const detailsRes = await fetch(`${API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (detailsRes.ok) {
@@ -89,7 +98,7 @@ export function useTccDetails() {
     } finally {
       setLoading(false);
     }
-  }, [tccId]);
+  }, [tccId, API_URL]);
 
   useEffect(() => {
     fetchTccDetails();
@@ -100,23 +109,22 @@ export function useTccDetails() {
         const token = Cookies.get('token');
         if (!token) return;
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/User/filter?Profile=BANKING`, { headers: { Authorization: `Bearer ${token}` } });
-
-          if(res.ok) {
-            const data = await res.json();
-            setAllBankingMembers(data);
-          }
+            const res = await fetch(`${API_URL}/User/filter?Profile=BANKING`, { headers: { Authorization: `Bearer ${token}` } });
+            if(res.ok) {
+              const data = await res.json();
+              setAllBankingMembers(data);
+            }
         } catch {
             toast.error("Erro ao carregar lista de membros da banca.");
         }
     };
     fetchMembers();
-  }, []);
+  }, [API_URL]);
 
   const handleRequestCancellation: SubmitHandler<CancellationSchemaType> = async (data) => {
     try {
       const token = Cookies.get('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/request`, {
+      const res = await fetch(`${API_URL}/Tcc/cancellation/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ idTcc: tccId, reason: data.reason }),
@@ -132,24 +140,26 @@ export function useTccDetails() {
   };
 
   const handleApproveCancellation = async () => {
+    const token = Cookies.get('token');
+    if (!token) { toast.error('Autenticação necessária.'); return; }
     try {
-      const token = Cookies.get('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/approve?tccId=${tccId}`, {
+      const res = await fetch(`${API_URL}/Tcc/cancellation/approve?tccId=${tccId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('Falha ao aprovar cancelamento.');
+      if (!res.ok) throw new Error('Falha ao aprovar o cancelamento.');
+      push('/ongoingTCCs');
       toast.success('Cancelamento aprovado com sucesso!');
       fetchTccDetails();
     } catch {
-      toast.error('Erro ao aprovar cancelamento.');
+      toast.error('Erro ao aprovar o cancelamento.');
     }
   };
-
+  
   const handleRegisterBanking: SubmitHandler<RegisterBankingSchemaType> = async (data) => {
     try {
         const token = Cookies.get('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/banking`, {
+        const res = await fetch(`${API_URL}/Tcc/banking`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ idTcc: tccId, ...data }),
@@ -163,6 +173,71 @@ export function useTccDetails() {
     }
   };
 
+  const handleScheduleSubmit: SubmitHandler<ScheduleSchemaType> = async (data) => {
+    const method = tccData?.infoTcc.presentationDate ? 'PUT' : 'POST';
+    try {
+        const token = Cookies.get('token');
+        const res = await fetch(`${API_URL}/Tcc/schedule`, {
+            method: method,
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ ...data, idTcc: tccId }),
+        });
+        if (!res.ok) throw new Error(`Falha ao ${method === 'POST' ? 'marcar' : 'editar'} apresentação.`);
+        toast.success(`Apresentação ${method === 'POST' ? 'marcada' : 'editada'} com sucesso!`);
+        setIsScheduleFormVisible(false);
+        fetchTccDetails();
+    } catch {
+        toast.error(`Erro ao ${method === 'POST' ? 'marcar' : 'editar'} apresentação.`);
+    }
+  };
+
+  const handleSendScheduleEmail = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+        toast.error('Autenticação necessária.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/Tcc/schedule/email?tccId=${tccId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+            throw new Error('Falha ao enviar email de agendamento.');
+        }
+
+        toast.success('Agenda enviada por email para todos os envolvidos!');
+    } catch {
+        toast.error('Erro ao tentar enviar o email.');
+    }
+  };
+
+  const handleResendInvite = async (studentEmail: string) => {
+    const token = Cookies.get('token');
+    if (!token) {
+        toast.error('Autenticação necessária.');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/Tcc/invite/code/${tccId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ userEmail: studentEmail }),
+        });
+
+        if (!res.ok) {
+            throw new Error('Falha ao reenviar o convite.');
+        }
+
+        toast.success(`Convite reenviado com sucesso para ${studentEmail}!`);
+    } catch {
+        toast.error('Erro ao tentar reenviar o convite.');
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -172,11 +247,17 @@ export function useTccDetails() {
     setIsCancellationModalOpen,
     isBankingFormVisible,
     setIsBankingFormVisible,
+    isScheduleFormVisible,
+    setIsScheduleFormVisible,
     cancellationForm,
     bankingForm,
+    scheduleForm,
     allBankingMembers,
     handleRequestCancellation,
     handleApproveCancellation,
     handleRegisterBanking,
+    handleScheduleSubmit,
+    handleSendScheduleEmail,
+    handleResendInvite
   };
 }

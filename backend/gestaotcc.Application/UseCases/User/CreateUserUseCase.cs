@@ -47,9 +47,8 @@ public class CreateUserUseCase(
                 var tcc = await tccGateway.FindTccById(tccInvite.TccId);
                 if (tcc is not null)
                 {
-                    
                     TccFactory.UpdateUsersTccToCreateUser(tcc, newUser, profileEntity!);
-                    CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList());
+                    CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList(), tcc.Title);
                     
                     var allIAlreadyAdded = tcc.TccInvites.Any(inv => !inv.IsValidCode);
                     if(!allIAlreadyAdded)
@@ -73,7 +72,7 @@ public class CreateUserUseCase(
         return ResultPattern<UserEntity>.SuccessResult(newUser);
     }
     
-    private void CreateDocumentForUser(UserEntity user, List<DocumentTypeEntity> documentTypes, List<DocumentEntity> documents)
+    private void CreateDocumentForUser(UserEntity user, List<DocumentTypeEntity> documentTypes, List<DocumentEntity> documents, string tccTitle)
     {
         foreach (var docType in documentTypes)
         {
@@ -90,18 +89,18 @@ public class CreateUserUseCase(
                 if (docType.Profiles.Count > 1)
                 {
                     // Cria 1 documento com User = null
-                    documents.Add(DocumentFactory.CreateDocument(docType, null));
+                    documents.Add(DocumentFactory.CreateDocument(docType, tccTitle, null));
                 }
                 else if (docType.Profiles.Count == 1)
                 {
                     // Cria 1 documento com o próprio usuário
-                    documents.Add(DocumentFactory.CreateDocument(docType, user));
+                    documents.Add(DocumentFactory.CreateDocument(docType, tccTitle, user));
                 }
             }
             else if (method == MethoSignatureType.NOT_ONLY_DOCS)
             {
                 // Cria 1 documento com o próprio usuário
-                documents.Add(DocumentFactory.CreateDocument(docType, user));
+                documents.Add(DocumentFactory.CreateDocument(docType, tccTitle, user));
             }
         }
     }
