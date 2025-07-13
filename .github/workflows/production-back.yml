@@ -145,11 +145,10 @@ jobs:
           dotnet tool install dotnet-sonarscanner --tool-path ./.sonar/scanner
       
       - name: SonarQube Build and analyze
-        working-directory: ./backend
         run: |
-          ../.sonar/scanner/dotnet-sonarscanner begin /k:"gestao-tccs-back" /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"gestao-tccs-back" /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
           dotnet build --no-incremental
-          ../.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}"
+          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}"
 
       - name: Run Tests and Code Coverage
         id: coverage
