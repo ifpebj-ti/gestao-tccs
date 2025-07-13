@@ -127,7 +127,7 @@ jobs:
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
-          path: ~\.sonar\cache
+          path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       
@@ -135,15 +135,14 @@ jobs:
         id: cache-sonar-scanner
         uses: actions/cache@v4
         with:
-          path: .\.sonar\scanner
+          path: ./.sonar/scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
 
       - name: Install SonarQube scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ./.sonar/scanner
-          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+          dotnet tool install dotnet-sonarscanner --tool-path ./.sonar/scanner
       
       - name: SonarQube Build and analyze
         working-directory: ./backend
