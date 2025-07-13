@@ -6,8 +6,10 @@ import { newUserSchema, NewUserSchemaSchemaType } from '@/app/schemas/newUserSch
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { env } from 'next-runtime-env';
 
 export function useNewUserForm() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
 
   const token = Cookies.get('token');
@@ -30,7 +32,7 @@ export function useNewUserForm() {
 
   const submitForm: SubmitHandler<NewUserSchemaSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/User', {
+      const response = await fetch(`${API_URL}/User`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

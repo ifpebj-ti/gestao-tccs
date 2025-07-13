@@ -2,8 +2,10 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { VerifyTccCodeSchemaType, verifyTccCodeSchema } from '@/app/schemas/verifyTccCodeSchema';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 
 export function useVerifyTccCode() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const form = useForm<VerifyTccCodeSchemaType>({
     resolver: zodResolver(verifyTccCodeSchema),
     defaultValues: {
@@ -14,7 +16,7 @@ export function useVerifyTccCode() {
 
   const submitForm: SubmitHandler<VerifyTccCodeSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Tcc/code/verify', {
+      const response = await fetch(`${API_URL}/Tcc/code/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
