@@ -1,6 +1,6 @@
 ![CI/CD](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production-back.yml/badge.svg)
 ![CI/CD](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production-front.yml/badge.svg)
-![Coverage]()
+<!-- COVERAGE_BADGE -->
 ![License](https://img.shields.io/github/license/ifpebj-ti/gestao-tccs)
 ![Last Commit](https://img.shields.io/github/last-commit/ifpebj-ti/gestao-tccs)
 ![Top Languages](https://img.shields.io/github/languages/top/ifpebj-ti/gestao-tccs)

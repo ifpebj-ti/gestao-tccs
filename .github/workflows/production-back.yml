@@ -121,6 +121,9 @@ jobs:
       - name: Run Tests and Code Coverage
         id: test-coverage
         run: |
+          # Garante que as ferramentas para ler XML estejam instaladas
+          sudo apt-get update && sudo apt-get install -y libxml2-utils
+
           dotnet test --collect:"XPlat Code Coverage" --settings ./coverlet.runsettings --results-directory ./coverage/
           
           COVERAGE_FILE=$(find ./coverage -name coverage.opencover.xml -print -quit)
@@ -134,7 +137,9 @@ jobs:
           echo "Arquivo de cobertura encontrado em: $COVERAGE_FILE"
 
           # Extrai a porcentagem do arquivo encontrado
-          COVERAGE_PERCENTAGE=$(xmllint --xpath 'string(/CoverageSession/Summary/@sequenceCoverage)' $COVERAGE_FILE | cut -d. -f1)
+          RAW_COVERAGE=$(xmllint --xpath 'string(/CoverageSession/Summary/@sequenceCoverage)' $COVERAGE_FILE)
+          COVERAGE_PERCENTAGE=$(echo $RAW_COVERAGE | cut -d. -f1)
+          echo "Porcentagem final para o badge: $COVERAGE_PERCENTAGE"
 
           # Define os outputs para os próximos passos usarem
           echo "report_path=$COVERAGE_FILE" >> $GITHUB_OUTPUT
