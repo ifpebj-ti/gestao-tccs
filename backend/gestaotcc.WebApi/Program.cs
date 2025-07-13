@@ -22,7 +22,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // Extension methods
 builder.Services.AddDbContextExtension(builder.Configuration);
-builder.Services.AddCorsExtension();
+builder.Services.AddCorsExtension(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
