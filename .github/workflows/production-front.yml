@@ -7,7 +7,7 @@ on:
     types:
       - closed
     paths:
-      - 'frontend/**'
+      - "frontend/**"
 
   workflow_dispatch:
 
@@ -129,7 +129,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
             -t ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG \
             -f Dockerfile .
 
@@ -157,7 +156,7 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG
           docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest
-      
+
       - name: Trigger Portainer webhook to update Frontend service
         run: curl -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
 
