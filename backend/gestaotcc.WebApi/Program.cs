@@ -31,6 +31,8 @@ builder.Host.AddSerilogExtension();
 builder.Services.AddHangfireExtension(builder.Configuration);
 builder.Services.AddOpenTelemetryExtension(builder.Environment);
 builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
+builder.WebHost.UseKestrel()
+    .UseUrls("http://0.0.0.0:8080");
 
 var app = builder.Build();
 
