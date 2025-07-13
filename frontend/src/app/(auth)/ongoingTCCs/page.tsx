@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { env } from 'next-runtime-env';
 
 interface DecodedToken {
   role: string | string[];
@@ -25,6 +26,7 @@ interface TCCFromApi {
 }
 
 export default function OngoingTCCsPage() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
   const [tccs, setTccs] = useState<TCCFromApi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function OngoingTCCsPage() {
         const { role, userId } = decodedToken;
 
         const wideViewRoles = ['ADMIN', 'COORDINATOR', 'LIBRARY', 'SUPERVISOR'];
-        let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter`;
+        let endpoint = `${API_URL}/Tcc/filter`;
 
         // Variável para determinar o tipo de visão (ampla ou restrita)
         let userHasWideView = false;
@@ -78,7 +80,7 @@ export default function OngoingTCCsPage() {
     };
 
     fetchTccs();
-  }, []);
+  }, [API_URL]);
 
   return (
     <div className="flex flex-col">

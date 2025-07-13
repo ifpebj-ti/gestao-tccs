@@ -2,8 +2,10 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { updatePasswordSchema, UpdatePasswordSchemaType } from '@/app/schemas/updatePasswordSchema';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 
 export function useUpdatePassword() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const form = useForm<UpdatePasswordSchemaType>({
     resolver: zodResolver(updatePasswordSchema),
     defaultValues: {
@@ -14,7 +16,7 @@ export function useUpdatePassword() {
 
   const submitForm: SubmitHandler<UpdatePasswordSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Auth/update-password', {
+      const response = await fetch(`${API_URL}/Auth/update-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

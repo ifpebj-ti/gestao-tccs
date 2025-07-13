@@ -10,6 +10,7 @@ import { scheduleSchema, ScheduleSchemaType } from '@/app/schemas/scheduleSchema
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 
 interface Member {
   id: number;
@@ -37,6 +38,7 @@ interface DecodedToken {
 }
 
 export function useTccDetails() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
   const [tccData, setTccData] = useState<TccDetailsResponse | null>(null);
   const [cancellationDetails, setCancellationDetails] = useState<CancellationDetailsResponse | null>(null);
@@ -73,7 +75,7 @@ export function useTccDetails() {
     setProfile(jwtDecode<DecodedToken>(token).role);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc?tccId=${tccId}`, {
+      const res = await fetch(`${API_URL}/Tcc?tccId=${tccId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Erro ao buscar dados do TCC.');
@@ -81,7 +83,7 @@ export function useTccDetails() {
       setTccData(result);
 
       if (result.cancellationRequest) {
-        const detailsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
+        const detailsRes = await fetch(`${API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (detailsRes.ok) {
@@ -96,7 +98,7 @@ export function useTccDetails() {
     } finally {
       setLoading(false);
     }
-  }, [tccId]);
+  }, [tccId, API_URL]);
 
   useEffect(() => {
     fetchTccDetails();
@@ -107,7 +109,7 @@ export function useTccDetails() {
         const token = Cookies.get('token');
         if (!token) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/User/filter?Profile=BANKING`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`${API_URL}/User/filter?Profile=BANKING`, { headers: { Authorization: `Bearer ${token}` } });
             if(res.ok) {
               const data = await res.json();
               setAllBankingMembers(data);
@@ -117,12 +119,12 @@ export function useTccDetails() {
         }
     };
     fetchMembers();
-  }, []);
+  }, [API_URL]);
 
   const handleRequestCancellation: SubmitHandler<CancellationSchemaType> = async (data) => {
     try {
       const token = Cookies.get('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/request`, {
+      const res = await fetch(`${API_URL}/Tcc/cancellation/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ idTcc: tccId, reason: data.reason }),
@@ -141,7 +143,7 @@ export function useTccDetails() {
     const token = Cookies.get('token');
     if (!token) { toast.error('Autenticação necessária.'); return; }
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/cancellation/approve?tccId=${tccId}`, {
+      const res = await fetch(`${API_URL}/Tcc/cancellation/approve?tccId=${tccId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
@@ -157,7 +159,7 @@ export function useTccDetails() {
   const handleRegisterBanking: SubmitHandler<RegisterBankingSchemaType> = async (data) => {
     try {
         const token = Cookies.get('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/banking`, {
+        const res = await fetch(`${API_URL}/Tcc/banking`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ idTcc: tccId, ...data }),
@@ -175,7 +177,7 @@ export function useTccDetails() {
     const method = tccData?.infoTcc.presentationDate ? 'PUT' : 'POST';
     try {
         const token = Cookies.get('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/schedule`, {
+        const res = await fetch(`${API_URL}/Tcc/schedule`, {
             method: method,
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ ...data, idTcc: tccId }),
@@ -197,7 +199,7 @@ export function useTccDetails() {
     }
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/schedule/email?tccId=${tccId}`, {
+        const res = await fetch(`${API_URL}/Tcc/schedule/email?tccId=${tccId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         });
@@ -220,7 +222,7 @@ export function useTccDetails() {
     }
 
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Tcc/invite/code/${tccId}`, {
+        const res = await fetch(`${API_URL}/Tcc/invite/code/${tccId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
             body: JSON.stringify({ userEmail: studentEmail }),

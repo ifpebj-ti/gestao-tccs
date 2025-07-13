@@ -4,8 +4,10 @@ import { loginSchema, LoginSchemaType } from '@/app/schemas/loginSchema';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
+import { env } from 'next-runtime-env';
 
 export function useLogin() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
   const form = useForm<LoginSchemaType>({
     resolver: zodResolver(loginSchema),
@@ -17,7 +19,7 @@ export function useLogin() {
 
   const submitForm: SubmitHandler<LoginSchemaType> = async (data) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + '/Auth/login', {
+      const response = await fetch(`${API_URL}/Auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

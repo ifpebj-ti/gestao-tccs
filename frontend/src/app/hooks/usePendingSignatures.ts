@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 
 interface DecodedToken {
   role: string | string[];
@@ -50,6 +51,7 @@ export interface GroupedByUserAndTcc {
 
 
 export function usePendingSignatures() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const [pendingData, setPendingData] = useState<PendingTcc[]>([]);
   const [groupedByUser, setGroupedByUser] = useState<GroupedByUserAndTcc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,7 +76,7 @@ export function usePendingSignatures() {
       ? decoded.role.some(r => ['ADMIN', 'SUPERVISOR'].includes(r))
       : ['ADMIN', 'SUPERVISOR'].includes(decoded.role);
 
-    let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/Signature/pending`;
+    let endpoint = `${API_URL}/Signature/pending`;
     
     if (canViewAll && showAll) {
       // Busca todas as pendências
@@ -95,7 +97,7 @@ export function usePendingSignatures() {
     } finally {
       setIsLoading(false);
     }
-  }, [showAll, profile, userId]);
+  }, [showAll, profile, userId, API_URL]);
 
   useEffect(() => {
     fetchPendingSignatures();

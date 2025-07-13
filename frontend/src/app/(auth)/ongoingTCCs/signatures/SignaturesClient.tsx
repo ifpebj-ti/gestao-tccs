@@ -17,8 +17,11 @@ import TccTabs from '@/components/TccTabs';
 import { useSearchParams } from 'next/navigation';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import { Badge } from '@/components/ui/badge';
+import { env } from 'next-runtime-env';
 
 export default function SignaturesClient() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
+
   const profileLabels: Record<string, string> = {
     STUDENT: 'Aluno',
     ADVISOR: 'Orientador',
@@ -83,12 +86,9 @@ export default function SignaturesClient() {
 
     const fetchWorkflow = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc/workflow?tccId=${tccId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
+        const res = await fetch(`${API_URL}/Tcc/workflow?tccId=${tccId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (!res.ok) throw new Error('Erro ao buscar workflow do TCC.');
         const result: WorkflowResponse = await res.json();
         setData(result);
@@ -101,12 +101,9 @@ export default function SignaturesClient() {
 
     const fetchTccDetails = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/Tcc?tccId=${tccId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
+        const res = await fetch(`${API_URL}/Tcc?tccId=${tccId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         if (!res.ok) throw new Error('Erro ao buscar detalhes do TCC.');
         const result: TccDetailsResponse = await res.json();
         const names = result.infoStudent.map((s) => s.name);
@@ -121,7 +118,7 @@ export default function SignaturesClient() {
       fetchWorkflow();
       fetchTccDetails();
     }
-  }, [tccId]);
+  }, [tccId, API_URL]);
 
   return (
     <div>

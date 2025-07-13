@@ -13,9 +13,10 @@ import {
 import Link from 'next/link';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 
 interface DecodedToken {
   unique_name: string;
@@ -34,12 +35,13 @@ interface UserTCCs {
 }
 
 export default function HomePage() {
+  const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
   const [profile, setProfile] = useState<string | string[] | null>(null);
   const [tccs, setTccs] = useState<TCCsInformation | null>(null);
   const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
 
-  const fetchUserTCCs = async () => {
+  const fetchUserTCCs = useCallback(async () => {
     try {
       const token = Cookies.get('token');
       if (!token) {
@@ -48,7 +50,7 @@ export default function HomePage() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}&StatusTcc=IN_PROGRESS`,
+        `${API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}&StatusTcc=IN_PROGRESS`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -65,7 +67,7 @@ export default function HomePage() {
     } catch {
       toast.error('Erro ao carregar TCCs do usuário.');
     }
-  };
+  }, [API_URL]);
 
   useEffect(() => {
     const token = Cookies.get('token');
@@ -81,7 +83,7 @@ export default function HomePage() {
         fetchUserTCCs();
       }
     }
-  }, []);
+  }, [API_URL, fetchUserTCCs]);
 
   useEffect(() => {
     const fetchTccs = async () => {
@@ -92,7 +94,7 @@ export default function HomePage() {
           return;
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Home`, {
+        const res = await fetch(`${API_URL}/Home`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -110,7 +112,7 @@ export default function HomePage() {
     };
 
     fetchTccs();
-  }, []);
+  }, [API_URL]);
 
   // Permite verificar se o usuário tem uma única role ou múltiplas roles.
   const canView = (allowedRoles: string[]) => {
