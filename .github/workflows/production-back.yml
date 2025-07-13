@@ -152,8 +152,31 @@ jobs:
           dotnet build --no-incremental
           ../.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}"
 
-      - name: Run Tests
-        run: dotnet test --verbosity normal
+      - name: Run Tests and Code Coverage
+        id: coverage
+        run: |
+          dotnet test --collect:"XPlat Code Coverage" --results-directory "coverage"
+          
+          # Coverlet gera o relatório em um diretório com nome aleatório dentro de 'coverage'
+          # Este comando encontra o arquivo json, extrai a porcentagem e a define como output
+          COVERAGE_FILE=$(find coverage -name "coverage.cobertura.json" | head -n 1)
+          if [ -f "$COVERAGE_FILE" ]; then
+            COVERAGE_PERCENTAGE=$(jq '.Modules | map(.Value."Coverage") | add / map(.Value."Total") | add * 100' $COVERAGE_FILE | cut -d. -f1)
+            echo "coverage_percentage=$COVERAGE_PERCENTAGE" >> $GITHUB_OUTPUT
+            echo "Cobertura total: $COVERAGE_PERCENTAGE%"
+          else
+            echo "Arquivo de cobertura não encontrado!"
+            echo "coverage_percentage=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Code Coverage Badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          name: "Coverage"
+          label: "Coverage"
+          status: "${{ steps.coverage.outputs.coverage_percentage }}%"
+          color: "brightgreen"
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
