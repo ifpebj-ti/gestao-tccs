@@ -121,7 +121,7 @@ jobs:
       - name: Run Tests and Code Coverage
         id: test-coverage
         run: |
-          dotnet test --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=opencover --results-directory ./coverage/
+          dotnet test --collect:"XPlat Code Coverage" --settings ./coverlet.runsettings --results-directory ./coverage/
           
           COVERAGE_FILE=$(find ./coverage -name coverage.opencover.xml -print -quit)
 
