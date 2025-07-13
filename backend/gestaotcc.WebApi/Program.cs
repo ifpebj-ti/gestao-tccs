@@ -5,6 +5,7 @@ using gestaotcc.WebApi.Middlewares;
 using gestaotcc.WebApi.SchemaFilters;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,13 @@ builder.Services.AddOpenTelemetryExtension(builder.Environment);
 builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
+
+// Configura a aplicação para confiar nos cabeçalhos enviados pelo proxy reverso (Nginx).
+// Isso é essencial para que o redirecionamento, o HTTPS e os IPs funcionem corretamente.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
