@@ -35,10 +35,15 @@ builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
 var app = builder.Build();
 
 // Configura a aplicação para confiar nos cabeçalhos enviados pelo proxy reverso (Nginx).
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+};
+
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
