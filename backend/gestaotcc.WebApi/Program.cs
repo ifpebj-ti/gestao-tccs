@@ -31,21 +31,8 @@ builder.Host.AddSerilogExtension();
 builder.Services.AddHangfireExtension(builder.Configuration);
 builder.Services.AddOpenTelemetryExtension(builder.Environment);
 builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
-builder.WebHost.UseKestrel()
-    .UseUrls("http://0.0.0.0:8080");
 
 var app = builder.Build();
-
-// Configura a aplicação para confiar nos cabeçalhos enviados pelo proxy reverso (Nginx).
-var forwardedHeadersOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-};
-
-forwardedHeadersOptions.KnownNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
-
-app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
