@@ -1,17 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  faArrowRightFromBracket,
-  faBell
-} from '@fortawesome/free-solid-svg-icons';
+import { faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import IFPELogo from '../../../public/IFPE Logo.png';
 import Image from 'next/image';
 import Cookies from 'js-cookie';
 
 export default function Header() {
-  // Função para lidar com o clique no botão de sair
   const handleLogout = () => {
     Cookies.remove('token');
     window.location.href = '/';
@@ -31,7 +27,6 @@ export default function Header() {
 
           {/* Botões no mobile ficam à direita */}
           <nav className="flex items-center gap-2 md:hidden">
-            <Button variant="ghost" icon={faBell} aria-label="Notificações" />
             <Button variant="ghost" icon={faArrowRightFromBracket}>
               <Link href="/">Sair</Link>
             </Button>
@@ -52,7 +47,6 @@ export default function Header() {
 
         {/* Botões desktop */}
         <nav className="hidden md:flex justify-end items-center gap-4 w-1/3">
-          <Button variant="ghost" icon={faBell} aria-label="Notificações" />
           <Button
             variant="ghost"
             icon={faArrowRightFromBracket}
