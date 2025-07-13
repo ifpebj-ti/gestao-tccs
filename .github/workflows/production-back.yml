@@ -97,7 +97,7 @@ jobs:
     if: >
       (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')
     permissions:
-      contents: read
+      contents: write
       packages: write
       security-events: write
     defaults:
@@ -117,6 +117,45 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+      
+      - name: Run Tests and Code Coverage
+        id: test-coverage
+        run: |
+          dotnet test --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=opencover --results-directory ./coverage/
+          
+          COVERAGE_FILE=$(find ./coverage -name coverage.opencover.xml -print -quit)
+
+          # Verifica se o arquivo foi encontrado
+          if [ -z "$COVERAGE_FILE" ]; then
+            echo "❌ Arquivo coverage.opencover.xml não encontrado!"
+            exit 1
+          fi
+          
+          echo "Arquivo de cobertura encontrado em: $COVERAGE_FILE"
+
+          # Extrai a porcentagem do arquivo encontrado
+          COVERAGE_PERCENTAGE=$(xmllint --xpath 'string(/CoverageSession/Summary/@sequenceCoverage)' $COVERAGE_FILE | cut -d. -f1)
+
+          # Define os outputs para os próximos passos usarem
+          echo "report_path=$COVERAGE_FILE" >> $GITHUB_OUTPUT
+          echo "coverage_percentage=${COVERAGE_PERCENTAGE:-0}" >> $GITHUB_OUTPUT
+
+      - name: Upload Code Coverage Badge
+        run: |
+          BADGE="![Coverage](https://img.shields.io/badge/Coverage-${{ steps.test-coverage.outputs.coverage_percentage }}%25-brightgreen)"
+          sed -i '0,/<!-- COVERAGE_BADGE -->/s|.*<!-- COVERAGE_BADGE -->|'"$BADGE"' <!-- COVERAGE_BADGE -->|' README.md
+        
+          # Configurar autenticação com GitHub CLI
+          echo "${{ secrets.GHCR_TOKEN }}" | gh auth login --with-token
+        
+          # Fazer commit e push via GitHub API
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github.v3+json" \
+            /repos/${{ github.repository }}/contents/README.md \
+            -f message="ci: atualizar badge de cobertura para ${{ steps.test-coverage.outputs.coverage_percentage }}%" \
+            -f content="$(base64 -w0 README.md)" \
+            -f sha="$(gh api repos/${{ github.repository }}/contents/README.md --jq .sha)"
 
       - name: Set up JDK 17 for SonarQube analysis
         uses: actions/setup-java@v4
@@ -146,35 +185,9 @@ jobs:
       
       - name: SonarQube Build and analyze
         run: |
-          ./.sonar/scanner/dotnet-sonarscanner begin /k:"gestao-tccs-back" /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"gestao-tccs-back" /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.cs.opencover.reportsPaths="${{ steps.test-coverage.outputs.report_path }}"
           dotnet build --no-incremental
           ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}"
-
-      - name: Run Tests and Code Coverage
-        id: coverage
-        run: |
-          dotnet test --collect:"XPlat Code Coverage" --results-directory "coverage"
-          
-          # Coverlet gera o relatório em um diretório com nome aleatório dentro de 'coverage'
-          # Este comando encontra o arquivo json, extrai a porcentagem e a define como output
-          COVERAGE_FILE=$(find coverage -name "coverage.cobertura.json" | head -n 1)
-          if [ -f "$COVERAGE_FILE" ]; then
-            COVERAGE_PERCENTAGE=$(jq '.Modules | map(.Value."Coverage") | add / map(.Value."Total") | add * 100' $COVERAGE_FILE | cut -d. -f1)
-            echo "coverage_percentage=$COVERAGE_PERCENTAGE" >> $GITHUB_OUTPUT
-            echo "Cobertura total: $COVERAGE_PERCENTAGE%"
-          else
-            echo "Arquivo de cobertura não encontrado!"
-            echo "coverage_percentage=0" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload Code Coverage Badge
-        uses: RubbaBoy/BYOB@v1.3.0
-        with:
-          name: "Coverage"
-          label: "Coverage"
-          status: "${{ steps.coverage.outputs.coverage_percentage }}%"
-          color: "brightgreen"
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
