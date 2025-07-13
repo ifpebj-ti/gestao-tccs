@@ -35,7 +35,6 @@ builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
 var app = builder.Build();
 
 // Configura a aplicação para confiar nos cabeçalhos enviados pelo proxy reverso (Nginx).
-// Isso é essencial para que o redirecionamento, o HTTPS e os IPs funcionem corretamente.
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
