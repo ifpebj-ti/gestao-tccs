@@ -12,21 +12,6 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext context)
     {
-        // Seed User
-        if (!context.Users.Any())
-        {
-            context.Users.Add(new UserEntityBuilder()
-                .WithName("dev-test")
-                .WithCpf("000.000.000-00")
-                .WithEmail("dev-test@gmail.com")
-                .WithPassword("Senha@123")
-                .WithProfile(new List<ProfileEntity>() { new ProfileEntityBuilder()
-                    .WithRole(RoleType.ADMIN.ToString())
-                    .Build() })
-                .Build());
-            context.SaveChanges();
-        }
-        
         // Seed Profiles
         if (!context.Profiles.Any())
         {
@@ -40,6 +25,21 @@ public static class DbInitializer
                 new() { Role = "STUDENT" },
                 new() { Role = "LIBRARY" }
             });
+            context.SaveChanges();
+        }
+        
+        // Seed User
+        if (!context.Users.Any())
+        {
+            var profile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
+            
+            context.Users.Add(new UserEntityBuilder()
+                .WithName("dev-test")
+                .WithCpf("000.000.000-00")
+                .WithEmail("dev-test@gmail.com")
+                .WithPassword("Senha@123")
+                .WithProfile(new List<ProfileEntity>() { profile! })
+                .Build());
             context.SaveChanges();
         }
 
