@@ -83,7 +83,7 @@ export function useTccDetails() {
       setTccData(result);
 
       if (result.cancellationRequest) {
-        const detailsRes = await fetch(`${API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
+        const detailsRes = await fetch(`${API_URL}/Tcc/cancellation?tccId=${tccId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (detailsRes.ok) {

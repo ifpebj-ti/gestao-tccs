@@ -67,6 +67,8 @@ export function usePendingSignatures() {
       setIsLoading(false);
       return;
     }
+    setIsLoading(true);
+    setPendingData([]);
     
     const decoded = jwtDecode<DecodedToken>(token);
     if (!profile) setProfile(decoded.role);
@@ -94,6 +96,7 @@ export function usePendingSignatures() {
       setPendingData(data);
     } catch {
       toast.error("Erro ao carregar assinaturas pendentes.");
+      setPendingData([]);
     } finally {
       setIsLoading(false);
     }
@@ -153,5 +156,6 @@ export function usePendingSignatures() {
     showAll,
     setShowAll,
     pendingData,
+    userId
   };
 }
