@@ -90,7 +90,6 @@ export default function PendingSignaturesPage() {
         icon={faGraduationCap}
         indicatorNumber={totalPending}
         indicatorColor="bg-red-600"
-        isOpen={openTccGroups.has(cardId)}
         onToggle={() => toggleTccGroup(cardId)}
       >
         <div className="space-y-2">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
@@ -12,8 +13,8 @@ interface CollapseCardProps {
   indicatorColor?: string;
   children?: React.ReactNode;
   onClick?: () => void;
-  isOpen: boolean;
-  onToggle: () => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
 export function CollapseCard({
@@ -23,14 +24,24 @@ export function CollapseCard({
   indicatorColor = 'bg-blue-500',
   children,
   onClick,
-  isOpen,
-  onToggle
+  isOpen: isOpenProp,
+  onToggle: onToggleProp
 }: CollapseCardProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  const isControlled = isOpenProp !== undefined && onToggleProp !== undefined;
+
+  const isOpen = isControlled ? isOpenProp : internalIsOpen;
+
   const hasChildren = !!children;
 
   const handleClick = () => {
     if (hasChildren) {
-      onToggle();
+      if (isControlled) {
+        onToggleProp();
+      } else {
+        setInternalIsOpen((prev) => !prev);
+      }
     } else if (onClick) {
       onClick();
     }
