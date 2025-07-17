@@ -98,7 +98,9 @@ export default function PendingSignaturesPage() {
               key={doc.documentId}
               className="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 transition cursor-pointer"
               onClick={() =>
-                push(`/signature/${doc.documentId}?tccId=${tcc.tccId}`)
+                push(
+                  `/pendingSignatures/signature/${doc.documentId}?tccId=${tcc.tccId}`
+                )
               }
             >
               <p className="font-semibold text-gray-700 flex items-center gap-2">
@@ -160,7 +162,7 @@ export default function PendingSignaturesPage() {
                           isActionable
                             ? () =>
                                 push(
-                                  `/signature/${doc.documentId}?tccId=${tccGroup.tccId}`
+                                  `/pendingSignatures/signature/[${doc.documentId}]?tccId=${tccGroup.tccId}`
                                 )
                             : undefined
                         }

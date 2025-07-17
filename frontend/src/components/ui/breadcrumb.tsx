@@ -113,6 +113,7 @@ export function BreadcrumbAuto({ map = {} }: { map?: Record<string, string> }) {
     signatures: 'Assinaturas',
     details: 'Detalhes',
     pendingSignatures: 'Assinaturas Pendentes',
+    signature: 'Assinatura',
     myTCC: 'Meu TCC'
   };
 
