@@ -22,34 +22,32 @@ interface BankingInfo {
 
 interface BankingInfoSectionProps {
   bankingData: BankingInfo | null;
-  canRegister: boolean;
-  isFormVisible: boolean;
-  onCancel: () => void;
-  form: UseFormReturn<RegisterBankingSchemaType>;
-  onSubmit: SubmitHandler<RegisterBankingSchemaType>;
-  allBankingMembers: Member[];
+  canRegister?: boolean;
+  isFormVisible?: boolean;
+  onCancel?: () => void;
+  form?: UseFormReturn<RegisterBankingSchemaType>;
+  onSubmit?: SubmitHandler<RegisterBankingSchemaType>;
+  allBankingMembers?: Member[];
 }
 
 export function BankingInfoSection({
   bankingData,
-  canRegister,
-  isFormVisible,
-  onCancel,
+  canRegister = false,
+  isFormVisible = false,
+  onCancel = () => {},
   form,
   onSubmit,
-  allBankingMembers
+  allBankingMembers = []
 }: BankingInfoSectionProps) {
   const hasBanking =
     bankingData && (bankingData.nameInternal || bankingData.nameExternal);
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting }
-  } = form;
 
-  const selectedInternalId = watch('idInternalBanking');
-  const selectedExternalId = watch('idExternalBanking');
+  // Desestruturação segura, caso 'form' seja undefined
+  const { register, handleSubmit, watch, formState } = form || {};
+  const { errors, isSubmitting } = formState || {};
+
+  const selectedInternalId = watch?.('idInternalBanking');
+  const selectedExternalId = watch?.('idExternalBanking');
 
   const internalOptions = allBankingMembers.filter(
     (member) => member.id !== selectedExternalId
@@ -93,7 +91,7 @@ export function BankingInfoSection({
             />
           </div>
         </div>
-      ) : isFormVisible && canRegister ? (
+      ) : isFormVisible && canRegister && form && onSubmit && handleSubmit ? (
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-4 mt-4"
@@ -114,7 +112,7 @@ export function BankingInfoSection({
               <select
                 id="idInternalBanking"
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                {...register('idInternalBanking', { valueAsNumber: true })}
+                {...register?.('idInternalBanking', { valueAsNumber: true })}
               >
                 <option value={0}>Selecione um membro interno</option>
                 {internalOptions.map((member) => (
@@ -123,7 +121,7 @@ export function BankingInfoSection({
                   </option>
                 ))}
               </select>
-              {errors.idInternalBanking && (
+              {errors?.idInternalBanking && (
                 <p className="text-sm text-red-600">
                   {errors.idInternalBanking.message}
                 </p>
@@ -137,7 +135,7 @@ export function BankingInfoSection({
               <select
                 id="idExternalBanking"
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                {...register('idExternalBanking', { valueAsNumber: true })}
+                {...register?.('idExternalBanking', { valueAsNumber: true })}
               >
                 <option value={0}>Selecione um membro externo</option>
                 {externalOptions.map((member) => (
@@ -146,7 +144,7 @@ export function BankingInfoSection({
                   </option>
                 ))}
               </select>
-              {errors.idExternalBanking && (
+              {errors?.idExternalBanking && (
                 <p className="text-sm text-red-600">
                   {errors.idExternalBanking.message}
                 </p>

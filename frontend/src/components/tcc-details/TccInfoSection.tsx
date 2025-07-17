@@ -15,36 +15,33 @@ interface TccInfoSectionProps {
     presentationTime: string | null;
     presentationLocation: string;
   };
-  isScheduleFormVisible: boolean;
-  onScheduleCancel: () => void;
-  scheduleForm: UseFormReturn<ScheduleSchemaType>;
-  onScheduleSubmit: SubmitHandler<ScheduleSchemaType>;
+  isScheduleFormVisible?: boolean;
+  onScheduleCancel?: () => void;
+  scheduleForm?: UseFormReturn<ScheduleSchemaType>;
+  onScheduleSubmit?: SubmitHandler<ScheduleSchemaType>;
 }
 
 export function TccInfoSection({
   infoTcc,
-  isScheduleFormVisible,
-  onScheduleCancel,
+  isScheduleFormVisible = false,
+  onScheduleCancel = () => {},
   scheduleForm,
   onScheduleSubmit
 }: TccInfoSectionProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset
-  } = scheduleForm;
-  const hasSchedule = infoTcc.presentationDate;
+  const { register, handleSubmit, formState, reset } = scheduleForm || {};
+  const { errors, isSubmitting } = formState || {};
+
+  const hasSchedule = !!infoTcc.presentationDate;
 
   useEffect(() => {
-    if (hasSchedule) {
+    if (hasSchedule && scheduleForm && reset) {
       reset({
         scheduleDate: infoTcc.presentationDate ?? '',
         scheduleTime: infoTcc.presentationTime ?? '',
-        scheduleLocation: infoTcc.presentationLocation ?? ''
+        scheduleLocation: infoTcc.presentationLocation
       });
     }
-  }, [hasSchedule, infoTcc, reset]);
+  }, [hasSchedule, infoTcc, reset, scheduleForm]);
 
   return (
     <section>
@@ -59,7 +56,10 @@ export function TccInfoSection({
           <Input value={infoTcc.summary} readOnly />
         </div>
 
-        {isScheduleFormVisible ? (
+        {isScheduleFormVisible &&
+        scheduleForm &&
+        handleSubmit &&
+        onScheduleSubmit ? (
           <form
             onSubmit={handleSubmit(onScheduleSubmit)}
             className="md:col-span-2 flex flex-col gap-4 mt-4 border-t pt-4"
@@ -73,9 +73,9 @@ export function TccInfoSection({
                 <Input
                   id="scheduleDate"
                   type="date"
-                  {...register('scheduleDate')}
+                  {...register?.('scheduleDate')}
                 />
-                {errors.scheduleDate && (
+                {errors?.scheduleDate && (
                   <p className="text-sm text-red-600">
                     {errors.scheduleDate.message}
                   </p>
@@ -86,9 +86,9 @@ export function TccInfoSection({
                 <Input
                   id="scheduleTime"
                   type="time"
-                  {...register('scheduleTime')}
+                  {...register?.('scheduleTime')}
                 />
-                {errors.scheduleTime && (
+                {errors?.scheduleTime && (
                   <p className="text-sm text-red-600">
                     {errors.scheduleTime.message}
                   </p>
@@ -99,9 +99,9 @@ export function TccInfoSection({
                 <Input
                   id="scheduleLocation"
                   placeholder="Ex: Sala 20 ou Link do Meet"
-                  {...register('scheduleLocation')}
+                  {...register?.('scheduleLocation')}
                 />
-                {errors.scheduleLocation && (
+                {errors?.scheduleLocation && (
                   <p className="text-sm text-red-600">
                     {errors.scheduleLocation.message}
                   </p>

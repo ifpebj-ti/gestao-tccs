@@ -10,30 +10,26 @@ interface DecodedToken {
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [], 
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
   '/myTCC': ['STUDENT'],
+  '/completedTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY'],
+  '/pendingSignatures': [], 
 };
 
 const tempProtectedRoutes = ['/autoRegister', '/newPassword'];
 
 function hasPermission(userRoles: string | string[], allowedRoles: string[]): boolean {
-  // Se a rota não exige perfis específicos, o acesso é permitido.
   if (allowedRoles.length === 0) {
     return true;
   }
-  
-  // Se o usuário tem uma única role (string)
   if (typeof userRoles === 'string') {
     return allowedRoles.includes(userRoles);
   }
-
-  // Se o usuário tem múltiplas roles (array), verifica se pelo menos uma delas é permitida.
   if (Array.isArray(userRoles)) {
     return userRoles.some(role => allowedRoles.includes(role));
   }
-
   return false;
 }
 
@@ -49,13 +45,23 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    const allowedProfiles = protectedRoutes[protectedRoute];
-
     try {
       const decoded = jwtDecode<DecodedToken>(token);
+      const userRoles = decoded.role;
       
-      if (!hasPermission(decoded.role, allowedProfiles)) {
-        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      const allowedProfiles = protectedRoutes[protectedRoute];
+      const hasGeneralPermission = hasPermission(userRoles, allowedProfiles);
+
+      if (!hasGeneralPermission) {
+        const isStudent = (Array.isArray(userRoles) ? userRoles.includes('STUDENT') : userRoles === 'STUDENT');
+        const isAccessingSpecificCompletedTcc = protectedRoute === '/completedTCCs' && path !== '/completedTCCs';
+
+        // Se for um aluno tentando acessar uma página de detalhes de TCC concluído, permita.
+        if (isStudent && isAccessingSpecificCompletedTcc) {
+        } else {
+          // Se não for essa exceção, então o usuário realmente não tem permissão.
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
       }
     } catch (err) {
       console.error('Erro ao decodificar token:', err);
@@ -63,7 +69,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Verificação de rotas com autenticação temporária
   if (tempProtectedRoutes.some((r) => path.startsWith(r)) && !tempToken) {
     return NextResponse.redirect(new URL('/', request.url));
   }
@@ -78,7 +83,9 @@ export const config = {
     '/newUser',
     '/autoRegister',
     '/newPassword',
-    '/ongoingTCCs/:path*', // Usar :path* para cobrir sub-rotas como /signatures e /details
+    '/ongoingTCCs/:path*',
     '/myTCC/:path*',
+    '/completedTCCs/:path*',
+    '/pendingSignatures/:path*',
   ],
 };

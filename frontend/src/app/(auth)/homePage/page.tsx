@@ -40,34 +40,41 @@ export default function HomePage() {
   const [profile, setProfile] = useState<string | string[] | null>(null);
   const [tccs, setTccs] = useState<TCCsInformation | null>(null);
   const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
+  const [completedUserTCC, setCompletedUserTCC] = useState<UserTCCs[]>([]);
 
-  const fetchUserTCCs = useCallback(async () => {
-    try {
+  const checkUserTccStatus = useCallback(
+    async (userId: string) => {
       const token = Cookies.get('token');
-      if (!token) {
-        toast.error('Token de autenticação não encontrado.');
-        return;
-      }
+      if (!token) return;
 
-      const res = await fetch(
-        `${API_URL}/Tcc/filter?userId=${jwtDecode<DecodedToken>(token).userId}&StatusTcc=IN_PROGRESS`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
+      try {
+        const completedRes = await fetch(
+          `${API_URL}/Tcc/filter?userId=${userId}&StatusTcc=COMPLETED`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!completedRes.ok)
+          throw new Error('Falha ao verificar TCCs concluídos.');
+
+        const completedData = await completedRes.json();
+
+        if (completedData && completedData.length > 0) {
+          setCompletedUserTCC(completedData);
+        } else {
+          const inProgressRes = await fetch(
+            `${API_URL}/Tcc/filter?userId=${userId}&StatusTcc=IN_PROGRESS`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (inProgressRes.ok) {
+            const inProgressData = await inProgressRes.json();
+            setUserTCCs(inProgressData);
           }
         }
-      );
-
-      if (!res.ok) {
-        throw new Error('Erro ao buscar TCCs do usuário.');
+      } catch {
+        toast.error('Erro ao verificar o status do seu TCC.');
       }
-
-      const data = await res.json();
-      setUserTCCs(data);
-    } catch {
-      toast.error('Erro ao carregar TCCs do usuário.');
-    }
-  }, [API_URL]);
+    },
+    [API_URL]
+  );
 
   useEffect(() => {
     const token = Cookies.get('token');
@@ -80,10 +87,10 @@ export default function HomePage() {
         : decodedToken.role === 'STUDENT';
 
       if (userHasStudentRole) {
-        fetchUserTCCs();
+        checkUserTccStatus(decodedToken.userId);
       }
     }
-  }, [API_URL, fetchUserTCCs]);
+  }, [checkUserTccStatus]);
 
   useEffect(() => {
     const fetchTccs = async () => {
@@ -114,29 +121,28 @@ export default function HomePage() {
     fetchTccs();
   }, [API_URL]);
 
-  // Permite verificar se o usuário tem uma única role ou múltiplas roles.
   const canView = (allowedRoles: string[]) => {
-    if (!profile) {
-      return false;
-    }
-    if (typeof profile === 'string') {
-      return allowedRoles.includes(profile);
-    }
-    if (Array.isArray(profile)) {
+    if (!profile) return false;
+    if (typeof profile === 'string') return allowedRoles.includes(profile);
+    if (Array.isArray(profile))
       return profile.some((userRole) => allowedRoles.includes(userRole));
-    }
     return false;
   };
 
   const isLimitedView = () => {
     if (!profile) return false;
-    if (typeof profile === 'string') {
+    if (typeof profile === 'string')
       return profile === 'STUDENT' || profile === 'BANKING';
-    }
-    if (Array.isArray(profile)) {
-      return false; // Usuários com múltiplos perfis (como admin) têm visão completa.
-    }
+    if (Array.isArray(profile)) return false;
     return false;
+  };
+
+  const handleMyTccClick = () => {
+    if (completedUserTCC.length > 0) {
+      push(`/completedTCCs/${completedUserTCC[0].tccId}`);
+    } else if (userTCCs.length > 0) {
+      push(`/myTCC/signatures?id=${userTCCs[0].tccId}`);
+    }
   };
 
   return (
@@ -194,25 +200,24 @@ export default function HomePage() {
             title="TCCs concluídos"
             icon={faFileCircleCheck}
             onClick={() => push('/completedTCCs')}
-          ></CollapseCard>
+          />
         )}
 
-        {canView(['STUDENT']) && (
-          <CollapseCard
-            title="Meu TCC"
-            icon={faGraduationCap}
-            onClick={() =>
-              userTCCs[0] && push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)
-            }
-          ></CollapseCard>
-        )}
+        {canView(['STUDENT']) &&
+          (userTCCs.length > 0 || completedUserTCC.length > 0) && (
+            <CollapseCard
+              title="Meu TCC"
+              icon={faGraduationCap}
+              onClick={handleMyTccClick}
+            />
+          )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
           <CollapseCard
             title="Cadastrar nova proposta"
             icon={faFileCirclePlus}
             onClick={() => push('/newTCC')}
-          ></CollapseCard>
+          />
         )}
 
         {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
@@ -220,7 +225,7 @@ export default function HomePage() {
             title="Cadastrar novo usuário"
             icon={faUserPlus}
             onClick={() => push('/newUser')}
-          ></CollapseCard>
+          />
         )}
       </div>
 
@@ -279,17 +284,16 @@ export default function HomePage() {
           />
         )}
 
-        {canView(['STUDENT']) && (
-          <CardHome
-            title="Meu TCC"
-            icon={faGraduationCap}
-            onClick={() =>
-              userTCCs[0] && push(`/myTCC/signatures?id=${userTCCs[0].tccId}`)
-            }
-          />
-        )}
+        {canView(['STUDENT']) &&
+          (userTCCs.length > 0 || completedUserTCC.length > 0) && (
+            <CardHome
+              title="Meu TCC"
+              icon={faGraduationCap}
+              onClick={handleMyTccClick}
+            />
+          )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
           <Link href="/newTCC">
             <CardHome
               title="Cadastrar nova proposta"

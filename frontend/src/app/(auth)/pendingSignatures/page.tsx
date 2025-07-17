@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   usePendingSignatures,
   PendingTcc,
@@ -20,13 +21,17 @@ import { useRouter } from 'next/navigation';
 export default function PendingSignaturesPage() {
   const { push } = useRouter();
   const {
-    pendingData,
     groupedByUser,
     isLoading,
     profile,
     showAll,
-    setShowAll
+    setShowAll,
+    pendingData,
+    userId: loggedInUserId
   } = usePendingSignatures();
+
+  const [openUserCards, setOpenUserCards] = useState<Set<number>>(new Set());
+  const [openTccGroups, setOpenTccGroups] = useState<Set<string>>(new Set());
 
   const profileLabels: Record<string, string> = {
     STUDENT: 'Aluno',
@@ -39,32 +44,64 @@ export default function PendingSignaturesPage() {
   const canToggleView =
     profile &&
     ((Array.isArray(profile) &&
-      profile.some((r) => ['ADMIN', 'SUPERVISOR'].includes(r))) ||
+      profile.some((r) =>
+        ['ADMIN', 'COORDINATOR', 'SUPERVISOR'].includes(r)
+      )) ||
       (typeof profile === 'string' &&
-        ['ADMIN', 'SUPERVISOR'].includes(profile)));
+        ['ADMIN', 'COORDINATOR', 'SUPERVISOR'].includes(profile)));
 
-  // Função de renderização para a visão TCC -> Documentos
+  const toggleUserCard = (userId: number) => {
+    setOpenUserCards((prevOpen) => {
+      const newOpen = new Set(prevOpen);
+      if (newOpen.has(userId)) {
+        newOpen.delete(userId);
+      } else {
+        newOpen.add(userId);
+      }
+      return newOpen;
+    });
+  };
+
+  const toggleTccGroup = (tccGroupId: string) => {
+    setOpenTccGroups((prevOpen) => {
+      const newOpen = new Set(prevOpen);
+      if (newOpen.has(tccGroupId)) {
+        newOpen.delete(tccGroupId);
+      } else {
+        newOpen.add(tccGroupId);
+      }
+      return newOpen;
+    });
+  };
+
+  // Visão "Minhas Pendências" (TCC -> Documentos)
   const renderTccCard = (tcc: PendingTcc) => {
     const totalPending = tcc.pendingDetails.reduce(
       (total, doc) => total + doc.userDetails.length,
       0
     );
+    const cardId = `tcc-${tcc.tccId}`;
     return (
       <CollapseCard
-        key={tcc.tccId}
+        key={cardId}
         title={
           'TCC - ' + (tcc.studentNames.join(', ') || 'TCC sem aluno definido')
         }
         icon={faGraduationCap}
         indicatorNumber={totalPending}
         indicatorColor="bg-red-600"
+        onToggle={() => toggleTccGroup(cardId)}
       >
         <div className="space-y-2">
           {tcc.pendingDetails.map((doc) => (
             <div
               key={doc.documentId}
               className="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 transition cursor-pointer"
-              onClick={() => push(`/assinatura/${doc.documentId}`)}
+              onClick={() =>
+                push(
+                  `/pendingSignatures/signature/${doc.documentId}?tccId=${tcc.tccId}`
+                )
+              }
             >
               <p className="font-semibold text-gray-700 flex items-center gap-2">
                 <FontAwesomeIcon
@@ -80,7 +117,7 @@ export default function PendingSignaturesPage() {
     );
   };
 
-  // Função de renderização para a visão Usuário -> TCC -> Documentos
+  // Visão "Todas as Pendências" (Usuário -> TCC -> Documentos)
   const renderUserCard = (userGroup: GroupedByUserAndTcc) => {
     const totalTasks = userGroup.tccGroups.reduce(
       (acc, group) => acc + group.documents.length,
@@ -93,41 +130,61 @@ export default function PendingSignaturesPage() {
         icon={faUser}
         indicatorNumber={totalTasks}
         indicatorColor="bg-red-600"
+        isOpen={openUserCards.has(userGroup.userId)}
+        onToggle={() => toggleUserCard(userGroup.userId)}
       >
         <div className="space-y-2">
-          {userGroup.tccGroups.map((tccGroup) => (
-            <CollapseCard
-              key={tccGroup.tccId}
-              title={`TCC de: ${tccGroup.studentNames.join(', ')}`}
-              icon={faGraduationCap}
-              indicatorNumber={tccGroup.documents.length}
-              indicatorColor="bg-blue-600"
-            >
-              <div className="space-y-3 pl-2">
-                {tccGroup.documents.map((doc) => (
-                  <div
-                    key={doc.documentId}
-                    className="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 transition cursor-pointer"
-                    onClick={() => push(`/assinatura/${doc.documentId}`)}
-                  >
-                    <p className="font-semibold text-gray-700 flex items-center gap-2">
-                      <FontAwesomeIcon
-                        icon={faFileSignature}
-                        className="text-gray-500"
-                      />
-                      {doc.documentName}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CollapseCard>
-          ))}
+          {userGroup.tccGroups.map((tccGroup) => {
+            const tccGroupId = `${userGroup.userId}-${tccGroup.tccId}`;
+            return (
+              <CollapseCard
+                key={tccGroupId}
+                title={`TCC de: ${tccGroup.studentNames.join(', ')}`}
+                icon={faGraduationCap}
+                indicatorNumber={tccGroup.documents.length}
+                indicatorColor="bg-blue-600"
+                isOpen={openTccGroups.has(tccGroupId)}
+                onToggle={() => toggleTccGroup(tccGroupId)}
+              >
+                <div className="space-y-3 pl-2">
+                  {tccGroup.documents.map((doc) => {
+                    const isActionable =
+                      String(userGroup.userId) === loggedInUserId;
+                    return (
+                      <div
+                        key={doc.documentId}
+                        className={`p-3 bg-gray-50 rounded-md border transition ${
+                          isActionable
+                            ? 'hover:bg-gray-100 cursor-pointer'
+                            : 'cursor-not-allowed opacity-70'
+                        }`}
+                        onClick={
+                          isActionable
+                            ? () =>
+                                push(
+                                  `/pendingSignatures/signature/[${doc.documentId}]?tccId=${tccGroup.tccId}`
+                                )
+                            : undefined
+                        }
+                      >
+                        <p className="font-semibold text-gray-700 flex items-center gap-2">
+                          <FontAwesomeIcon
+                            icon={faFileSignature}
+                            className="text-gray-500"
+                          />
+                          {doc.documentName}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapseCard>
+            );
+          })}
         </div>
       </CollapseCard>
     );
   };
-
-  // As variáveis 'dataToRender' e 'renderFunction' foram removidas.
 
   return (
     <div className="flex flex-col">
