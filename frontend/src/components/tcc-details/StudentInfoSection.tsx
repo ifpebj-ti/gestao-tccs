@@ -21,16 +21,16 @@ interface Student {
 
 interface StudentInfoSectionProps {
   students: Student[];
-  canResendInvite: boolean;
-  onResendInvite: (email: string) => void;
-  resendingInviteTo: string | null;
+  canResendInvite?: boolean;
+  onResendInvite?: (email: string) => void;
+  resendingInviteTo?: string | null;
 }
 
 export function StudentInfoSection({
   students,
-  canResendInvite,
-  onResendInvite,
-  resendingInviteTo
+  canResendInvite = false,
+  onResendInvite = () => {},
+  resendingInviteTo = null
 }: StudentInfoSectionProps) {
   if (students.length === 0) {
     return (
@@ -107,12 +107,12 @@ export function StudentInfoSection({
                         <FontAwesomeIcon
                           icon={faSpinner}
                           spin
-                          className="h-3.5 w-3.5"
+                          className="mr-2 h-3.5 w-3.5"
                         />
                       ) : (
                         <FontAwesomeIcon
                           icon={faPaperPlane}
-                          className="h-3.5 w-3.5"
+                          className="mr-2 h-3.5 w-3.5"
                         />
                       )}
                       {isThisStudentLoading

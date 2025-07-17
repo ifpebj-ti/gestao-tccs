@@ -44,7 +44,7 @@ export function useTccDetails() {
   const [cancellationDetails, setCancellationDetails] = useState<CancellationDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<string | string[] | null>(null);
-    const [resendingInviteTo, setResendingInviteTo] = useState<string | null>(null);
+  const [resendingInviteTo, setResendingInviteTo] = useState<string | null>(null);
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
   const [isBankingFormVisible, setIsBankingFormVisible] = useState(false);
   const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
