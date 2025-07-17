@@ -35,6 +35,7 @@ export default function DetailsClient() {
     handleRegisterBanking,
     handleScheduleSubmit,
     handleSendScheduleEmail,
+    resendingInviteTo,
     handleResendInvite
   } = useTccDetails();
 
@@ -79,6 +80,7 @@ export default function DetailsClient() {
             students={tccData.infoStudent}
             canResendInvite={canManageTcc && !tccData.cancellationRequest}
             onResendInvite={handleResendInvite}
+            resendingInviteTo={resendingInviteTo}
           />
 
           {tccData.infoAdvisor.name && (
@@ -106,7 +108,6 @@ export default function DetailsClient() {
           }
           isBankingFormVisible={isBankingFormVisible}
           hasSchedule={!!tccData.infoTcc.presentationDate}
-          // CORREÇÃO: Adicionando a propriedade que estava faltando
           isScheduleFormVisible={isScheduleFormVisible}
           onApprove={handleApproveCancellation}
           onRequest={() => setIsCancellationModalOpen(true)}
