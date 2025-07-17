@@ -12,21 +12,6 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext context)
     {
-        // Seed User
-        if (!context.Users.Any())
-        {
-            context.Users.Add(new UserEntityBuilder()
-                .WithName("dev-test")
-                .WithCpf("000.000.000-00")
-                .WithEmail("dev-test@gmail.com")
-                .WithPassword("Senha@123")
-                .WithProfile(new List<ProfileEntity>() { new ProfileEntityBuilder()
-                    .WithRole(RoleType.ADMIN.ToString())
-                    .Build() })
-                .Build());
-            context.SaveChanges();
-        }
-        
         // Seed Profiles
         if (!context.Profiles.Any())
         {
@@ -40,6 +25,21 @@ public static class DbInitializer
                 new() { Role = "STUDENT" },
                 new() { Role = "LIBRARY" }
             });
+            context.SaveChanges();
+        }
+        
+        // Seed User
+        if (!context.Users.Any())
+        {
+            var profile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
+            
+            context.Users.Add(new UserEntityBuilder()
+                .WithName("dev-test")
+                .WithCpf("000.000.000-00")
+                .WithEmail("dev-test@gmail.com")
+                .WithPassword("Senha@123")
+                .WithProfile(new List<ProfileEntity>() { profile! })
+                .Build());
             context.SaveChanges();
         }
 
@@ -60,7 +60,7 @@ public static class DbInitializer
             context.DocumentTypes.AddRange(new DocumentTypeEntity[]
             {
                 new() { Name = "ANEXO I - TERMO DE COMPROMISSO DE ORIENTAÇÃO", SignatureOrder = 2, MethodSignature = MethoSignatureType.ONLY_DOCS.ToString() },
-                new() { Name = "ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÀO VOLUNTÁRIA", SignatureOrder = 2, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
+                new() { Name = "ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA", SignatureOrder = 2, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
                 new() { Name = "ANEXO VI - TERMO DE COMPROMISSO DO ORIENTANDO", SignatureOrder = 2, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
                 new() { Name = "ANEXO III - CRONOGRAMA DE ENCONTROS", SignatureOrder = 3, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
                 new() { Name = "ANEXO VII - FICHA DE ACOMPANHAMENTO", SignatureOrder = 3, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },

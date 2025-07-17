@@ -69,7 +69,7 @@ public class MinioGateway : IMinioGateway
         var args = new PresignedGetObjectArgs()
             .WithBucket(_bucketName)
             .WithObject(objectName)
-            .WithExpiry(60);
+            .WithExpiry(120);
 
         var url = await _minioClient.PresignedGetObjectAsync(args);
         url = url.Replace($"http://{_endpoint}", _publicDomain);
