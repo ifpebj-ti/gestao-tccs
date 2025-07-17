@@ -6,6 +6,8 @@ import { FormProvider } from 'react-hook-form';
 import React from 'react';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import TccTabs from '@/components/TccTabs';
+import { Button } from '@/components/ui/button';
+import { faFileArchive } from '@fortawesome/free-solid-svg-icons';
 import { TccHeader } from '@/components/tcc-details/TccHeader';
 import { TccInfoSection } from '@/components/tcc-details/TccInfoSection';
 import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection';
@@ -35,8 +37,8 @@ export default function DetailsClient() {
     handleRegisterBanking,
     handleScheduleSubmit,
     handleSendScheduleEmail,
-    resendingInviteTo,
-    handleResendInvite
+    handleResendInvite,
+    handleDownloadAllDocuments
   } = useTccDetails();
 
   if (loading) {
@@ -62,10 +64,20 @@ export default function DetailsClient() {
           <TccTabs />
         </Suspense>
 
-        <TccHeader
-          infoStudent={tccData.infoStudent}
-          cancellationRequested={tccData.cancellationRequest}
-        />
+        <div className="mt-6 flex flex-col md:flex-row justify-between gap-4">
+          <TccHeader
+            infoStudent={tccData.infoStudent}
+            cancellationRequested={tccData.cancellationRequest}
+          />
+          <Button
+            variant="outline"
+            onClick={handleDownloadAllDocuments}
+            className="w-full md:w-fit"
+            icon={faFileArchive}
+          >
+            Baixar Todos os Documentos
+          </Button>
+        </div>
 
         <div className="flex flex-col gap-8 mt-10">
           <TccInfoSection
@@ -75,18 +87,15 @@ export default function DetailsClient() {
             scheduleForm={scheduleForm}
             onScheduleSubmit={handleScheduleSubmit}
           />
-
           <StudentInfoSection
             students={tccData.infoStudent}
             canResendInvite={canManageTcc && !tccData.cancellationRequest}
             onResendInvite={handleResendInvite}
-            resendingInviteTo={resendingInviteTo}
+            resendingInviteTo={null}
           />
-
           {tccData.infoAdvisor.name && (
             <AdvisorInfoSection advisor={tccData.infoAdvisor} />
           )}
-
           <BankingInfoSection
             bankingData={tccData.infoBanking}
             canRegister={canManageTcc && !tccData.cancellationRequest}

@@ -240,6 +240,45 @@ export function useTccDetails() {
     }
   };
 
+  const handleDownloadAllDocuments = async () => {
+    const token = Cookies.get('token');
+    if (!tccId || !token) {
+      toast.error("Não foi possível identificar o TCC para download.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/Signature/all/documents/download/${tccId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error('Erro ao baixar os documentos.');
+
+      const contentDisposition = res.headers.get('Content-Disposition');
+      let filename = `TCC_${tccId}_documentos.zip`;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch {
+      toast.error("Não foi possível baixar o pacote de documentos.");
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -262,5 +301,6 @@ export function useTccDetails() {
     handleSendScheduleEmail,
     resendingInviteTo,
     handleResendInvite,
+    handleDownloadAllDocuments
   };
 }
