@@ -114,7 +114,8 @@ export function BreadcrumbAuto({ map = {} }: { map?: Record<string, string> }) {
     details: 'Detalhes',
     pendingSignatures: 'Assinaturas Pendentes',
     signature: 'Assinatura',
-    myTCC: 'Meu TCC'
+    myTCC: 'Meu TCC',
+    completedTCCs: 'TCCs Concluídos'
   };
 
   const segments = pathname.split('/').filter(Boolean);
