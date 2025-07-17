@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useSignaturePage } from '@/app/hooks/useSignaturePage';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   faDownload,
   faSignature,
   faSpinner,
   faInfoCircle,
-  faFilePdf
+  faFilePdf,
+  faExternalLinkAlt,
+  faExclamationTriangle // 1. Importar o ícone de aviso
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CollapseCard } from '@/components/CollapseCard';
@@ -39,6 +40,7 @@ export default function SignatureClient() {
         </p>
       </div>
 
+      {/* Passo 1: Baixar Documento */}
       <div className="space-y-2">
         <h3 className="font-bold text-base">Passo 1: Baixar Documento</h3>
         <Button
@@ -54,16 +56,38 @@ export default function SignatureClient() {
         </Button>
       </div>
 
+      {/* Passo 2: Assinar (Link Externo) */}
+      <div
+        className={`border-t pt-4 space-y-2 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
+      >
+        <h3 className="font-bold text-base">Passo 2: Assinar o Documento</h3>
+        <p className="text-sm text-gray-600">
+          Não tem um assinador? Utilize o serviço gratuito do Governo Federal.
+        </p>
+        <a
+          href="https://www.gov.br/pt-br/servicos/assinatura-eletronica"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={!downloadClicked ? 'pointer-events-none' : ''}
+        >
+          <Button variant="link" className="p-0 h-auto text-blue-600">
+            Assinar com gov.br
+            <FontAwesomeIcon
+              icon={faExternalLinkAlt}
+              className="ml-2 h-3 w-3"
+            />
+          </Button>
+        </a>
+      </div>
+
+      {/* Passo 3: Enviar Documento */}
       <div
         className={`border-t pt-4 space-y-2 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
       >
         <h3 className="font-bold text-base">
-          Passo 2: Enviar Documento Assinado
+          Passo 3: Enviar Documento Assinado
         </h3>
         <div>
-          <Label htmlFor="signature-file" className="text-sm font-medium">
-            Arquivo PDF
-          </Label>
           <CustomFileInput
             selectedFile={selectedFile}
             onFileSelect={setSelectedFile}
@@ -79,10 +103,27 @@ export default function SignatureClient() {
         </div>
       </div>
 
+      {/* Passo 4: Confirmar Assinatura */}
       <div
-        className={`border-t pt-4 space-y-2 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
+        className={`border-t pt-4 space-y-4 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
       >
-        <h3 className="font-bold text-base">Passo 3: Confirmar Assinatura</h3>
+        <h3 className="font-bold text-base">Passo 4: Confirmar Assinatura</h3>
+
+        {/* 2. Bloco de aviso adicionado aqui */}
+        <div className="p-3 text-sm text-amber-700 rounded-lg bg-amber-50 border border-amber-200">
+          <div className="flex items-start gap-2">
+            <FontAwesomeIcon
+              icon={faExclamationTriangle}
+              className="mt-0.5 h-4 w-4"
+            />
+            <div>
+              <span className="font-bold">Atenção:</span> Verifique se o arquivo
+              anexado é o documento correto e devidamente assinado. Esta ação
+              não poderá ser desfeita.
+            </div>
+          </div>
+        </div>
+
         <Button
           onClick={handleSignDocument}
           disabled={!downloadClicked || !selectedFile || isSubmitting}
@@ -134,7 +175,7 @@ export default function SignatureClient() {
         {isLoading ? 'Carregando documento...' : documentName}
       </h1>
 
-      {/* Layout para Telas Grandes (lg em diante) -> Duas Colunas */}
+      {/* Layout para Telas Grandes (lg em diante) */}
       <div className="hidden lg:grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 h-[80vh]">
           <DocumentViewer />
@@ -144,12 +185,11 @@ export default function SignatureClient() {
         </div>
       </div>
 
-      {/* Layout para Mobile e Tablets (até lg) -> Coluna Única */}
+      {/* Layout para Mobile e Tablets (até lg) */}
       <div className="lg:hidden flex flex-col gap-8">
         <div>
           <ActionPanel />
         </div>
-        {/* O visualizador é um card expansível */}
         <div>
           <CollapseCard title="Visualizar Documento" icon={faFilePdf}>
             <div className="w-full h-[70vh]">
