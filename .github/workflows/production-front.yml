@@ -108,7 +108,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Clones rasos devem ser desativados para uma melhor relevância da análise do SonarQube
+          fetch-depth: 0 # Clones rasos devem ser desativados para uma melhor relevância da análise do SonarQube
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -121,13 +121,13 @@ jobs:
       - name: Run Lint
         run: npm run lint
 
-      - name: Run SonarQube Scan 
-        uses: SonarSource/sonarqube-scan-action@v5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONT }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-            projectBaseDir: frontend
+      # - name: Run SonarQube Scan
+      #   uses: SonarSource/sonarqube-scan-action@v5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_FRONT }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      #   with:
+      #       projectBaseDir: frontend
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2

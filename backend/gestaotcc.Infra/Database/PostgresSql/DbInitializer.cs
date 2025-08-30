@@ -28,22 +28,7 @@ public static class DbInitializer
             context.SaveChanges();
         }
         
-        // Seed User
-        if (!context.Users.Any())
-        {
-            var profile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
-            
-            context.Users.Add(new UserEntityBuilder()
-                .WithName("dev-test")
-                .WithCpf("000.000.000-00")
-                .WithEmail("dev-test@gmail.com")
-                .WithPassword("Senha@123")
-                .WithProfile(new List<ProfileEntity>() { profile! })
-                .Build());
-            context.SaveChanges();
-        }
-
-        // Seed Courses
+         // Seed Courses
         if (!context.Courses.Any())
         {
             context.Courses.AddRange(new CourseEntity[]
@@ -53,6 +38,24 @@ public static class DbInitializer
             });
             context.SaveChanges();
         }
+
+        // Seed User
+        if (!context.Users.Any())
+        {
+            var profile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
+            var course = context.Courses.FirstOrDefault(x => x.Name == CourseType.ENGENHARIA_DE_SOFTWARE.ToString());
+
+            context.Users.Add(new UserEntityBuilder()
+                .WithName("dev-test")
+                .WithCpf("000.000.000-00")
+                .WithEmail("dev-test@gmail.com")
+                .WithPassword("Senha@123")
+                .WithCourse(course)
+                .WithProfile(new List<ProfileEntity>() { profile! })
+                .Build());
+            context.SaveChanges();
+        }
+
 
         // Seed DocumentTypes
         if (!context.DocumentTypes.Any())
