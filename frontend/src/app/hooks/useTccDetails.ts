@@ -44,6 +44,7 @@ export function useTccDetails() {
   const [cancellationDetails, setCancellationDetails] = useState<CancellationDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<string | string[] | null>(null);
+  const [resendingInviteTo, setResendingInviteTo] = useState<string | null>(null);
   const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
   const [isBankingFormVisible, setIsBankingFormVisible] = useState(false);
   const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
@@ -83,7 +84,7 @@ export function useTccDetails() {
       setTccData(result);
 
       if (result.cancellationRequest) {
-        const detailsRes = await fetch(`${API_URL}/Tcc/cancellation/details?idTcc=${tccId}`, {
+        const detailsRes = await fetch(`${API_URL}/Tcc/cancellation?tccId=${tccId}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (detailsRes.ok) {
@@ -197,17 +198,14 @@ export function useTccDetails() {
         toast.error('Autenticação necessária.');
         return;
     }
-
     try {
         const res = await fetch(`${API_URL}/Tcc/schedule/email?tccId=${tccId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         });
-
         if (!res.ok) {
             throw new Error('Falha ao enviar email de agendamento.');
         }
-
         toast.success('Agenda enviada por email para todos os envolvidos!');
     } catch {
         toast.error('Erro ao tentar enviar o email.');
@@ -215,9 +213,11 @@ export function useTccDetails() {
   };
 
   const handleResendInvite = async (studentEmail: string) => {
+    setResendingInviteTo(studentEmail);
     const token = Cookies.get('token');
     if (!token) {
         toast.error('Autenticação necessária.');
+        setResendingInviteTo(null);
         return;
     }
 
@@ -225,7 +225,7 @@ export function useTccDetails() {
         const res = await fetch(`${API_URL}/Tcc/invite/code/${tccId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ userEmail: studentEmail }),
+            body: JSON.stringify(studentEmail),
         });
 
         if (!res.ok) {
@@ -235,6 +235,47 @@ export function useTccDetails() {
         toast.success(`Convite reenviado com sucesso para ${studentEmail}!`);
     } catch {
         toast.error('Erro ao tentar reenviar o convite.');
+    } finally {
+        setResendingInviteTo(null);
+    }
+  };
+
+  const handleDownloadAllDocuments = async () => {
+    const token = Cookies.get('token');
+    if (!tccId || !token) {
+      toast.error("Não foi possível identificar o TCC para download.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/Signature/all/documents/download/${tccId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error('Erro ao baixar os documentos.');
+
+      const contentDisposition = res.headers.get('Content-Disposition');
+      let filename = `TCC_${tccId}_documentos.zip`;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch {
+      toast.error("Não foi possível baixar o pacote de documentos.");
     }
   };
 
@@ -258,6 +299,8 @@ export function useTccDetails() {
     handleRegisterBanking,
     handleScheduleSubmit,
     handleSendScheduleEmail,
-    handleResendInvite
+    resendingInviteTo,
+    handleResendInvite,
+    handleDownloadAllDocuments
   };
 }

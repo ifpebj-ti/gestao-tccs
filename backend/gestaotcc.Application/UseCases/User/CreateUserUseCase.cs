@@ -48,9 +48,9 @@ public class CreateUserUseCase(
                 if (tcc is not null)
                 {
                     TccFactory.UpdateUsersTccToCreateUser(tcc, newUser, profileEntity!);
-                    CreateDocumentForUser(newUser, documentTypes, tcc.Documents.ToList(), tcc.Title);
+                    CreateDocumentForUser(newUser, documentTypes, tcc.Documents, tcc.Title);
                     
-                    var allIAlreadyAdded = tcc.TccInvites.Any(inv => !inv.IsValidCode);
+                    var allIAlreadyAdded = tcc.TccInvites.Any(inv => inv.IsValidCode);
                     if(!allIAlreadyAdded)
                         tcc.Step = StepTccType.START_AND_ORGANIZATION.ToString();
                     
@@ -72,7 +72,7 @@ public class CreateUserUseCase(
         return ResultPattern<UserEntity>.SuccessResult(newUser);
     }
     
-    private void CreateDocumentForUser(UserEntity user, List<DocumentTypeEntity> documentTypes, List<DocumentEntity> documents, string tccTitle)
+    private void CreateDocumentForUser(UserEntity user, List<DocumentTypeEntity> documentTypes, ICollection<DocumentEntity> documents, string tccTitle)
     {
         foreach (var docType in documentTypes)
         {
@@ -88,6 +88,9 @@ public class CreateUserUseCase(
             {
                 if (docType.Profiles.Count > 1)
                 {
+                    if (documents.Any(doc => doc.DocumentTypeId == docType.Id && doc.UserId is null))
+                        continue;
+
                     // Cria 1 documento com User = null
                     documents.Add(DocumentFactory.CreateDocument(docType, tccTitle, null));
                 }

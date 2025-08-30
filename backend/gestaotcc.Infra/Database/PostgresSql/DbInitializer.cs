@@ -63,7 +63,7 @@ public static class DbInitializer
             context.DocumentTypes.AddRange(new DocumentTypeEntity[]
             {
                 new() { Name = "ANEXO I - TERMO DE COMPROMISSO DE ORIENTAÇÃO", SignatureOrder = 2, MethodSignature = MethoSignatureType.ONLY_DOCS.ToString() },
-                new() { Name = "ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÀO VOLUNTÁRIA", SignatureOrder = 2, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
+                new() { Name = "ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA", SignatureOrder = 2, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
                 new() { Name = "ANEXO VI - TERMO DE COMPROMISSO DO ORIENTANDO", SignatureOrder = 2, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
                 new() { Name = "ANEXO III - CRONOGRAMA DE ENCONTROS", SignatureOrder = 3, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
                 new() { Name = "ANEXO VII - FICHA DE ACOMPANHAMENTO", SignatureOrder = 3, MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString() },
