@@ -29,6 +29,8 @@ Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando
 
 Acesse a Wiki do Projeto para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
 
+Acompanhe o [Sprint Report](https://www.canva.com/design/DAGyh_WU0jU/3eeINFORZW4p_HAiuHqmEg/view?utm_content=DAGyh_WU0jU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfb7fd3492f)!
+
 ## 🎨 Protótipo
 
 Confira o protótipo interativo no [Figma](https://www.figma.com/design/gaL3ToIzCBEcyh09FpyXE1/Gest%C3%A3o-de-TCCs---Gov.BR?node-id=4002-2726&t=aqQQCIGpvvDAxGUC-1).
