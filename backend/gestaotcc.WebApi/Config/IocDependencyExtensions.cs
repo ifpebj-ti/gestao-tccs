@@ -25,6 +25,7 @@ public static class IocDependencyExtensions
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
         services.AddScoped<IMinioGateway, MinioGateway>();
+        services.AddScoped<IITextGateway, ITextGateway>();
 
         // AccessCode
         services.AddScoped<CreateAccessCodeUseCase>();
@@ -71,6 +72,7 @@ public static class IocDependencyExtensions
         services.AddScoped<DownloadDocumentUseCase>();
         services.AddScoped<FindDocumentUseCase>();
         services.AddScoped<AllDownloadDocumentsUseCase>();
+        services.AddScoped<RemoveFilledPdfsUseCase>();
         
         // Home
         services.AddScoped<GetInfoHomeUseCase>();

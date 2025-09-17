@@ -45,6 +45,8 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.TccCancellation)
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.Profile)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.Signatures)
             .Include(x => x.Documents)
