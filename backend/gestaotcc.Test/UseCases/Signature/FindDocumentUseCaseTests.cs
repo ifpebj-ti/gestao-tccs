@@ -1,9 +1,13 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Signature;
+using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
+using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Entities.User;
+using gestaotcc.Domain.Enums;
 using NSubstitute;
 
 namespace gestaotcc.Test.UseCases.Signature;
@@ -12,11 +16,12 @@ public class FindDocumentUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
+    private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly FindDocumentUseCase _useCase;
 
     public FindDocumentUseCaseTests()
     {
-        _useCase = new FindDocumentUseCase(_tccGateway, _minioGateway);
+        _useCase = new FindDocumentUseCase(_tccGateway, _minioGateway, _userGateway);
     }
 
     [Fact]
@@ -24,7 +29,7 @@ public class FindDocumentUseCaseTests
     {
         _tccGateway.FindTccById(Arg.Any<long>()).Returns((TccEntity?)null);
 
-        var result = await _useCase.Execute(1, 1);
+        var result = await _useCase.Execute(1, 1, 1);
 
         Assert.True(result.IsFailure);
         Assert.Equal(404, result.ErrorDetails?.Status);
@@ -37,7 +42,7 @@ public class FindDocumentUseCaseTests
         var documentType = new DocumentTypeEntity { Id = 1, Name = "Proposal" };
 
         var signature = new SignatureEntity { DocumentId = 1, UserId = 100 };
-
+        
         var document = new DocumentEntity
         {
             Id = 1,
@@ -54,9 +59,9 @@ public class FindDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(1).Returns(tcc);
-        _minioGateway.GetPresignedUrl("signed-doc.pdf", true).Returns("https://signed-doc-url");
+        _minioGateway.GetPresignedUrl("signed-doc.pdf", Arg.Any<Dictionary<string, string>>(), true).Returns("https://signed-doc-url");
 
-        var result = await _useCase.Execute(1, 1);
+        var result = await _useCase.Execute(1, 1, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("https://signed-doc-url", result.Data.Url);
@@ -66,6 +71,18 @@ public class FindDocumentUseCaseTests
     public async Task Execute_ShouldReturnTemplateDocumentUrl_WhenDocumentIsNotSigned()
     {
         var documentType = new DocumentTypeEntity { Id = 1, Name = "Proposal" };
+
+        var profile = new ProfileEntity
+        {
+            Id = 1,
+            Role = RoleType.ADVISOR.ToString()
+        };
+        
+        var supervisorUser = new UserEntity
+        {
+            Id = 1,
+            Profile = new List<ProfileEntity>() { profile }
+        };
 
         var document = new DocumentEntity
         {
@@ -83,9 +100,12 @@ public class FindDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(1).Returns(tcc);
-        _minioGateway.GetPresignedUrl("Proposal.pdf", false).Returns("https://template-doc-url");
+        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(u => u.Profile == RoleType.ADVISOR.ToString()))
+            .Returns(new List<UserEntity> { supervisorUser });
+        _minioGateway.GetPresignedUrl("Proposal.pdf", Arg.Any<System.Collections.Generic.Dictionary<string, string>>(), false)
+            .Returns("https://template-doc-url");
 
-        var result = await _useCase.Execute(1, 1);
+        var result = await _useCase.Execute(1, 1, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("https://template-doc-url", result.Data.Url);

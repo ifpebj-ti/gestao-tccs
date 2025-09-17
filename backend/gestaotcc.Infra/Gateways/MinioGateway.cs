@@ -1,6 +1,8 @@
 using gestaotcc.Application.Gateways;
+using gestaotcc.Domain.Dtos.Signature;
 using Microsoft.Extensions.Configuration;
 using Minio;
+using Minio.ApiEndpoints;
 using Minio.DataModel;
 using Minio.DataModel.Args;
 
@@ -10,15 +12,17 @@ public class MinioGateway : IMinioGateway
 {
     private readonly IConfiguration _configuration;
     private readonly IMinioClient _minioClient;
+    private readonly IITextGateway _iTextGateway;
     private readonly string _bucketName;
     private readonly string _env;
     private readonly string? _publicDomain;
     private readonly string? _endpoint;
 
-    public MinioGateway(IConfiguration configuration, IMinioClient minioClient)
+    public MinioGateway(IConfiguration configuration, IMinioClient minioClient, IITextGateway textGateway)
     {
         _configuration = configuration;
         _minioClient = minioClient;
+        _iTextGateway = textGateway;
 
         var minioSettings = _configuration.GetSection("MINIO_SETTINGS");
         _bucketName = minioSettings.GetValue<string>("BUCKET_NAME")!;
@@ -27,15 +31,15 @@ public class MinioGateway : IMinioGateway
         _env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
     }
 
-    public async Task Send(string fileName, byte[] file, string contentType)
+    public async Task Send(string fileName, byte[] file, string contentType, bool isFilledPdfProcess = false)
     {
         bool bucketExists = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(_bucketName));
         if (!bucketExists)
         {
             await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(_bucketName));
         }
-
-        var objectName = $"signatures/{fileName}.{contentType.Split("/")[1]}";
+        
+        var objectName = isFilledPdfProcess ? fileName : $"signatures/{fileName}.{contentType.Split("/")[1]}";
 
         using var byteStream = new MemoryStream(file);
         await _minioClient.PutObjectAsync(new PutObjectArgs()
@@ -62,9 +66,23 @@ public class MinioGateway : IMinioGateway
         return ms.ToArray();
     }
 
-    public async Task<string> GetPresignedUrl(string fileName, bool signedDocument = false)
+    public async Task<string> GetPresignedUrl(string fileName, Dictionary<string, string> fields, bool signedDocument = false)
     {
         var objectName = signedDocument ? $"signatures/{fileName}" : $"templates/{fileName}";
+
+        if (!signedDocument)
+        {
+            var fileTemplate = await Download(fileName, signedDocument);
+            var fileStream = new MemoryStream(fileTemplate);
+            fileStream.Position = 0;
+
+            var outputStream = await _iTextGateway.FillPdf(fields ,fileStream);
+            var fileByte = outputStream.ToArray();
+            
+            objectName = $"filled/{Guid.NewGuid()}_{DateTime.Now:dd-MM-yyyy}_{fileName}";
+            
+            await Send(objectName, fileByte, "application/pdf", true);
+        }
 
         var args = new PresignedGetObjectArgs()
             .WithBucket(_bucketName)
@@ -110,5 +128,36 @@ public class MinioGateway : IMinioGateway
 
         zipStream.Position = 0;
         return zipStream.ToArray();
+    }
+
+    public async Task<IAsyncEnumerable<StorageObjectDto>> ListBuckets(string folderName)
+    {
+        return MapObjectsAsync(_minioClient.ListObjectsEnumAsync(
+            new ListObjectsArgs()
+                .WithBucket(_bucketName)
+                .WithPrefix(folderName)
+                .WithRecursive(true)
+        ));
+    }
+
+    public async Task Remove(string objectName)
+    {
+        await _minioClient.RemoveObjectAsync(
+            new RemoveObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectName)
+        );
+    }
+
+    private async IAsyncEnumerable<StorageObjectDto> MapObjectsAsync(IAsyncEnumerable<Item> items)
+    {
+        await foreach (var item in items)
+        {
+            yield return new StorageObjectDto(
+                item.Key,
+                item.Size,
+                item.LastModified
+            );
+        }
     }
 }
