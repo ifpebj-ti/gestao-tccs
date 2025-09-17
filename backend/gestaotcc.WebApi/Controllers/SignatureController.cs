@@ -116,10 +116,12 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<FindDocumentDTO>> FindDocument(
         [FromQuery] long tccId, 
         [FromQuery] long documentId, 
-        [FromQuery] long studentId, 
         [FromServices] FindDocumentUseCase findDocumentUseCase)
     {
-        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId);
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        
+        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, long.Parse(userIdClaim));
         if (useCaseResult.IsFailure)
         {
             Log.Error(useCaseResult.ErrorDetails!.Detail);
