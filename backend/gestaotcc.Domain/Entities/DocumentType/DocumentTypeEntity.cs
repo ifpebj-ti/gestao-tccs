@@ -1,5 +1,4 @@
 using gestaotcc.Domain.Entities.Document;
-using gestaotcc.Domain.Entities.DocumentTypeFormFieldData;
 using gestaotcc.Domain.Entities.Profile;
 
 namespace gestaotcc.Domain.Entities.DocumentType;
@@ -12,7 +11,6 @@ public class DocumentTypeEntity
     public string MethodSignature { get; set; } = string.Empty;
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public ICollection<ProfileEntity> Profiles { get; set; } = new List<ProfileEntity>();
-    public ICollection<DocumentTypeFormFieldDataEntity> DocumentTypeFormFieldData { get; set; } = null!;
     public DocumentTypeEntity() {}
 
     public DocumentTypeEntity(long id, string name, long signatureOrder)

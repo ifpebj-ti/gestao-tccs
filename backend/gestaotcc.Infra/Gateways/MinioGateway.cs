@@ -1,6 +1,8 @@
 using gestaotcc.Application.Gateways;
+using gestaotcc.Domain.Dtos.Signature;
 using Microsoft.Extensions.Configuration;
 using Minio;
+using Minio.ApiEndpoints;
 using Minio.DataModel;
 using Minio.DataModel.Args;
 
@@ -74,10 +76,10 @@ public class MinioGateway : IMinioGateway
             var fileStream = new MemoryStream(fileTemplate);
             fileStream.Position = 0;
 
-            var outputStream = _iTextGateway.FillPdf(fields ,fileStream);
-            var fileByte = fileStream.ToArray();
+            var outputStream = await _iTextGateway.FillPdf(fields ,fileStream);
+            var fileByte = outputStream.ToArray();
             
-            objectName = $"filled/{Guid.NewGuid()}_{DateTime.Now:dd/MM/yyyy}_{fileName}";
+            objectName = $"filled/{Guid.NewGuid()}_{DateTime.Now:dd-MM-yyyy}_{fileName}";
             
             await Send(objectName, fileByte, "application/pdf", true);
         }
@@ -126,5 +128,36 @@ public class MinioGateway : IMinioGateway
 
         zipStream.Position = 0;
         return zipStream.ToArray();
+    }
+
+    public async Task<IAsyncEnumerable<StorageObjectDto>> ListBuckets(string folderName)
+    {
+        return MapObjectsAsync(_minioClient.ListObjectsEnumAsync(
+            new ListObjectsArgs()
+                .WithBucket(_bucketName)
+                .WithPrefix(folderName)
+                .WithRecursive(true)
+        ));
+    }
+
+    public async Task Remove(string objectName)
+    {
+        await _minioClient.RemoveObjectAsync(
+            new RemoveObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(objectName)
+        );
+    }
+
+    private async IAsyncEnumerable<StorageObjectDto> MapObjectsAsync(IAsyncEnumerable<Item> items)
+    {
+        await foreach (var item in items)
+        {
+            yield return new StorageObjectDto(
+                item.Key,
+                item.Size,
+                item.LastModified
+            );
+        }
     }
 }

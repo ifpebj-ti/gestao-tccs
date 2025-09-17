@@ -24,6 +24,7 @@ public static class HangfireExtension
         using var scope = serviceProvider.CreateScope();
         var resendInvitationUseCase = scope.ServiceProvider.GetRequiredService<ResendInvitationTccEmailUseCase>();
         var sendPendingsignatures = scope.ServiceProvider.GetRequiredService<SendPendingSignatureUseCase>();
+        var removeFilledPdfsUseCase = scope.ServiceProvider.GetRequiredService<RemoveFilledPdfsUseCase>();
 
         RecurringJob.AddOrUpdate(
             "resend-invite-tcc",
@@ -34,6 +35,12 @@ public static class HangfireExtension
         RecurringJob.AddOrUpdate(
             "send-pending-signatures",
             () => sendPendingsignatures.Execute(),
+            "0 5 * * *" // Executar diariamente às 5:00
+        );
+        
+        RecurringJob.AddOrUpdate(
+            "remove-filled-pdfs",
+            () => removeFilledPdfsUseCase.Execute(),
             "0 5 * * *" // Executar diariamente às 5:00
         );
 

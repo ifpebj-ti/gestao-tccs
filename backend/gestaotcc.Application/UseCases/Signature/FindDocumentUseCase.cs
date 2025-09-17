@@ -4,7 +4,6 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Entities.DocumentType;
-using gestaotcc.Domain.Entities.DocumentTypeFormFieldData;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
@@ -72,6 +71,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
                 fields["email_orientador"] = advisor?.Email ?? "";
                 fields["telefone_orientador"] = "";
                 fields["titulo_orientador"] = "";
+                AddCommonDateFields(fields, nowDate);
 
                 for (var i = 0; i < students.Count; i++)
                 {

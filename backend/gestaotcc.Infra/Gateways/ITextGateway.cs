@@ -1,28 +1,35 @@
 using gestaotcc.Application.Gateways;
-
+using iText.Kernel.Pdf;
+using iText.Forms;
 namespace gestaotcc.Infra.Gateways;
 
 public class ITextGateway : IITextGateway
 {
     public Task<MemoryStream> FillPdf(Dictionary<string, string> fields, MemoryStream ms)
     {
-        using var reader = new iText.Kernel.Pdf.PdfReader(ms);
-        using var output = new MemoryStream();
-        using var writer = new iText.Kernel.Pdf.PdfWriter(output);
-        using var pdfDoc = new iText.Kernel.Pdf.PdfDocument(reader, writer);
-        var form = iText.Forms.PdfAcroForm.GetAcroForm(pdfDoc, true);
+        ms.Position = 0;
+
+        var output = new MemoryStream();
+
+        var reader = new PdfReader(ms);
+        var writer = new PdfWriter(output);
+        var pdfDoc = new PdfDocument(reader, writer);
+
+        var form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
         foreach (var field in fields)
         {
-            if (form.GetField(field.Key) != null) // só preenche se o campo existir
+            var pdfField = form.GetField(field.Key);
+            if (pdfField != null)
             {
-                form.GetField(field.Key).SetValue(field.Value ?? "");
+                pdfField.SetValue(field.Value ?? "");
             }
         }
-        pdfDoc.Close();
-        
-        output.Position = 0;
-        
+
+        form.SetNeedAppearances(true);
+
+        pdfDoc.Close(); // fecha apenas o pdf, não o MemoryStream
+
         return Task.FromResult(output);
     }
 }
