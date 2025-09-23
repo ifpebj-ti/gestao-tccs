@@ -2,9 +2,8 @@ import { z } from 'zod';
 
 export const newUserSchema = z.object({
   name: z.string().min(3, 'Nome muito curto'),
-  email: z.string().min(1, 'Email é obrigatório').email('Email inválido').refine(email =>
-    email.endsWith('@discente.ifpe.edu.br') || email.endsWith('@docente.ifpe.edu.br'), {
-      message: 'O email deve ser do domínio @discente.ifpe.edu.br ou @docente.ifpe.edu.br',
+  email: z.string().min(1, 'Email é obrigatório').email('Email inválido').refine(email => email.endsWith('.ifpe.edu.br'), {
+    message: 'O email deve pertencer ao domínio do IFPE (.ifpe.edu.br)',
   }),
   registration: z.string().optional(),
   cpf: z.string().min(11, 'CPF inválido').max(14, 'CPF inválido').refine(cpf => /^\d{11}$/.test(cpf) || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(cpf), {
