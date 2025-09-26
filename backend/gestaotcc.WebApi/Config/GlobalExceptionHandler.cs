@@ -40,6 +40,13 @@ public class GlobalExceptionHandler : IExceptionHandler
             problemDetails.Detail = exception.Message;
             problemDetails.Instance = httpContext.Request.Path;
         }
+        else
+        {
+            problemDetails.Title = "Erro interno";
+            problemDetails.Status = StatusCodes.Status500InternalServerError;
+            problemDetails.Detail = exception.Message;
+            problemDetails.Instance = httpContext.Request.Path;
+        }
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
 
