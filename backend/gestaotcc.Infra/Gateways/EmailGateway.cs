@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using System.Security.Authentication;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Errors;
@@ -22,11 +23,22 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             emailDto.EmailBody = body;
 
             var message = CreateMessage(emailDto);
-            await client.SendMailAsync(message);
+
+            await client.SendMailAsync(message).ConfigureAwait(false);
+        }
+        catch (SmtpException ex)
+        {
+            Console.WriteLine($"SMTP Exception: {ex}");
+            return ResultPattern<bool>.FailureResult(ex.Message, 500);
+        }
+        catch (AuthenticationException ex)
+        {
+            Console.WriteLine($"Auth Exception: {ex}");
+            return ResultPattern<bool>.FailureResult(ex.Message, 500);
         }
         catch (Exception ex)
         {
-            throw new DomainException(ex.Message);
+            Console.WriteLine($"Other Exception: {ex}");
             return ResultPattern<bool>.FailureResult(ex.Message, 500);
         }
 
