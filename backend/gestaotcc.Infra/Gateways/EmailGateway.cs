@@ -13,15 +13,15 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
 {
     public async Task<ResultPattern<bool>> Send(SendEmailDTO emailDto)
     {
-        var client = InitializeClient();
-
-        var body = CreateTemplate(emailDto);
-        emailDto.EmailBody = body;
-
-        var message = CreateMessage(emailDto);
 
         try
         {
+            var client = InitializeClient();
+
+            var body = CreateTemplate(emailDto);
+            emailDto.EmailBody = body;
+
+            var message = CreateMessage(emailDto);
             await client.SendMailAsync(message);
         }
         catch (Exception ex)
