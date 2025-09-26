@@ -3,6 +3,7 @@ using System.Net.Mail;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Errors;
+using gestaotcc.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Scriban;
 
@@ -25,6 +26,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         }
         catch (Exception ex)
         {
+            throw new DomainException(ex.Message);
             return ResultPattern<bool>.FailureResult(ex.Message, 500);
         }
 
