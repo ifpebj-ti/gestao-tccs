@@ -63,6 +63,11 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
     
     private MailMessage CreateMessage(SendEmailDTO data)
     {
+        var corsSettings = configuration.GetSection("CORS_SETTINGS");
+        var urlfront = corsSettings.GetValue<string>("URL_FRONT");
+        
+        data.Variables.Add("urlfront", urlfront);
+        
         var mailSettings = configuration.GetSection("MailSettings");
         var emailId = mailSettings.GetValue<string>("EmailId");
         
