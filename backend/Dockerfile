@@ -24,5 +24,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
 WORKDIR /app
 
 COPY --from=build /app/out .
+COPY ./gestaotcc.WebApi/Templates ./Templates
 
 ENTRYPOINT ["dotnet", "gestaotcc.WebApi.dll"]
