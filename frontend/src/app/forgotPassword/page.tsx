@@ -34,8 +34,12 @@ export default function ForgotPassword() {
     if (!isCodeSent) {
       // Resend code
       try {
-        await resendSubmit({ userEmail: data.userEmail });
-        setIsCodeSent(true);
+        const success = await resendSubmit({ userEmail: data.userEmail });
+        if (success) {
+          setIsCodeSent(true);
+        } else {
+          setIsCodeSent(false);
+        }
       } catch (error) {
         console.error('Erro ao enviar o código:', error);
       }
