@@ -26,17 +26,15 @@ export function useResendAccessCode() {
       });
 
       if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          toast.success('Código de acesso enviado com sucesso!');
-        } else {
-          toast.success('Código de acesso enviado com sucesso!');
-        }
+        toast.success('Código de acesso enviado com sucesso!');
+        return true;
       } else {
         toast.error('Erro ao enviar o código de acesso. Verifique se o e-mail está correto.');
+        return false;
       }
     } catch {
-      toast.error('Erro ao enviar o código de acesso. Tente novamente mais tarde.');
+      toast.error('Erro de conexão. Tente novamente mais tarde.');
+      return false;
     }
   };
 
