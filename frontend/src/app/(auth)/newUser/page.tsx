@@ -18,6 +18,30 @@ export default function NewUser() {
   const { errors, handleSubmit, register, submitForm, isSubmitting } =
     useNewUserForm();
 
+  const formatCPF = (value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+    const limitedValue = numericValue.slice(0, 11);
+    let formattedValue = limitedValue;
+    if (limitedValue.length > 3) {
+      formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2');
+    }
+    if (limitedValue.length > 6) {
+      formattedValue = formattedValue.replace(
+        /(\d{3})\.(\d{3})(\d)/,
+        '$1.$2.$3'
+      );
+    }
+    if (limitedValue.length > 9) {
+      formattedValue = formattedValue.replace(
+        /(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/,
+        '$1.$2.$3-$4'
+      );
+    }
+    return formattedValue;
+  };
+
+  const { onChange: onCpfChange, ...cpfRest } = register('cpf');
+
   return (
     <div className="flex flex-col">
       <BreadcrumbAuto />
@@ -83,12 +107,15 @@ export default function NewUser() {
               CPF
             </Label>
             <Input
-              id="cpf"
-              type="text"
               placeholder="Digite o CPF do usuário"
               icon={faIdCard}
               errorText={errors.cpf?.message?.toString()}
-              {...register('cpf')}
+              maxLength={14}
+              {...cpfRest}
+              onChange={(e) => {
+                e.target.value = formatCPF(e.target.value);
+                onCpfChange(e);
+              }}
             />
           </div>
           {/* campo siape */}
