@@ -1,6 +1,10 @@
 # Etapa 1: Build da aplicação
 FROM node:22-alpine AS builder
 
+# Define variável de ambiente para a versão da aplicação
+ARG NEXT_PUBLIC_APP_VERSION
+ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
+
 # Define diretório de trabalho
 WORKDIR /app
 
