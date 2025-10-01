@@ -15,8 +15,10 @@ import { useNewUserForm } from '@/app/hooks/useNewUser';
 
 export default function NewUser() {
   const { push } = useRouter();
-  const { errors, handleSubmit, register, submitForm, isSubmitting } =
+  const { errors, handleSubmit, register, submitForm, isSubmitting, watch } =
     useNewUserForm();
+
+  const profileValue = watch('profile');
 
   const formatCPF = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -83,11 +85,17 @@ export default function NewUser() {
               <option value="SUPERVISOR">Supervisor</option>
               <option value="ADVISOR">Orientador</option>
               <option value="BANKING">Banca</option>
-              <option value="LIBRARY">Biblioteca</option>
+              <option value="LIBRARY">Bibliotecário</option>
             </select>
           </div>
         </div>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div
+          className={
+            profileValue === 'BANKING'
+              ? 'grid md:grid-cols-2 gap-4' // Se for Banca, usa 2 colunas
+              : 'grid md:grid-cols-3 gap-4' // Senão, usa 3 colunas
+          }
+        >
           <div className="grid items-center gap-1.5">
             <Label className="font-semibold" htmlFor="email">
               Email
@@ -119,19 +127,21 @@ export default function NewUser() {
             />
           </div>
           {/* campo siape */}
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="siape">
-              SIAPE
-            </Label>
-            <Input
-              id="siape"
-              type="text"
-              placeholder="Digite o SIAPE do usuário"
-              icon={faGraduationCap}
-              errorText={errors.siape?.message?.toString()}
-              {...register('siape')}
-            />
-          </div>
+          {profileValue !== 'BANKING' && (
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="siape">
+                SIAPE
+              </Label>
+              <Input
+                id="siape"
+                type="text"
+                placeholder="Digite o SIAPE do usuário"
+                icon={faGraduationCap}
+                errorText={errors.siape?.message?.toString()}
+                {...register('siape')}
+              />
+            </div>
+          )}
         </div>
         <div className="flex gap-2 md:self-end">
           <Button

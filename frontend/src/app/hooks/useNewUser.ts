@@ -25,7 +25,7 @@ export function useNewUserForm() {
     course: 'ENGENHARIA_DE_SOFTWARE'
   };
 
-  const {handleSubmit, register, formState: {errors, isSubmitting}, reset} = useForm<NewUserSchemaSchemaType>({
+  const {handleSubmit, register, formState: {errors, isSubmitting}, reset, watch} = useForm<NewUserSchemaSchemaType>({
     resolver: zodResolver(newUserSchema),
     defaultValues: defaultValues
   });
@@ -58,5 +58,5 @@ export function useNewUserForm() {
     }
   };
 
-  return { register, submitForm, handleSubmit, errors, isSubmitting, isSelfRegistering};
+  return { register, submitForm, handleSubmit, errors, isSubmitting, isSelfRegistering, watch};
 }
