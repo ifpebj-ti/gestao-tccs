@@ -13,11 +13,13 @@ public class FindAllUserByFilterUseCaseTests
 {
     private readonly IUserGateway _userGateway;
     private readonly FindAllUserByFilterUseCase _findAllUserByFilterUseCase;
+    private readonly IAppLoggerGateway<FindAllUserByFilterUseCase> _logger;
 
     public FindAllUserByFilterUseCaseTests()
     {
         _userGateway = Substitute.For<IUserGateway>();
-        _findAllUserByFilterUseCase = new FindAllUserByFilterUseCase(_userGateway);
+        _logger = Substitute.For<IAppLoggerGateway<FindAllUserByFilterUseCase>>();
+        _findAllUserByFilterUseCase = new FindAllUserByFilterUseCase(_userGateway, _logger);
     }
 
     [Fact]

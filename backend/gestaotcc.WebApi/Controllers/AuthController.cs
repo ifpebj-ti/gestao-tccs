@@ -34,7 +34,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         var validator = new LoginValidator();
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.ToString());
+            throw new ValidatorException(validationResult.ToString());
         var useCaseResult = await loginUseCase.Execute(data.Email, data.Password);
 
         if (!useCaseResult.IsSuccess)
@@ -74,7 +74,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         var validator = new UpdatePasswordValidator();
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.ToString());
+            throw new ValidatorException(validationResult.ToString());
         var useCaseResult = await updatePasswordUseCase.Execute(data);
 
         if (useCaseResult.IsFailure)
@@ -114,7 +114,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         var validator = new NewPasswordValidator();
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.ToString());
+            throw new ValidatorException(validationResult.ToString());
         var useCaseResult = await newPasswordUseCase.Execute(data);
 
         if (useCaseResult.IsFailure)

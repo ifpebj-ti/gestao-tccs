@@ -2,8 +2,8 @@
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.WebApi.ResponseModels;
 using gestaotcc.WebApi.ResponseModels.User;
-using gestaotcc.WebApi.Validators;
 using gestaotcc.WebApi.Validators.User;
+using gestaotcc.WebApi.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -37,7 +37,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
         {
-            throw new ValidationException(validationResult.ToString());
+            throw new ValidatorException(validationResult.ToString());
         }
 
         var result = await createUserUseCase.Execute(data, configuration.GetValue<string>("COMBINATION_STRING_FOR_ACCESSCODE")!);
@@ -106,6 +106,13 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     public async Task<ActionResult<List<FindAllUserByFilterDTO>>> FindAllByFilter([FromQuery] UserFilterDTO data,
         [FromServices] FindAllUserByFilterUseCase findAllUserByFilterUseCase)
     {
+        var validator = new FindAllByFilterValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidatorException("teste");
+        }
+        
         var useCaseResult = await findAllUserByFilterUseCase.Execute(data);
         
         Log.Information("Usuários retonados com sucesso");

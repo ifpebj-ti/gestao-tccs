@@ -18,9 +18,7 @@ public class SimpleJsonLogFormatter : ITextFormatter
             Timestamp = logEvent.Timestamp.LocalDateTime.ToString("o"),
             Level = logEvent.Level.ToString(),
             Message = logEvent.RenderMessage(),
-            UserId = logEvent.Properties.ContainsKey("UserId") ? logEvent.Properties["UserId"].ToString().Trim('"') : null,
             Application = logEvent.Properties.ContainsKey("Application") ? logEvent.Properties["Application"].ToString().Trim('"') : null,
-            Endpoint = logEvent.Properties.ContainsKey("ActionName") ? logEvent.Properties["ActionName"].ToString().Trim('"') : null,
             Environment = logEvent.Properties.ContainsKey("env") ? logEvent.Properties["env"].ToString().Trim('"') : null
         };
 

@@ -30,7 +30,7 @@ public class AccessCodeController(ILogger<AccessCodeController> logger, IConfigu
         var validator = new VerifyAccessCodeValidator();
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.ToString());
+            throw new ValidatorException(validationResult.ToString());
         var useCaseResult = await verifyAccessCodeUseCase.Execute(data);
 
         if (useCaseResult.IsFailure)
@@ -70,7 +70,7 @@ public class AccessCodeController(ILogger<AccessCodeController> logger, IConfigu
         var validator = new ResendAccessCodeValidator();
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.ToString());
+            throw new ValidatorException(validationResult.ToString());
         var useCaseResult = await resendAccessCodeUseCase.Execute(data, configuration.GetValue<string>("COMBINATION_STRING_FOR_ACCESSCODE")!);
 
         if (useCaseResult.IsFailure)
