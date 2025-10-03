@@ -5,7 +5,7 @@ services:
     image: prom/prometheus
     container_name: prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${HOME_PATH}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "${PORT_MACHINE_PROMETHEUS}:9090"
     networks:
@@ -30,7 +30,7 @@ services:
       - "${PORT_FRONTEND_TEMPO}:3200"
       - "${PORT_SEND_TRACES_TEMPO}:4318"
     volumes:
-      - ./tempo/tempo-config.yaml:/etc/tempo.yaml
+      - ${HOME_PATH}/tempo/tempo-config.yaml:/etc/tempo.yaml
       - tempo_data:/var/tempo
     networks:
       - observability-net
