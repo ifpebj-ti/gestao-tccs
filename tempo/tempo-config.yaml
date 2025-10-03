@@ -1,0 +1,25 @@
+server:
+  http_listen_port: 3200
+
+# Esta seção é responsável por receber os dados
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: 0.0.0.0:4318 # Escuta por OTLP/HTTP aqui
+        grpc:
+          endpoint: 0.0.0.0:4317 # Escuta por OTLP/gRPC aqui
+
+# Esta seção é responsável por armazenar os dados temporariamente
+ingester:
+  trace_idle_period: 10s
+  max_block_bytes: 1000000
+  max_block_duration: 5m
+
+# Esta seção define onde e como os dados são salvos
+storage:
+  trace:
+    backend: local # Salva no "disco" do contêiner
+    local:
+      path: /var/tempo # Diretório de armazenamento

@@ -24,6 +24,8 @@ services:
       - MINIO_SETTINGS__SECRET_KEY=${MINIO_SECRET_KEY}
       - MINIO_SETTINGS__BUCKET_NAME=${MINIO_BUCKET_NAME}
       - CORS_SETTINGS__URL_FRONT=${CORS_SETTINGS_URL_FRONT}
+      - URL_TEMPO=${URL_TEMPO}
+      - URL_LOKI=${URL_LOKI}
     restart: unless-stopped
     networks:
       - front_net
