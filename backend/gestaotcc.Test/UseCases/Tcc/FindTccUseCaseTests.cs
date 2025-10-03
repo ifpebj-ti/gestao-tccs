@@ -16,10 +16,11 @@ public class FindTccUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly FindTccUseCase _useCase;
+    private readonly IAppLoggerGateway<FindTccUseCase> _logger = Substitute.For<IAppLoggerGateway<FindTccUseCase>>();
 
     public FindTccUseCaseTests()
     {
-        _useCase = new FindTccUseCase(_tccGateway);
+        _useCase = new FindTccUseCase(_tccGateway, _logger);
     }
 
     [Fact]

@@ -22,10 +22,11 @@ public class SendPendingSignatureUseCaseTests
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
     private readonly SendPendingSignatureUseCase _useCase;
+    private readonly IAppLoggerGateway<SendPendingSignatureUseCase> _logger = Substitute.For<IAppLoggerGateway<SendPendingSignatureUseCase>>();
 
     public SendPendingSignatureUseCaseTests()
     {
-        _useCase = new SendPendingSignatureUseCase(_tccGateway, _emailGateway, _documentTypeGateway);
+        _useCase = new SendPendingSignatureUseCase(_tccGateway, _emailGateway, _documentTypeGateway, _logger);
     }
 
     [Fact]

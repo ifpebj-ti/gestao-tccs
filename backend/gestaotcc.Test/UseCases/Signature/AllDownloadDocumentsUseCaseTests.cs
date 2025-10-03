@@ -11,10 +11,11 @@ public class AllDownloadDocumentsUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
     private readonly AllDownloadDocumentsUseCase _useCase;
+    private readonly IAppLoggerGateway<AllDownloadDocumentsUseCase> _logger = Substitute.For<IAppLoggerGateway<AllDownloadDocumentsUseCase>>();
 
     public AllDownloadDocumentsUseCaseTests()
     {
-        _useCase = new AllDownloadDocumentsUseCase(_tccGateway, _minioGateway);
+        _useCase = new AllDownloadDocumentsUseCase(_tccGateway, _minioGateway, _logger);
     }
 
     [Fact]

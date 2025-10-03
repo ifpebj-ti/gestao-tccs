@@ -15,10 +15,11 @@ public class FindAllTccByFilterUseCaseTests
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly FindAllTccByFilterUseCase _useCase;
+    private readonly IAppLoggerGateway<FindAllTccByFilterUseCase> _logger = Substitute.For<IAppLoggerGateway<FindAllTccByFilterUseCase>>();
 
     public FindAllTccByFilterUseCaseTests()
     {
-        _useCase = new FindAllTccByFilterUseCase(_userGateway, _tccGateway);
+        _useCase = new FindAllTccByFilterUseCase(_userGateway, _tccGateway, _logger);
     }
 
     [Fact]

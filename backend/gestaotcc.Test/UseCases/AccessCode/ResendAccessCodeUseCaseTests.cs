@@ -14,10 +14,11 @@ public class ResendAccessCodeUseCaseTests
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly ResendAccessCodeUseCase _useCase;
+    private readonly IAppLoggerGateway<ResendAccessCodeUseCase> _logger = Substitute.For<IAppLoggerGateway<ResendAccessCodeUseCase>>();
 
     public ResendAccessCodeUseCaseTests()
     {
-        _useCase = new ResendAccessCodeUseCase(_userGateway, _emailGateway);
+        _useCase = new ResendAccessCodeUseCase(_userGateway, _emailGateway, _logger);
     }
 
     [Fact]

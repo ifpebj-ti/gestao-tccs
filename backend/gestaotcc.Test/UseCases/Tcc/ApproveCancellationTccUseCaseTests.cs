@@ -11,10 +11,11 @@ public class ApproveCancellationTccUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly ApproveCancellationTccUseCase _useCase;
+    private readonly IAppLoggerGateway<ApproveCancellationTccUseCase> _logger = Substitute.For<IAppLoggerGateway<ApproveCancellationTccUseCase>>();
 
     public ApproveCancellationTccUseCaseTests()
     {
-        _useCase = new ApproveCancellationTccUseCase(_tccGateway);
+        _useCase = new ApproveCancellationTccUseCase(_tccGateway, _logger);
     }
 
     [Fact]

@@ -18,10 +18,11 @@ public class FindDocumentUseCaseTests
     private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly FindDocumentUseCase _useCase;
+    private readonly IAppLoggerGateway<FindDocumentUseCase> _logger = Substitute.For<IAppLoggerGateway<FindDocumentUseCase>>();
 
     public FindDocumentUseCaseTests()
     {
-        _useCase = new FindDocumentUseCase(_tccGateway, _minioGateway, _userGateway);
+        _useCase = new FindDocumentUseCase(_tccGateway, _minioGateway, _userGateway, _logger);
     }
 
     [Fact]

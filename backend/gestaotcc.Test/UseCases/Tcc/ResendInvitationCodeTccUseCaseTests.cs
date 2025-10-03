@@ -13,10 +13,11 @@ public class ResendInvitationCodeTccUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly ResendInvitationCodeTccUseCase _useCase;
+    private readonly IAppLoggerGateway<ResendInvitationCodeTccUseCase> _logger = Substitute.For<IAppLoggerGateway<ResendInvitationCodeTccUseCase>>();
 
     public ResendInvitationCodeTccUseCaseTests()
     {
-        _useCase = new ResendInvitationCodeTccUseCase(_emailGateway, _tccGateway);
+        _useCase = new ResendInvitationCodeTccUseCase(_emailGateway, _tccGateway, _logger);
     }
 
     [Fact]

@@ -24,7 +24,6 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<List<FindAllPendingSignatureDTO>>> FindAllPendingSignatures([FromQuery] long? userId,
         [FromServices] FindAllPendingSignaturesUseCase findAllPendingSignaturesUseCase)
     {
-        Log.Information("Retonando assinaturas pendentes com sucesso");
         var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId);
         
         return Ok(useCaseResult.Data);
@@ -58,7 +57,6 @@ public class SignatureController : ControllerBase
         var useCaseResult = await signSignatureUseCase.Execute(dto);
         if (useCaseResult.IsFailure)
         {
-            Log.Error(useCaseResult.ErrorDetails!.Detail);
             
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -70,7 +68,6 @@ public class SignatureController : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
         
-        Log.Information("Operação realizada com sucesso");
         return Ok(new MessageSuccessResponseModel("Operação realizada com sucesso"));
     }
 
@@ -87,7 +84,6 @@ public class SignatureController : ControllerBase
         var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId);
         if (useCaseResult.IsFailure)
         {
-            Log.Error(useCaseResult.ErrorDetails!.Detail);
             
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -99,7 +95,6 @@ public class SignatureController : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
         
-        Log.Information("Operação realizado com sucesso");
         return File(useCaseResult.Data.File, "application/octet-stream", useCaseResult.Data.FileName);
     }
 
@@ -124,7 +119,6 @@ public class SignatureController : ControllerBase
         var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, long.Parse(userIdClaim));
         if (useCaseResult.IsFailure)
         {
-            Log.Error(useCaseResult.ErrorDetails!.Detail);
             
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -136,7 +130,6 @@ public class SignatureController : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
         
-        Log.Information("Url retornada com sucesso");
         return Ok(useCaseResult.Data);
     }
 
@@ -152,7 +145,6 @@ public class SignatureController : ControllerBase
         var useCaseResult = await allDownloadDocumentsUseCase.Execute(tccId);
         if (useCaseResult.IsFailure)
         {
-            Log.Error(useCaseResult.ErrorDetails!.Detail);
             
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -164,7 +156,6 @@ public class SignatureController : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
         
-        Log.Information(useCaseResult.Message);
         return File(useCaseResult.Data.File, "application/zip", $"{useCaseResult.Data.FolderName}.zip");
     }
 }

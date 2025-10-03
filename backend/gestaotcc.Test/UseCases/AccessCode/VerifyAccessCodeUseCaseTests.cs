@@ -11,10 +11,11 @@ public class VerifyAccessCodeUseCaseTests
 {
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly VerifyAccessCodeUseCase _useCase;
+    private readonly IAppLoggerGateway<VerifyAccessCodeUseCase> _logger = Substitute.For<IAppLoggerGateway<VerifyAccessCodeUseCase>>();
 
     public VerifyAccessCodeUseCaseTests()
     {
-        _useCase = new VerifyAccessCodeUseCase(_userGateway);
+        _useCase = new VerifyAccessCodeUseCase(_userGateway, _logger);
     }
 
     [Fact]

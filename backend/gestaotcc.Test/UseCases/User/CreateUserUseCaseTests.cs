@@ -1,3 +1,5 @@
+using gestaotcc.Application.UseCases.Tcc;
+
 namespace gestaotcc.Test.UseCases.User;
 
 using gestaotcc.Domain.Entities.TccInvite;
@@ -33,6 +35,8 @@ public class CreateUserUseCaseTests
     private readonly IDocumentTypeGateway _documentTypeGateway;
     private readonly CreateAccessCodeUseCase _createAccessCodeUseCase;
     private readonly CreateUserUseCase _createUserUseCase;
+    private readonly IAppLoggerGateway<CreateUserUseCase> _loggerCreateUserUseCase;
+    private readonly IAppLoggerGateway<CreateAccessCodeUseCase> _loggerCreateAccessCodeUseCase;
 
     public CreateUserUseCaseTests()
     {
@@ -42,7 +46,9 @@ public class CreateUserUseCaseTests
         _courseGateway = Substitute.For<ICourseGateway>();
         _tccGateway = Substitute.For<ITccGateway>();
         _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
-        _createAccessCodeUseCase = Substitute.For<CreateAccessCodeUseCase>();
+        _loggerCreateUserUseCase = Substitute.For<IAppLoggerGateway<CreateUserUseCase>>();
+        _loggerCreateAccessCodeUseCase = Substitute.For<IAppLoggerGateway<CreateAccessCodeUseCase>>();
+        _createAccessCodeUseCase = Substitute.For<CreateAccessCodeUseCase>(_loggerCreateAccessCodeUseCase);
 
         _createUserUseCase = new CreateUserUseCase(
             _userGateway,
@@ -51,7 +57,8 @@ public class CreateUserUseCaseTests
             _courseGateway,
             _tccGateway,
             _documentTypeGateway,
-            _createAccessCodeUseCase);
+            _createAccessCodeUseCase,
+            _loggerCreateUserUseCase);
     }
 
     [Fact]
