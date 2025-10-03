@@ -1,18 +1,28 @@
+using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.AccessCode;
+using NSubstitute;
 
 namespace gestaotcc.Test.UseCases.AccessCode;
 
 public class CreateAccessCodeUseCaseTests
 {
+    private readonly CreateAccessCodeUseCase _useCase;
+    private readonly IAppLoggerGateway<CreateAccessCodeUseCase> _logger;
+
+    public CreateAccessCodeUseCaseTests()
+    {
+        _logger = Substitute.For<IAppLoggerGateway<CreateAccessCodeUseCase>>();
+        _useCase = new CreateAccessCodeUseCase(_logger);
+    }
+    
     [Fact]
     public void Execute_ShouldReturnValidAccessCode()
     {
         // Arrange
         var combination = "ABCDEFG123456";
-        var useCase = new CreateAccessCodeUseCase();
 
         // Act
-        var result = useCase.Execute(combination);
+        var result = _useCase.Execute(combination);
 
         // Assert
         Assert.True(result.IsSuccess);

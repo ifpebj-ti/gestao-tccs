@@ -11,10 +11,11 @@ public class CreateScheduleTccUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly CreateScheduleTccUseCase _useCase;
+    private readonly IAppLoggerGateway<CreateScheduleTccUseCase> _logger = Substitute.For<IAppLoggerGateway<CreateScheduleTccUseCase>>();
 
     public CreateScheduleTccUseCaseTests()
     {
-        _useCase = new CreateScheduleTccUseCase(_tccGateway);
+        _useCase = new CreateScheduleTccUseCase(_tccGateway, _logger);
     }
 
     [Fact]

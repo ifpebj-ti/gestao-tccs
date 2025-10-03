@@ -11,10 +11,11 @@ public class LoginUseCaseTests
     private readonly IBcryptGateway _bcryptGateway = Substitute.For<IBcryptGateway>();
     private readonly ITokenGateway _tokenGateway = Substitute.For<ITokenGateway>();
     private readonly LoginUseCase _useCase;
+    private readonly IAppLoggerGateway<LoginUseCase> _logger = Substitute.For<IAppLoggerGateway<LoginUseCase>>();
 
     public LoginUseCaseTests()
     {
-        _useCase = new LoginUseCase(_userGateway, _bcryptGateway, _tokenGateway);
+        _useCase = new LoginUseCase(_userGateway, _bcryptGateway, _tokenGateway, _logger);
     }
 
     [Fact]

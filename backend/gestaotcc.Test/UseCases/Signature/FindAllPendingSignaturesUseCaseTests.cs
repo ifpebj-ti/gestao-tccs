@@ -18,10 +18,11 @@ public class FindAllPendingSignaturesUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
     private readonly FindAllPendingSignaturesUseCase _useCase;
+    private readonly IAppLoggerGateway<FindAllPendingSignaturesUseCase> _logger = Substitute.For<IAppLoggerGateway<FindAllPendingSignaturesUseCase>>();
 
     public FindAllPendingSignaturesUseCaseTests()
     {
-        _useCase = new FindAllPendingSignaturesUseCase(_tccGateway, _documentTypeGateway);
+        _useCase = new FindAllPendingSignaturesUseCase(_tccGateway, _documentTypeGateway, _logger);
     }
 
     [Fact]

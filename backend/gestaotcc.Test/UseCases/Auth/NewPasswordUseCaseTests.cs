@@ -16,10 +16,11 @@ public class NewPasswordUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly NewPasswordUseCase _useCase;
+    private readonly IAppLoggerGateway<NewPasswordUseCase> _logger = Substitute.For<IAppLoggerGateway<NewPasswordUseCase>>();
 
     public NewPasswordUseCaseTests()
     {
-        _useCase = new NewPasswordUseCase(_userGateway, _bcryptGateway, _tccGateway, _emailGateway);
+        _useCase = new NewPasswordUseCase(_userGateway, _bcryptGateway, _tccGateway, _emailGateway, _logger);
     }
 
     [Fact]

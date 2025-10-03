@@ -9,10 +9,11 @@ public class FindAllProfilesUseCaseTests
 {
     private readonly IProfileGateway _profileGateway = Substitute.For<IProfileGateway>();
     private readonly FindAllProfilesUseCase _useCase;
+    private readonly IAppLoggerGateway<FindAllProfilesUseCase> _logger = Substitute.For<IAppLoggerGateway<FindAllProfilesUseCase>>();
 
     public FindAllProfilesUseCaseTests()
     {
-        _useCase = new FindAllProfilesUseCase(_profileGateway);
+        _useCase = new FindAllProfilesUseCase(_profileGateway, _logger);
     }
 
     [Fact]

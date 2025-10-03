@@ -5,6 +5,8 @@ scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["prometheus:9090"]
+
   - job_name: "backend"
+    metrics_path: /metrics      # <- importante!
     static_configs:
       - targets: ["gestao-backend:8080"]

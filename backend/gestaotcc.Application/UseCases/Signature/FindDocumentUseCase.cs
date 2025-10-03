@@ -12,33 +12,48 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IUserGateway userGateway)
+public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IUserGateway userGateway, IAppLoggerGateway<FindDocumentUseCase> logger)
 {
     public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long studentId)
     {
+        logger.LogInformation("Iniciando busca de documento para TccId: {TccId}, DocumentId: {DocumentId}, StudentId: {StudentId}", tccId, documentId, studentId);
+        
         var tcc = await tccGateway.FindTccById(tccId);
         if (tcc is null)
+        {
+            logger.LogWarning("Falha na busca: TCC não encontrado para o TccId: {TccId}", tccId);
             return ResultPattern<FindDocumentDTO>.FailureResult("Erro ao realizar download do documento", 404);
+        }
+        
+        logger.LogInformation("TCC encontrado. TccId: {TccId}", tccId);
 
         var isSign = tcc.Documents.Any(doc => doc.Signatures.Any(sig => sig.DocumentId == documentId));
+        logger.LogInformation("Verificação de assinatura para DocumentId {DocumentId}: IsSigned = {IsSigned}", documentId, isSign);
+        
         var templateDocument = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.DocumentType;
         var document = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.FileName + ".pdf";
 
         var fields = new Dictionary<string, string>();
         if (!isSign)
         {
-            var supervisorsUser =
-                await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()));
+            logger.LogInformation("Documento não assinado. Iniciando processo de preenchimento de dados do template.");
+            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()));
+            logger.LogInformation("Encontrados {SupervisorCount} usuários com perfil de supervisor.", supervisorsUser.Count);
             
-            var onlySupervisorUser = supervisorsUser // Usuário que é supervisor, mas que não é Admin ou coordenador, pois admin e coordenador também tem acesso de supervisor
+            var onlySupervisorUser = supervisorsUser
                 .FirstOrDefault(u => u.Profile
                     .Any(p => p.Role != RoleType.COORDINATOR.ToString() && p.Role != RoleType.ADMIN.ToString() && p.Role == RoleType.ADVISOR.ToString()));
+            
+            logger.LogInformation("Usuário supervisor selecionado: {SupervisorName} (Id: {SupervisorId})", onlySupervisorUser!.Name, onlySupervisorUser.Id);
             fields = FillDataFile(studentId, tcc, templateDocument, tcc.UserTccs, onlySupervisorUser!);
+            logger.LogInformation("Processo de preenchimento de dados concluído. {FieldCount} campos foram preenchidos.", fields.Count);
         }
 
         var isTemplateOrDocument = isSign ? document : templateDocument.Name + ".pdf";
+        logger.LogInformation("Solicitando URL pré-assinada do Minio para o arquivo: {FileName} com {FieldCount} campos de substituição.", isTemplateOrDocument, fields.Count);
 
         var documentUrl = await minioGateway.GetPresignedUrl(isTemplateOrDocument, fields, isSign);
+        logger.LogInformation("URL pré-assinada para TccId {TccId} recebida com sucesso.", tccId);
 
         return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(documentUrl));
     }
@@ -50,6 +65,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         ICollection<UserTccEntity> usersTccEntity,
         UserEntity supervisorUser)
     {
+        logger.LogDebug("Iniciando FillDataFile para o DocumentTypeId: {DocumentTypeId}", documentTypeEntity.Id);
         var fields = new Dictionary<string, string>();
         var advisor = usersTccEntity.FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString())?.User;
         var student = usersTccEntity.FirstOrDefault(ut => ut.UserId == studentUserId)?.User;
@@ -159,6 +175,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
                 break;
         }
 
+        logger.LogDebug("FillDataFile concluído para DocumentTypeId: {DocumentTypeId}. {FieldCount} campos preenchidos.", documentTypeEntity.Id, fields.Count);
         return fields;
     }
 
@@ -169,10 +186,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         fields["mes"] = date.ToString("MMMM", new CultureInfo("pt-BR"));
         fields["ano"] = date.Year.ToString();
     }
-
-    /// <summary>
-    /// Divide um título longo em duas partes, respeitando o tamanho máximo
-    /// </summary>
+    
     private (string, string) SplitTitle(string title, int maxLength)
     {
         if (string.IsNullOrEmpty(title))

@@ -9,11 +9,13 @@ public class FindUserByEmailUseCaseTests
 {
     private readonly IUserGateway _userGateway;
     private readonly FindUserByEmailUseCase _useCase;
+    private readonly IAppLoggerGateway<FindUserByEmailUseCase> _logger;
 
     public FindUserByEmailUseCaseTests()
     {
         _userGateway = Substitute.For<IUserGateway>();
-        _useCase = new FindUserByEmailUseCase(_userGateway);
+        _logger = Substitute.For<IAppLoggerGateway<FindUserByEmailUseCase>>();
+        _useCase = new FindUserByEmailUseCase(_userGateway, _logger);
     }
 
     [Fact]

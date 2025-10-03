@@ -18,11 +18,13 @@ public class GetInfoHomeUseCaseTests
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
     private readonly FindAllPendingSignaturesUseCase _realPendingSignaturesUseCase;
     private readonly GetInfoHomeUseCase _useCase;
+    private readonly IAppLoggerGateway<GetInfoHomeUseCase> _loggerGetInfo = Substitute.For<IAppLoggerGateway<GetInfoHomeUseCase>>();
+    private readonly IAppLoggerGateway<FindAllPendingSignaturesUseCase> _loggerFindAllPendingSignatures = Substitute.For<IAppLoggerGateway<FindAllPendingSignaturesUseCase>>();
 
     public GetInfoHomeUseCaseTests()
     {
-        _realPendingSignaturesUseCase = new FindAllPendingSignaturesUseCase(_tccGateway, _documentTypeGateway);
-        _useCase = new GetInfoHomeUseCase(_userGateway, _tccGateway, _realPendingSignaturesUseCase);
+        _realPendingSignaturesUseCase = new FindAllPendingSignaturesUseCase(_tccGateway, _documentTypeGateway, _loggerFindAllPendingSignatures);
+        _useCase = new GetInfoHomeUseCase(_userGateway, _tccGateway, _realPendingSignaturesUseCase, _loggerGetInfo);
     }
 
     [Fact]

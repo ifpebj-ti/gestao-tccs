@@ -12,10 +12,11 @@ public class VerifyCodeInviteTccUseCaseTests
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly VerifyCodeInviteTccUseCase _useCase;
+    private readonly IAppLoggerGateway<VerifyCodeInviteTccUseCase> _logger = Substitute.For<IAppLoggerGateway<VerifyCodeInviteTccUseCase>>();
 
     public VerifyCodeInviteTccUseCaseTests()
     {
-        _useCase = new VerifyCodeInviteTccUseCase(_userGateway, _tccGateway);
+        _useCase = new VerifyCodeInviteTccUseCase(_userGateway, _tccGateway, _logger);
     }
 
     [Fact]

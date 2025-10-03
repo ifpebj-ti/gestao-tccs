@@ -18,10 +18,11 @@ public class FindTccWorkflowUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
     private readonly FindTccWorkflowUseCase _useCase;
+    private readonly IAppLoggerGateway<FindTccWorkflowUseCase> _logger = Substitute.For<IAppLoggerGateway<FindTccWorkflowUseCase>>();
 
     public FindTccWorkflowUseCaseTests()
     {
-        _useCase = new FindTccWorkflowUseCase(_tccGateway, _documentTypeGateway);
+        _useCase = new FindTccWorkflowUseCase(_tccGateway, _documentTypeGateway, _logger);
     }
 
     [Fact]
