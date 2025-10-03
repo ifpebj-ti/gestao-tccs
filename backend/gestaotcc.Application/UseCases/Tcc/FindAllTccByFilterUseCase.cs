@@ -6,14 +6,22 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
-public class FindAllTccByFilterUseCase(IUserGateway userGateway, ITccGateway tccGateway)
+public class FindAllTccByFilterUseCase(IUserGateway userGateway, ITccGateway tccGateway, IAppLoggerGateway<FindAllTccByFilterUseCase> logger)
 {
     public async Task<ResultPattern<List<FindAllTccByFilterDTO>>> Execute(TccFilterDTO tccFilter)
     {
-        var tccs = await tccGateway.FindAllTccByFilter(tccFilter);
+        logger.LogInformation("Iniciando busca de TCCs com filtro. UserId: {UserId}, Status: {Status}", tccFilter.UserId, tccFilter.StatusTcc);
 
-        return ResultPattern<List<FindAllTccByFilterDTO>>.SuccessResult(tccs.
+        var tccs = await tccGateway.FindAllTccByFilter(tccFilter);
+        
+        logger.LogInformation("Busca no gateway concluída. {TccCount} TCCs encontrados para o filtro aplicado.", tccs.Count);
+
+        var resultDTO = tccs.
             Select(TccFactory.CreateFindAllTccByStatusOrUserIdDTO)
-            .ToList());
+            .ToList();
+        
+        logger.LogInformation("Mapeamento para DTO concluído. Retornando {TccCount} TCCs.", resultDTO.Count);
+
+        return ResultPattern<List<FindAllTccByFilterDTO>>.SuccessResult(resultDTO);
     }
 }

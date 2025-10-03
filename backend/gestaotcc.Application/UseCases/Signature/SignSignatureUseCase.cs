@@ -10,7 +10,7 @@ using gestaotcc.Domain.Entities.User;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway)
+public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -23,8 +23,11 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
     public async Task<ResultPattern<string>> Execute(SignSignatureDTO data)
     {
+        logger.LogInformation("Iniciando processo de assinatura de documento. TccId: {TccId}, DocumentId: {DocumentId}, UserId: {UserId}", data.TccId, data.DocumentId, data.UserId);
+
         if (!IsValidFile(data))
         {
+            logger.LogWarning("Falha na assinatura para UserId {UserId}: Arquivo inválido. Tamanho: {FileSize}MB, ContentType: {ContentType}", data.UserId, data.FileSize, data.FileContentType);
             return InvalidFileResult();
         }
 
@@ -34,18 +37,31 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         var user = GetUserInTcc(tcc, data.UserId);
         if (UserAlreadySigned(tcc, data.DocumentId, user.Id))
         {
+            logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário já assinou o DocumentId {DocumentId}.", data.UserId, data.DocumentId);
             return InvalidFileResult();
         }
 
         var document = tcc.Documents.First(d => d.Id == data.DocumentId);
         
         if (!UserCanSignDocument(user, tcc, document))
+        {
+            logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário não tem permissão para assinar o DocumentId {DocumentId}.", data.UserId, data.DocumentId);
             return InvalidFileResult();
+        }
         
+        logger.LogInformation("Validações bem-sucedidas. Adicionando assinatura do UserId {UserId} ao DocumentId {DocumentId}.", user.Id, document.Id);
         document.Signatures.Add(SignatureFactory.CreateSignature(user));
 
-        if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep)) return InvalidFileResult();
-        if (!_stepSignatureOrderMap.TryGetValue(tccStep, out var currentOrder)) return InvalidFileResult();
+        if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep))
+        {
+            logger.LogError("Falha na assinatura para TccId {TccId}: A etapa atual '{TccStep}' é inválida.", tcc.Id, tcc.Step);
+            return InvalidFileResult();
+        }
+        if (!_stepSignatureOrderMap.TryGetValue(tccStep, out var currentOrder))
+        {
+            logger.LogError("Falha na assinatura para TccId {TccId}: A etapa '{TccStep}' não está mapeada para uma ordem de assinatura.", tcc.Id, tcc.Step);
+            return InvalidFileResult();
+        }
 
         var documentTypesInStep = allDocumentTypes
             .Where(dt => dt.SignatureOrder == currentOrder)
@@ -57,12 +73,22 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
         if (AllDocumentsInStepAreSigned(tcc, documentsInStep))
         {
+            var oldStep = tcc.Step;
             tcc.Step = GetNextStep(tccStep);
+            logger.LogInformation("Todas as assinaturas da etapa {OldStep} foram concluídas. Avançando TccId {TccId} para a etapa {NewStep}.", oldStep, tcc.Id, tcc.Step);
         }
-
+        else
+        {
+            logger.LogInformation("Assinatura registrada para TccId {TccId}. Ainda existem pendências na etapa atual.", tcc.Id);
+        }
+        
+        logger.LogInformation("Atualizando TCC no banco de dados. TccId: {TccId}", tcc.Id);
         await tccGateway.Update(tcc);
+        
+        logger.LogInformation("Enviando arquivo assinado para o Minio. FileName: {FileName}", document.FileName);
         await minioGateway.Send(document.FileName, data.File, data.FileContentType);
-
+        
+        logger.LogInformation("Processo de assinatura concluído com sucesso para UserId {UserId}, DocumentId {DocumentId}.", data.UserId, data.DocumentId);
         return ResultPattern<string>.SuccessResult();
     }
 
@@ -97,8 +123,7 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             var docType = document.DocumentType;
             var method = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
             var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
-
-            // Filtra somente usuários com perfil aceito no tipo de documento
+            
             var validUserTccs = tcc.UserTccs
                 .Where(ut => acceptedRoles.Contains(ut.Profile.Role))
                 .ToList();
@@ -114,7 +139,6 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
                     if (role == RoleType.STUDENT.ToString())
                     {
-                        // Apenas o dono do documento (estudante) deve assinar este documento
                         if (document.UserId.HasValue && document.UserId == userId)
                         {
                             expectedUserIds.Add(userId);
@@ -122,20 +146,18 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
                     }
                     else
                     {
-                        // ADVISOR, etc. devem assinar todos os documentos do tipo
                         expectedUserIds.Add(userId);
                     }
                 }
 
                 var signedUserIds = document.Signatures.Select(s => s.User.Id).ToHashSet();
-
-                // Se faltar alguém, ainda não pode mudar o step
+                
                 if (!expectedUserIds.IsSubsetOf(signedUserIds))
                 {
                     return false;
                 }
             }
-            else // ONLY_DOCS
+            else
             {
                 var expectedUserIds = validUserTccs.Select(ut => ut.User.Id).ToHashSet();
                 var signedUserIds = document.Signatures.Select(s => s.User.Id).ToHashSet();
@@ -174,11 +196,9 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
         if (method == MethoSignatureType.NOT_ONLY_DOCS && profile.Role == RoleType.STUDENT.ToString())
         {
-            // Verifica se o estudante está assinando o documento que pertence a ele
             return document.UserId == user.Id;
         }
 
-        return true; // ADVISOR ou ONLY_DOCS ou estudantes autorizados corretamente
+        return true;
     }
-
 }

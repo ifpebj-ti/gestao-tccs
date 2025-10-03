@@ -14,10 +14,11 @@ public class FindTccCancellationUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly FindTccCancellationUseCase _useCase;
+    private readonly IAppLoggerGateway<FindTccCancellationUseCase> _logger = Substitute.For<IAppLoggerGateway<FindTccCancellationUseCase>>();
 
     public FindTccCancellationUseCaseTests()
     {
-        _useCase = new FindTccCancellationUseCase(_tccGateway);
+        _useCase = new FindTccCancellationUseCase(_tccGateway, _logger);
     }
 
     [Fact]

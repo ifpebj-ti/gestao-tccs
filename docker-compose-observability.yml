@@ -5,7 +5,7 @@ services:
     image: prom/prometheus
     container_name: prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${HOME_PATH}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "${PORT_MACHINE_PROMETHEUS}:9090"
     networks:
@@ -22,18 +22,23 @@ services:
       - observability-net
     restart: unless-stopped
 
-  promtail:
-    image: grafana/promtail
-    container_name: promtail
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    ports:
+      - "${PORT_FRONTEND_TEMPO}:3200"
+      - "${PORT_SEND_TRACES_TEMPO}:4318"
     volumes:
-      - ./promtail/promtail-config.yml:/etc/promtail/config.yml
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: -config.file=/etc/promtail/config.yml
-    depends_on:
-      - loki
+      - ${HOME_PATH}/tempo/tempo-config.yaml:/etc/tempo.yaml
+      - tempo_data:/var/tempo
     networks:
       - observability-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   grafana:
@@ -53,6 +58,7 @@ services:
 
 volumes:
   grafana_data:
+  tempo_data:
 
 networks:
   observability-net:

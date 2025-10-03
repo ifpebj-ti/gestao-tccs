@@ -31,7 +31,6 @@ public class TccController : ControllerBase
         var result = await createTccUseCase.Execute(data);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao criar usuário");
 
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -43,7 +42,6 @@ public class TccController : ControllerBase
                 : NotFound();
         }
 
-        Log.Information("Usuário criado com sucesso");
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
     /// <summary>
@@ -64,7 +62,6 @@ public class TccController : ControllerBase
         var result = await verifyCodeInviteTccUseCase.Execute(data);
         if (result.IsFailure)
         {
-            Log.Error("Erro verificar código");
 
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
@@ -76,7 +73,6 @@ public class TccController : ControllerBase
                 : NotFound(result.ErrorDetails);
         }
 
-        Log.Information("Código verificado com sucesso");
         return Ok(new MessageSuccessResponseModel("Código verificado com sucesso"));
     }
 
@@ -91,7 +87,6 @@ public class TccController : ControllerBase
     public async Task<ActionResult<List<FindAllTccByFilterDTO>>> FindAllTccByFilter([FromQuery] TccFilterDTO tccFilter,
         [FromServices] FindAllTccByFilterUseCase findAllTccByFilterUseCase)
     {
-        Log.Information("Tccs Retornados com sucesso");
 
         var useCaseResult = await findAllTccByFilterUseCase.Execute(tccFilter);
 
@@ -112,13 +107,11 @@ public class TccController : ControllerBase
         var result = await findTccUseCase.Execute(tccId);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao buscar TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             return NotFound(result.ErrorDetails);
         }
-        Log.Information("TCC encontrado com sucesso");
         return Ok(result.Data);
     }
 
@@ -136,7 +129,6 @@ public class TccController : ControllerBase
         if (userIdClaim == null) return Unauthorized();
 
         var usecaseResult = await findWorkflowUseCase.Execute(tccId, long.Parse(userIdClaim));
-        Log.Information("Workflow do tcc retornado com sucesso");
         return Ok(usecaseResult.Data);
     }
 
@@ -154,7 +146,6 @@ public class TccController : ControllerBase
         var result = await linkBankingUserUseCase.Execute(data);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao vincular usuário de banca");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -163,7 +154,6 @@ public class TccController : ControllerBase
                 ? Conflict(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-        Log.Information("Usuário de banca vinculado com sucesso");
         return Ok(new MessageSuccessResponseModel("Usuário de banca vinculado com sucesso"));
     }
 
@@ -188,7 +178,6 @@ public class TccController : ControllerBase
         var result = await requestCancellationTccUseCase.Execute(data);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao solicitar cancelamento do TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -197,7 +186,6 @@ public class TccController : ControllerBase
                 ? Conflict(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-        Log.Information("Solicitação de cancelamento do TCC realizada com sucesso");
         return Ok(new MessageSuccessResponseModel("Solicitação de cancelamento do TCC realizada com sucesso"));
     }
 
@@ -215,7 +203,6 @@ public class TccController : ControllerBase
         var result = await approveCancellationTccUseCase.Execute(tccId);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao aprovar cancelamento do TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -224,7 +211,6 @@ public class TccController : ControllerBase
                 ? Conflict(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-        Log.Information("Cancelamento do TCC aprovado com sucesso");
         return Ok(new MessageSuccessResponseModel("Cancelamento do TCC aprovado com sucesso"));
     }
 
@@ -242,7 +228,6 @@ public class TccController : ControllerBase
         var result = await findTccCancellationUseCase.Execute(tccId);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao buscar solicitação de cancelamento do TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -250,7 +235,6 @@ public class TccController : ControllerBase
             return NotFound(result.ErrorDetails);
         }
 
-        Log.Information("Solicitação de cancelamento do TCC encontrada com sucesso");
         return Ok(result.Data);
     }
 
@@ -276,7 +260,6 @@ public class TccController : ControllerBase
         var result = await createScheduleTccUseCase.Execute(data);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao criar agendamento de defesa do TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -285,7 +268,6 @@ public class TccController : ControllerBase
                 ? Conflict(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-        Log.Information("Agendamento de defesa do TCC criado com sucesso");
         return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC criado com sucesso"));
     }
 
@@ -311,7 +293,6 @@ public class TccController : ControllerBase
         var result = await editScheduleTccUseCase.Execute(data);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao editar agendamento de defesa do TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -320,7 +301,6 @@ public class TccController : ControllerBase
                 ? Conflict(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-        Log.Information("Agendamento de defesa do TCC editado com sucesso");
         return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC editado com sucesso"));
     }
 
@@ -338,7 +318,6 @@ public class TccController : ControllerBase
         var result = await sendScheduleEmailUseCase.Execute(tccId);
         if (result.IsFailure)
         {
-            Log.Error("Erro ao enviar email de agendamento de defesa do TCC");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
@@ -347,7 +326,6 @@ public class TccController : ControllerBase
                 ? Conflict(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-        Log.Information("Email de agendamento de defesa do TCC enviado com sucesso");
         return Ok(new MessageSuccessResponseModel("Email de agendamento de defesa do TCC enviado com sucesso"));
     }
 
@@ -363,7 +341,6 @@ public class TccController : ControllerBase
         var useCaseResult = await resendInvitationCodeTccUseCase.Execute(userEmail, tccId);
         if (useCaseResult.IsFailure)
         {
-            Log.Error("Erro ao gerar novo código de convite");
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             useCaseResult.ErrorDetails!.Type = endpointUrl;
@@ -373,7 +350,6 @@ public class TccController : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        Log.Information("Novo código de convite gerado com sucesso");
         return Ok(new MessageSuccessResponseModel(useCaseResult.Message));
     }
 }

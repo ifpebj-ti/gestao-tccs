@@ -26,6 +26,7 @@ public static class IocDependencyExtensions
         services.AddScoped<ITccGateway, TccGateway>();
         services.AddScoped<IMinioGateway, MinioGateway>();
         services.AddScoped<IITextGateway, ITextGateway>();
+        services.AddScoped(typeof(IAppLoggerGateway<>), typeof(AppLoggerGateway<>));
 
         // AccessCode
         services.AddScoped<CreateAccessCodeUseCase>();

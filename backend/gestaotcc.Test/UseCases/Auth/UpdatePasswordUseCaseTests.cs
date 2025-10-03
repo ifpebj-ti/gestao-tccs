@@ -11,10 +11,11 @@ public class UpdatePasswordUseCaseTests
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly IBcryptGateway _bcryptGateway = Substitute.For<IBcryptGateway>();
     private readonly UpdatePasswordUseCase _useCase;
+    private readonly IAppLoggerGateway<UpdatePasswordUseCase> _logger = Substitute.For<IAppLoggerGateway<UpdatePasswordUseCase>>();
 
     public UpdatePasswordUseCaseTests()
     {
-        _useCase = new UpdatePasswordUseCase(_userGateway, _bcryptGateway);
+        _useCase = new UpdatePasswordUseCase(_userGateway, _bcryptGateway, _logger);
     }
 
     [Fact]

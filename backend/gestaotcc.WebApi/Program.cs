@@ -1,8 +1,10 @@
+using FluentValidation;
 using gestaotcc.Infra.Database;
 using gestaotcc.Infra.Database.PostgresSql;
 using gestaotcc.WebApi.Config;
 using gestaotcc.WebApi.Middlewares;
 using gestaotcc.WebApi.SchemaFilters;
+using gestaotcc.WebApi.Validators.User;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -14,8 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddValidatorsFromAssemblyContaining<FindAllByFilterValidator>();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SchemaFilter<DateAndTimeOnlySchemaFilter>(); // Filtro de esquema personalizado para os tipos de dateOnly e TimeOnly
@@ -27,9 +29,9 @@ builder.Services.AddCorsExtension(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
-builder.Host.AddSerilogExtension();
+builder.Host.AddSerilogExtension(builder.Configuration);
 builder.Services.AddHangfireExtension(builder.Configuration);
-builder.Services.AddOpenTelemetryExtension(builder.Environment);
+builder.Services.AddOpenTelemetryExtension(builder.Environment, builder.Configuration);
 builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
@@ -55,6 +57,7 @@ app.UseCors("CorsPolicy");
 app.UseHttpsRedirection();
 
 // Middlewares
+app.UseMiddleware<GlobalExceptionHandler>();
 app.UseMiddleware<LogMiddleware>();
 
 app.MapPrometheusScrapingEndpoint();

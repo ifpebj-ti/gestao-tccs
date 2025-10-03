@@ -25,8 +25,6 @@ public class HomeController : ControllerBase
         var useCaseResult = await getInfoHomeUseCase.Execute(long.Parse(userIdClaim));
         if (useCaseResult.IsFailure)
         {
-            Log.Error("Erro ao criar usuário");
-
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             useCaseResult.ErrorDetails!.Type = endpointUrl;
@@ -37,7 +35,6 @@ public class HomeController : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        Log.Information("Dados retornados com sucesso");
         return Ok(useCaseResult.Data);
     }
 }

@@ -9,11 +9,12 @@ public class FindUserByIdUseCaseTests
 {
     private readonly IUserGateway _userGateway;
     private readonly FindUserByIdUseCase _useCase;
-
+    private readonly IAppLoggerGateway<FindUserByIdUseCase> _logger;
     public FindUserByIdUseCaseTests()
     {
         _userGateway = Substitute.For<IUserGateway>();
-        _useCase = new FindUserByIdUseCase(_userGateway);
+        _logger = Substitute.For<IAppLoggerGateway<FindUserByIdUseCase>>();
+        _useCase = new FindUserByIdUseCase(_userGateway, _logger);
     }
 
     [Fact]

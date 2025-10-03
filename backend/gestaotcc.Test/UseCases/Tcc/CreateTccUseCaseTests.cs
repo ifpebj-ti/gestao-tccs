@@ -18,12 +18,13 @@ public class CreateTccUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
+    private readonly IAppLoggerGateway<CreateTccUseCase> _logger = Substitute.For<IAppLoggerGateway<CreateTccUseCase>>();
 
     private readonly CreateTccUseCase _useCase;
 
     public CreateTccUseCaseTests()
     {
-        _useCase = new CreateTccUseCase(_userGateway, _tccGateway, _emailGateway, _documentTypeGateway);
+        _useCase = new CreateTccUseCase(_userGateway, _tccGateway, _emailGateway, _documentTypeGateway, _logger);
     }
 
     [Fact]

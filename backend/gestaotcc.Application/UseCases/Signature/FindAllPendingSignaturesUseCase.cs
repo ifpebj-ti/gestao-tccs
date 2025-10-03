@@ -12,7 +12,8 @@ namespace gestaotcc.Application.UseCases.Signature;
 
 public class FindAllPendingSignaturesUseCase(
     ITccGateway tccGateway,
-    IDocumentTypeGateway documentTypeGateway)
+    IDocumentTypeGateway documentTypeGateway,
+    IAppLoggerGateway<FindAllPendingSignaturesUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -32,18 +33,41 @@ public class FindAllPendingSignaturesUseCase(
 
     public async Task<ResultPattern<List<FindAllPendingSignatureDTO>>> Execute(long? userId)
     {
+        logger.LogInformation("Iniciando busca por assinaturas pendentes. UserId: {UserId}", userId.HasValue ? userId.Value.ToString() : "GLOBAL");
+        
         var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()));
         if (!tccs.Any())
+        {
+            logger.LogInformation("Nenhum TCC em andamento encontrado para o filtro aplicado. Retornando lista vazia.");
             return ResultPattern<List<FindAllPendingSignatureDTO>>.SuccessResult(new());
+        }
+        
+        logger.LogInformation("{TccCount} TCCs em andamento encontrados.", tccs.Count);
 
         var documentTypes = await documentTypeGateway.FindAll();
+        logger.LogInformation("{DocTypeCount} tipos de documento carregados.", documentTypes.Count);
+        
         var results = new List<FindAllPendingSignatureDTO>();
 
         foreach (var tcc in tccs)
         {
-            if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep)) continue;
-            if (!_stepSignatureOrderMap.TryGetValue(tccStep, out var currentOrder)) continue;
-            if (tccStep == StepTccType.PROPOSAL_REGISTRATION) continue;
+            logger.LogDebug("Processando TccId: {TccId} na etapa: {TccStep}", tcc.Id, tcc.Step);
+
+            if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep))
+            {
+                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' é inválida.", tcc.Id, tcc.Step);
+                continue;
+            }
+            if (!_stepSignatureOrderMap.TryGetValue(tccStep, out var currentOrder))
+            {
+                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' não mapeada para ordem de assinatura.", tcc.Id, tcc.Step);
+                continue;
+            }
+            if (tccStep == StepTccType.PROPOSAL_REGISTRATION)
+            {
+                logger.LogDebug("TccId {TccId} pulado: Etapa é PROPOSAL_REGISTRATION.", tcc.Id);
+                continue;
+            }
 
             var userTccs = tcc.UserTccs.ToList();
             var studentNames = GetStudentNames(tcc, userTccs);
@@ -57,7 +81,6 @@ public class FindAllPendingSignaturesUseCase(
                 var methodType = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
                 var docs = documentsInStep.Where(d => d.DocumentTypeId == docType.Id).ToList();
 
-                // Ordenar UserTccs por perfil e ID, de acordo com a fila
                 var orderedUserTccs = userTccs
                     .Where(u => docType.Profiles.Any(p => p.Id == u.Profile.Id))
                     .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
@@ -70,7 +93,6 @@ public class FindAllPendingSignaturesUseCase(
                     {
                         if (doc.UserId != null)
                         {
-                            // Documento individual
                             var user = userTccs.FirstOrDefault(u => u.User.Id == doc.UserId);
                             if (user != null && doc.Signatures.All(s => s.UserId != user.User.Id))
                             {
@@ -79,7 +101,6 @@ public class FindAllPendingSignaturesUseCase(
                         }
                         else
                         {
-                            // Documento compartilhado com perfil (fila por perfil)
                             foreach (var currentUser in orderedUserTccs)
                             {
                                 var alreadySigned = doc.Signatures.Any(s => s.UserId == currentUser.User.Id);
@@ -93,8 +114,7 @@ public class FindAllPendingSignaturesUseCase(
                                 {
                                     pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
                                 }
-
-                                break; // só um usuário pode assinar por vez
+                                break;
                             }
                         }
                     }
@@ -108,39 +128,42 @@ public class FindAllPendingSignaturesUseCase(
                             var alreadySigned = doc.Signatures.Any(s => s.UserId == currentUser.User.Id);
                             if (alreadySigned) continue;
 
-                            // Verifica se esse usuário está autorizado a assinar esse tipo de documento
                             var isEligible = docType.Profiles.Any(p => p.Id == currentUser.Profile.Id);
                             if (!isEligible) continue;
 
-                            // Verifica se os usuários anteriores na fila já assinaram
                             var currentProfileIndex = _signatureQueueByProfile.IndexOf(currentUser.Profile.Role);
 
                             var allPreviousProfilesSigned = orderedUserTccs
                                 .Where(u =>
                                     _signatureQueueByProfile.IndexOf(u.Profile.Role) < currentProfileIndex &&
-                                    docType.Profiles.Any(p => p.Id == u.Profile.Id)) // apenas perfis autorizados
+                                    docType.Profiles.Any(p => p.Id == u.Profile.Id))
                                 .All(prev =>
                                     doc.Signatures.Any(sig => sig.UserId == prev.User.Id));
 
                             if (allPreviousProfilesSigned)
                             {
                                 pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
-                                break; // Apenas um usuário por vez da fila deve assinar
+                                break;
                             }
                         }
                     }
                 }
             }
+            
+            logger.LogDebug("TccId {TccId}: Encontrados {PendingCount} detalhes de assinatura pendente (antes do filtro).", tcc.Id, pendingDetails.Count);
 
             if (userId.HasValue)
             {
+                var originalCount = pendingDetails.Count;
                 pendingDetails = pendingDetails
                     .Where(pd => pd.UserDetails.Any(u => u.UserId == userId.Value))
                     .ToList();
+                logger.LogInformation("TccId {TccId}: Filtrando para UserId {UserId}. Contagem de pendências foi de {OriginalCount} para {FilteredCount}.", tcc.Id, userId.Value, originalCount, pendingDetails.Count);
             }
 
             if (pendingDetails.Any())
             {
+                logger.LogInformation("TccId {TccId} possui {PendingDetailsCount} assinaturas pendentes e será adicionado ao resultado.", tcc.Id, pendingDetails.Count);
                 results.Add(new FindAllPendingSignatureDTO(
                     tcc.Id,
                     studentNames,
@@ -148,6 +171,7 @@ public class FindAllPendingSignaturesUseCase(
             }
         }
 
+        logger.LogInformation("Busca por assinaturas pendentes concluída. Retornando {ResultCount} TCCs com pendências.", results.Count);
         return ResultPattern<List<FindAllPendingSignatureDTO>>.SuccessResult(results);
     }
 
@@ -192,6 +216,3 @@ public class FindAllPendingSignaturesUseCase(
             });
     }
 }
-
-
-

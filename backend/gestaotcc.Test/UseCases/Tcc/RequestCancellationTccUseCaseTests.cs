@@ -11,10 +11,11 @@ public class RequestCancellationTccUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly RequestCancellationTccUseCase _useCase;
+    private readonly IAppLoggerGateway<RequestCancellationTccUseCase> _logger = Substitute.For<IAppLoggerGateway<RequestCancellationTccUseCase>>();
 
     public RequestCancellationTccUseCaseTests()
     {
-        _useCase = new RequestCancellationTccUseCase(_tccGateway);
+        _useCase = new RequestCancellationTccUseCase(_tccGateway, _logger);
     }
 
     [Fact]
