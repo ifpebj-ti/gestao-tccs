@@ -32,7 +32,8 @@ public static class SerilogExtension
                     {
                         new LokiLabel { Key = "app", Value = "gestaotcc-api" },
                         new LokiLabel { Key = "env", Value = context.HostingEnvironment.EnvironmentName },
-                    });
+                    })
+                .WriteTo.Console();
         });
     }
 }
