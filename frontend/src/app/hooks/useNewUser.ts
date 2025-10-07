@@ -35,7 +35,8 @@ export function useNewUserForm() {
       const response = await fetch(`${API_URL}/User`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({...data, profile: [data.profile]})
       });
