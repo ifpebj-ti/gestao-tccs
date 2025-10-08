@@ -54,6 +54,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
+    // verificar
     public async Task<TccEntity?> FindTccInformations(long id)
     {
         return await context.Tccs
@@ -64,7 +65,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.Profile)
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)
-                    .ThenInclude(x => x.Course)
+                    .ThenInclude(x => x.CampiCourse)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

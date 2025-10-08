@@ -1,5 +1,6 @@
 using System.Collections;
 using gestaotcc.Domain.Entities.AccessCode;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
@@ -18,8 +19,8 @@ public class UserEntityBuilder
     private string _password = string.Empty;
     private string _status = string.Empty;
     private ICollection<ProfileEntity> _profile = new List<ProfileEntity>();
-    private CourseEntity _course = null!;
     private AccessCodeEntity _accessCode = null!;
+    private CampiCourseEntity _campiCourse = null!;
     private ICollection<UserTccEntity> _userTccs = new List<UserTccEntity>();
     private ICollection<SignatureEntity> _signatures = new List<SignatureEntity>();
 
@@ -77,9 +78,9 @@ public class UserEntityBuilder
         return this;
     }
 
-    public UserEntityBuilder WithCourse(CourseEntity course)
+    public UserEntityBuilder WithCampiCourse(CampiCourseEntity campiCourse)
     {
-        _course = course;
+        _campiCourse = campiCourse;
         return this;
     }
     
@@ -102,6 +103,6 @@ public class UserEntityBuilder
     }
     public UserEntity Build()
     {
-        return new UserEntity(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _course, _accessCode, _userTccs, _signatures);
+        return new UserEntity(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _campiCourse, _accessCode, _userTccs, _signatures);
     }
 }

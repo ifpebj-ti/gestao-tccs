@@ -1,4 +1,5 @@
 using gestaotcc.Domain.Entities.AccessCode;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.Profile;
@@ -18,8 +19,8 @@ public class UserEntity
     public string Password { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public ICollection<ProfileEntity> Profile { get; set; } = null!;
-    public CourseEntity Course { get; set; } = null!;
-    public long CourseId { get; set; }
+    public CampiCourseEntity? CampiCourse { get; set; }
+    public long? CampiCourseId { get; set; }
     public AccessCodeEntity AccessCode { get; set; } = null!;
     public ICollection<UserTccEntity> UserTccs { get; set; } = null!;
     public ICollection<SignatureEntity> Signatures { get; set; } = null!;
@@ -35,8 +36,8 @@ public class UserEntity
         string siape,
         string password, 
         string status, 
-        ICollection<ProfileEntity> profile, 
-        CourseEntity course, 
+        ICollection<ProfileEntity> profile,
+        CampiCourseEntity campiCourse,
         AccessCodeEntity accessCode, 
         ICollection<UserTccEntity> userTccs,
         ICollection<SignatureEntity> signatures)
@@ -50,7 +51,7 @@ public class UserEntity
         Password = password;
         Status = status;
         Profile = profile;
-        Course = course;
+        CampiCourse = campiCourse;
         AccessCode = accessCode;
         UserTccs = userTccs;
         Signatures = signatures;

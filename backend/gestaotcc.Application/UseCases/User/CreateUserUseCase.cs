@@ -36,11 +36,10 @@ public class CreateUserUseCase(
         logger.LogInformation("Perfis expandidos para {UserEmail}: [{ExpandedProfiles}]", data.Email, string.Join(", ", expandedProfileRoles));
 
         var profile = await profileGateway.FindByRole(expandedProfileRoles);
-        var course = await courseGateway.FindByName(data.Course);
         var accessCode = createAccessCodeUseCase.Execute(combination);
 
         logger.LogInformation("Criando nova entidade de usuário para {UserEmail}...", data.Email);
-        var newUser = UserFactory.CreateUser(data, profile, course, accessCode.Data);
+        var newUser = UserFactory.CreateUser(data, profile, data.CourseId, data.CampusId,  accessCode.Data);
         await userGateway.Save(newUser);
         logger.LogInformation("Usuário {UserEmail} salvo com sucesso no banco de dados. Novo UserId: {UserId}", newUser.Email, newUser.Id);
 

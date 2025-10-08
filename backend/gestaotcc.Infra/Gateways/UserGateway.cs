@@ -12,20 +12,22 @@ using gestaotcc.Domain.Dtos.User;
 namespace gestaotcc.Infra.Gateways;
 public class UserGateway(AppDbContext context) : IUserGateway
 {
+    //verificar
     public async Task<UserEntity?> FindByEmail(string email)
     {
         return await context.Users
             .Include(x => x.Profile)
-            .Include(x => x.Course)
+            .Include(x => x.CampiCourse)
             .Include(x => x.AccessCode)
             .FirstOrDefaultAsync(x => x.Email == email);
     }
 
+    //verificar
     public async Task<UserEntity?> FindById(long id)
     {
         return await context.Users
             .Include(x => x.Profile)
-            .Include(x => x.Course)
+            .Include(x => x.CampiCourse)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -49,6 +51,7 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .ToListAsync();
     }
 
+    //verificar
     public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter)
     {
         var query = context.Users.AsQueryable();
@@ -68,7 +71,7 @@ public class UserGateway(AppDbContext context) : IUserGateway
 
         return await query
             .Include(x => x.Profile)
-            .Include(x => x.Course)
+            .Include(x => x.CampiCourse)
             .ToListAsync();
     }
 }
