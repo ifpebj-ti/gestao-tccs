@@ -10,5 +10,5 @@ public interface IUserGateway
     Task Save(UserEntity user);
     Task Update(UserEntity user);
     Task<List<UserEntity>> FindAllByEmail(List<string> emails);
-    Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter);
+    Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter, long campiId);
 }

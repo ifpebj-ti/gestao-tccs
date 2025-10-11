@@ -10,13 +10,9 @@ namespace gestaotcc.Application.Factories;
 public class UserFactory
 {
     //verificar
-    public static UserEntity CreateUser(CreateUserDTO data, List<ProfileEntity> profile, long courseId, long campusId, AccessCodeEntity accessCode)
+    public static UserEntity CreateUser(CreateUserDTO data, List<ProfileEntity> profile, CampiCourseEntity campiCourse, AccessCodeEntity accessCode)
     {
         var randomPassword = PasswordHelper.GenerateRandomPassword();
-        var campiCourse =  new CampiCourseEntityBuilder()
-            .WithCampiId(campusId)
-            .WithCourseId(courseId)
-            .Build();
 
         return new UserEntityBuilder()
             .WithName(data.Name)

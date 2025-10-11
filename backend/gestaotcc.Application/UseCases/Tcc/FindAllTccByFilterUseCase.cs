@@ -8,11 +8,11 @@ namespace gestaotcc.Application.UseCases.Tcc;
 
 public class FindAllTccByFilterUseCase(IUserGateway userGateway, ITccGateway tccGateway, IAppLoggerGateway<FindAllTccByFilterUseCase> logger)
 {
-    public async Task<ResultPattern<List<FindAllTccByFilterDTO>>> Execute(TccFilterDTO tccFilter)
+    public async Task<ResultPattern<List<FindAllTccByFilterDTO>>> Execute(TccFilterDTO tccFilter, long campiId)
     {
         logger.LogInformation("Iniciando busca de TCCs com filtro. UserId: {UserId}, Status: {Status}", tccFilter.UserId, tccFilter.StatusTcc);
 
-        var tccs = await tccGateway.FindAllTccByFilter(tccFilter);
+        var tccs = await tccGateway.FindAllTccByFilter(tccFilter, campiId);
         
         logger.LogInformation("Busca no gateway concluída. {TccCount} TCCs encontrados para o filtro aplicado.", tccs.Count);
 

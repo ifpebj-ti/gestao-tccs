@@ -1,4 +1,5 @@
 ﻿using gestaotcc.Application.Gateways;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Infra.Database;
 using Microsoft.EntityFrameworkCore;
@@ -15,5 +16,10 @@ public class CourseGateway(AppDbContext context) : ICourseGateway
             throw new Exception("Curso não encontrado");
 
         return course;
+    }
+
+    public async Task<CampiCourseEntity> FindByCampiAndCourseId(long campiId, long courseId)
+    {
+        return (await context.CampiCourses.FirstOrDefaultAsync(cc => cc.CampiId == campiId && cc.CourseId == courseId))!;
     }
 }

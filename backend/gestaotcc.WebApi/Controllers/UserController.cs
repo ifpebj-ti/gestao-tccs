@@ -90,7 +90,10 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
             throw new ValidatorException("teste");
         }
         
-        var useCaseResult = await findAllUserByFilterUseCase.Execute(data);
+        var campiIdClaim = User.FindFirst("campiId")?.Value;
+        if (campiIdClaim == null) return Unauthorized();
+        
+        var useCaseResult = await findAllUserByFilterUseCase.Execute(data, long.Parse(campiIdClaim));
         
         return Ok(useCaseResult.Data);
     }

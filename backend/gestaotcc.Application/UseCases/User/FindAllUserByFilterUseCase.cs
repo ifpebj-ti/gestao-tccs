@@ -8,11 +8,11 @@ namespace gestaotcc.Application.UseCases.User;
 
 public class FindAllUserByFilterUseCase(IUserGateway userGateway, IAppLoggerGateway<FindAllUserByFilterUseCase> logger)
 {
-    public async Task<ResultPattern<List<FindAllUserByFilterDTO>>> Execute(UserFilterDTO data)
+    public async Task<ResultPattern<List<FindAllUserByFilterDTO>>> Execute(UserFilterDTO data, long campId)
     {
         logger.LogInformation("Iniciando busca de usuários com filtros {@Filtro}", data);
 
-        var users = await userGateway.FindAllByFilter(data);
+        var users = await userGateway.FindAllByFilter(data, campId);
         var result = users.Select(UserFactory.CreateFindAllUserByFilterDTO).ToList();
 
         logger.LogInformation("Busca concluída. {Quantidade} usuários encontrados", result.Count);

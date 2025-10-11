@@ -7,13 +7,11 @@ namespace gestaotcc.WebApi.Validators.Tcc
     {
         public CreateTccValidator()
         {
-            RuleFor(x => x.StudentEmails)
-                .NotNull().WithMessage("A lista de e-mails dos estudantes é obrigatória.")
-                .NotEmpty().WithMessage("A lista de e-mails dos estudantes não pode estar vazia.");
+            RuleFor(x => x.Students)
+                .NotEmpty().WithMessage("A lista de estudantes não pode ser vazia.");
 
-            RuleForEach(x => x.StudentEmails)
-                .NotEmpty().WithMessage("O e-mail do estudante não pode estar vazio.")
-                .EmailAddress().WithMessage("O e-mail '{PropertyValue}' não é válido.");
+            RuleForEach(x => x.Students)
+                .SetValidator(new StudentsToCreateTccDTOValidator());
 
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("O título é obrigatório.");

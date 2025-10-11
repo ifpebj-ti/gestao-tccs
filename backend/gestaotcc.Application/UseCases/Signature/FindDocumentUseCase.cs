@@ -15,7 +15,7 @@ namespace gestaotcc.Application.UseCases.Signature;
 public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IUserGateway userGateway, IAppLoggerGateway<FindDocumentUseCase> logger)
 {
     //verificar
-    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long studentId)
+    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long studentId, long campiId)
     {
         logger.LogInformation("Iniciando busca de documento para TccId: {TccId}, DocumentId: {DocumentId}, StudentId: {StudentId}", tccId, documentId, studentId);
         
@@ -38,7 +38,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         if (!isSign)
         {
             logger.LogInformation("Documento não assinado. Iniciando processo de preenchimento de dados do template.");
-            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()));
+            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()), campiId);
             logger.LogInformation("Encontrados {SupervisorCount} usuários com perfil de supervisor.", supervisorsUser.Count);
             
             var onlySupervisorUser = supervisorsUser

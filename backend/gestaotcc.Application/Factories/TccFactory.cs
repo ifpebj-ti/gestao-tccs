@@ -12,7 +12,7 @@ namespace gestaotcc.Application.Factories;
 
 public class TccFactory
 {
-    public static TccEntity CreateTcc(CreateTccDTO data, List<UserEntity> users, List<string> userInvites, List<DocumentTypeEntity> documentTypes)
+    public static TccEntity CreateTcc(CreateTccDTO data, List<UserEntity> users, List<StudentsToCreateTccDTO> userInvites, List<DocumentTypeEntity> documentTypes, long campiId)
     {
         var random = new Random();
 
@@ -22,7 +22,7 @@ public class TccFactory
             var code = new string(Enumerable.Repeat(chars, 6)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
 
-            return TccInviteFactory.CreateTccInvite(u, code);
+            return TccInviteFactory.CreateTccInvite(u.StudentEmail, code, campiId, u.CourseId);
         }).ToList();
 
         var documents = new List<DocumentEntity>();

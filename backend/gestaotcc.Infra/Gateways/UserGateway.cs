@@ -18,6 +18,9 @@ public class UserGateway(AppDbContext context) : IUserGateway
         return await context.Users
             .Include(x => x.Profile)
             .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Campi)
             .Include(x => x.AccessCode)
             .FirstOrDefaultAsync(x => x.Email == email);
     }
@@ -47,14 +50,19 @@ public class UserGateway(AppDbContext context) : IUserGateway
     {
         return await context.Users
             .Include(x => x.Profile)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Campi)
             .Where(x => emails.Contains(x.Email))
             .ToListAsync();
     }
 
     //verificar
-    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter)
+    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter, long campiId)
     {
         var query = context.Users.AsQueryable();
+        query = query.Where(x => x.CampiCourse!.Id == campiId);
 
         if (!string.IsNullOrEmpty(filter.Name))
             query = query.Where(u => u.Name.Contains(filter.Name));
@@ -72,6 +80,9 @@ public class UserGateway(AppDbContext context) : IUserGateway
         return await query
             .Include(x => x.Profile)
             .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Campi)
             .ToListAsync();
     }
 }

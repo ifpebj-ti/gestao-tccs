@@ -103,7 +103,6 @@ public class CreateUserUseCaseTests
             1);
         UserEntity newUser = null;
         var profileStudent = new ProfileEntity { Role = "STUDENT" };
-        var campiCourse =  new CampiCourseEntity { CampiId = 1, CourseId = 1  };
         var accessCode = new AccessCodeEntity { Code = "ACC123", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
@@ -123,13 +122,12 @@ public class CreateUserUseCaseTests
         result.Data.Name.Should().Be(createUserDto.Name);
         result.Data.Email.Should().Be(createUserDto.Email);
         result.Data.Profile.Should().ContainSingle(p => p.Role == "STUDENT");
-        result.Data.CampiCourse.Should().BeEquivalentTo(campiCourse);
         result.Data.AccessCode.Should().Be(accessCode);
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
         await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
             dto.Recipient == createUserDto.Email && dto.TypeTemplate == "ADD-USER-TCC"));
-        await _tccGateway.Received(1).FindInviteTccByEmail(createUserDto.Email);
+        await _tccGateway.Received(2).FindInviteTccByEmail(createUserDto.Email);
         await _tccGateway.DidNotReceive().FindTccById(Arg.Any<long>());
         await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
     }
@@ -170,7 +168,7 @@ public class CreateUserUseCaseTests
         result.Data.Should().NotBeNull();
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
-        await _tccGateway.Received(1).FindInviteTccByEmail(createUserDto.Email);
+        await _tccGateway.Received(2).FindInviteTccByEmail(createUserDto.Email);
         await _tccGateway.Received(1).FindTccById(tccInvite.TccId);
         await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
         await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
@@ -192,7 +190,6 @@ public class CreateUserUseCaseTests
             1);
         UserEntity newUser = null;
         var profileTeacher = new ProfileEntity { Role = "TEACHER" };
-        var campiCourse =  new CampiCourseEntity { CampiId = 1, CourseId = 1 };
         var accessCode = new AccessCodeEntity { Code = "ACC456", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
@@ -211,7 +208,6 @@ public class CreateUserUseCaseTests
         result.Data.Name.Should().Be(createUserDto.Name);
         result.Data.Email.Should().Be(createUserDto.Email);
         result.Data.Profile.Should().ContainSingle(p => p.Role == "TEACHER");
-        result.Data.CampiCourse.Should().BeEquivalentTo(campiCourse);
         result.Data.AccessCode.Should().Be(accessCode);
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));

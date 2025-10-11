@@ -9,9 +9,10 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
 {
     public async Task<ResultPattern<string>> Execute(CreateTccDTO data)
     {
-        logger.LogInformation("Iniciando criação de TCC. Título: {TccTitle}, OrientadorId: {AdvisorId}, Alunos: {StudentCount}", data.Title, data.AdvisorId, data.StudentEmails.Count);
-
-        var users = await userGateway.FindAllByEmail(data.StudentEmails);
+        logger.LogInformation("Iniciando criação de TCC. Título: {TccTitle}, OrientadorId: {AdvisorId}, Alunos: {StudentCount}", data.Title, data.AdvisorId, data.Students.Count);
+        var studentEmails = data.Students.Select(s => s.StudentEmail).ToList();
+            
+        var users = await userGateway.FindAllByEmail(studentEmails);
         var advisor = await userGateway.FindById(data.AdvisorId);
         if (advisor is null)
         {
@@ -19,15 +20,21 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
             return ResultPattern<string>.FailureResult("Erro ao criar tcc", 404);
         }
         
-        logger.LogInformation("Orientador encontrado: {AdvisorName} (Id: {AdvisorId}). {ExistingStudentCount} de {TotalStudentCount} alunos encontrados no sistema.", advisor.Name, advisor.Id, users.Count, data.StudentEmails.Count);
+        if (users.Count > 0 && users.Any(u => u.CampiCourse!.Id != advisor!.CampiCourse!.Id))
+        {
+            logger.LogWarning("Falha na criação do TCC: Orientador com Id {AdvisorId} e orientandos de campus diferentes.", data.AdvisorId);
+            return ResultPattern<string>.FailureResult("Erro ao criar tcc", 404);
+        }
+        
+        logger.LogInformation("Orientador encontrado: {AdvisorName} (Id: {AdvisorId}). {ExistingStudentCount} de {TotalStudentCount} alunos encontrados no sistema.", advisor.Name, advisor.Id, users.Count, data.Students.Count);
         var documentTypes = await documentTypeGateway.FindAll();
         var allEmails = users.Select(u => u.Email).ToHashSet();
         
-        var usersInviteEmails = data.StudentEmails
-            .Where(email => !allEmails.Contains(email))
+        var usersInviteEmails = data.Students
+            .Where(student => !allEmails.Contains(student.StudentEmail))
             .ToList();
         
-        var usersNotInviteEmails = data.StudentEmails
+        var usersNotInviteEmails = studentEmails
             .Where(email => allEmails.Contains(email))
             .ToList();
         
@@ -40,7 +47,7 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         usersNotInvite.Add(advisor);
         
         logger.LogInformation("Criando entidade TCC via factory...");
-        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes);
+        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes, advisor.CampiCourse!.CampiId);
 
         logger.LogInformation("Salvando nova entidade TCC no banco de dados...");
         await tccGateway.Save(tcc);

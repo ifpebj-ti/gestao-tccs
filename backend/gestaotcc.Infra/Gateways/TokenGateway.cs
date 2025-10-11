@@ -26,6 +26,7 @@ public class TokenGateway(IConfiguration configuration) : ITokenGateway
             {
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim("userId", user.Id.ToString()),
+                new Claim("campiId", user.CampiCourseId.ToString()!)
             }.Concat(user.Profile.Select(p => new Claim(ClaimTypes.Role, p.Role)))
             ),
             Expires = DateTime.UtcNow.AddHours(expirationTime),

@@ -66,6 +66,11 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)
                     .ThenInclude(x => x.CampiCourse)
+                        .ThenInclude(x => x!.Course)
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.CampiCourse)
+                        .ThenInclude(x => x!.Campi)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -116,9 +121,12 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter)
+    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiId)
     {
         var query = context.Tccs.AsQueryable();
+        
+        if(campiId != 0)
+            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiId));
         
         if(!string.IsNullOrEmpty(tccFilter.UserId.ToString()))
             query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));

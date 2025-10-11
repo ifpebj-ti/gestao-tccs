@@ -31,11 +31,11 @@ public class FindAllPendingSignaturesUseCase(
         RoleType.STUDENT.ToString()
     };
 
-    public async Task<ResultPattern<List<FindAllPendingSignatureDTO>>> Execute(long? userId)
+    public async Task<ResultPattern<List<FindAllPendingSignatureDTO>>> Execute(long? userId, long campiId)
     {
         logger.LogInformation("Iniciando busca por assinaturas pendentes. UserId: {UserId}", userId.HasValue ? userId.Value.ToString() : "GLOBAL");
         
-        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()));
+        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), campiId);
         if (!tccs.Any())
         {
             logger.LogInformation("Nenhum TCC em andamento encontrado para o filtro aplicado. Retornando lista vazia.");

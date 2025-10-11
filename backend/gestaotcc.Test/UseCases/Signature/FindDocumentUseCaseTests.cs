@@ -30,7 +30,7 @@ public class FindDocumentUseCaseTests
     {
         _tccGateway.FindTccById(Arg.Any<long>()).Returns((TccEntity?)null);
 
-        var result = await _useCase.Execute(1, 1, 1);
+        var result = await _useCase.Execute(1, 1, 1, 1);
 
         Assert.True(result.IsFailure);
         Assert.Equal(404, result.ErrorDetails?.Status);
@@ -62,7 +62,7 @@ public class FindDocumentUseCaseTests
         _tccGateway.FindTccById(1).Returns(tcc);
         _minioGateway.GetPresignedUrl("signed-doc.pdf", Arg.Any<Dictionary<string, string>>(), true).Returns("https://signed-doc-url");
 
-        var result = await _useCase.Execute(1, 1, 1);
+        var result = await _useCase.Execute(1, 1, 1, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("https://signed-doc-url", result.Data.Url);
@@ -101,12 +101,12 @@ public class FindDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(1).Returns(tcc);
-        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(u => u.Profile == RoleType.ADVISOR.ToString()))
+        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(u => u.Profile == RoleType.ADVISOR.ToString()), Arg.Any<long>())
             .Returns(new List<UserEntity> { supervisorUser });
         _minioGateway.GetPresignedUrl("Proposal.pdf", Arg.Any<System.Collections.Generic.Dictionary<string, string>>(), false)
             .Returns("https://template-doc-url");
 
-        var result = await _useCase.Execute(1, 1, 1);
+        var result = await _useCase.Execute(1, 1, 1, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("https://template-doc-url", result.Data.Url);

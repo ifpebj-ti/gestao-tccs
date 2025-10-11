@@ -32,9 +32,9 @@ public class SendPendingSignatureUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnSuccess_WhenNoTccsFound()
     {
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(new List<TccEntity>());
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(new List<TccEntity>());
 
-        var result = await _useCase.Execute();
+        var result = await _useCase.Execute(1);
 
         Assert.True(result.IsSuccess);
         await _emailGateway.DidNotReceive().Send(Arg.Any<SendEmailDTO>());
@@ -84,12 +84,12 @@ public class SendPendingSignatureUseCaseTests
         };
         userTcc.Tcc = tcc;
 
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(new List<TccEntity> { tcc });
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(new List<TccEntity> { tcc });
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult(true));
 
         // Act
-        var result = await _useCase.Execute();
+        var result = await _useCase.Execute(1);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -137,11 +137,11 @@ public class SendPendingSignatureUseCaseTests
         };
         userTcc.Tcc = tcc;
 
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(new List<TccEntity> { tcc });
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(new List<TccEntity> { tcc });
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult(true));
 
-        var result = await _useCase.Execute();
+        var result = await _useCase.Execute(1);
 
         Assert.True(result.IsSuccess);
         await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
