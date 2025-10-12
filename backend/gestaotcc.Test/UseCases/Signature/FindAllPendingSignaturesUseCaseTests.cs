@@ -28,10 +28,10 @@ public class FindAllPendingSignaturesUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnEmptyList_WhenNoTccsInProgress()
     {
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>())
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(),Arg.Any<long>())
             .Returns(Task.FromResult(new List<TccEntity>()));
 
-        var result = await _useCase.Execute(null);
+        var result = await _useCase.Execute(null, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Data);
@@ -50,13 +50,13 @@ public class FindAllPendingSignaturesUseCaseTests
             TccInvites = new List<TccInviteEntity>()
         };
 
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>())
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
             .Returns(new List<TccEntity> { tccWithInvalidStep });
 
         _documentTypeGateway.FindAll()
             .Returns(new List<DocumentTypeEntity>());
 
-        var result = await _useCase.Execute(null);
+        var result = await _useCase.Execute(null, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Data);
@@ -117,14 +117,14 @@ public async Task Execute_ShouldReturnPendingSignatures_WhenThereAreDocumentsToS
     tcc.Documents.Add(document);
 
     // Mocks
-    _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>())
+    _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
         .Returns(new List<TccEntity> { tcc });
 
     _documentTypeGateway.FindAll()
         .Returns(new List<DocumentTypeEntity> { docType });
 
     // Executa o UseCase
-    var result = await _useCase.Execute(null);
+    var result = await _useCase.Execute(null, 1);
 
     // Verificações
     Assert.True(result.IsSuccess);
@@ -192,13 +192,13 @@ public async Task Execute_ShouldReturnPendingSignatures_WhenThereAreDocumentsToS
         
         tcc.Documents.Add(document);
 
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>())
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
             .Returns(new List<TccEntity> { tcc });
 
         _documentTypeGateway.FindAll()
             .Returns(new List<DocumentTypeEntity> { docType });
 
-        var result = await _useCase.Execute(userAdvisor.Id);
+        var result = await _useCase.Execute(userAdvisor.Id, 1);
 
         Assert.True(result.IsSuccess);
 

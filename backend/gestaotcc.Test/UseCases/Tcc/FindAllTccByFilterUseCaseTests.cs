@@ -54,11 +54,11 @@ public class FindAllTccByFilterUseCaseTests
             }
         };
 
-        _tccGateway.FindAllTccByFilter(Arg.Is<TccFilterDTO>(f => f.UserId == tccFilter.UserId && f.StatusTcc == tccFilter.StatusTcc))
+        _tccGateway.FindAllTccByFilter(Arg.Is<TccFilterDTO>(f => f.UserId == tccFilter.UserId && f.StatusTcc == tccFilter.StatusTcc), Arg.Any<long>())
             .Returns(Task.FromResult(tccList));
 
         // Act
-        var result = await _useCase.Execute(tccFilter);
+        var result = await _useCase.Execute(tccFilter, 1);
 
         // Assert
         Assert.True(result.IsSuccess);

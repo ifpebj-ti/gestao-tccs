@@ -82,7 +82,47 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("AccessCodes", (string)null);
+                    b.ToTable("AccessCodes");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Campi.CampiEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Campi");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.CampiCourse.CampiCourseEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CampiId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CourseId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampiId");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("CampiCourses");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Course.CourseEntity", b =>
@@ -93,7 +133,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Level")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
@@ -105,7 +145,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
@@ -137,7 +177,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Documents", (string)null);
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.DocumentType.DocumentTypeEntity", b =>
@@ -162,7 +202,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DocumentTypes", (string)null);
+                    b.ToTable("DocumentTypes");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Profile.ProfileEntity", b =>
@@ -180,7 +220,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Profiles", (string)null);
+                    b.ToTable("Profiles");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Signature.SignatureEntity", b =>
@@ -206,7 +246,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Signatures", (string)null);
+                    b.ToTable("Signatures");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
@@ -240,7 +280,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tccs", (string)null);
+                    b.ToTable("Tccs");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccCancellation.TccCancellationEntity", b =>
@@ -271,7 +311,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccCancellations", (string)null);
+                    b.ToTable("TccCancellations");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccInvite.TccInviteEntity", b =>
@@ -282,10 +322,16 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("CampiId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
+
+                    b.Property<long>("CourseId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -302,7 +348,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("TccId");
 
-                    b.ToTable("TccInvites", (string)null);
+                    b.ToTable("TccInvites");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity", b =>
@@ -329,7 +375,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.HasIndex("TccId")
                         .IsUnique();
 
-                    b.ToTable("TccSchedules", (string)null);
+                    b.ToTable("TccSchedules");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
@@ -345,7 +391,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                         .HasMaxLength(14)
                         .HasColumnType("character varying(14)");
 
-                    b.Property<long>("CourseId")
+                    b.Property<long?>("CampiCourseId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Email")
@@ -378,9 +424,9 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CampiCourseId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.UserTcc.UserTccEntity", b =>
@@ -411,7 +457,7 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserTccs", (string)null);
+                    b.ToTable("UserTccs");
                 });
 
             modelBuilder.Entity("DocumentTypeEntityProfileEntity", b =>
@@ -453,6 +499,25 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.CampiCourse.CampiCourseEntity", b =>
+                {
+                    b.HasOne("gestaotcc.Domain.Entities.Campi.CampiEntity", "Campi")
+                        .WithMany("CampiCourses")
+                        .HasForeignKey("CampiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("gestaotcc.Domain.Entities.Course.CourseEntity", "Course")
+                        .WithMany("CampiCourses")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Campi");
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>
@@ -534,13 +599,11 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.User.UserEntity", b =>
                 {
-                    b.HasOne("gestaotcc.Domain.Entities.Course.CourseEntity", "Course")
+                    b.HasOne("gestaotcc.Domain.Entities.CampiCourse.CampiCourseEntity", "CampiCourse")
                         .WithMany("Users")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("CampiCourseId");
 
-                    b.Navigation("Course");
+                    b.Navigation("CampiCourse");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.UserTcc.UserTccEntity", b =>
@@ -568,9 +631,19 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("gestaotcc.Domain.Entities.Course.CourseEntity", b =>
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Campi.CampiEntity", b =>
+                {
+                    b.Navigation("CampiCourses");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.CampiCourse.CampiCourseEntity", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("gestaotcc.Domain.Entities.Course.CourseEntity", b =>
+                {
+                    b.Navigation("CampiCourses");
                 });
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Document.DocumentEntity", b =>

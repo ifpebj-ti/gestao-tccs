@@ -1,4 +1,6 @@
-﻿using gestaotcc.WebApi.ResponseModels.Course;
+﻿using gestaotcc.Domain.Entities.CampiCourse;
+using gestaotcc.WebApi.ResponseModels.CampiCourse;
+using gestaotcc.WebApi.ResponseModels.Course;
 using gestaotcc.WebApi.ResponseModels.Profile;
 
 namespace gestaotcc.WebApi.ResponseModels.User;
@@ -15,6 +17,7 @@ public class UserResponseBuilder
     private string _status = string.Empty;
     private ICollection<ProfileResponse> _profile = new List<ProfileResponse>();
     private CourseResponse _course = null!;
+    private CampiCourseResponse _campiCourse = null!;
 
     public UserResponseBuilder WithId(long id)
     {
@@ -76,8 +79,14 @@ public class UserResponseBuilder
         return this;
     }
 
+    public UserResponseBuilder WithCampiCourses(CampiCourseResponse campiCourse)
+    {
+        _campiCourse = campiCourse;
+        return this;
+    }
+
     public UserResponse Build()
     {
-        return new UserResponse(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _course);
+        return new UserResponse(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _campiCourse);
     }
 }

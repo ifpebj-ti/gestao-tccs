@@ -1,4 +1,5 @@
 using gestaotcc.Application.UseCases.Tcc;
+using gestaotcc.Domain.Entities.CampiCourse;
 
 namespace gestaotcc.Test.UseCases.User;
 
@@ -65,7 +66,15 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldReturnFailure_WhenUserAlreadyExists()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Test User", "test@example.com", "12345", "111.222.333-44", null, new List<string> { "STUDENT" }, "Computer Science");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "STUDENT" },
+            1,
+            1);
         var existingUser = new UserEntity();
         _userGateway.FindByEmail(createUserDto.Email).Returns(existingUser);
 
@@ -83,16 +92,22 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldCreateUserAndSendEmail_WhenUserIsOnlyStudentAndHasNoTccInvite()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Student User", "student@example.com", "67890", "555.666.777-88", null, new List<string> { "STUDENT" }, "Computer Science");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "STUDENT" },
+            1,
+            1);
         UserEntity newUser = null;
         var profileStudent = new ProfileEntity { Role = "STUDENT" };
-        var course = new CourseEntity { Name = "Computer Science" };
         var accessCode = new AccessCodeEntity { Code = "ACC123", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
         _profileGateway.FindByRole(Arg.Any<List<string>>()).Returns(Task.FromResult(new List<ProfileEntity> { profileStudent }));
-        _courseGateway.FindByName(createUserDto.Course).Returns(Task.FromResult(course));
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Do<UserEntity>(u => newUser = u)).Returns(Task.CompletedTask);
         _tccGateway.FindInviteTccByEmail(createUserDto.Email).Returns(Task.FromResult((TccInviteEntity)null));
@@ -107,13 +122,12 @@ public class CreateUserUseCaseTests
         result.Data.Name.Should().Be(createUserDto.Name);
         result.Data.Email.Should().Be(createUserDto.Email);
         result.Data.Profile.Should().ContainSingle(p => p.Role == "STUDENT");
-        result.Data.Course.Should().Be(course);
         result.Data.AccessCode.Should().Be(accessCode);
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
         await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
             dto.Recipient == createUserDto.Email && dto.TypeTemplate == "ADD-USER-TCC"));
-        await _tccGateway.Received(1).FindInviteTccByEmail(createUserDto.Email);
+        await _tccGateway.Received(2).FindInviteTccByEmail(createUserDto.Email);
         await _tccGateway.DidNotReceive().FindTccById(Arg.Any<long>());
         await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
     }
@@ -122,10 +136,17 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldCreateUserAndSendEmail_WhenUserIsOnlyStudentAndHasTccInvite_ButTccDoesNotExist()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Student User", "student@example.com", "67890", "555.666.777-88", null, new List<string> { "STUDENT" }, "Computer Science");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "STUDENT" },
+            1,
+            1);
         UserEntity newUser = null;
         var profileStudent = new ProfileEntity { Role = "STUDENT" };
-        var course = new CourseEntity { Name = "Computer Science" };
         var accessCode = new AccessCodeEntity { Code = "ACC123", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         var tccInvite = new TccInviteEntity { TccId = 1, Email = createUserDto.Email, IsValidCode = true };
@@ -133,7 +154,6 @@ public class CreateUserUseCaseTests
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
         _profileGateway.FindByRole(Arg.Any<List<string>>()).Returns(Task.FromResult(new List<ProfileEntity> { profileStudent }));
-        _courseGateway.FindByName(createUserDto.Course).Returns(Task.FromResult(course));
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Do<UserEntity>(u => newUser = u)).Returns(Task.CompletedTask);
         _tccGateway.FindInviteTccByEmail(createUserDto.Email).Returns(Task.FromResult(tccInvite));
@@ -148,7 +168,7 @@ public class CreateUserUseCaseTests
         result.Data.Should().NotBeNull();
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
-        await _tccGateway.Received(1).FindInviteTccByEmail(createUserDto.Email);
+        await _tccGateway.Received(2).FindInviteTccByEmail(createUserDto.Email);
         await _tccGateway.Received(1).FindTccById(tccInvite.TccId);
         await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
         await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
@@ -159,16 +179,22 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldCreateUserAndSendEmail_WhenUserIsNotOnlyStudent()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Teacher User", "teacher@example.com", null, "999.888.777-66", "12345", new List<string> { "TEACHER" }, "Mathematics");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "ADVISOR" },
+            1,
+            1);
         UserEntity newUser = null;
         var profileTeacher = new ProfileEntity { Role = "TEACHER" };
-        var course = new CourseEntity { Name = "Mathematics" };
         var accessCode = new AccessCodeEntity { Code = "ACC456", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
         _profileGateway.FindByRole(Arg.Any<List<string>>()).Returns(Task.FromResult(new List<ProfileEntity> { profileTeacher }));
-        _courseGateway.FindByName(createUserDto.Course).Returns(Task.FromResult(course));
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Do<UserEntity>(u => newUser = u)).Returns(Task.CompletedTask);
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(Task.FromResult(ResultPattern<bool>.SuccessResult()));
@@ -182,7 +208,6 @@ public class CreateUserUseCaseTests
         result.Data.Name.Should().Be(createUserDto.Name);
         result.Data.Email.Should().Be(createUserDto.Email);
         result.Data.Profile.Should().ContainSingle(p => p.Role == "TEACHER");
-        result.Data.Course.Should().Be(course);
         result.Data.AccessCode.Should().Be(accessCode);
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
@@ -197,15 +222,21 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldReturnFailure_WhenEmailSendFailsForStudent()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Student User", "student@example.com", "67890", "555.666.777-88", null, new List<string> { "STUDENT" }, "Computer Science");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "STUDENT" },
+            1,
+            1);
         var profileStudent = new ProfileEntity { Role = "STUDENT" };
-        var course = new CourseEntity { Name = "Computer Science" };
         var accessCode = new AccessCodeEntity { Code = "ACC123", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
         _profileGateway.FindByRole(Arg.Any<List<string>>()).Returns(Task.FromResult(new List<ProfileEntity> { profileStudent }));
-        _courseGateway.FindByName(createUserDto.Course).Returns(Task.FromResult(course));
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Any<UserEntity>()).Returns(Task.CompletedTask);
         _tccGateway.FindInviteTccByEmail(createUserDto.Email).Returns(Task.FromResult((TccInviteEntity)null));
@@ -225,15 +256,21 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldReturnFailure_WhenEmailSendFailsForOtherProfiles()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Coordinator User", "coord@example.com", null, "111.111.111-11", "98765", new List<string> { "COORDINATOR" }, "Physics");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "STUDENT" },
+            1,
+            1);
         var profileCoordinator = new ProfileEntity { Role = "COORDINATOR" };
-        var course = new CourseEntity { Name = "Physics" };
         var accessCode = new AccessCodeEntity { Code = "ACC789", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
         _profileGateway.FindByRole(Arg.Any<List<string>>()).Returns(Task.FromResult(new List<ProfileEntity> { profileCoordinator }));
-        _courseGateway.FindByName(createUserDto.Course).Returns(Task.FromResult(course));
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Any<UserEntity>()).Returns(Task.CompletedTask);
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(Task.FromResult(ResultPattern<bool>.FailureResult("Email service unavailable", 500)));
@@ -253,10 +290,17 @@ public class CreateUserUseCaseTests
     public async Task Execute_ShouldNotSetTccStepToStartAndOrganization_WhenNotAllInvitesAreAdded()
     {
         // Arrange
-        var createUserDto = new CreateUserDTO("Student User", "student@example.com", "67890", "555.666.777-88", null, new List<string> { "STUDENT" }, "Computer Science");
+        var createUserDto = new CreateUserDTO(
+            "Student User", 
+            "student@example.com",
+            "67890",
+            "555.666.777-88",
+            null,
+            new List<string> { "STUDENT" },
+            1,
+            1);
         UserEntity newUser = null;
         var profileStudent = new ProfileEntity { Role = "STUDENT" };
-        var course = new CourseEntity { Name = "Computer Science" };
         var accessCode = new AccessCodeEntity { Code = "ACC123", ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
 
         var tccInvite1 = new TccInviteEntity { TccId = 1, Email = createUserDto.Email, IsValidCode = true };
@@ -266,7 +310,6 @@ public class CreateUserUseCaseTests
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
         _profileGateway.FindByRole(Arg.Any<List<string>>()).Returns(Task.FromResult(new List<ProfileEntity> { profileStudent }));
-        _courseGateway.FindByName(createUserDto.Course).Returns(Task.FromResult(course));
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Do<UserEntity>(u => newUser = u)).Returns(Task.CompletedTask);
         _tccGateway.FindInviteTccByEmail(createUserDto.Email).Returns(Task.FromResult(tccInvite1));

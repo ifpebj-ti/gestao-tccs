@@ -1,5 +1,6 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.User;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.User;
 using NSubstitute;
 
@@ -31,7 +32,7 @@ public class FindUserByIdUseCaseTests
             Password = "hashedpassword",
             Status = "Ativo",
             Profile = new List<Domain.Entities.Profile.ProfileEntity>(),
-            Course = new Domain.Entities.Course.CourseEntity(),
+            CampiCourse = new CampiCourseEntity(),
             AccessCode = new Domain.Entities.AccessCode.AccessCodeEntity(),
             UserTccs = new List<Domain.Entities.UserTcc.UserTccEntity>(),
             Signatures = new List<Domain.Entities.Signature.SignatureEntity>(),

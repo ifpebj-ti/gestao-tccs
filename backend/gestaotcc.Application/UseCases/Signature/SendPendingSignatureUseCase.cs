@@ -32,10 +32,10 @@ public class SendPendingSignatureUseCase(
         RoleType.STUDENT.ToString()
     };
 
-    public async Task<ResultPattern<string>> Execute()
+    public async Task<ResultPattern<string>> Execute(long campiId)
     {
         logger.LogInformation("Iniciando tarefa de envio de e-mails para assinaturas pendentes.");
-        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, "IN_PROGRESS"));
+        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, "IN_PROGRESS"), campiId);
         if (!tccs.Any())
         {
             logger.LogInformation("Nenhum TCC em andamento encontrado. Tarefa concluída sem notificações.");

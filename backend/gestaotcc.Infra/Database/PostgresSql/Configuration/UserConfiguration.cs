@@ -50,5 +50,10 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId)
             .IsRequired(false);
+
+        builder.HasOne(x => x.CampiCourse)
+            .WithMany(x => x.Users)
+            .HasForeignKey(x => x.CampiCourseId)
+            .IsRequired(false);
     }
 }

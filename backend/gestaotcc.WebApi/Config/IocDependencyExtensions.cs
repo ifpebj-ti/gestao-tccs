@@ -1,6 +1,7 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Application.UseCases.Auth;
+using gestaotcc.Application.UseCases.Campi;
 using gestaotcc.Application.UseCases.Home;
 using gestaotcc.Application.UseCases.Profile;
 using gestaotcc.Application.UseCases.Signature;
@@ -77,5 +78,9 @@ public static class IocDependencyExtensions
         
         // Home
         services.AddScoped<GetInfoHomeUseCase>();
+        
+        // Course
+        services.AddScoped<FindAllCampiUseCase>();
+        services.AddScoped<FindAllCourseByCampiCourseIdUseCase>();
     }
 }

@@ -33,7 +33,7 @@ public class GetInfoHomeUseCase(
         if (profiles.Contains(RoleType.COORDINATOR.ToString()) || profiles.Contains(RoleType.SUPERVISOR.ToString()))
         {
             logger.LogInformation("Executando lógica de busca para perfil COORDENADOR/SUPERVISOR. UserId: {UserId}", userId);
-            var pendingSignaturesResult = await findAllPendingSignaturesUseCase.Execute(null);
+            var pendingSignaturesResult = await findAllPendingSignaturesUseCase.Execute(null, user.CampiCourse!.Id);
             if (pendingSignaturesResult.IsSuccess)
             {
                 pendingSignaturesCount = pendingSignaturesResult.Data.Sum(p => p.PendingDetails.Count);
@@ -43,13 +43,13 @@ public class GetInfoHomeUseCase(
                 logger.LogWarning("A busca por assinaturas pendentes (global) falhou. UserId: {UserId}. Motivo: {ErrorMessage}", userId, pendingSignaturesResult.Message);
             }
 
-            var allInProgressTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, StatusTccType.IN_PROGRESS.ToString()));
+            var allInProgressTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, StatusTccType.IN_PROGRESS.ToString()), user.CampiCourse!.Id);
             inProgressTccsCount = allInProgressTccs.Count;
         }
         else if (profiles.Contains(RoleType.ADVISOR.ToString()) || profiles.Contains(RoleType.BANKING.ToString()))
         {
             logger.LogInformation("Executando lógica de busca para perfil ORIENTADOR/BANCA. UserId: {UserId}", userId);
-            var pendingSignaturesResult = await findAllPendingSignaturesUseCase.Execute(userId);
+            var pendingSignaturesResult = await findAllPendingSignaturesUseCase.Execute(userId, user.CampiCourse!.Id);
             if (pendingSignaturesResult.IsSuccess)
             {
                 pendingSignaturesCount = pendingSignaturesResult.Data.Sum(p => p.PendingDetails.Count);
@@ -59,13 +59,13 @@ public class GetInfoHomeUseCase(
                 logger.LogWarning("A busca por assinaturas pendentes falhou para UserId {UserId}. Motivo: {ErrorMessage}", userId, pendingSignaturesResult.Message);
             }
             
-            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()));
+            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), user.CampiCourse!.Id);
             inProgressTccsCount = userTccs.Count;
         }
         else if (profiles.Contains(RoleType.STUDENT.ToString()))
         {
             logger.LogInformation("Executando lógica de busca para perfil ESTUDANTE. UserId: {UserId}", userId);
-            var pendingSignaturesResult = await findAllPendingSignaturesUseCase.Execute(userId);
+            var pendingSignaturesResult = await findAllPendingSignaturesUseCase.Execute(userId, user.CampiCourse!.Id);
             if (pendingSignaturesResult.IsSuccess)
             {
                 pendingSignaturesCount = pendingSignaturesResult.Data.Sum(p => p.PendingDetails.Count);
@@ -75,7 +75,7 @@ public class GetInfoHomeUseCase(
                 logger.LogWarning("A busca por assinaturas pendentes falhou para UserId {UserId}. Motivo: {ErrorMessage}", userId, pendingSignaturesResult.Message);
             }
             
-            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()));
+            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), user.CampiCourse!.Id);
             inProgressTccsCount = userTccs.Any() ? 1 : 0;
         }
 
