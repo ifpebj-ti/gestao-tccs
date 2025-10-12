@@ -50,9 +50,8 @@ export function useVerifyAccessCode() {
       } else {
         toast.error('Código de acesso inválido ou expirado. Tente novamente.');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar o código de acesso. Tente novamente mais tarde.');
-      console.error('Erro ao enviar o código de acesso:', error);
     }
   };
 
