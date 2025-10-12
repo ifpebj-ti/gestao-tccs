@@ -24,7 +24,7 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<List<FindAllPendingSignatureDTO>>> FindAllPendingSignatures([FromQuery] long? userId,
         [FromServices] FindAllPendingSignaturesUseCase findAllPendingSignaturesUseCase)
     {
-        var campiIdClaim = User.FindFirst("campiId")?.Value;
+        var campiIdClaim = User.FindFirst("campiCourseId")?.Value;
         if (campiIdClaim == null) return Unauthorized();
         
         var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId, long.Parse(campiIdClaim));
