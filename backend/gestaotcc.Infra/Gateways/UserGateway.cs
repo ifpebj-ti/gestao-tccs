@@ -59,10 +59,10 @@ public class UserGateway(AppDbContext context) : IUserGateway
     }
 
     //verificar
-    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter, long campiId)
+    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter, long campiCourseId)
     {
         var query = context.Users.AsQueryable();
-        query = query.Where(x => x.CampiCourse!.Id == campiId);
+        query = query.Where(x => x.CampiCourse!.Id == campiCourseId);
 
         if (!string.IsNullOrEmpty(filter.Name))
             query = query.Where(u => u.Name.Contains(filter.Name));

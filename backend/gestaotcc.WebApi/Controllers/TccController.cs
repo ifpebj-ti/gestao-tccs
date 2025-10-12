@@ -87,10 +87,10 @@ public class TccController : ControllerBase
     public async Task<ActionResult<List<FindAllTccByFilterDTO>>> FindAllTccByFilter([FromQuery] TccFilterDTO tccFilter,
         [FromServices] FindAllTccByFilterUseCase findAllTccByFilterUseCase)
     {
-        var campiIdClaim = User.FindFirst("campiId")?.Value;
-        if (campiIdClaim == null) return Unauthorized();
+        var campiCourseId = User.FindFirst("campiCourseId")?.Value;
+        if (campiCourseId == null) return Unauthorized();
         
-        var useCaseResult = await findAllTccByFilterUseCase.Execute(tccFilter, long.Parse(campiIdClaim));
+        var useCaseResult = await findAllTccByFilterUseCase.Execute(tccFilter, long.Parse(campiCourseId));
 
         return Ok(useCaseResult.Data);
     }

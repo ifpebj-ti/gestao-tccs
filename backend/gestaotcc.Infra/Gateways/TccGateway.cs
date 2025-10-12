@@ -121,12 +121,12 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiId)
+    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId)
     {
         var query = context.Tccs.AsQueryable();
         
-        if(campiId != 0)
-            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiId));
+        if(campiCourseId != 0)
+            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
         
         if(!string.IsNullOrEmpty(tccFilter.UserId.ToString()))
             query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));

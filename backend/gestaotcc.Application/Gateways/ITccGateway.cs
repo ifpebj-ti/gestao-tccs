@@ -14,7 +14,7 @@ public interface ITccGateway
     Task UpdateTccInvite(TccInviteEntity tccInvite);
     Task<TccEntity?> FindTccById(long id);
     Task<TccEntity?> FindTccWorkflow(long? tccId, long userId);
-    Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiId);
+    Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId);
     Task<TccEntity?> FindTccCancellation(long id);
     Task<TccEntity?> FindTccScheduling(long id);
     Task<TccEntity?> FindTccInformations(long id);
