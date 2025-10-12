@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtDecode } from "jwt-decode";
+import { toast } from 'react-toastify';
 
 interface DecodedToken {
   unique_name: string;
@@ -10,11 +11,11 @@ interface DecodedToken {
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [], 
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/newTCC': ['COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
-  '/ongoingTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
+  '/ongoingTCCs': ['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
   '/myTCC': ['STUDENT'],
-  '/completedTCCs': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY'],
+  '/completedTCCs': ['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY'],
   '/pendingSignatures': [], 
 };
 
@@ -63,8 +64,8 @@ export function middleware(request: NextRequest) {
           return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
       }
-    } catch (err) {
-      console.error('Erro ao decodificar token:', err);
+    } catch {
+      toast.error('Erro ao decodificar token')
       return NextResponse.redirect(new URL('/', request.url));
     }
   }
