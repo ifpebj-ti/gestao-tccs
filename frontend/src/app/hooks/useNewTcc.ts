@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { newTccSchema, NewTccSchemaType } from '@/app/schemas/newTccSchema';
 import { toast } from 'react-toastify';
@@ -9,59 +9,74 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { env } from 'next-runtime-env';
 
+interface Course {
+  id: number;
+  name: string;
+}
+
+interface Advisor {
+  id: number;
+  name: string;
+}
+
 export function useNewTccForm() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
-  const [advisors, setAdvisors] = useState<{ id: number; name: string }[]>([]);
+  const [advisors, setAdvisors] = useState<Advisor[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
 
   const form = useForm<NewTccSchemaType>({
     resolver: zodResolver(newTccSchema),
     defaultValues: {
-      studentEmails: [''],
+      students: [{ studentEmail: '', courseId: 0 }],
       advisorId: 0,
       title: '',
       summary: '',
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "students"
+  });
+
   useEffect(() => {
-    const fetchAdvisors = async () => {
-      const token = Cookies.get('token');
+    const token = Cookies.get('token');
+    
+    const fetchData = async <T>(endpoint: string, setData: (data: T) => void) => {
       try {
-        const res = await fetch(
-          `${API_URL}/User/filter?Profile=ADVISOR`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          }
-        );
-        if (!res.ok) throw new Error('Erro ao buscar orientadores');
-        const data = await res.json();
-        setAdvisors(data);
-      } catch (error) {
-        console.error(error);
-        toast.error('Erro ao carregar orientadores.');
+        const res = await fetch(`${API_URL}/${endpoint}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`Erro ao buscar ${endpoint}`);
+        const data = await res.json() as T;
+        setData(data);
+      } catch {
+        toast.error(`Erro ao carregar dados de ${endpoint.toLowerCase()}.`);
       }
     };
 
-    fetchAdvisors();
+    fetchData<Advisor[]>('User/filter?Profile=ADVISOR', setAdvisors);
+    fetchData<Course[]>('Campi/all/courses', setCourses); 
+
   }, [API_URL]);
 
   const submitForm: SubmitHandler<NewTccSchemaType> = async (data) => {
     try {
+      const payload = {
+        students: data.students,
+        title: data.title,
+        summary: data.summary,
+        advisorId: data.advisorId,
+      };
+
       const response = await fetch(`${API_URL}/Tcc`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${Cookies.get('token')}`,
         },
-        body: JSON.stringify({
-          studentEmails: data.studentEmails,
-          title: data.title,
-          summary: data.summary,
-          advisorId: data.advisorId,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -75,5 +90,15 @@ export function useNewTccForm() {
     }
   };
 
-  return { form, submitForm, advisors, isSubmitting: form.formState.isSubmitting};
+  return { 
+    form, 
+    submitForm, 
+    advisors, 
+    courses,
+    fields,
+    append,
+    remove,
+    isSubmitting: form.formState.isSubmitting 
+  };
 }
+

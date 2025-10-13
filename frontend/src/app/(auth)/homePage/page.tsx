@@ -155,7 +155,6 @@ export default function HomePage() {
       {/* Mobile (Collapse) */}
       <div className="md:hidden">
         {canView([
-          'ADMIN',
           'COORDINATOR',
           'SUPERVISOR',
           'ADVISOR',
@@ -173,7 +172,6 @@ export default function HomePage() {
         )}
 
         {canView([
-          'ADMIN',
           'COORDINATOR',
           'SUPERVISOR',
           'ADVISOR',
@@ -189,13 +187,7 @@ export default function HomePage() {
           />
         )}
 
-        {canView([
-          'ADMIN',
-          'COORDINATOR',
-          'SUPERVISOR',
-          'ADVISOR',
-          'LIBRARY'
-        ]) && (
+        {canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY']) && (
           <CollapseCard
             title="TCCs concluídos"
             icon={faFileCircleCheck}
@@ -212,7 +204,7 @@ export default function HomePage() {
             />
           )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
+        {canView(['COORDINATOR', 'SUPERVISOR']) && (
           <CollapseCard
             title="Cadastrar nova proposta"
             icon={faFileCirclePlus}
@@ -236,7 +228,6 @@ export default function HomePage() {
         }`}
       >
         {canView([
-          'ADMIN',
           'COORDINATOR',
           'SUPERVISOR',
           'ADVISOR',
@@ -254,7 +245,6 @@ export default function HomePage() {
         )}
 
         {canView([
-          'ADMIN',
           'COORDINATOR',
           'SUPERVISOR',
           'ADVISOR',
@@ -270,13 +260,7 @@ export default function HomePage() {
           />
         )}
 
-        {canView([
-          'ADMIN',
-          'COORDINATOR',
-          'SUPERVISOR',
-          'ADVISOR',
-          'LIBRARY'
-        ]) && (
+        {canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY']) && (
           <CardHome
             title="TCCs concluídos"
             icon={faFileCircleCheck}
@@ -293,7 +277,7 @@ export default function HomePage() {
             />
           )}
 
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
+        {canView(['COORDINATOR', 'SUPERVISOR']) && (
           <Link href="/newTCC">
             <CardHome
               title="Cadastrar nova proposta"
