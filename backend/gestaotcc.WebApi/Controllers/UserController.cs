@@ -97,4 +97,36 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
         
         return Ok(useCaseResult.Data);
     }
+
+    /// <summary>
+    /// Auto cadastro de estudantes
+    /// </summary>
+    [HttpPost("autoregister")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> AutoRegister([FromBody] AutoRegisterDTO data,
+        [FromServices] AutoRegisterUseCase autoRegisterUseCase)
+    {
+        var validator = new AutoRegisterValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidatorException(validationResult.ToString());
+        }
+
+        var result = await autoRegisterUseCase.Execute(data, configuration.GetValue<string>("COMBINATION_STRING_FOR_ACCESSCODE")!);
+
+        if (result.IsFailure)
+        {
+
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return result.ErrorDetails?.Status is 500
+                ? StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails)
+                : NotFound();
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
 }

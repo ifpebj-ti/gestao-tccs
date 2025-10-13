@@ -26,6 +26,21 @@ public class UserFactory
             .WithAccessCode(accessCode)
             .Build();
     }
+    public static UserEntity CreateUser(AutoRegisterDTO data, List<ProfileEntity> profile, CampiCourseEntity campiCourse, AccessCodeEntity accessCode)
+    {
+        var randomPassword = PasswordHelper.GenerateRandomPassword();
+
+        return new UserEntityBuilder()
+            .WithName(data.Name)
+            .WithEmail(data.Email)
+            .WithRegistration(data.Registration ?? "")
+            .WithCpf(data.CPF)
+            .WithPassword(randomPassword)
+            .WithProfile(profile)
+            .WithCampiCourse(campiCourse)
+            .WithAccessCode(accessCode)
+            .Build();
+    }
     
     public static FindAllUserByFilterDTO CreateFindAllUserByFilterDTO(UserEntity user)
     {
