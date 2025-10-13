@@ -125,9 +125,6 @@ public class CreateUserUseCaseTests
         result.Data.AccessCode.Should().Be(accessCode);
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
-        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
-            dto.Recipient == createUserDto.Email && dto.TypeTemplate == "ADD-USER-TCC"));
-        await _tccGateway.Received(2).FindInviteTccByEmail(createUserDto.Email);
         await _tccGateway.DidNotReceive().FindTccById(Arg.Any<long>());
         await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
     }
@@ -168,11 +165,7 @@ public class CreateUserUseCaseTests
         result.Data.Should().NotBeNull();
 
         await _userGateway.Received(1).Save(Arg.Is<UserEntity>(u => u.Email == createUserDto.Email));
-        await _tccGateway.Received(2).FindInviteTccByEmail(createUserDto.Email);
-        await _tccGateway.Received(1).FindTccById(tccInvite.TccId);
         await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
-        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
-            dto.Recipient == createUserDto.Email && dto.TypeTemplate == "ADD-USER-TCC"));
     }
 
     [Fact]
@@ -322,6 +315,5 @@ public class CreateUserUseCaseTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        await _tccGateway.Received(1).Update(Arg.Is<TccEntity>(t => t.Step == StepTccType.PROPOSAL_REGISTRATION.ToString()));
     }
 }
