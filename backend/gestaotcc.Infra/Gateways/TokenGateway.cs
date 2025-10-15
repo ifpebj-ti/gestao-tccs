@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using gestaotcc.Domain.Dtos.Auth;
 
 namespace gestaotcc.Infra.Gateways;
 public class TokenGateway(IConfiguration configuration) : ITokenGateway
@@ -34,5 +35,21 @@ public class TokenGateway(IConfiguration configuration) : ITokenGateway
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
+    }
+
+    public DecodedIdTokenDTO DecodeToken(string idToken)
+    {
+        var handler = new JwtSecurityTokenHandler();
+
+        var token = handler.ReadJwtToken(idToken);
+
+        var claims = token.Claims;
+
+        var cpf = claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+        var email = claims.FirstOrDefault(c => c.Type == "email")?.Value;
+        var phone = claims.FirstOrDefault(c => c.Type == "phone_number")?.Value;
+        var completeName = claims.FirstOrDefault(c => c.Type == "name")?.Value;
+
+        return new DecodedIdTokenDTO(cpf, completeName, email, phone);
     }
 }
