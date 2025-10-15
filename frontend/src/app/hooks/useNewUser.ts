@@ -25,7 +25,6 @@ export function useNewUserForm() {
   const { push } = useRouter();
 
   const token = Cookies.get('token');
-  const isSelfRegistering = !token;
 
   const [campusData, setCampusData] = useState<CampusWithCourses[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -35,7 +34,7 @@ export function useNewUserForm() {
     email: '',
     registration: '',
     cpf: '',
-    profile: isSelfRegistering ? 'STUDENT' : undefined,
+    profile: undefined,
     siape: '',
     campusId: undefined, 
     courseId: undefined,
@@ -109,13 +108,7 @@ export function useNewUserForm() {
       if (response.ok) {
         toast.success('Usuário registrado com sucesso!');
         reset();
-        const result = await response.json();
-        if (isSelfRegistering) {
-          Cookies.set('access_token_temp', result.token, { expires: 5 / 1440 });
-          push('/newPassword');
-        } else {
-          push('/homePage');
-        }
+        push('/homePage');
       } else {
         toast.error("Erro ao registrar usuário. Verifique os dados e tente novamente.");
       }
@@ -130,7 +123,6 @@ export function useNewUserForm() {
     handleSubmit, 
     errors, 
     isSubmitting, 
-    isSelfRegistering, 
     watch,
     campus: campusData,
     courses 
