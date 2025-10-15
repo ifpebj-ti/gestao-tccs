@@ -2,6 +2,7 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Dtos.Tcc;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Tcc;
@@ -32,6 +33,11 @@ public class CreateTccUseCaseTests
     {
         // Arrange
         var studentEmail = "student@example.com";
+        var campiCourse = new CampiCourseEntityBuilder()
+            .WithCampiId(1)
+            .WithCourseId(1)
+            .Build();
+        
         var advisor = new UserEntity
         {
             Id = 100,
@@ -40,7 +46,8 @@ public class CreateTccUseCaseTests
             Profile = new List<ProfileEntity>
             {
                 new ProfileEntity { Role = RoleType.ADVISOR.ToString() }
-            }
+            },
+            CampiCourse = campiCourse
         };
 
         var student = new UserEntity
@@ -51,7 +58,8 @@ public class CreateTccUseCaseTests
             Profile = new List<ProfileEntity>
             {
                 new ProfileEntity { Role = RoleType.STUDENT.ToString() }
-            }
+            },
+            CampiCourse = campiCourse
         };
 
         var docType = new DocumentTypeEntity
@@ -72,7 +80,7 @@ public class CreateTccUseCaseTests
 
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult(true));
 
-        var dto = new CreateTccDTO(new List<string> { studentEmail }, "Titulo TCC", "Resumo TCC", advisor.Id);
+        var dto = new CreateTccDTO(new List<StudentsToCreateTccDTO> { new StudentsToCreateTccDTO(studentEmail, 1)  }, "Titulo TCC", "Resumo TCC", advisor.Id);
 
         // Act
         var result = await _useCase.Execute(dto);
@@ -89,7 +97,7 @@ public class CreateTccUseCaseTests
     {
         _userGateway.FindById(Arg.Any<long>()).Returns((UserEntity?)null);
 
-        var dto = new CreateTccDTO(new List<string> { "student@example.com" }, "Titulo", "Resumo", 999);
+        var dto = new CreateTccDTO(new List<StudentsToCreateTccDTO> { new StudentsToCreateTccDTO("student@example.com", 1)  }, "Titulo", "Resumo", 999);
 
         var result = await _useCase.Execute(dto);
 

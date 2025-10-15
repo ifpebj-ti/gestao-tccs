@@ -3,6 +3,7 @@ using gestaotcc.Application.UseCases.Home;
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Dtos.Tcc;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Enums;
@@ -55,12 +56,17 @@ public class GetInfoHomeUseCaseTests
     [Fact]
     public async Task Execute_AsCoordinatorOrSupervisor_ShouldFetchPendingSignaturesAndTccs()
     {
+        var campiCourse = new CampiCourseEntityBuilder()
+            .WithCampiId(1)
+            .WithCourseId(1)
+            .Build();
         var user = new UserEntity
         {
             Profile = new List<Domain.Entities.Profile.ProfileEntity>
             {
                 new() { Role = RoleType.COORDINATOR.ToString() }
-            }
+            },
+            CampiCourse = campiCourse
         };
         _userGateway.FindById(Arg.Any<long>()).Returns(user);
 
@@ -70,7 +76,7 @@ public class GetInfoHomeUseCaseTests
             new TccEntity { Id = 2, Step = "START_AND_ORGANIZATION", Status = "IN_PROGRESS", Documents = [], UserTccs = [], TccInvites = [] },
             new TccEntity { Id = 3, Step = "START_AND_ORGANIZATION", Status = "IN_PROGRESS", Documents = [], UserTccs = [], TccInvites = [] }
         };
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(tccs);
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(tccs);
         _documentTypeGateway.FindAll().Returns(new List<Domain.Entities.DocumentType.DocumentTypeEntity>());
 
         var result = await _useCase.Execute(1);
@@ -85,12 +91,17 @@ public class GetInfoHomeUseCaseTests
     [InlineData(RoleType.BANKING)]
     public async Task Execute_AsAdvisorOrBanking_ShouldFetchPendingSignaturesAndTccs(RoleType role)
     {
+        var campiCourse = new CampiCourseEntityBuilder()
+            .WithCampiId(1)
+            .WithCourseId(1)
+            .Build();
         var user = new UserEntity
         {
             Profile = new List<Domain.Entities.Profile.ProfileEntity>
             {
                 new() { Role = role.ToString() }
-            }
+            },
+            CampiCourse = campiCourse
         };
         _userGateway.FindById(Arg.Any<long>()).Returns(user);
 
@@ -99,7 +110,7 @@ public class GetInfoHomeUseCaseTests
             new TccEntity { Id = 1, Step = "START_AND_ORGANIZATION", Status = "IN_PROGRESS", Documents = [], UserTccs = [], TccInvites = [] },
             new TccEntity { Id = 2, Step = "START_AND_ORGANIZATION", Status = "IN_PROGRESS", Documents = [], UserTccs = [], TccInvites = [] }
         };
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(tccs);
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(tccs);
         _documentTypeGateway.FindAll().Returns(new List<Domain.Entities.DocumentType.DocumentTypeEntity>());
 
         var result = await _useCase.Execute(10);
@@ -112,12 +123,17 @@ public class GetInfoHomeUseCaseTests
     [Fact]
     public async Task Execute_AsStudent_ShouldFetchPendingSignaturesAndTccs()
     {
+        var campiCourse = new CampiCourseEntityBuilder()
+            .WithCampiId(1)
+            .WithCourseId(1)
+            .Build();
         var user = new UserEntity
         {
             Profile = new List<Domain.Entities.Profile.ProfileEntity>
             {
                 new() { Role = RoleType.STUDENT.ToString() }
-            }
+            },
+            CampiCourse = campiCourse
         };
         _userGateway.FindById(Arg.Any<long>()).Returns(user);
 
@@ -125,7 +141,7 @@ public class GetInfoHomeUseCaseTests
         {
             new TccEntity { Id = 1, Step = "START_AND_ORGANIZATION", Status = "IN_PROGRESS", Documents = [], UserTccs = [], TccInvites = [] }
         };
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(tccs);
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(tccs);
         _documentTypeGateway.FindAll().Returns(new List<Domain.Entities.DocumentType.DocumentTypeEntity>());
 
         var result = await _useCase.Execute(5);
@@ -134,7 +150,7 @@ public class GetInfoHomeUseCaseTests
         Assert.Equal(1, result.Data.TccInprogress);
         Assert.Equal(0, result.Data.PendingSignature);
 
-        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>()).Returns(new List<TccEntity>());
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(new List<TccEntity>());
         result = await _useCase.Execute(5);
 
         Assert.True(result.IsSuccess);

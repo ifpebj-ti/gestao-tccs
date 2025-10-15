@@ -24,7 +24,10 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<List<FindAllPendingSignatureDTO>>> FindAllPendingSignatures([FromQuery] long? userId,
         [FromServices] FindAllPendingSignaturesUseCase findAllPendingSignaturesUseCase)
     {
-        var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId);
+        var campiIdClaim = User.FindFirst("campiCourseId")?.Value;
+        if (campiIdClaim == null) return Unauthorized();
+        
+        var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId, long.Parse(campiIdClaim));
         
         return Ok(useCaseResult.Data);
     }
@@ -115,8 +118,10 @@ public class SignatureController : ControllerBase
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
+        var campiCourseId = User.FindFirst("campiCourseId")?.Value;
+        if (campiCourseId == null) return Unauthorized();
         
-        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, long.Parse(userIdClaim));
+        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, long.Parse(userIdClaim), long.Parse(campiCourseId));
         if (useCaseResult.IsFailure)
         {
             

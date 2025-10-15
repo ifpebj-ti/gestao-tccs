@@ -1,5 +1,6 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Tcc;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Tcc;
@@ -52,8 +53,10 @@ public class FindTccUseCaseTests
             Name = "Aluno 1",
             Registration = "123",
             CPF = "11122233344",
-            Course = new CourseEntity { Name = "Engenharia" },
-            Email = "aluno1@email.com"
+            Email = "aluno1@email.com",
+            CampiCourse = new CampiCourseEntityBuilder()
+                .WithCourse(new CourseEntityBuilder().WithName("Engenharia").Build())
+                .Build()
         };
 
         var advisorUser = new UserEntity

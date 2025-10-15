@@ -16,6 +16,7 @@ import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
 import { useResendAccessCode } from '@/app/hooks/useResendAccessCode';
 import { useVerifyAccessCode } from '@/app/hooks/useVerifyAccessCode';
+import { toast } from 'react-toastify';
 
 export default function ForgotPassword() {
   const [isCodeSent, setIsCodeSent] = useState(false);
@@ -40,8 +41,8 @@ export default function ForgotPassword() {
         } else {
           setIsCodeSent(false);
         }
-      } catch (error) {
-        console.error('Erro ao enviar o código:', error);
+      } catch {
+        toast.error('Erro ao enviar o código');
       }
     } else {
       // Verify code
@@ -50,8 +51,8 @@ export default function ForgotPassword() {
           userEmail: data.userEmail,
           accessCode: data.accessCode!
         });
-      } catch (error) {
-        console.error('Erro ao verificar o código:', error);
+      } catch {
+        toast.error('Erro ao verificar o código');
       }
     }
   };

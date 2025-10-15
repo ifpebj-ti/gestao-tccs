@@ -18,7 +18,7 @@ public class TccInfoFactory
                 Name: ut.User.Name,
                 Registration: ut.User.Registration,
                 CPF: ut.User.CPF,
-                Course: ut.User.Course.Name,
+                Course: ut.User.CampiCourse?.Course.Name,
                 Email: ut.User.Email
             ))
             .ToList();

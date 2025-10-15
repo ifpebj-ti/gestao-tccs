@@ -9,7 +9,7 @@ public class CourseResponseMethods
         return new CourseResponseBuilder()
             .WithId(course.Id)
             .WithName(course.Name)
-            .WithDescription(course.Description)
+            .WithDescription(course.Level)
             .Build();
     }
 }

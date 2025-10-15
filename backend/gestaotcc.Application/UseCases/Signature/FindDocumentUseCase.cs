@@ -14,7 +14,8 @@ namespace gestaotcc.Application.UseCases.Signature;
 
 public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IUserGateway userGateway, IAppLoggerGateway<FindDocumentUseCase> logger)
 {
-    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long studentId)
+    //verificar
+    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long studentId, long campiCourseId)
     {
         logger.LogInformation("Iniciando busca de documento para TccId: {TccId}, DocumentId: {DocumentId}, StudentId: {StudentId}", tccId, documentId, studentId);
         
@@ -37,7 +38,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         if (!isSign)
         {
             logger.LogInformation("Documento não assinado. Iniciando processo de preenchimento de dados do template.");
-            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()));
+            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()), campiCourseId);
             logger.LogInformation("Encontrados {SupervisorCount} usuários com perfil de supervisor.", supervisorsUser.Count);
             
             var onlySupervisorUser = supervisorsUser
@@ -82,7 +83,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         {
             case 1:
                 fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["curso_orientador"] = advisor?.Course?.Name ?? "";
+                fields["curso_orientador"] = advisor?.CampiCourse?.Course.Name ?? "";
                 fields["universidade_curso_orientador"] = "";
                 fields["email_orientador"] = advisor?.Email ?? "";
                 fields["telefone_orientador"] = "";
@@ -92,7 +93,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
                 for (var i = 0; i < students.Count; i++)
                 {
                     fields[$"nome_orientando_{i + 1}"] = students[i].Name ?? "";
-                    fields[$"curso_orientando_{i + 1}"] = students[i].Course?.Name ?? "";
+                    fields[$"curso_orientando_{i + 1}"] = students[i].CampiCourse?.Course.Name ?? "";
                     fields[$"turma_orientando_{i + 1}"] = "";
                     fields[$"ano_orientando_{i + 1}"] = "";
                     fields[$"turno_orientando_{i + 1}"] = "";
@@ -104,13 +105,13 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
 
             case 2:
                 fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["curso_orientador"] = advisor?.Course?.Name ?? "";
+                fields["curso_orientador"] = advisor?.CampiCourse?.Course.Name ?? "";
                 fields["universidade_orientador"] = "Instituto Federal de Pernambuco - Campus Belo Jardim";
                 fields["nome_orientando"] = student?.Name ?? "";
                 fields["email_orientador"] = advisor?.Email ?? "";
                 fields["telefone_orientador"] = "";
                 fields["titulo_orientador"] = "";
-                fields["curso_orientando"] = student?.Course?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["turma_orientando"] = "";
                 fields["ano_orientando"] = "";
                 fields["email_orientando"] = student?.Email ?? "";
@@ -120,7 +121,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
 
             case 3:
                 fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.Course?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["titulo_tcc"] = tccTitle;
                 fields["nome_orientador"] = advisor?.Name ?? "";
                 AddCommonDateFields(fields, nowDate);
@@ -128,7 +129,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
 
             case 4:
                 fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.Course?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["turma_orientando"] = "";
                 fields["ano_orientando"] = "";
                 fields["data_apresentacao"] = tccSchedule.ScheduledDate.ToString("dd/MM/yyyy");
@@ -141,7 +142,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
             case 5:
                 fields["nome_orientando"] = student?.Name ?? "";
                 fields["matricula_orientando"] = "";
-                fields["curso_orientando"] = student?.Course?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["universidade_cidade_orientando"] = "";
                 fields["nome_orientador"] = advisor?.Name ?? "";
                 AddCommonDateFields(fields, nowDate);
@@ -149,7 +150,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
 
             case 6:
                 fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.Course?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["titulo_tcc"] = tccTitle;
                 fields["nome_orientador"] = advisor?.Name ?? "";
                 AddCommonDateFields(fields, nowDate);
@@ -159,12 +160,12 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
                 var (tccTitle1, tccTitle2) = SplitTitle(tccTitle, 78);
                 var studentNames = string.Join(", ", students.Select(s => s.Name));
 
-                fields["curso_supervisor"] = supervisorUser.Course?.Name ?? "";
+                fields["curso_supervisor"] = supervisorUser.CampiCourse?.Course.Name ?? "";
                 fields["universidade_supervisor"] = "";
                 fields["titulo_tcc_1"] = tccTitle1;
                 fields["titulo_tcc_2"] = tccTitle2;
                 fields["orientandos"] = studentNames;
-                fields["curso_orientando"] = student?.Course?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["dia_apresentacao"] = tccSchedule.ScheduledDate.Day.ToString();
                 fields["mes_apresentacao"] = tccSchedule.ScheduledDate.Month.ToString();
                 fields["ano_apresentacao"] = tccSchedule.ScheduledDate.Year.ToString();

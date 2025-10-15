@@ -34,7 +34,7 @@ public static class HangfireExtension
         
         RecurringJob.AddOrUpdate(
             "send-pending-signatures",
-            () => sendPendingsignatures.Execute(),
+            () => sendPendingsignatures.Execute(0),
             "0 5 * * *" // Executar diariamente às 5:00
         );
         

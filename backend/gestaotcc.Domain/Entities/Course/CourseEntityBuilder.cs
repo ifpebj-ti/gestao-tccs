@@ -6,8 +6,7 @@ public class CourseEntityBuilder
 {
     private long _id;
     private string _name = string.Empty;
-    private string _description = string.Empty;
-    private ICollection<UserEntity> _users = new List<UserEntity>();
+    private string _level = string.Empty;
 
     public CourseEntityBuilder WithId(long id)
     {
@@ -21,20 +20,14 @@ public class CourseEntityBuilder
         return this;
     }
 
-    public CourseEntityBuilder WithDescription(string description)
+    public CourseEntityBuilder WithDescription(string level)
     {
-        _description = description;
-        return this;
-    }
-
-    public CourseEntityBuilder WithUsers(ICollection<UserEntity> users)
-    {
-        _users = users;
+        _level = level;
         return this;
     }
 
     public CourseEntity Build()
     {
-        return new CourseEntity(_id, _name, _description, _users);
+        return new CourseEntity(_id, _name, _level);
     }
 }

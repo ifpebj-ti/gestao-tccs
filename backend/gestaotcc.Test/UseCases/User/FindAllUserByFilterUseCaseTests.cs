@@ -2,6 +2,7 @@ using FluentAssertions;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Dtos.User;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.User;
@@ -29,7 +30,9 @@ public class FindAllUserByFilterUseCaseTests
         // Note: UserFilterDTO agora tem 'Profile' como string, e todos os campos podem ser nulos, exceto Profile.
         var filter = new UserFilterDTO(Email: "student@example.com", Name: "Test", Registration: null, Profile: "STUDENT");
         
-        var course = new CourseEntity { Id = 1, Name = "Computer Science" };
+        var campiCourse =  new CampiCourseEntityBuilder()
+            .WithCourse(new CourseEntityBuilder().WithName("Computer Science").Build())
+            .Build() ;
         var profileStudent = new ProfileEntity { Id = 1, Role = "STUDENT" };
         profileStudent.Users = new List<UserEntity>();
         
@@ -40,7 +43,7 @@ public class FindAllUserByFilterUseCaseTests
             Name = "Test User 1", 
             Email = "student1@example.com", 
             Registration = "REG1",
-            Course = course,
+            CampiCourse = campiCourse,
             Profile = new List<ProfileEntity> { profileStudent } 
         };
         var user2 = new UserEntity 
@@ -49,7 +52,7 @@ public class FindAllUserByFilterUseCaseTests
             Name = "Test User 2", 
             Email = "student2@example.com", 
             Registration = "REG2",
-            Course = course,
+            CampiCourse = campiCourse,
             Profile = new List<ProfileEntity> { profileStudent } 
         };
 
@@ -60,10 +63,10 @@ public class FindAllUserByFilterUseCaseTests
 
         var usersFromGateway = new List<UserEntity> { user1, user2 };
 
-        _userGateway.FindAllByFilter(filter).Returns(Task.FromResult(usersFromGateway));
+        _userGateway.FindAllByFilter(filter, Arg.Any<long>()).Returns(Task.FromResult(usersFromGateway));
 
         // Act
-        var result = await _findAllUserByFilterUseCase.Execute(filter);
+        var result = await _findAllUserByFilterUseCase.Execute(filter, 1);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -82,7 +85,7 @@ public class FindAllUserByFilterUseCaseTests
         result.Data.Last().Profile.Should().Be("STUDENT");
         result.Data.Last().Course.Should().Be("Computer Science");
 
-        await _userGateway.Received(1).FindAllByFilter(filter);
+        await _userGateway.Received(1).FindAllByFilter(filter, 1);
     }
 
     [Fact]
@@ -90,16 +93,16 @@ public class FindAllUserByFilterUseCaseTests
     {
         // Arrange
         var filter = new UserFilterDTO(Email: "nonexistent@example.com", Name: "NonExistent", Registration: null, Profile: "ADMIN");
-        _userGateway.FindAllByFilter(filter).Returns(Task.FromResult(new List<UserEntity>()));
+        _userGateway.FindAllByFilter(filter, Arg.Any<long>()).Returns(Task.FromResult(new List<UserEntity>()));
 
         // Act
-        var result = await _findAllUserByFilterUseCase.Execute(filter);
+        var result = await _findAllUserByFilterUseCase.Execute(filter, 1);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Data.Should().NotBeNull();
         result.Data.Should().BeEmpty();
-        await _userGateway.Received(1).FindAllByFilter(filter);
+        await _userGateway.Received(1).FindAllByFilter(filter, 1);
     }
     
     [Fact]
@@ -107,7 +110,9 @@ public class FindAllUserByFilterUseCaseTests
     {
         // Arrange
         var filter = new UserFilterDTO(Email: "multi@example.com", Name: "Multi Profile", Registration: null, Profile: "STUDENT");
-        var course = new CourseEntity { Id = 4, Name = "Business" };
+        var campiCourse =  new CampiCourseEntityBuilder()
+            .WithCourse(new CourseEntityBuilder().WithName("Computer Science").Build())
+            .Build();
         var studentProfile = new ProfileEntity { Id = 5, Role = "STUDENT" };
         var teacherProfile = new ProfileEntity { Id = 6, Role = "TEACHER" };
         studentProfile.Users = new List<UserEntity>();
@@ -120,7 +125,7 @@ public class FindAllUserByFilterUseCaseTests
             Name = "Multi Profile User",
             Email = "multi@example.com",
             Registration = "REG3",
-            Course = course,
+            CampiCourse = campiCourse,
             // A ordem aqui importa para o FirstOrDefault no UserFactory.
             // O primeiro perfil na lista que tiver o usuário associado será escolhido.
             Profile = new List<ProfileEntity> { studentProfile, teacherProfile } 
@@ -130,10 +135,10 @@ public class FindAllUserByFilterUseCaseTests
         studentProfile.Users.Add(user); // Associa o usuário ao perfil de estudante
         teacherProfile.Users.Add(user); // Associa o usuário ao perfil de professor também
 
-        _userGateway.FindAllByFilter(filter).Returns(Task.FromResult(new List<UserEntity> { user }));
+        _userGateway.FindAllByFilter(filter, Arg.Any<long>()).Returns(Task.FromResult(new List<UserEntity> { user }));
 
         // Act
-        var result = await _findAllUserByFilterUseCase.Execute(filter);
+        var result = await _findAllUserByFilterUseCase.Execute(filter, 1);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -144,8 +149,8 @@ public class FindAllUserByFilterUseCaseTests
         result.Data.First().Email.Should().Be("multi@example.com");
         // O FirstOrDefault(x => x.Users.Any(x => x.Id == user.Id)) vai pegar o 'studentProfile' primeiro
         result.Data.First().Profile.Should().Be("STUDENT"); 
-        result.Data.First().Course.Should().Be("Business");
+        result.Data.First().Course.Should().Be("Computer Science");
 
-        await _userGateway.Received(1).FindAllByFilter(filter);
+        await _userGateway.Received(1).FindAllByFilter(filter, 1);
     }
 }

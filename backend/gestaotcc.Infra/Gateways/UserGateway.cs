@@ -12,20 +12,25 @@ using gestaotcc.Domain.Dtos.User;
 namespace gestaotcc.Infra.Gateways;
 public class UserGateway(AppDbContext context) : IUserGateway
 {
+    //verificar
     public async Task<UserEntity?> FindByEmail(string email)
     {
         return await context.Users
             .Include(x => x.Profile)
-            .Include(x => x.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Campi)
             .Include(x => x.AccessCode)
             .FirstOrDefaultAsync(x => x.Email == email);
     }
 
+    //verificar
     public async Task<UserEntity?> FindById(long id)
     {
         return await context.Users
             .Include(x => x.Profile)
-            .Include(x => x.Course)
+            .Include(x => x.CampiCourse)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -45,13 +50,19 @@ public class UserGateway(AppDbContext context) : IUserGateway
     {
         return await context.Users
             .Include(x => x.Profile)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Campi)
             .Where(x => emails.Contains(x.Email))
             .ToListAsync();
     }
 
-    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter)
+    //verificar
+    public async Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter, long campiCourseId)
     {
         var query = context.Users.AsQueryable();
+        query = query.Where(x => x.CampiCourse!.Id == campiCourseId);
 
         if (!string.IsNullOrEmpty(filter.Name))
             query = query.Where(u => u.Name.Contains(filter.Name));
@@ -68,7 +79,10 @@ public class UserGateway(AppDbContext context) : IUserGateway
 
         return await query
             .Include(x => x.Profile)
-            .Include(x => x.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Course)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x!.Campi)
             .ToListAsync();
     }
 }

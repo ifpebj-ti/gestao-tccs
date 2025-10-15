@@ -1,4 +1,6 @@
 using gestaotcc.Domain.Entities.AccessCode;
+using gestaotcc.Domain.Entities.Campi;
+using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
@@ -19,7 +21,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserEntity> Users { get; set; }
     public DbSet<ProfileEntity> Profiles { get; set; }
     public DbSet<AccessCodeEntity> AccessCodes { get; set; }
-    public DbSet<CourseEntity> Courses { get; set; }
     public DbSet<TccEntity> Tccs { get; set; }
     public DbSet<UserTccEntity> UserTccs { get; set; }
     public DbSet<TccInviteEntity> TccInvites { get; set; }
@@ -28,6 +29,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<DocumentEntity> Documents { get; set; }
     public DbSet<DocumentTypeEntity> DocumentTypes { get; set; }
     public DbSet<SignatureEntity> Signatures { get; set; }
+    
+    public DbSet<CampiEntity> Campi { get; set; }
+    public DbSet<CourseEntity> Courses { get; set; }
+    public DbSet<CampiCourseEntity> CampiCourses { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -7,19 +7,20 @@ import { Label } from '@/components/ui/label';
 import {
   faArrowLeft,
   faEnvelope,
-  faLock
+  faLock,
+  faTag
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
-import { useUpdatePassword } from '@/app/hooks/useUpdatePassword';
+import { useNewPassword } from '../hooks/useNewPassword';
 
 export default function NewPassword() {
-  const { form, submitForm } = useUpdatePassword();
+  const { form, submitForm, isSubmitting } = useNewPassword();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = form;
 
   const handleRedirectToLogin = () => {
@@ -47,14 +48,26 @@ export default function NewPassword() {
             onSubmit={handleSubmit(submitForm)}
           >
             <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="userEmail">
+              <Label className="font-semibold" htmlFor="email">
                 Email
               </Label>
               <Input
                 placeholder="Digite seu email institucional"
                 icon={faEnvelope}
-                errorText={errors.userEmail?.message?.toString()}
-                {...register('userEmail')}
+                errorText={errors.email?.message?.toString()}
+                {...register('email')}
+              />
+            </div>
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="inviteCode">
+                Código de Convite
+              </Label>
+              <Input
+                id="inviteCode"
+                placeholder="Digite o código recebido"
+                icon={faTag}
+                errorText={errors.inviteCode?.message}
+                {...register('inviteCode')}
               />
             </div>
             <div className="grid items-center gap-1.5">
@@ -66,8 +79,8 @@ export default function NewPassword() {
                 placeholder="Digite sua senha"
                 icon={faLock}
                 isPassword={true}
-                errorText={errors.userPassword?.message?.toString()}
-                {...register('userPassword')}
+                errorText={errors.password?.message?.toString()}
+                {...register('password')}
               />
             </div>
             <div className="grid items-center gap-1.5">
@@ -79,8 +92,8 @@ export default function NewPassword() {
                 placeholder="Confirme sua senha"
                 icon={faLock}
                 isPassword={true}
-                errorText={errors.userPassword?.message?.toString()}
-                {...register('userPassword')}
+                errorText={errors.confirmPassword?.message?.toString()}
+                {...register('confirmPassword')}
               />
             </div>
             <Button type="submit">
