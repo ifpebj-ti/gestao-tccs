@@ -4,5 +4,5 @@ namespace gestaotcc.Application.Gateways;
 
 public interface IGovGateway
 {
-    Task<ResponseGetGovTokenDTO> GetAccessToken(string code, string codeVerifier);
+    Task<ResponseGetGovTokenDTO?> GetAccessToken(string code, string codeVerifier);
 }

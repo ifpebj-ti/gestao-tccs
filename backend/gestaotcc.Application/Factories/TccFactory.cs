@@ -2,7 +2,6 @@ using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Profile;
-using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;

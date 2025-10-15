@@ -21,7 +21,6 @@ public class UserEntity
     public ICollection<ProfileEntity> Profile { get; set; } = null!;
     public CampiCourseEntity? CampiCourse { get; set; }
     public long? CampiCourseId { get; set; }
-    public AccessCodeEntity AccessCode { get; set; } = null!;
     public ICollection<UserTccEntity> UserTccs { get; set; } = null!;
     public ICollection<SignatureEntity> Signatures { get; set; } = null!;
     public ICollection<DocumentEntity>? Documents { get; set; } = null!;
@@ -38,7 +37,6 @@ public class UserEntity
         string status, 
         ICollection<ProfileEntity> profile,
         CampiCourseEntity campiCourse,
-        AccessCodeEntity accessCode, 
         ICollection<UserTccEntity> userTccs,
         ICollection<SignatureEntity> signatures)
     {
@@ -52,7 +50,6 @@ public class UserEntity
         Status = status;
         Profile = profile;
         CampiCourse = campiCourse;
-        AccessCode = accessCode;
         UserTccs = userTccs;
         Signatures = signatures;
     }

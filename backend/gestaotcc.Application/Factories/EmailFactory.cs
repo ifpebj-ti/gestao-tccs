@@ -1,7 +1,6 @@
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Dtos.Signature;
-using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.TccSchedule;
@@ -14,7 +13,6 @@ public class EmailFactory
     {
         Dictionary<string, Object> variables = new Dictionary<string, Object>();
         variables.Add("username", user.Name);
-        variables.Add("accesscode", user.AccessCode != null ?  user.AccessCode.Code : "");
         
 
         var chooseSubject = (typeSend == "CREATE-USER" || typeSend == "AUTO-REGISTER-USER") ? "Bem-vindo(a) ao Gestão TCC" 

@@ -19,7 +19,6 @@ public class UserEntityBuilder
     private string _password = string.Empty;
     private string _status = string.Empty;
     private ICollection<ProfileEntity> _profile = new List<ProfileEntity>();
-    private AccessCodeEntity _accessCode = null!;
     private CampiCourseEntity _campiCourse = null!;
     private ICollection<UserTccEntity> _userTccs = new List<UserTccEntity>();
     private ICollection<SignatureEntity> _signatures = new List<SignatureEntity>();
@@ -83,12 +82,6 @@ public class UserEntityBuilder
         _campiCourse = campiCourse;
         return this;
     }
-    
-    public UserEntityBuilder WithAccessCode(AccessCodeEntity accessCode)
-    {
-        _accessCode = accessCode;
-        return this;
-    }
 
     public UserEntityBuilder WithUserTcc(ICollection<UserTccEntity> userTccs)
     {
@@ -103,6 +96,6 @@ public class UserEntityBuilder
     }
     public UserEntity Build()
     {
-        return new UserEntity(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _campiCourse, _accessCode, _userTccs, _signatures);
+        return new UserEntity(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _campiCourse, _userTccs, _signatures);
     }
 }

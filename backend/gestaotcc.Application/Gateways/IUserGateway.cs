@@ -6,6 +6,7 @@ namespace gestaotcc.Application.Gateways;
 public interface IUserGateway
 {
     Task<UserEntity?> FindByEmail(string email);
+    Task<UserEntity?> FindByCpf(string cpf);
     Task<UserEntity?> FindById(long id);
     Task Save(UserEntity user);
     Task Update(UserEntity user);

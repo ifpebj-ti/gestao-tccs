@@ -34,7 +34,6 @@ public class FindUserByEmailUseCaseTests
             Status = "Ativo",
             Profile = new List<Domain.Entities.Profile.ProfileEntity>(),
             CampiCourse = new CampiCourseEntity(),
-            AccessCode = new Domain.Entities.AccessCode.AccessCodeEntity(),
             UserTccs = new List<Domain.Entities.UserTcc.UserTccEntity>(),
             Signatures = new List<Domain.Entities.Signature.SignatureEntity>(),
             Documents = new List<Domain.Entities.Document.DocumentEntity>()

@@ -13,48 +13,23 @@ namespace gestaotcc.WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(ILogger<AuthController> logger) : ControllerBase
+public class AuthController(ILogger<AuthController> logger, IConfiguration configuration) : ControllerBase
 {
     /// <summary>
-    /// Realiza login no sistema
+    /// Buscar url para requisitar a autorização no gov.
     /// </summary>
     [AllowAnonymous]
-    [HttpPost("login")]
-    public async Task<ActionResult<LoginResponseModel>> Login([FromBody] LoginDTO data, [FromServices] LoginUseCase loginUseCase)
+    [HttpGet("gov/url")]
+    public async Task<ActionResult<ResponseGetAuthrizationDTO>> GenerateGovAuthUrl([FromServices] GenerateGovAuthUrlUseCase generateGovAuthUrlUseCase)
     {
-        var validator = new LoginValidator();
-        var validationResult = await validator.ValidateAsync(data);
-        if (!validationResult.IsValid)
-            throw new ValidatorException(validationResult.ToString());
-        var useCaseResult = await loginUseCase.Execute(data.Email, data.Password);
+        var govSettings = configuration.GetSection("GOV_SETTINGS");
+        var urlToken = govSettings.GetValue<string>("URL_TOKEN");
+        var clientId = govSettings.GetValue<string>("CLIENT_ID");
+        var scope = govSettings.GetValue<string>("SCOPE");
+        var govUrlAuth = govSettings.GetValue<string>("URL_GOV_AUTH");
+        var redirectUri = govSettings.GetValue<string>("REDIRECT_URL_GOV");
 
-        if (!useCaseResult.IsSuccess)
-        {
-            // Construindo a URL dinamicamente
-            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
-            useCaseResult.ErrorDetails!.Type = endpointUrl;
-
-            // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
-                : NotFound(useCaseResult.ErrorDetails);
-        }
-
-        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken));
-    }
-
-    /// <summary>
-    /// Alterar senha do usuário
-    /// </summary>
-    [AllowAnonymous]
-    [HttpPost("update-password")]
-    public async Task<ActionResult<MessageSuccessResponseModel>> Update([FromBody] UpdatePasswordDTO data, [FromServices] UpdatePasswordUseCase updatePasswordUseCase)
-    {
-        var validator = new UpdatePasswordValidator();
-        var validationResult = await validator.ValidateAsync(data);
-        if (!validationResult.IsValid)
-            throw new ValidatorException(validationResult.ToString());
-        var useCaseResult = await updatePasswordUseCase.Execute(data);
+        var useCaseResult = await generateGovAuthUrlUseCase.Execute(new GetAuthorizationDTO(clientId, scope, redirectUri, govUrlAuth));
 
         if (useCaseResult.IsFailure)
         {
@@ -63,27 +38,27 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
+            return useCaseResult.ErrorDetails?.Status is 500
+                ? StatusCode(StatusCodes.Status500InternalServerError, useCaseResult.ErrorDetails)
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        return Ok(new MessageSuccessResponseModel("Senha alterada com sucesso"));
+        return Ok(new ResponseGetAuthrizationDTO(useCaseResult.Data));
     }
 
     /// <summary>
-    /// Criar nova senha do primeiro acesso de usuário Aluno
+    /// Realizar login
     /// </summary>
+    /// <param name="code">Código que o gov vai utilizar para validar.</param>
+    /// <param name="state">Estado que o gov vai utilizar para validar.</param>
     [AllowAnonymous]
-    [HttpPost("new-password")]
-    public async Task<ActionResult<MessageSuccessResponseModel>> NewPassword([FromBody] NewPasswordDTO data, [FromServices] NewPasswordUseCase newPasswordUseCase)
+    [HttpGet("login")]
+    public async Task<ActionResult<TokenDTO>> Login(
+        [FromServices] GetGovAccessTokenUseCase getGovAccessTokenUseCase,
+        [FromQuery] string code,
+        [FromQuery] string state)
     {
-        var validator = new NewPasswordValidator();
-        var validationResult = await validator.ValidateAsync(data);
-        if (!validationResult.IsValid)
-            throw new ValidatorException(validationResult.ToString());
-        var useCaseResult = await newPasswordUseCase.Execute(data);
-
+        var useCaseResult = await getGovAccessTokenUseCase.Execute(code, state);
         if (useCaseResult.IsFailure)
         {
             // Construindo a URL dinamicamente
@@ -91,11 +66,11 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
+            return useCaseResult.ErrorDetails?.Status is 500
+                ? StatusCode(StatusCodes.Status500InternalServerError, useCaseResult.ErrorDetails)
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        return Ok(new MessageSuccessResponseModel("Senha criada com sucesso"));
+        return Ok(useCaseResult.Data);
     }
 }

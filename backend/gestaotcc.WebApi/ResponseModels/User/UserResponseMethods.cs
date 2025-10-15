@@ -27,7 +27,6 @@ public class UserResponseMethods
             .WithStatus(user.Status)
             .WithProfile(ProfileResponseMethods.CreateProfileResponse(user.Profile))
             .WithCampiCourses(campiCourse)
-            //.WithCourse(CourseResponseMethods.CreateCourseResponse(user.CampiCourses))
             .Build();
     }
 }

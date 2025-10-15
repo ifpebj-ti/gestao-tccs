@@ -1,5 +1,4 @@
 using gestaotcc.Application.Gateways;
-using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Application.UseCases.Auth;
 using gestaotcc.Application.UseCases.Campi;
 using gestaotcc.Application.UseCases.Home;
@@ -7,8 +6,6 @@ using gestaotcc.Application.UseCases.Profile;
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
-using gestaotcc.Domain.Dtos.Home;
-using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Infra.Gateways;
 
 namespace gestaotcc.WebApi.Config;
@@ -29,11 +26,6 @@ public static class IocDependencyExtensions
         services.AddScoped<IITextGateway, ITextGateway>();
         services.AddScoped(typeof(IAppLoggerGateway<>), typeof(AppLoggerGateway<>));
         services.AddScoped<IMemoryCacheGateway, MemoryCacheGateway>();
-
-        // AccessCode
-        services.AddScoped<CreateAccessCodeUseCase>();
-        services.AddScoped<VerifyAccessCodeUseCase>();
-        services.AddScoped<ResendAccessCodeUseCase>();
 
         // Auth
         services.AddScoped<LoginUseCase>();

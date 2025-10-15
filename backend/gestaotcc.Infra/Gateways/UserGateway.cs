@@ -21,7 +21,6 @@ public class UserGateway(AppDbContext context) : IUserGateway
                 .ThenInclude(x => x!.Course)
             .Include(x => x.CampiCourse)
                 .ThenInclude(x => x!.Campi)
-            .Include(x => x.AccessCode)
             .FirstOrDefaultAsync(x => x.Email == email);
     }
 
@@ -84,5 +83,10 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .Include(x => x.CampiCourse)
                 .ThenInclude(x => x!.Campi)
             .ToListAsync();
+    }
+
+    public async Task<UserEntity?> FindByCpf(string cpf)
+    {
+        return await context.Users.FirstOrDefaultAsync(u => u.CPF == cpf);
     }
 }

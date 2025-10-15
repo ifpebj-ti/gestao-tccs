@@ -1,4 +1,3 @@
-using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.Campi;
 using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
@@ -20,7 +19,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<UserEntity> Users { get; set; }
     public DbSet<ProfileEntity> Profiles { get; set; }
-    public DbSet<AccessCodeEntity> AccessCodes { get; set; }
     public DbSet<TccEntity> Tccs { get; set; }
     public DbSet<UserTccEntity> UserTccs { get; set; }
     public DbSet<TccInviteEntity> TccInvites { get; set; }

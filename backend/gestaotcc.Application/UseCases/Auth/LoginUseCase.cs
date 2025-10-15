@@ -11,16 +11,16 @@ public class LoginUseCase(
     ITokenGateway tokenGateway,
     IAppLoggerGateway<LoginUseCase> logger)
 {
-    public async Task<ResultPattern<TokenDTO>> Execute(string userEmail, string userPassword)
+    public async Task<ResultPattern<TokenDTO>> Execute(string userCpf)
     {
-        logger.LogInformation("Iniciando tentativa de login para o e-mail: {UserEmail}", userEmail);
+        logger.LogInformation("Iniciando tentativa de login para o e-mail: {UserCpf}", userCpf);
 
-        var user = await userGateway.FindByEmail(userEmail);
+        var user = await userGateway.FindByCpf(userCpf);
         if (user is null || user.Status.ToUpper() == "INACTIVE")
         {
             logger.LogWarning(
-                "Falha no login para {UserEmail}: Usuário não encontrado ou inativo.",
-                userEmail);
+                "Falha no login para {UserCpf}: Usuário não encontrado ou inativo.",
+                userCpf);
             return ResultPattern<TokenDTO>.FailureResult(
                 "Erro ao realizar login. Por favor verifique as informações e tente novamente", 409);
         }
@@ -30,10 +30,6 @@ public class LoginUseCase(
             "Usuário encontrado para a tentativa de login. UserId: {UserId}, Status: {UserStatus}",
             userId,
             user.Status);
-
-        var result = ValidateTypeLogin(user, userPassword);
-        if (result.IsFailure)
-            return ResultPattern<TokenDTO>.FailureResult(result.Message, 409);
 
         var accessToken = tokenGateway.CreateAccessToken(user);
         if (accessToken is null)
@@ -50,35 +46,5 @@ public class LoginUseCase(
             userId);
 
         return ResultPattern<TokenDTO>.SuccessResult(new TokenDTO(accessToken));
-    }
-
-    private ResultPattern<TokenDTO> ValidateTypeLogin(UserEntity user, string userPassword)
-    {
-        var userId = user.Id;
-
-        if (user.Status.ToUpper() == "ACTIVE")
-        {
-            logger.LogInformation("Validando senha com hash para usuário ativo. UserId: {UserId}", userId);
-            var result = bcryptGateway.VerifyHashPassword(user, userPassword);
-            if (!result)
-            {
-                logger.LogWarning("Falha na validação de senha (hash) para o UserId: {UserId}", userId);
-                return ResultPattern<TokenDTO>.FailureResult(
-                    "Erro ao realizar login, verifique os dados e tente novamente", 409);
-            }
-        }
-        else // Status de primeiro acesso
-        {
-            logger.LogInformation("Validando senha de primeiro acesso para UserId: {UserId}", userId);
-            if (user.Password != userPassword)
-            {
-                logger.LogWarning("Falha na validação de senha (primeiro acesso) para o UserId: {UserId}", userId);
-                return ResultPattern<TokenDTO>.FailureResult(
-                    "Erro ao realizar login, verifique os dados e tente novamente", 409);
-            }
-        }
-
-        logger.LogInformation("Validação de senha bem-sucedida para o UserId: {UserId}", userId);
-        return ResultPattern<TokenDTO>.SuccessResult();
     }
 }

@@ -1,12 +1,8 @@
 ﻿using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.Helpers;
-using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Domain.Dtos.User;
-using gestaotcc.Domain.Entities.Document;
-using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.User;
-using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.User;
@@ -18,7 +14,6 @@ public class CreateUserUseCase(
     ICourseGateway courseGateway,
     ITccGateway tccGateway,
     IDocumentTypeGateway documentTypeGateway,
-    CreateAccessCodeUseCase createAccessCodeUseCase,
     IAppLoggerGateway<CreateUserUseCase> logger)
 {
     public async Task<ResultPattern<UserEntity>> Execute(CreateUserDTO data, string combination)
@@ -40,13 +35,12 @@ public class CreateUserUseCase(
             string.Join(", ", expandedProfileRoles));
 
         var profile = await profileGateway.FindByRole(expandedProfileRoles);
-        var accessCode = createAccessCodeUseCase.Execute(combination);
         var courseId = data.CourseId;
         var campiId = data.CampusId;
 
         logger.LogInformation("Criando nova entidade de usuário para {UserEmail}...", data.Email);
         var campiCourse = await courseGateway.FindByCampiAndCourseId(campiId, courseId);
-        var newUser = UserFactory.CreateUser(data, profile, campiCourse, accessCode.Data);
+        var newUser = UserFactory.CreateUser(data, profile, campiCourse);
         await userGateway.Save(newUser);
         logger.LogInformation("Usuário {UserEmail} salvo com sucesso no banco de dados. Novo UserId: {UserId}",
             newUser.Email, newUser.Id);

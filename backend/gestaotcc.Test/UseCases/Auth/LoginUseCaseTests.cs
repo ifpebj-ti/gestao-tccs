@@ -22,10 +22,10 @@ public class LoginUseCaseTests
     public async Task Execute_ShouldReturnFailure_WhenUserNotFound()
     {
         // Arrange
-        _userGateway.FindByEmail("notfound@example.com").Returns((UserEntity?)null);
+        _userGateway.FindByCpf("000.000.000-00").Returns((UserEntity?)null);
 
         // Act
-        var result = await _useCase.Execute("notfound@example.com", "any");
+        var result = await _useCase.Execute("000.000.000-00");
 
         // Assert
         Assert.True(result.IsFailure);
@@ -35,49 +35,24 @@ public class LoginUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnFailure_WhenUserIsInactive()
     {
-        var user = new UserEntity { Email = "user@example.com", Status = "INACTIVE" };
-        _userGateway.FindByEmail(user.Email).Returns(user);
+        var user = new UserEntity { Email = "user@example.com", Status = "INACTIVE", CPF = "000.000.000-00" };
+        _userGateway.FindByCpf(user.CPF).Returns(user);
 
-        var result = await _useCase.Execute(user.Email, "password");
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(409, result.ErrorDetails?.Status);
-    }
-
-    [Fact]
-    public async Task Execute_ShouldReturnFailure_WhenPasswordInvalid_ForActiveUser()
-    {
-        var user = new UserEntity { Email = "user@example.com", Status = "ACTIVE" };
-        _userGateway.FindByEmail(user.Email).Returns(user);
-        _bcryptGateway.VerifyHashPassword(user, "wrongpassword").Returns(false);
-
-        var result = await _useCase.Execute(user.Email, "wrongpassword");
+        var result = await _useCase.Execute(user.CPF);
 
         Assert.True(result.IsFailure);
         Assert.Equal(409, result.ErrorDetails?.Status);
     }
 
-    [Fact]
-    public async Task Execute_ShouldReturnFailure_WhenPasswordInvalid_ForFirstAccess()
-    {
-        var user = new UserEntity { Email = "user@example.com", Status = "FIRST_ACCESS", Password = "123456" };
-        _userGateway.FindByEmail(user.Email).Returns(user);
-
-        var result = await _useCase.Execute(user.Email, "wrongpass");
-
-        Assert.True(result.IsFailure);
-        Assert.Equal(409, result.ErrorDetails?.Status);
-    }
 
     [Fact]
     public async Task Execute_ShouldReturnFailure_WhenTokenIsNull()
     {
-        var user = new UserEntity { Email = "user@example.com", Status = "ACTIVE" };
-        _userGateway.FindByEmail(user.Email).Returns(user);
-        _bcryptGateway.VerifyHashPassword(user, "correctpass").Returns(true);
+        var user = new UserEntity { Email = "user@example.com", Status = "ACTIVE", CPF = "000.000.000-00" };
+        _userGateway.FindByCpf(user.CPF).Returns(user);
         _tokenGateway.CreateAccessToken(user).Returns((string?)null);
 
-        var result = await _useCase.Execute(user.Email, "correctpass");
+        var result = await _useCase.Execute(user.CPF);
 
         Assert.True(result.IsFailure);
         Assert.Equal(409, result.ErrorDetails?.Status);
@@ -86,12 +61,11 @@ public class LoginUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnSuccess_WhenLoginIsValid_ForActiveUser()
     {
-        var user = new UserEntity { Email = "user@example.com", Status = "ACTIVE" };
-        _userGateway.FindByEmail(user.Email).Returns(user);
-        _bcryptGateway.VerifyHashPassword(user, "correctpass").Returns(true);
+        var user = new UserEntity { Email = "user@example.com", Status = "ACTIVE", CPF = "000.000.000-00" };
+        _userGateway.FindByCpf(user.CPF).Returns(user);
         _tokenGateway.CreateAccessToken(user).Returns("valid-token");
 
-        var result = await _useCase.Execute(user.Email, "correctpass");
+        var result = await _useCase.Execute(user.CPF);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("valid-token", result.Data.AccessToken);
@@ -100,11 +74,11 @@ public class LoginUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnSuccess_WhenLoginIsValid_ForFirstAccess()
     {
-        var user = new UserEntity { Email = "user@example.com", Status = "FIRST_ACCESS", Password = "firstpass" };
-        _userGateway.FindByEmail(user.Email).Returns(user);
+        var user = new UserEntity { Email = "user@example.com", Status = "FIRST_ACCESS", Password = "firstpass", CPF = "000.000.000-00" };
+        _userGateway.FindByCpf(user.CPF).Returns(user);
         _tokenGateway.CreateAccessToken(user).Returns("first-token");
 
-        var result = await _useCase.Execute(user.Email, "firstpass");
+        var result = await _useCase.Execute(user.CPF);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("first-token", result.Data.AccessToken);
