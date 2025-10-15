@@ -41,14 +41,6 @@ export const newUserSchema = z.object({
       message: 'SIAPE é obrigatório para o perfil selecionado.'
     });
   }
-  
-  if (data.profile === 'STUDENT' && !data.registration) {
-    ctx.addIssue({
-      path: ['registration'],
-      code: z.ZodIssueCode.custom,
-      message: 'Matrícula é obrigatória'
-    });
-  }
 });
 
 export type NewUserSchemaSchemaType = z.infer<typeof newUserSchema>;
