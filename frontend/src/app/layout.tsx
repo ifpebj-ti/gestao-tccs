@@ -4,6 +4,10 @@ import { PublicEnvScript } from 'next-runtime-env';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { config } from '@fortawesome/fontawesome-svg-core';
+import '@fortawesome/fontawesome-svg-core/styles.css';
+config.autoAddCss = false;
+
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import VersionDisplay from '@/components/VersionDisplay';
@@ -19,8 +23,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Gestão de TCCs',
-  description: 'Feito por alunos do IFPE - Campus Belo Jardim'
+  title: 'Gradus Flow - Gestão de TCCs',
+  description: 'Feito por alunos do IFPE - Campus Belo Jardim 2025'
 };
 
 export default function RootLayout({
