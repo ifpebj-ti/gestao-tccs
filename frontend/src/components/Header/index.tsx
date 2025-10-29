@@ -7,6 +7,8 @@ import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
 import IFPELogo from '../../../public/IFPE Logo.png';
+import IFPELogoMini from '../../../public/Logo ifpe mini.svg';
+import LogoImage from '../../../public/flat-color-icons_graduation-cap.svg';
 import UserProfile from '../UserProfile/index';
 import { toast } from 'react-toastify';
 
@@ -70,8 +72,8 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 w-full bg-white shadow z-50">
       <div className="mx-auto px-4 md:px-10 py-3 flex items-center justify-between gap-2 w-full">
-        {/* Logo */}
-        <div className="flex-shrink-0">
+        {/* Logo Desktop */}
+        <div className="flex-shrink-0 hidden md:block">
           <Link href="/">
             <Image
               src={IFPELogo}
@@ -82,10 +84,27 @@ export default function Header() {
           </Link>
         </div>
 
+        {/* Logo Mobile */}
+        <div className="flex-shrink-0 md:hidden">
+          <Link href="/">
+            <Image
+              src={IFPELogoMini}
+              alt="IFPE Logo"
+              className="h-8 w-auto md:h-12"
+              priority
+            />
+          </Link>
+        </div>
+
         {/* Título (centralizado) */}
-        <div className="flex-1 flex justify-center">
-          <h1 className="text-lg md:text-xl font-semibold text-gray-800 text-center">
-            Gestão de TCCs
+        <div className="flex gap-3 justify-center items-center">
+          <Image
+            src={LogoImage}
+            alt="Logo Image"
+            className="md:h-10 h-8 w-min"
+          />
+          <h1 className="md:text-xl font-semibold text-gray-800 text-center">
+            Gradus Flow
           </h1>
         </div>
 

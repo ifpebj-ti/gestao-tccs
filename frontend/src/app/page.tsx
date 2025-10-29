@@ -8,6 +8,7 @@ import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../public/login image.svg';
 import IFPELogo from '../../public/IFPE Logo.png';
+import LogoImage from '../../public/flat-color-icons_graduation-cap.svg';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLogin } from '@/app/hooks/useLogin';
 
@@ -26,14 +27,23 @@ export default function Login() {
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen lg:max-h-screen py-10 lg:py-40 px-6 lg:px-10">
       {/* image */}
-      <Image src={LoginImage} alt="Login Image" className="w-full md:w-2/3" />
+      <Image
+        src={LoginImage}
+        alt="Login Image"
+        className="w-full md:w-2/3 priority"
+      />
 
       {/* content */}
       <div className="w-full lg:w-1/3 flex flex-col justify-between gap-10">
         <div className="flex flex-col w-full gap-6">
-          <h1 className="text-2xl lg:text-4xl font-medium my-6">
-            Acesso à Gestão de TCCs
-          </h1>
+          <div className="flex items-center justify-center gap-4">
+            <Image
+              src={LogoImage}
+              alt="Logo Image"
+              className="md:h-14 h-12 w-min"
+            />
+            <h1 className="text-3xl lg:text-4xl font-medium">Gradus Flow</h1>
+          </div>
           {/* form */}
           <form
             className="flex flex-col gap-4"
