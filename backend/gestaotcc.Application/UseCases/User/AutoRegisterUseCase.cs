@@ -1,7 +1,6 @@
 using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.Helpers;
-using gestaotcc.Application.UseCases.AccessCode;
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
@@ -18,7 +17,6 @@ public class AutoRegisterUseCase(
     ICourseGateway courseGateway,
     IEmailGateway emailGateway,
     IDocumentTypeGateway documentTypeGateway,
-    CreateAccessCodeUseCase createAccessCodeUseCase,
     IAppLoggerGateway<AutoRegisterUseCase> logger)
 {
     public async Task<ResultPattern<UserEntity>> Execute(AutoRegisterDTO data, string combination)
@@ -42,10 +40,9 @@ public class AutoRegisterUseCase(
         var expandedProfileRoles = ProfileHelper.ExpandProfiles(["STUDENT"]);
         var profile = await profileGateway.FindByRole(expandedProfileRoles);
         var campiCourse = await courseGateway.FindByCampiAndCourseId(userInvite!.CampiId, userInvite.CourseId);
-        var accessCode = createAccessCodeUseCase.Execute(combination).Data;
 
         logger.LogInformation("Criando nova entidade de usuário para {UserEmail}...", data.Email);
-        var newStudent = UserFactory.CreateUser(data, profile, campiCourse, accessCode);
+        var newStudent = UserFactory.CreateUser(data, profile, campiCourse);
         
         await userGateway.Save(newStudent);
         logger.LogInformation("Usuário {UserEmail} salvo com sucesso no banco de dados. Novo UserId: {UserId}",

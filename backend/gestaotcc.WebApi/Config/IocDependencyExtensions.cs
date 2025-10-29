@@ -29,8 +29,8 @@ public static class IocDependencyExtensions
 
         // Auth
         services.AddScoped<LoginUseCase>();
-        services.AddScoped<UpdatePasswordUseCase>();
-        services.AddScoped<NewPasswordUseCase>();
+        services.AddScoped<GenerateGovLoginAuthUrlUseCase>();
+        services.AddScoped<GenerateGovSignatureAuthUrlUseCase>();
 
         // User
         services.AddScoped<CreateUserUseCase>();

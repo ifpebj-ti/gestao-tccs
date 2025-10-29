@@ -5,10 +5,10 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Auth;
 
-public class GetGovAccessTokenUseCase(
+public class GetGovAccessTokenLoginUseCase(
     IGovGateway govGateway, 
     IMemoryCacheGateway memoryCacheGateway, 
-    IAppLoggerGateway<GetGovAccessTokenUseCase> logger,
+    IAppLoggerGateway<GetGovAccessTokenLoginUseCase> logger,
     ITokenGateway tokenGateway,
     LoginUseCase loginUseCase)
 {
@@ -25,7 +25,7 @@ public class GetGovAccessTokenUseCase(
         memoryCacheGateway.Remove(state);
         
         logger.LogInformation("Buscando Token de acesso do gov");
-        var tokenResponse = await govGateway.GetAccessToken(code, codeVerifier);
+        var tokenResponse = await govGateway.GetLoginAccessToken(code, codeVerifier);
         if (tokenResponse is null)
         {
             logger.LogError("Falha ao obter o token do Gov.br.");

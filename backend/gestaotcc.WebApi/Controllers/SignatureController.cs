@@ -10,7 +10,7 @@ namespace gestaotcc.WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class SignatureController : ControllerBase
+public class SignatureController(IConfiguration configuration) : ControllerBase
 {
     /// <summary>
     /// Busca todas as assinaturas pendentes
@@ -54,7 +54,8 @@ public class SignatureController : ControllerBase
             data.UserId, 
             fileBuffer,
             (double)fileStream.Length / (1024 * 1024),
-            data.File.ContentType
+            data.File.ContentType,
+            data.AccessToken
             );
         
         var useCaseResult = await signSignatureUseCase.Execute(dto);

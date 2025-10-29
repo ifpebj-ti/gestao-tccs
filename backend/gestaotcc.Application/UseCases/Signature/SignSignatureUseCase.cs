@@ -10,7 +10,13 @@ using gestaotcc.Domain.Entities.User;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
+public class SignSignatureUseCase(
+    IDocumentTypeGateway documentTypeGateway, 
+    ITccGateway tccGateway, 
+    IMinioGateway minioGateway,
+    IITextGateway iTextGateway,
+    IGovGateway govGateway,
+    IAppLoggerGateway<SignSignatureUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -47,6 +53,32 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário não tem permissão para assinar o DocumentId {DocumentId}.", data.UserId, data.DocumentId);
             return InvalidFileResult();
+        }
+        
+        byte[] finalSignedPdfBytes;
+        try
+        {
+            // PASSO A (IText): Preparar o PDF, criar placeholder, calcular o hash
+            logger.LogInformation("Preparando PDF para assinatura envelopada (PAdES)...");
+            var (hashB64, preparedPdf) = await iTextGateway.PrepareEnvelopedSignature(data.File);
+
+            // PASSO B (Gov): Chamar a API de assinatura 'assinarPKCS7'
+            logger.LogInformation("Enviando hash para API de assinatura Gov.br...");
+            var signatureB64 = await govGateway.SignPkcs7(hashB64, data.AccessToken);
+            if (string.IsNullOrEmpty(signatureB64))
+            {
+                logger.LogError("API Gov.br (assinarPKCS7) não retornou uma assinatura válida.");
+                return ResultPattern<string>.FailureResult("Falha no serviço de assinatura do Gov.br.", 503); // Service Unavailable
+            }
+
+            // PASSO C (IText): Embutir a assinatura no PDF
+            logger.LogInformation("Embutindo assinatura digital PKCS#7 no documento PDF...");
+            finalSignedPdfBytes = await iTextGateway.EmbedEnvelopedSignature(preparedPdf, signatureB64);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro técnico durante o processo de assinatura digital. UserId: {UserId}, DocumentId: {DocumentId}", data.UserId, data.DocumentId);
+            return ResultPattern<string>.FailureResult($"Erro técnico no processo de assinatura: {ex.Message}", 500);
         }
         
         logger.LogInformation("Validações bem-sucedidas. Adicionando assinatura do UserId {UserId} ao DocumentId {DocumentId}.", user.Id, document.Id);
@@ -86,7 +118,7 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         await tccGateway.Update(tcc);
         
         logger.LogInformation("Enviando arquivo assinado para o Minio. FileName: {FileName}", document.FileName);
-        await minioGateway.Send(document.FileName, data.File, data.FileContentType);
+        await minioGateway.Send(document.FileName, finalSignedPdfBytes, data.FileContentType);
         
         logger.LogInformation("Processo de assinatura concluído com sucesso para UserId {UserId}, DocumentId {DocumentId}.", data.UserId, data.DocumentId);
         return ResultPattern<string>.SuccessResult();

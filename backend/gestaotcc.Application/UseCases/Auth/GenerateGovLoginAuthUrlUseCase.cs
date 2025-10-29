@@ -4,9 +4,9 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Auth;
 
-public class GenerateGovAuthUrlUseCase(IAppLoggerGateway<GenerateGovAuthUrlUseCase> logger, IMemoryCacheGateway memoryCacheGateway)
+public class GenerateGovLoginAuthUrlUseCase(IAppLoggerGateway<GenerateGovLoginAuthUrlUseCase> logger, IMemoryCacheGateway memoryCacheGateway)
 {
-    public async Task<ResultPattern<string>> Execute(GetAuthorizationDTO data)
+    public async Task<ResultPattern<string>> Execute(GetAuthorizationLoginGovDTO data)
     {
         logger.LogInformation("Iniciando processo de construção de url para requisição authorize do gov");
         var state = Guid.NewGuid().ToString("N");

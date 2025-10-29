@@ -1,6 +1,4 @@
-using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.CampiCourse;
-using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;

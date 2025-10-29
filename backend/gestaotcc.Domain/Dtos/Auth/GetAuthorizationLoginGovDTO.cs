@@ -1,6 +1,6 @@
 namespace gestaotcc.Domain.Dtos.Auth;
 
-public record GetAuthorizationDTO(
+public record GetAuthorizationLoginGovDTO(
     string ClientId,
     string Scope,
     string RedirectUri,
