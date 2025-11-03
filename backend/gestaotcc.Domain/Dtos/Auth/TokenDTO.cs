@@ -5,4 +5,4 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace gestaotcc.Domain.Dtos.Auth;
-public record TokenDTO(string AccessToken);
+public record TokenDTO(string AccessToken, bool IsDevTest, bool IsTempDevTestPassword);
