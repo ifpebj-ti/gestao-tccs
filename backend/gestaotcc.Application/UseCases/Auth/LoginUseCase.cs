@@ -48,8 +48,11 @@ public class LoginUseCase(
         logger.LogInformation(
             "Login bem-sucedido e token gerado para o UserId: {UserId}",
             userId);
+        
+        var isDevTest = user.Email == "dev-test@gmail.com";
+        var isTempDevTestPassword = user.Password == "Senha@123";
 
-        return ResultPattern<TokenDTO>.SuccessResult(new TokenDTO(accessToken));
+        return ResultPattern<TokenDTO>.SuccessResult(new TokenDTO(accessToken, isDevTest, isTempDevTestPassword));
     }
 
     private ResultPattern<TokenDTO> ValidateTypeLogin(UserEntity user, string userPassword)

@@ -1,3 +1,3 @@
 ﻿namespace gestaotcc.WebApi.ResponseModels.Auth;
 
-public record LoginResponseModel(string AccessToken);
+public record LoginResponseModel(string AccessToken, bool IsDevTest, bool IsTempDevTestPassword);

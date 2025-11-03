@@ -18,6 +18,10 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
     /// <summary>
     /// Realiza login no sistema
     /// </summary>
+    /// <remarks>
+    /// A propriedade isDevTest implica dizer que é um usuario do tipo teste ou não. Se for true é um usuario tipo teste.
+    /// A proprieda IsTempDevTestPassword implica dizer que a senha ainda é a padrão ou não. Se for true ainda é.
+    /// </remarks>
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseModel>> Login([FromBody] LoginDTO data, [FromServices] LoginUseCase loginUseCase)
@@ -40,7 +44,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken));
+        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken, useCaseResult.Data.IsDevTest, useCaseResult.Data.IsTempDevTestPassword));
     }
 
     /// <summary>
