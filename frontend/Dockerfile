@@ -1,5 +1,5 @@
 # Etapa 1: Build da aplicação
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Define variável de ambiente para a versão da aplicação
 ARG NEXT_PUBLIC_APP_VERSION
@@ -21,7 +21,7 @@ COPY . ./
 RUN npm run build
 
 # Etapa 2: Imagem leve para rodar a aplicação
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 # Define diretório de trabalho
 WORKDIR /app
