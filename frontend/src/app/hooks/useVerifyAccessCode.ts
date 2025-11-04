@@ -41,7 +41,7 @@ export function useVerifyAccessCode() {
           if (window.location.pathname === '/firstAccess') {
             window.location.href = '/autoRegister';
           } else if (window.location.pathname === '/forgotPassword') {
-            window.location.href = '/newPassword';
+            window.location.href = '/updatePassword';
           }
 
         } else {

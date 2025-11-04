@@ -10,7 +10,8 @@ export function useUpdatePassword() {
     resolver: zodResolver(updatePasswordSchema),
     defaultValues: {
       userEmail: '',
-      userPassword: ''
+      userPassword: '',
+      confirmPassword: ''
     }
   });
 

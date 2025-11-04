@@ -7,19 +7,21 @@ interface DecodedToken {
   unique_name: string;
   userId: string;
   role: string | string[];
+  isTestUser?: boolean;
+  isDefaultPassword?: boolean;
 }
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [], 
-  '/newTCC': ['COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/newTCC': ['ADMIN','COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
-  '/ongoingTCCs': ['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
+  '/ongoingTCCs': ['ADMIN','COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'LIBRARY'],
   '/myTCC': ['STUDENT'],
-  '/completedTCCs': ['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY'],
+  '/completedTCCs': ['ADMIN','COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY'],
   '/pendingSignatures': [], 
 };
 
-const tempProtectedRoutes = ['/autoRegister', '/newPassword'];
+const tempProtectedRoutes = ['/autoRegister', '/newPassword', '/updatePassword'];
 
 function hasPermission(userRoles: string | string[], allowedRoles: string[]): boolean {
   if (allowedRoles.length === 0) {
@@ -74,6 +76,27 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  const isTempProtectedRoute = tempProtectedRoutes.some((r) => path.startsWith(r));
+  if (isTempProtectedRoute) {
+    // Permitir acesso se o token temporário existir
+    if (tempToken) {
+      return NextResponse.next();
+    }
+    // Verificar o token principal se o temporário não existir
+    if (token) {
+      try {
+        const decoded = jwtDecode<DecodedToken>(token);
+        // Permitir acesso se for usuário de teste ou estiver com senha padrão
+        if (decoded.isTestUser || decoded.isDefaultPassword) {
+          return NextResponse.next();
+        }
+      } catch {
+        toast.error('Erro ao decodificar token');
+      }
+    }
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   return NextResponse.next();
 }
 
@@ -84,6 +107,7 @@ export const config = {
     '/newUser',
     '/autoRegister',
     '/newPassword',
+    '/updatePassword',
     '/ongoingTCCs/:path*',
     '/myTCC/:path*',
     '/completedTCCs/:path*',
