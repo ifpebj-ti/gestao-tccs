@@ -8,6 +8,7 @@ on:
       - closed
     paths:
       - "frontend/**"
+      - ".github/workflows/**"
 
   workflow_dispatch:
 
