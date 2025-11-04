@@ -224,7 +224,7 @@ jobs:
 
       - name: Scan image for critical vulnerabilities
         run: |
-          docker scout cves --only-severity critical --exit-code 1 ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:$CREATED_TAG
+          docker scout cves --only-severity critical --exit-code ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:$CREATED_TAG
           docker scout quickview ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:$CREATED_TAG
 
       - name: Push Docker images (version and latest)
