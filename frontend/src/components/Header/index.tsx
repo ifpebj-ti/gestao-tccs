@@ -5,12 +5,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 import IFPELogo from '../../../public/IFPE Logo.png';
 import IFPELogoMini from '../../../public/Logo ifpe mini.svg';
 import LogoImage from '../../../public/flat-color-icons_graduation-cap.svg';
 import UserProfile from '../UserProfile/index';
-import { toast } from 'react-toastify';
+import { Button } from '@/components/ui/button';
+import { TriangleAlert } from 'lucide-react';
 
 interface User {
   name: string;
@@ -20,6 +23,8 @@ interface User {
 interface DecodedToken {
   unique_name: string;
   role: string | string[];
+  isTestUser?: boolean;
+  isDefaultPassword?: boolean;
 }
 
 const roleTranslations: { [key: string]: string } = {
@@ -34,6 +39,9 @@ const roleTranslations: { [key: string]: string } = {
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null);
+  const [isTestUser, setIsTestUser] = useState(false);
+  const [isDefaultPassword, setIsDefaultPassword] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const token = Cookies.get('token');
@@ -41,6 +49,12 @@ export default function Header() {
     if (token) {
       try {
         const decodedToken: DecodedToken = jwtDecode(token);
+
+        const testUserFlag = decodedToken.isTestUser === true;
+        const defaultPasswordFlag = decodedToken.isDefaultPassword === true;
+
+        setIsTestUser(testUserFlag);
+        setIsDefaultPassword(defaultPasswordFlag);
 
         const rolesFromToken = Array.isArray(decodedToken.role)
           ? decodedToken.role
@@ -69,8 +83,12 @@ export default function Header() {
     window.location.href = '/';
   };
 
+  const handleRedirectToUpdatePassword = () => {
+    router.push('/update-password');
+  };
+
   return (
-    <header className="fixed top-0 left-0 w-full bg-white shadow z-50">
+    <header className=" top-0 left-0 w-full bg-white shadow z-50">
       <div className="mx-auto px-4 md:px-10 py-3 flex items-center justify-between gap-2 w-full">
         {/* Logo Desktop */}
         <div className="flex-shrink-0 hidden md:block">
@@ -108,8 +126,20 @@ export default function Header() {
           </h1>
         </div>
 
-        {/* Menu do Usuário (à direita) */}
-        <div className="flex-shrink-0">
+        {/* Menu do Usuário e Botão de Teste (à direita) */}
+        <div className="flex-shrink-0 flex items-center gap-2">
+          {/* Botão de Usuário Teste */}
+          {isTestUser && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRedirectToUpdatePassword}
+            >
+              Trocar Senha
+            </Button>
+          )}
+
+          {/* Menu do Usuário */}
           {user ? (
             <UserProfile user={user} onLogout={handleLogout} />
           ) : (
@@ -117,6 +147,26 @@ export default function Header() {
           )}
         </div>
       </div>
+
+      {/* Alerta Condicional */}
+      {isDefaultPassword && (
+        <div className="px-4 md:px-10 py-2 flex flex-col items-center justify-center gap-2 text-center">
+          <div className="w-full text-sm text-yellow-800 font-medium bg-yellow-100 p-2 rounded-md flex items-center justify-center gap-2">
+            <TriangleAlert className="flex-shrink-0 w-5 h-5" />
+            <span>
+              <strong>Alerta:</strong> Sua senha é a padrão. Por favor,
+              <Button
+                variant="link"
+                className="p-0 h-auto ml-1 font-bold text-yellow-800 hover:text-yellow-900"
+                onClick={handleRedirectToUpdatePassword}
+              >
+                altere sua senha
+              </Button>{' '}
+              para mais segurança.
+            </span>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
