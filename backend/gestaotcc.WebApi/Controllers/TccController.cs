@@ -16,7 +16,7 @@ public class TccController : ControllerBase
     /// <summary>
     /// Criar uma nova proposta de tcc
     /// </summary>
-    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpPost]
     public async Task<ActionResult<MessageSuccessResponseModel>> Create([FromBody] CreateTccDTO data,
         [FromServices] CreateTccUseCase createTccUseCase)

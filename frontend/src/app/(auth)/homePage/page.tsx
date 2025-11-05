@@ -204,7 +204,7 @@ export default function HomePage() {
             />
           )}
 
-        {canView(['COORDINATOR', 'SUPERVISOR']) && (
+        {canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
           <CollapseCard
             title="Cadastrar nova proposta"
             icon={faFileCirclePlus}
@@ -277,7 +277,7 @@ export default function HomePage() {
             />
           )}
 
-        {canView(['COORDINATOR', 'SUPERVISOR']) && (
+        {canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR']) && (
           <Link href="/newTCC">
             <CardHome
               title="Cadastrar nova proposta"
