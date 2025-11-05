@@ -75,9 +75,6 @@ export default function Header() {
         setUser(null);
       }
     }
-
-    setIsDefaultPassword(true);
-    setIsTestUser(true);
   }, []);
 
   const handleLogout = () => {
