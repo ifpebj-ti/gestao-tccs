@@ -1,12 +1,7 @@
 ﻿using gestaotcc.Application.UseCases.Auth;
 using gestaotcc.Domain.Dtos.Auth;
-using gestaotcc.WebApi.ResponseModels;
-using gestaotcc.WebApi.ResponseModels.Auth;
-using gestaotcc.WebApi.Validators;
-using gestaotcc.WebApi.Validators.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 
 namespace gestaotcc.WebApi.Controllers;
