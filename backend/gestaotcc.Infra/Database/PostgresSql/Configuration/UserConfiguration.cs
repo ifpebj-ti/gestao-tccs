@@ -37,6 +37,26 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
         builder.Property(x => x.Status)
             .HasMaxLength(15)
             .IsRequired();
+
+        builder.Property(x => x.Phone)
+            .HasMaxLength(15)
+            .IsRequired(true);
+
+        builder.Property(x => x.UserClass)
+            .HasMaxLength(50)
+            .IsRequired(false);
+
+        builder.Property(x => x.YearClass)
+            .HasMaxLength(50)
+            .IsRequired(false);
+
+        builder.Property(x => x.Shift)
+            .HasMaxLength(50)
+            .IsRequired(false);
+
+        builder.Property(x => x.Titration)
+            .HasMaxLength(100)
+            .IsRequired(false);
         
         builder.HasMany(x => x.Profile)
             .WithMany(x => x.Users)

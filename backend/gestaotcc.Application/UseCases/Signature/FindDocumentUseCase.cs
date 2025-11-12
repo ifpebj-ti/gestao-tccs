@@ -84,21 +84,21 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
             case 1:
                 fields["nome_orientador"] = advisor?.Name ?? "";
                 fields["curso_orientador"] = advisor?.CampiCourse?.Course.Name ?? "";
-                fields["universidade_curso_orientador"] = "";
+                fields["universidade_curso_orientador"] = advisor?.CampiCourse?.Campi.City ?? "";
                 fields["email_orientador"] = advisor?.Email ?? "";
-                fields["telefone_orientador"] = "";
-                fields["titulo_orientador"] = "";
-                AddCommonDateFields(fields, nowDate);
+                fields["telefone_orientador"] = advisor?.Phone ?? "";
+                fields["titulo_orientador"] = advisor?.Titration ?? "";
+                AddCommonDateFields(fields, nowDate, students[0]);
 
                 for (var i = 0; i < students.Count; i++)
                 {
                     fields[$"nome_orientando_{i + 1}"] = students[i].Name ?? "";
                     fields[$"curso_orientando_{i + 1}"] = students[i].CampiCourse?.Course.Name ?? "";
-                    fields[$"turma_orientando_{i + 1}"] = "";
-                    fields[$"ano_orientando_{i + 1}"] = "";
-                    fields[$"turno_orientando_{i + 1}"] = "";
+                    fields[$"turma_orientando_{i + 1}"] = students[i].UserClass ?? "";
+                    fields[$"ano_orientando_{i + 1}"] = students[i].YearClass ?? "";
+                    fields[$"turno_orientando_{i + 1}"] = students[i].Shift ?? "";
                     fields[$"email_orientando_{i + 1}"] = students[i].Email ?? "";
-                    fields[$"telefone_orientando_{i + 1}"] = "";
+                    fields[$"telefone_orientando_{i + 1}"] = students[i].Phone ?? "";
                 }
 
                 break;
@@ -106,73 +106,78 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
             case 2:
                 fields["nome_orientador"] = advisor?.Name ?? "";
                 fields["curso_orientador"] = advisor?.CampiCourse?.Course.Name ?? "";
-                fields["universidade_orientador"] = "Instituto Federal de Pernambuco - Campus Belo Jardim";
+                fields["universidade_orientador"] = advisor?.CampiCourse?.Campi.Name ?? "";
                 fields["nome_orientando"] = student?.Name ?? "";
                 fields["email_orientador"] = advisor?.Email ?? "";
-                fields["telefone_orientador"] = "";
-                fields["titulo_orientador"] = "";
+                fields["telefone_orientador"] = advisor?.Titration ?? "";
+                fields["titulo_orientador"] = advisor?.Titration ?? "";
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["turma_orientando"] = "";
-                fields["ano_orientando"] = "";
+                fields["turma_orientando"] = student?.UserClass ?? "";
+                fields["ano_orientando"] = student?.YearClass ?? "";
+                fields["turno_orientando"] = student?.Shift ?? "";
                 fields["email_orientando"] = student?.Email ?? "";
-                fields["telefone_orientando"] = "";
-                AddCommonDateFields(fields, nowDate);
+                fields["telefone_orientando"] = student?.Phone ?? "";
+                AddCommonDateFields(fields, nowDate, student!);
                 break;
 
             case 3:
                 fields["nome_orientando"] = student?.Name ?? "";
+                fields["matricula_orientando"] = student?.Registration ?? "";
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
+                fields["universidade_cidade_orientando"] = student?.CampiCourse?.Campi.City ?? "";
                 fields["titulo_tcc"] = tccTitle;
                 fields["nome_orientador"] = advisor?.Name ?? "";
-                AddCommonDateFields(fields, nowDate);
+                AddCommonDateFields(fields, nowDate, student!);
                 break;
 
             case 4:
                 fields["nome_orientando"] = student?.Name ?? "";
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["turma_orientando"] = "";
-                fields["ano_orientando"] = "";
-                fields["data_apresentacao"] = tccSchedule.ScheduledDate.ToString("dd/MM/yyyy");
-                fields["local_apresentacao"] = tccSchedule.Location ?? "";
+                
                 fields["nome_orientador"] = advisor?.Name ?? "";
                 fields["titulo_tcc"] = tccTitle;
-                AddCommonDateFields(fields, nowDate);
+                AddCommonDateFields(fields, nowDate, student!);
                 break;
 
             case 5:
                 fields["nome_orientando"] = student?.Name ?? "";
-                fields["matricula_orientando"] = "";
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["universidade_cidade_orientando"] = "";
                 fields["nome_orientador"] = advisor?.Name ?? "";
-                AddCommonDateFields(fields, nowDate);
+                fields["titulo_tcc"] = tccTitle;
+                AddCommonDateFields(fields, nowDate, student!);
                 break;
 
             case 6:
-                fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["titulo_tcc"] = tccTitle;
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                AddCommonDateFields(fields, nowDate);
-                break;
-
-            case 7:
                 var (tccTitle1, tccTitle2) = SplitTitle(tccTitle, 78);
                 var studentNames = string.Join(", ", students.Select(s => s.Name));
 
-                fields["curso_supervisor"] = supervisorUser.CampiCourse?.Course.Name ?? "";
-                fields["universidade_supervisor"] = "";
+                fields["curso_supervisor"] = supervisorUser.CampiCourse?.Course.Name ?? ""; 
+                fields["universidade_supervisor"] = supervisorUser.CampiCourse?.Campi.City ?? "";
                 fields["titulo_tcc_1"] = tccTitle1;
                 fields["titulo_tcc_2"] = tccTitle2;
                 fields["orientandos"] = studentNames;
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["dia_apresentacao"] = tccSchedule.ScheduledDate.Day.ToString();
-                fields["mes_apresentacao"] = tccSchedule.ScheduledDate.Month.ToString();
-                fields["ano_apresentacao"] = tccSchedule.ScheduledDate.Year.ToString();
-                fields["hora_apresentacao"] = tccSchedule.ScheduledDate.Hour.ToString();
-                fields["minuto_apresentacao"] = tccSchedule.ScheduledDate.Minute.ToString();
-                fields["local_apresentacao"] = tccSchedule.Location ?? "";
-                AddCommonDateFields(fields, nowDate);
+                fields["titulo_tcc"] = tccTitle;
+                fields["dia_apresentacao"] = tccSchedule?.ScheduledDate.Day.ToString() ?? "";
+                fields["mes_apresentacao"] = tccSchedule?.ScheduledDate.Month.ToString() ?? "";
+                fields["ano_apresentacao"] = tccSchedule?.ScheduledDate.Year.ToString() ?? "";
+                fields["hora_apresentacao"] = tccSchedule?.ScheduledDate.Hour.ToString() ?? "";
+                fields["minuto_apresentacao"] = tccSchedule?.ScheduledDate.Minute.ToString() ?? "";
+                fields["local_apresentacao"] = tccSchedule?.Location ?? "";
+                AddCommonDateFields(fields, nowDate, student!);
+                break;
+
+            case 7:
+                fields["nome_orientando"] = student?.Name ?? "";
+                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
+                fields["ano_orientando"] = student?.YearClass ?? "";
+                fields["turma_orientando"] = student?.UserClass ?? "";
+                fields["turno_orientando"] = student?.Shift ?? "";
+                fields["data_apresentacao"] = tccSchedule?.ScheduledDate.ToString("dd/MM/yyyy") ?? "";
+                fields["local_apresentacao"] = tccSchedule?.Location ?? "";
+                fields["nome_orientador"] = advisor?.Name ?? "";
+                fields["titulo_tcc"] = tccTitle;
+                AddCommonDateFields(fields, nowDate, student!);
                 break;
         }
 
@@ -180,9 +185,9 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         return fields;
     }
 
-    private void AddCommonDateFields(Dictionary<string, string> fields, DateTime date)
+    private void AddCommonDateFields(Dictionary<string, string> fields, DateTime date, UserEntity user)
     {
-        fields["cidade"] = "";
+        fields["cidade"] = user.CampiCourse?.Campi.City ?? "";
         fields["dia"] = date.Day.ToString();
         fields["mes"] = date.ToString("MMMM", new CultureInfo("pt-BR"));
         fields["ano"] = date.Year.ToString();
