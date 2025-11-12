@@ -48,8 +48,11 @@ namespace gestaotcc.WebApi.Validators.User
                 .Must(s => s != null && (s.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase) || s.Equals("INACTIVE", StringComparison.OrdinalIgnoreCase)))
                 .WithMessage("O status deve ser 'ACTIVE' ou 'INACTIVE'.");
 
-            RuleFor(x => x.CampiCourseId)
-                .NotEmpty().WithMessage("O ID do Campus/Curso é obrigatório.");
+            RuleFor(x => x.CampiId)
+                .NotEmpty().WithMessage("O ID do Campus é obrigatório.");
+
+            RuleFor(x => x.CourseId)
+                .NotEmpty().WithMessage("O ID do Curso é obrigatório.");
 
             RuleFor(x => x.Siape)
                 .NotEmpty().WithMessage("O SIAPE é obrigatório para o perfil SUPERVISOR ou ADVISOR.")

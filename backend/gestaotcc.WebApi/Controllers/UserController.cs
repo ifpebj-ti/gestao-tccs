@@ -1,5 +1,6 @@
 ﻿using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Dtos.User;
+using gestaotcc.Domain.Utils;
 using gestaotcc.WebApi.ResponseModels;
 using gestaotcc.WebApi.ResponseModels.User;
 using gestaotcc.WebApi.Validators;
@@ -163,5 +164,22 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
         }
 
         return Ok(new MessageSuccessResponseModel(result.Message));
+    }
+
+    /// <summary>
+    /// Buscar todos os usuários com paginação.
+    /// </summary>
+    /// <param name="pageNumber">Número da página.</param>
+    /// <param name="pageSize">Tamanho da página.</param>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
+    [HttpGet("all")]
+    public async Task<ActionResult<PagedResultResponse<List<FindAllUserDTO>>>> FindAll(
+        [FromServices] FindAllUserUseCase findAllUserUseCase,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await findAllUserUseCase.Execute(pageNumber, pageSize);
+
+        return Ok(result);
     }
 }

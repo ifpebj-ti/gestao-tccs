@@ -10,5 +10,6 @@ public record UpdateUserDTO(
     string Siape, 
     List<string> Profile, 
     string Status,
-    long CampiCourseId);
+    long CampiId,
+    long CourseId);
 

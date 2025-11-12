@@ -4,7 +4,7 @@ using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.User;
-public class UpdateUserUseCase(IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<UpdateUserUseCase> logger)
+public class UpdateUserUseCase(IUserGateway userGateway, IProfileGateway profileGateway, ICourseGateway courseGateway, IAppLoggerGateway<UpdateUserUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(UpdateUserDTO data)
     {
@@ -20,12 +20,14 @@ public class UpdateUserUseCase(IUserGateway userGateway, IProfileGateway profile
         var expandedProfileRoles = ProfileHelper.ExpandProfiles(data.Profile);
         var profile = await profileGateway.FindByRole(expandedProfileRoles);
 
+        var campus = await courseGateway.FindByCampiAndCourseId(data.CampiId, data.CourseId);
+
         user.Name = data.Name;
         user.Email = data.Email;
         user.Registration = data.Registration;
         user.SIAPE = data.Siape;
         user.CPF = data.Cpf;
-        user.CampiCourseId = data.CampiCourseId;
+        user.CampiCourseId = campus.Id;
         user.Profile = profile;
         user.Status = data.Status;
 
