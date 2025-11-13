@@ -46,10 +46,6 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
             .HasMaxLength(50)
             .IsRequired(false);
 
-        builder.Property(x => x.YearClass)
-            .HasMaxLength(50)
-            .IsRequired(false);
-
         builder.Property(x => x.Shift)
             .HasMaxLength(50)
             .IsRequired(false);

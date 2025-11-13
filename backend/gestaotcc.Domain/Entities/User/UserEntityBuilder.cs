@@ -1,7 +1,5 @@
-using System.Collections;
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.CampiCourse;
-using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.UserTcc;
@@ -19,10 +17,9 @@ public class UserEntityBuilder
     private string _password = string.Empty;
     private string _status = string.Empty;
     private string _phone = string.Empty;
-    private string _userClass = string.Empty;
-    private string _yearClass = string.Empty;
-    private string _shift = string.Empty;
-    private string _titration = string.Empty;
+    private string? _userClass;
+    private string? _shift;
+    private string? _titration;
     private ICollection<ProfileEntity> _profile = new List<ProfileEntity>();
     private AccessCodeEntity _accessCode = null!;
     private CampiCourseEntity _campiCourse = null!;
@@ -83,26 +80,19 @@ public class UserEntityBuilder
         return this;
     }
 
-    public UserEntityBuilder WithUserClass(string userClass)
+    public UserEntityBuilder WithUserClass(string? userClass)
     {
         _userClass = userClass;
         return this;
     }
 
-    public UserEntityBuilder WithYearClass(string yearClass)
-    {
-        _yearClass = yearClass;
-        return this;
-
-    }
-
-    public UserEntityBuilder WithShift(string shift)
+    public UserEntityBuilder WithShift(string? shift)
     {
         _shift = shift;
         return this;
     }
 
-    public UserEntityBuilder WithTitration(string titration)
+    public UserEntityBuilder WithTitration(string? titration)
     {
         _titration = titration;
         return this;
@@ -149,7 +139,6 @@ public class UserEntityBuilder
             _status, 
             _phone, 
             _userClass, 
-            _yearClass, 
             _shift, 
             _titration, 
             _profile, 

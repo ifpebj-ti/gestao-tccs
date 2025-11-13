@@ -2,6 +2,7 @@
 using gestaotcc.Application.Helpers;
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Errors;
+using gestaotcc.Domain.Utils;
 
 namespace gestaotcc.Application.UseCases.User;
 public class UpdateUserUseCase(IUserGateway userGateway, IProfileGateway profileGateway, ICourseGateway courseGateway, IAppLoggerGateway<UpdateUserUseCase> logger)
@@ -30,6 +31,10 @@ public class UpdateUserUseCase(IUserGateway userGateway, IProfileGateway profile
         user.CampiCourseId = campus.Id;
         user.Profile = profile;
         user.Status = data.Status;
+        user.Phone = data.Phone;
+        user.UserClass = data.UserClass;
+        user.Shift = EnumExtension.GetDescription(data.Shift);
+        user.Titration = data.Titration;
 
         await userGateway.Update(user);
 

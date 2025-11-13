@@ -19,6 +19,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// </summary>
     /// <remarks>
     /// Para o campo Profile, pode ser as seguintes opções: ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT, BANKING ou LIBRARY
+    /// Para o campo de Shift, pode ser as seguintes opções: MORNING, AFTERNOON, DAYTIME
     /// </remarks>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPost]
@@ -136,6 +137,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// <remarks>
     /// Para o campo Profile, pode ser as seguintes opções: ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT, BANKING ou LIBRARY
     /// Para o campo status, pode ser as seguintes opções: INACTIVE e ACTIVE
+    /// Para o campo de Shift, pode ser as seguintes opções: MORNING, AFTERNOON, DAYTIME
     /// </remarks>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPut]

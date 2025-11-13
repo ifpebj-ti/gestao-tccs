@@ -7,6 +7,10 @@ public record FindAllUserDTO(
     string? Registration,
     string Cpf,
     string? Siape,
+    string Phone,
+    string? UserClass,
+    string? Shift,
+    string? Titration,
     CampiDetailsForFindAllUserDTO Campus,
     string Status
     );

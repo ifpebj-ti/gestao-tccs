@@ -32,6 +32,10 @@ public class FindAllUserUseCase(IUserGateway userGateway, IAppLoggerGateway<Find
                     u.Registration,
                     u.CPF,
                     u.SIAPE,
+                    u.Phone,
+                    u.UserClass,
+                    u.Shift,
+                    u.Titration,
                     new CampiDetailsForFindAllUserDTO(
                         u.CampiCourse!.CampiId,
                         u.CampiCourse.Campi.Name,

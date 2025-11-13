@@ -79,6 +79,9 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         var tccSchedule = tcc.TccSchedule;
         var nowDate = DateTime.Now;
 
+        var semester = (tcc.CreationDate.Month <= 6) ? 1 : 2;
+        var formattedSemester = $"{tcc.CreationDate.Year}.{semester}";
+
         switch (documentTypeEntity.Id)
         {
             case 1:
@@ -95,7 +98,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
                     fields[$"nome_orientando_{i + 1}"] = students[i].Name ?? "";
                     fields[$"curso_orientando_{i + 1}"] = students[i].CampiCourse?.Course.Name ?? "";
                     fields[$"turma_orientando_{i + 1}"] = students[i].UserClass ?? "";
-                    fields[$"ano_orientando_{i + 1}"] = students[i].YearClass ?? "";
+                    fields[$"ano_orientando_{i + 1}"] = formattedSemester;
                     fields[$"turno_orientando_{i + 1}"] = students[i].Shift ?? "";
                     fields[$"email_orientando_{i + 1}"] = students[i].Email ?? "";
                     fields[$"telefone_orientando_{i + 1}"] = students[i].Phone ?? "";
@@ -113,7 +116,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
                 fields["titulo_orientador"] = advisor?.Titration ?? "";
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
                 fields["turma_orientando"] = student?.UserClass ?? "";
-                fields["ano_orientando"] = student?.YearClass ?? "";
+                fields["ano_orientando"] = formattedSemester;
                 fields["turno_orientando"] = student?.Shift ?? "";
                 fields["email_orientando"] = student?.Email ?? "";
                 fields["telefone_orientando"] = student?.Phone ?? "";
@@ -170,7 +173,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
             case 7:
                 fields["nome_orientando"] = student?.Name ?? "";
                 fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["ano_orientando"] = student?.YearClass ?? "";
+                fields["ano_orientando"] = formattedSemester;
                 fields["turma_orientando"] = student?.UserClass ?? "";
                 fields["turno_orientando"] = student?.Shift ?? "";
                 fields["data_apresentacao"] = tccSchedule?.ScheduledDate.ToString("dd/MM/yyyy") ?? "";

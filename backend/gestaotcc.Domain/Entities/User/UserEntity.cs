@@ -19,7 +19,6 @@ public class UserEntity
     public string Status { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string? UserClass { get; set; } = string.Empty;
-    public string? YearClass { get; set; } = string.Empty;
     public string? Shift { get; set; } = string.Empty;
     public string? Titration { get; set; } = string.Empty;
     public ICollection<ProfileEntity> Profile { get; set; } = null!;
@@ -42,7 +41,6 @@ public class UserEntity
         string status,
         string phone,
         string? userClass,
-        string? yearClass,
         string? shift,
         string? titration,
         ICollection<ProfileEntity> profile,
@@ -61,7 +59,6 @@ public class UserEntity
         Status = status;
         Phone = phone;
         UserClass = userClass;
-        YearClass = yearClass;
         Shift = shift;
         Titration = titration;
         Profile = profile;
