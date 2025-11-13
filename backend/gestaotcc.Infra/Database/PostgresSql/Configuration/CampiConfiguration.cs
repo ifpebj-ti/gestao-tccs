@@ -12,5 +12,9 @@ public class CampiConfiguration : IEntityTypeConfiguration<CampiEntity>
 
         builder.Property(x => x.Name)
             .IsRequired();
+
+        builder.Property(x => x.City)
+            .HasMaxLength(100)
+            .IsRequired();
     }
 }

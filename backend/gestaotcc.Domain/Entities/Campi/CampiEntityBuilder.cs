@@ -7,6 +7,7 @@ public class CampiEntityBuilder
 {
     private long _id;
     private string _name = string.Empty;
+    private string _city = string.Empty;
     private ICollection<CampiCourseEntity> _campiCourses = new List<CampiCourseEntity>();
 
     public CampiEntityBuilder WithId(long id)
@@ -21,6 +22,12 @@ public class CampiEntityBuilder
         return this;
     }
 
+    public CampiEntityBuilder WithCity(string city)
+    {
+        _city = city;
+        return this;
+    }
+
     public CampiEntityBuilder WithCourses(ICollection<CampiCourseEntity> campiCourses)
     {
         _campiCourses = campiCourses;
@@ -29,6 +36,6 @@ public class CampiEntityBuilder
 
     public CampiEntity Build()
     {
-        return new CampiEntity(_id, _name, _campiCourses);
+        return new CampiEntity(_id, _name, _city, _campiCourses);
     }
 }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using gestaotcc.Domain.Dtos.User;
+using gestaotcc.Domain.Utils;
 
 namespace gestaotcc.Infra.Gateways;
 public class UserGateway(AppDbContext context) : IUserGateway
@@ -84,5 +85,27 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .Include(x => x.CampiCourse)
                 .ThenInclude(x => x!.Campi)
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<List<UserEntity>>> FindAll(int pageNumber, int pageSize)
+    {
+        var totalRecords = await context.Users.CountAsync();
+
+        var users = await context.Users
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x.Campi)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x.Course)
+            .Include(x => x.Profile)
+            .OrderBy(x => x.Name)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<List<UserEntity>>
+        {
+            TotalRecords = totalRecords,
+            Pages = users
+        };
     }
 }

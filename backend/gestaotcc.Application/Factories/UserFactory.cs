@@ -5,6 +5,7 @@ using gestaotcc.Domain.Entities.CampiCourse;
 using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.User;
+using gestaotcc.Domain.Utils;
 
 namespace gestaotcc.Application.Factories;
 public class UserFactory
@@ -20,6 +21,10 @@ public class UserFactory
             .WithRegistration(data.Registration ?? "")
             .WithCpf(data.CPF)
             .WithSiape(data.SIAPE ?? "")
+            .WithPhone(data.Phone)
+            .WithUserClass(data.UserClass)
+            .WithShift(EnumExtension.GetDescription(data.Shift))
+            .WithTitration(data.Titration)
             .WithPassword(randomPassword)
             .WithProfile(profile)
             .WithCampiCourse(campiCourse)
