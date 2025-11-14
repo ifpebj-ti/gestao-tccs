@@ -30,4 +30,31 @@ public class UserResponseMethods
             //.WithCourse(CourseResponseMethods.CreateCourseResponse(user.CampiCourses))
             .Build();
     }
+
+    public static UserResponse CreateUserResponseToFindUserById(UserEntity user)
+    {
+        var campiCourse = new CampiCourseResponse(
+            user.CampiCourse.CampiId,
+            user.CampiCourse.Campi.Name,
+            user.CampiCourse.CourseId,
+            user.CampiCourse.Course.Name
+            );
+
+        return new UserResponseBuilder()
+            .WithId(user.Id)
+            .WithName(user.Name)
+            .WithEmail(user.Email)
+            .WithRegistration(user.Registration)
+            .WithCpf(user.CPF)
+            .WithSiape(user.SIAPE)
+            .WithStatus(user.Status)
+            .WithPhone(user.Phone)
+            .WithUserClass(user.UserClass)
+            .WithShift(user.Shift)
+            .WithTitration(user.Titration)
+            .WithProfile(ProfileResponseMethods.CreateProfileResponse(user.Profile))
+            .WithCampiCourses(campiCourse)
+            //.WithCourse(CourseResponseMethods.CreateCourseResponse(user.CampiCourses))
+            .Build();
+    }
 }

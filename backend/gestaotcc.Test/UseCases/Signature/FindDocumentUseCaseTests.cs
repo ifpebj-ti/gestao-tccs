@@ -7,6 +7,7 @@ using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
+using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
 using NSubstitute;
 
@@ -94,10 +95,30 @@ public class FindDocumentUseCaseTests
             Signatures = new List<SignatureEntity>() // vazio = não assinado
         };
 
+        var profileStudent = new ProfileEntity
+        {
+            Id = 1,
+            Role = RoleType.STUDENT.ToString()
+        };
+
+        var userStudent = new UserEntity
+        {
+            Id = 1,
+            Profile = new List<ProfileEntity> { profileStudent }
+        };
+
+        var userTcc = new UserTccEntity
+        {
+            Id = 1,
+            User = userStudent,
+            Profile = profileStudent
+        };
+
         var tcc = new TccEntity
         {
             Id = 1,
-            Documents = new List<DocumentEntity> { document }
+            Documents = new List<DocumentEntity> { document },
+            UserTccs = new List<UserTccEntity> { userTcc }
         };
 
         _tccGateway.FindTccById(1).Returns(tcc);

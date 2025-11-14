@@ -57,8 +57,9 @@ namespace gestaotcc.WebApi.Validators.User
             RuleFor(x => x.Siape)
                 .NotEmpty().WithMessage("O SIAPE é obrigatório para o perfil SUPERVISOR ou ADVISOR.")
                 .When(x => x.Profile != null && x.Profile.Any(p =>
-                        p == RoleType.SUPERVISOR.ToString() || // SUPERVISOR
-                        p == RoleType.ADVISOR.ToString()));      // ADVISOR
+                        p == RoleType.SUPERVISOR.ToString() ||
+                        p == RoleType.ADVISOR.ToString() ||
+                        p == RoleType.COORDINATOR.ToString()));      
 
             RuleFor(x => x.Phone)
                 .NotEmpty().WithMessage("Telefone é obrigatório.")

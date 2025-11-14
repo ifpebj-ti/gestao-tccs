@@ -73,6 +73,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "STUDENT" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         var existingUser = new UserEntity();
@@ -99,6 +103,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "STUDENT" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         UserEntity newUser = null;
@@ -140,6 +148,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "STUDENT" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         UserEntity newUser = null;
@@ -179,6 +191,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "ADVISOR" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         UserEntity newUser = null;
@@ -222,6 +238,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "STUDENT" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         var profileStudent = new ProfileEntity { Role = "STUDENT" };
@@ -256,6 +276,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "STUDENT" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         var profileCoordinator = new ProfileEntity { Role = "COORDINATOR" };
@@ -290,6 +314,10 @@ public class CreateUserUseCaseTests
             "555.666.777-88",
             null,
             new List<string> { "STUDENT" },
+            "0000000000",
+            "2022.1",
+            ShiftType.MORNING,
+            null,
             1,
             1);
         UserEntity newUser = null;

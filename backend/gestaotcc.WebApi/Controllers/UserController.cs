@@ -19,7 +19,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// </summary>
     /// <remarks>
     /// Para o campo Profile, pode ser as seguintes opções: ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT, BANKING ou LIBRARY
-    /// Para o campo de Shift, pode ser as seguintes opções: MORNING, AFTERNOON, DAYTIME
+    /// Para o campo de Shift, pode ser as seguintes opções: 1 = MORNING, 2 = AFTERNOON, 3 = NIGHT, 4 = DAYTIME
     /// </remarks>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPost]
@@ -54,7 +54,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// Busca um usuário por meio do email
     /// </summary>
     [HttpGet("email")]
-    public async Task<ActionResult<UserResponse>> FindUserByEmail([FromQuery] string email, [FromServices] FindUserByEmailUseCase findUserByEmailUseCase)
+    public async Task<ActionResult<FindUserByEmailDTO>> FindUserByEmail([FromQuery] string email, [FromServices] FindUserByEmailUseCase findUserByEmailUseCase)
     {
         var useCaseResult = await findUserByEmailUseCase.Execute(email);
         if (useCaseResult.IsFailure)
@@ -70,7 +70,33 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
                 : NotFound(useCaseResult.ErrorDetails);
         }
 
-        return Ok(UserResponseMethods.CreateUserResponse(useCaseResult.Data));
+        return Ok(useCaseResult.Data);
+    }
+
+
+    /// <summary>
+    /// Buscar usuário por Id
+    /// </summary>
+    /// <param name="userId">Id do usuário.</param>
+    [Authorize]
+    [HttpGet("{userId}")]
+    public async Task<ActionResult<UserResponse>> FindById([FromRoute] long userId, [FromServices] FindUserByIdUseCase findUserByIdUseCase)
+    {
+        var useCaseResult = await findUserByIdUseCase.Execute(userId);
+        if(useCaseResult.IsFailure)
+        {
+
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+
+        return Ok(UserResponseMethods.CreateUserResponseToFindUserById(useCaseResult.Data));
     }
 
     /// <summary>
@@ -137,7 +163,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// <remarks>
     /// Para o campo Profile, pode ser as seguintes opções: ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT, BANKING ou LIBRARY
     /// Para o campo status, pode ser as seguintes opções: INACTIVE e ACTIVE
-    /// Para o campo de Shift, pode ser as seguintes opções: MORNING, AFTERNOON, DAYTIME
+    /// Para o campo de Shift, pode ser as seguintes opções: 1 = MORNING, 2 = AFTERNOON, 3 = NIGHT, 4 = DAYTIME
     /// </remarks>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPut]
@@ -182,6 +208,6 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     {
         var result = await findAllUserUseCase.Execute(pageNumber, pageSize);
 
-        return Ok(result);
+        return Ok(result.Data);
     }
 }
