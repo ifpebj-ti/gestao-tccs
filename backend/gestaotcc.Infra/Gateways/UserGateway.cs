@@ -32,6 +32,9 @@ public class UserGateway(AppDbContext context) : IUserGateway
         return await context.Users
             .Include(x => x.Profile)
             .Include(x => x.CampiCourse)
+                .ThenInclude(x => x.Campi)
+            .Include(x => x.CampiCourse)
+                .ThenInclude(x => x.Course)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
