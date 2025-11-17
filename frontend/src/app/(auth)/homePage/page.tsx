@@ -8,7 +8,8 @@ import {
   faFileCirclePlus,
   faFileSignature,
   faGraduationCap,
-  faUserPlus
+  faUserPlus,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import Link from 'next/link';
 import { jwtDecode } from 'jwt-decode';
@@ -219,6 +220,14 @@ export default function HomePage() {
             onClick={() => push('/newUser')}
           />
         )}
+
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
+          <CollapseCard
+            title="Usuários"
+            icon={faUsers}
+            onClick={() => push('/users')}
+          />
+        )}
       </div>
 
       {/* Desktop (Grid Cards) */}
@@ -293,6 +302,16 @@ export default function HomePage() {
               title="Cadastrar novo usuário"
               icon={faUserPlus}
               onClick={() => push('newUser')}
+            />
+          </Link>
+        )}
+
+        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
+          <Link href="/users">
+            <CardHome
+              title="Usuários"
+              icon={faUsers}
+              onClick={() => push('/users')}
             />
           </Link>
         )}
