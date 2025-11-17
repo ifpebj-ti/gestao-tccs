@@ -65,18 +65,6 @@ namespace gestaotcc.WebApi.Validators.User
                 .NotEmpty().WithMessage("Telefone é obrigatório.")
                 .MinimumLength(10).WithMessage("Telefone inválido, deve conter DDD e número (mínimo 10 dígitos).")
                 .MaximumLength(15).WithMessage("Telefone inválido (máximo 15 dígitos)."); // Ex: (XX) 9XXXX-XXXX
-
-            RuleFor(x => x.UserClass)
-                .NotEmpty().WithMessage("Turma não pode ser vazia.")
-                .When(x => x.UserClass != null);
-
-            RuleFor(x => x.Titration)
-                .NotEmpty().WithMessage("Titulação não pode ser vazia.")
-                .When(x => x.Titration != null);
-
-            RuleFor(x => x.Shift)
-                .IsInEnum().WithMessage("Turno inválido.")
-                .When(x => x.Shift.HasValue);
         }
     }
 }
