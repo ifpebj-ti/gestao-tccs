@@ -11,7 +11,7 @@ import {
   faInfoCircle,
   faFilePdf,
   faExternalLinkAlt,
-  faExclamationTriangle // 1. Importar o ícone de aviso
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CollapseCard } from '@/components/CollapseCard';
@@ -172,7 +172,9 @@ export default function SignatureClient() {
     <div className="flex flex-col">
       <BreadcrumbAuto />
       <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10 truncate">
-        {isLoading ? 'Carregando documento...' : documentName}
+        {isLoading
+          ? 'Carregando documento...'
+          : documentName || 'Erro ao carregar documento'}
       </h1>
 
       {/* Layout para Telas Grandes (lg em diante) */}
@@ -186,16 +188,16 @@ export default function SignatureClient() {
       </div>
 
       {/* Layout para Mobile e Tablets (até lg) */}
-      <div className="lg:hidden flex flex-col gap-8">
-        <div>
-          <ActionPanel />
-        </div>
+      <div className="lg:hidden flex flex-col gap-4 ">
         <div>
           <CollapseCard title="Visualizar Documento" icon={faFilePdf}>
             <div className="w-full h-[70vh]">
               <DocumentViewer />
             </div>
           </CollapseCard>
+        </div>
+        <div>
+          <ActionPanel />
         </div>
       </div>
     </div>
