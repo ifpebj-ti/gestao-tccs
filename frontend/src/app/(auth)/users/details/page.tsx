@@ -21,7 +21,8 @@ import {
   faAddressCard,
   faHashtag,
   faBuilding,
-  faGraduationCap
+  faGraduationCap,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 
 interface UserProfile {
@@ -343,6 +344,24 @@ function EditUserForm() {
                   icon={faAddressCard}
                   {...register('registration')}
                   errorText={errors.registration?.message}
+                />
+              </div>
+            )}
+
+            {watchedProfile?.[0] === 'STUDENT' && (
+              <div>
+                <label
+                  htmlFor="userClass"
+                  className="block text-sm font-semibold text-gray-700 mb-1"
+                >
+                  Turma
+                </label>
+                <Input
+                  helperText="Ex: 2025.2"
+                  id="userClass"
+                  icon={faUsers}
+                  {...register('userClass')}
+                  errorText={errors.userClass?.message}
                 />
               </div>
             )}
