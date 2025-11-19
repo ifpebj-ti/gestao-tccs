@@ -14,28 +14,22 @@ public class MinioGateway : IMinioGateway
     private readonly IConfiguration _configuration;
     private readonly IMinioClient _minioClient;
     private readonly IITextGateway _iTextGateway;
-    private readonly IHostEnvironment _environment;
     private readonly string _bucketName;
     private readonly string _env;
     private readonly string? _publicDomain;
     private readonly string? _endpoint;
-    private readonly string? _accessKey;
-    private readonly string? _secretKey;
 
-    public MinioGateway(IConfiguration configuration, IMinioClient minioClient, IITextGateway textGateway, IHostEnvironment environment)
+    public MinioGateway(IConfiguration configuration, IMinioClient minioClient, IITextGateway textGateway)
     {
         _configuration = configuration;
         _minioClient = minioClient;
         _iTextGateway = textGateway;
-        _environment = environment;
 
         var minioSettings = _configuration.GetSection("MINIO_SETTINGS");
         _bucketName = minioSettings.GetValue<string>("BUCKET_NAME")!;
         _publicDomain = minioSettings.GetValue<string>("DOMAIN");
         _endpoint = minioSettings.GetValue<string>("ENDPOINT");
         _env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-        _accessKey = minioSettings.GetValue<string>("ACCESS_KEY");
-        _secretKey = minioSettings.GetValue<string>("SECRET_KEY");
         
     }
 
@@ -97,25 +91,9 @@ public class MinioGateway : IMinioGateway
             .WithObject(objectName)
             .WithExpiry(120);
 
-        var url = "";
-        if (_environment.IsDevelopment())
-        {
-            url = await _minioClient.PresignedGetObjectAsync(args);
-            url = url.Replace($"http://{_endpoint}", _publicDomain);
-            return url;
-        }
-        else
-        {
-            var publicMinioClient = new MinioClient()
-                .WithEndpoint(_publicDomain.Split("//")[1]) // Sem https://
-                .WithCredentials(_accessKey, _secretKey) // Mesmas credenciais
-                .WithSSL() // Público é HTTPS
-                .Build();
-
-            url = await publicMinioClient.PresignedGetObjectAsync(args);
-            
-            return url;
-        }
+        var url = await _minioClient.PresignedGetObjectAsync(args);
+        url = url.Replace($"http://{_endpoint}", _publicDomain);
+        return url;
     }
 
     public async Task<byte[]> DownloadFolderAsZip(string folderName)
