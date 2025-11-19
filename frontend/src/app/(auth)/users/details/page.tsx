@@ -54,7 +54,18 @@ function convertApiResponseToFormData(
   data: UserDetailsApiResponse
 ): EditUserSchemaType {
   const getShiftNumber = (shiftString: string | undefined): number | null => {
-    switch (shiftString) {
+    // Convertendo para maiúsculas e removendo espaços para padronizar
+    const normalizedShift = shiftString?.toUpperCase().trim() || '';
+
+    switch (normalizedShift) {
+      case 'MATUTINO':
+        return 1;
+      case 'VESPERTINO':
+        return 2;
+      case 'NOTURNO':
+        return 3;
+      case 'DIURNO':
+        return 4;
       case 'MORNING':
         return 1;
       case 'AFTERNOON':
@@ -68,6 +79,15 @@ function convertApiResponseToFormData(
     }
   };
 
+  let primaryProfileRole: string = '';
+
+  if (data.profile && data.profile.length > 0) {
+    // Clonar e ordenar os perfis pelo ID (menor ID primeiro)
+    const sortedProfiles = [...data.profile].sort((a, b) => a.id - b.id);
+
+    primaryProfileRole = sortedProfiles[0].role;
+  }
+
   return {
     id: data.id,
     name: data.name,
@@ -79,7 +99,7 @@ function convertApiResponseToFormData(
     userClass: data.userClass || '',
     titration: data.titration || '',
     status: data.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
-    profile: data.profile.map((p) => p.role),
+    profile: primaryProfileRole ? [primaryProfileRole] : [],
     shift: getShiftNumber(data.shift),
     campiId: data.campiCourse?.campiId || null,
     courseId: data.campiCourse?.courseId || null
@@ -214,7 +234,6 @@ function EditUserForm() {
                 id="profile"
                 className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
                 {...register('profile', { setValueAs: (v: string) => [v] })}
-                defaultValue={form.getValues('profile')?.[1]}
               >
                 <option value="STUDENT">Estudante</option>
                 <option value="BANKING">Banca</option>
@@ -274,10 +293,10 @@ function EditUserForm() {
                 })}
               >
                 <option value="">Selecione um turno</option>
-                <option value="1">Manhã</option>
-                <option value="2">Tarde</option>
-                <option value="3">Noite</option>
-                <option value="4">Integral</option>
+                <option value="1">Matutino</option>
+                <option value="2">Vespertino</option>
+                <option value="3">Noturno</option>
+                <option value="4">Diurno</option>
               </select>
               {errors.shift && (
                 <p className="text-red-500 text-sm mt-1">
