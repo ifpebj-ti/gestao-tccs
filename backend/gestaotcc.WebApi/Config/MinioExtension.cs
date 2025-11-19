@@ -11,11 +11,23 @@ public static class MinioExtension
         var accessKey = minioSettings.GetValue<string>("ACCESS_KEY");
         var secretKey = minioSettings.GetValue<string>("SECRET_KEY");
         
-        services.AddMinio(configureClient => configureClient
-            .WithEndpoint(endpoint)
-            .WithCredentials(accessKey, secretKey)
-            .WithSSL(!environment.IsDevelopment())
-            .Build());
+        services.AddMinio(configureClient => 
+        {
+            configureClient
+                .WithEndpoint(endpoint)
+                .WithCredentials(accessKey, secretKey)
+                .WithSSL(!environment.IsDevelopment());
+            
+            if (!environment.IsDevelopment())
+            {
+                configureClient.WithHttpClient(new HttpClient(new HttpClientHandler()
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                }));
+            }
+
+            configureClient.Build();
+        });
         
         return services;
     }
