@@ -36,9 +36,9 @@ export function useSignaturePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Documento não encontrado ou link expirado.');
-      
+
       const data = await res.json();
-      setDocumentUrl(data.url);
+      setDocumentUrl("data:application/pdf;base64,"+data.url);
 
       if (data.url) {
         const path = data.url.split('?')[0];
@@ -64,7 +64,7 @@ export function useSignaturePage() {
         toast.error("Informações insuficientes para realizar o download.");
         return;
     }
-    
+
     try {
         const res = await fetch(`${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -87,7 +87,7 @@ export function useSignaturePage() {
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', filename);
-        
+
         document.body.appendChild(link);
         link.click();
         link.parentNode?.removeChild(link);

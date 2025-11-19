@@ -68,7 +68,7 @@ public class MinioGateway : IMinioGateway
         return ms.ToArray();
     }
 
-    public async Task<string> GetPresignedUrl(string fileName, Dictionary<string, string> fields, bool signedDocument = false)
+    public async Task<string> GetDocumentAsBase64(string fileName, Dictionary<string, string> fields, bool signedDocument = false)
     {
         var objectName = signedDocument ? $"signatures/{fileName}" : $"templates/{fileName}";
 
@@ -86,14 +86,8 @@ public class MinioGateway : IMinioGateway
             await Send(objectName, fileByte, "application/pdf", true);
         }
 
-        var args = new PresignedGetObjectArgs()
-            .WithBucket(_bucketName)
-            .WithObject(objectName)
-            .WithExpiry(120);
-
-        var url = await _minioClient.PresignedGetObjectAsync(args);
-        url = url.Replace($"http://{_endpoint}", _publicDomain);
-        return url;
+        var file = await Download(fileName, signedDocument);
+        return Convert.ToBase64String(file);
     }
 
     public async Task<byte[]> DownloadFolderAsZip(string folderName)

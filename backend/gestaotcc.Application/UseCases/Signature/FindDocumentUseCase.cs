@@ -53,7 +53,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         var isTemplateOrDocument = isSign ? document : templateDocument.Name + ".pdf";
         logger.LogInformation("Solicitando URL pré-assinada do Minio para o arquivo: {FileName} com {FieldCount} campos de substituição.", isTemplateOrDocument, fields.Count);
 
-        var documentUrl = await minioGateway.GetPresignedUrl(isTemplateOrDocument, fields, isSign);
+        var documentUrl = await minioGateway.GetDocumentAsBase64(isTemplateOrDocument, fields, isSign);
         logger.LogInformation("URL pré-assinada para TccId {TccId} recebida com sucesso.", tccId);
 
         return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(documentUrl));
