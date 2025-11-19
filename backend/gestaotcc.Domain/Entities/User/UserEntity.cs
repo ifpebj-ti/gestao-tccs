@@ -1,6 +1,5 @@
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.CampiCourse;
-using gestaotcc.Domain.Entities.Course;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
@@ -18,6 +17,10 @@ public class UserEntity
     public string? SIAPE { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string? UserClass { get; set; } = string.Empty;
+    public string? Shift { get; set; } = string.Empty;
+    public string? Titration { get; set; } = string.Empty;
     public ICollection<ProfileEntity> Profile { get; set; } = null!;
     public CampiCourseEntity? CampiCourse { get; set; }
     public long? CampiCourseId { get; set; }
@@ -35,7 +38,11 @@ public class UserEntity
         string cpf,
         string siape,
         string password, 
-        string status, 
+        string status,
+        string phone,
+        string? userClass,
+        string? shift,
+        string? titration,
         ICollection<ProfileEntity> profile,
         CampiCourseEntity campiCourse,
         AccessCodeEntity accessCode, 
@@ -50,6 +57,10 @@ public class UserEntity
         SIAPE = siape;
         Password = password;
         Status = status;
+        Phone = phone;
+        UserClass = userClass;
+        Shift = shift;
+        Titration = titration;
         Profile = profile;
         CampiCourse = campiCourse;
         AccessCode = accessCode;

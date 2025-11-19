@@ -34,5 +34,14 @@ public class CreateUserValidator : AbstractValidator<CreateUserDTO>
             .NotEmpty().WithMessage("O campo CPF é obrigatório.")
             .Matches(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$").WithMessage("O CPF deve estar no formato XXX.XXX.XXX-XX.")
             .Must(cpf => cpf.Length == 14).WithMessage("O CPF deve ter 14 caracteres, incluindo os pontos e o traço.");
+
+        RuleFor(x => x.Phone)
+            .NotEmpty().WithMessage("Telefone é obrigatório.")
+            .MinimumLength(10).WithMessage("Telefone inválido, deve conter DDD e número (mínimo 10 dígitos).")
+            .MaximumLength(15).WithMessage("Telefone inválido (máximo 15 dígitos)."); // Ex: (XX) 9XXXX-XXXX
+
+        RuleFor(x => x.SIAPE)
+            .NotEmpty().WithMessage("SIAPE não pode ser vazio.")
+            .When(x => x.SIAPE != null);
     }
 }

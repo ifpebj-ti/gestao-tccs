@@ -45,6 +45,8 @@ public static class IocDependencyExtensions
         services.AddScoped<FindUserByIdUseCase>();
         services.AddScoped<FindAllUserByFilterUseCase>();
         services.AddScoped<AutoRegisterUseCase>();
+        services.AddScoped<UpdateUserUseCase>();
+        services.AddScoped<FindAllUserUseCase>();
         
         // Tcc
         services.AddScoped<CreateTccUseCase>();

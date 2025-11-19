@@ -32,6 +32,10 @@ public class FindUserByEmailUseCaseTests
             CPF = "00000000000",
             Password = "hashedpassword",
             Status = "Ativo",
+            Phone = "00000000000",
+            UserClass = "2022.1",
+            Shift = "Diurno",
+            Titration = null,
             Profile = new List<Domain.Entities.Profile.ProfileEntity>(),
             CampiCourse = new CampiCourseEntity(),
             AccessCode = new Domain.Entities.AccessCode.AccessCodeEntity(),
@@ -47,7 +51,12 @@ public class FindUserByEmailUseCaseTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal(user, result.Data);
+        Assert.Equal(user.Id, result.Data.Id);
+        Assert.Equal(user.Name, result.Data.Name);
+        Assert.Equal(user.Email, result.Data.Email);
+        Assert.Equal(user.UserClass, result.Data.UserClass);
+        Assert.Equal(user.Shift, result.Data.Shift);
+        Assert.Equal(user.Titration, result.Data.Titration);
         Assert.Null(result.ErrorDetails);
     }
 

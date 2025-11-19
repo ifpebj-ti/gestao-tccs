@@ -35,17 +35,17 @@ public static class DbInitializer
         {
             context.Campi.AddRange(new CampiEntity[]
             {
-                new() { Id = 1, Name = "IFPE - Abreu e Lima" },
-                new() { Id = 2, Name = "IFPE - Afogados da Ingazeira" },
-                new() { Id = 3, Name = "IFPE - Barreiros" },
-                new() { Id = 4, Name = "IFPE - Caruaru" },
-                new() { Id = 5, Name = "IFPE - Garanhuns" },
-                new() { Id = 6, Name = "IFPE - Ipojuca" },
-                new() { Id = 7, Name = "IFPE - Jaboatão dos Guararapes" },
-                new() { Id = 8, Name = "IF Sertão-PE - Floresta" },
-                new() { Id = 9, Name = "IF Sertão-PE - Salgueiro" },
-                new() { Id = 10, Name = "IF Sertão-PE - Petrolina" },
-                new() { Id = 11, Name = "IFPE - Belo Jardim" }
+                new() { Id = 1, Name = "IFPE - Abreu e Lima", City = "Abreu e Lima" },
+                new() { Id = 2, Name = "IFPE - Afogados da Ingazeira", City = "Afogados da Ingazeira" },
+                new() { Id = 3, Name = "IFPE - Barreiros", City = "Barreiros" },
+                new() { Id = 4, Name = "IFPE - Caruaru", City = "Caruaru" },
+                new() { Id = 5, Name = "IFPE - Garanhuns", City = "Garanhuns" },
+                new() { Id = 6, Name = "IFPE - Ipojuca", City = "Ipojuca" },
+                new() { Id = 7, Name = "IFPE - Jaboatão dos Guararapes", City = "Jaboatão dos Guararapes" },
+                new() { Id = 8, Name = "IF Sertão-PE - Floresta", City = "Floresta" },
+                new() { Id = 9, Name = "IF Sertão-PE - Salgueiro", City = "Salgueiro" },
+                new() { Id = 10, Name = "IF Sertão-PE - Petrolina", City = "Petrolina" },
+                new() { Id = 11, Name = "IFPE - Belo Jardim", City = "Belo Jardim" }
             });
             context.SaveChanges();
 

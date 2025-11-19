@@ -12,6 +12,10 @@ public record UserResponse(
     string CPF, 
     string SIAPE, 
     string? Password, 
-    string Status, 
+    string Status,
+    string Phone,
+    string? UserClass,
+    string? Shift,
+    string? Titration,
     ICollection<ProfileResponse> Profile, 
     CampiCourseResponse CampiCourse);

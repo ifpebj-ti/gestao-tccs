@@ -1,4 +1,5 @@
 ﻿using gestaotcc.Domain.Entities.CampiCourse;
+using gestaotcc.Domain.Entities.User;
 using gestaotcc.WebApi.ResponseModels.CampiCourse;
 using gestaotcc.WebApi.ResponseModels.Course;
 using gestaotcc.WebApi.ResponseModels.Profile;
@@ -15,6 +16,10 @@ public class UserResponseBuilder
     private string _siape = string.Empty;
     private string _password = string.Empty;
     private string _status = string.Empty;
+    private string _phone = string.Empty;
+    private string? _userClass;
+    private string? _shift;
+    private string? _titration;
     private ICollection<ProfileResponse> _profile = new List<ProfileResponse>();
     private CourseResponse _course = null!;
     private CampiCourseResponse _campiCourse = null!;
@@ -67,6 +72,30 @@ public class UserResponseBuilder
         return this;
     }
 
+    public UserResponseBuilder WithPhone(string phone)
+    {
+        _phone = phone;
+        return this;
+    }
+
+    public UserResponseBuilder WithUserClass(string? userClass)
+    {
+        _userClass = userClass;
+        return this;
+    }
+
+    public UserResponseBuilder WithShift(string? shift)
+    {
+        _shift = shift;
+        return this;
+    }
+
+    public UserResponseBuilder WithTitration(string? titration)
+    {
+        _titration = titration;
+        return this;
+    }
+
     public UserResponseBuilder WithProfile(ICollection<ProfileResponse> profile)
     {
         _profile = profile;
@@ -87,6 +116,20 @@ public class UserResponseBuilder
 
     public UserResponse Build()
     {
-        return new UserResponse(_id, _name, _email, _registration, _cpf, _siape, _password, _status, _profile, _campiCourse);
+        return new UserResponse(
+            _id, 
+            _name, 
+            _email, 
+            _registration, 
+            _cpf, 
+            _siape, 
+            _password, 
+            _status, 
+            _phone, 
+            _userClass, 
+            _shift, 
+            _titration, 
+            _profile, 
+            _campiCourse);
     }
 }
