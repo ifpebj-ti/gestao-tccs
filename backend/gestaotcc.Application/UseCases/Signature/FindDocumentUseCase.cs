@@ -190,9 +190,14 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
 
     private void AddCommonDateFields(Dictionary<string, string> fields, DateTime date, UserEntity user)
     {
-        fields["cidade"] = user.CampiCourse?.Campi.City ?? "";
+        string[] mesesPtBr = { 
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" 
+        };
+
+        fields["cidade"] = "";
         fields["dia"] = date.Day.ToString();
-        fields["mes"] = date.ToString("MMMM", new CultureInfo("pt-BR"));
+        fields["mes"] = mesesPtBr[date.Month - 1]; 
         fields["ano"] = date.Year.ToString();
     }
     
