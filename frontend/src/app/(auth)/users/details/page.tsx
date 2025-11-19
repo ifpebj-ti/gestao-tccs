@@ -357,7 +357,7 @@ function EditUserForm() {
                   Turma
                 </label>
                 <Input
-                  helperText="Ex: 2025.2"
+                  placeholder="Ex:2025.2"
                   id="userClass"
                   icon={faUsers}
                   {...register('userClass')}
