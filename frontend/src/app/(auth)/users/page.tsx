@@ -2,8 +2,14 @@
 
 import { CollapseCard } from '@/components/CollapseCard';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import { faUser, faPen, faFile } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useState } from 'react';
+import {
+  faUser,
+  faPen,
+  faFile,
+  faSearch
+} from '@fortawesome/free-solid-svg-icons';
+import { Input } from '@/components/ui/input';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from 'react-toastify';
@@ -55,8 +61,6 @@ const formatStatusTag = (
       className: 'bg-green-100 text-green-800'
     };
   }
-
-  // Se for INACTIVE, vazio, nulo ou undefined, retorna Inativo (vermelho)
   return {
     text: 'Inativo',
     className: 'bg-red-100 text-red-800'
@@ -83,7 +87,6 @@ const formatProfile = (profile?: string): string => {
     case 'LIBRARY':
       return 'Biblioteca';
     default:
-      // Caso não esteja mapeado, apenas formata (ex: "OTHER" -> "Other")
       return profile.charAt(0).toUpperCase() + profile.slice(1).toLowerCase();
   }
 };
@@ -91,15 +94,19 @@ const formatProfile = (profile?: string): string => {
 export default function UsersPage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
-  const [users, setUsers] = useState<UserFromApi[]>([]);
+
+  const [apiUsers, setApiUsers] = useState<UserFromApi[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
+
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
+  const fetchUsers = useCallback(
+    async (page: number) => {
       setIsLoading(true);
       try {
         const token = Cookies.get('token');
@@ -109,7 +116,7 @@ export default function UsersPage() {
           return;
         }
 
-        const endpoint = `${API_URL}/User/all?pageNumber=${currentPage}&pageSize=${pageSize}`;
+        const endpoint = `${API_URL}/User/all?pageNumber=${page}&pageSize=${pageSize}`;
 
         const res = await fetch(endpoint, {
           headers: {
@@ -117,46 +124,101 @@ export default function UsersPage() {
           }
         });
 
+        if (!res.ok) {
+          throw new Error('Falha ao buscar usuários');
+        }
+
         const responseData: ApiResponse = await res.json();
 
-        setUsers(responseData.data);
+        setApiUsers(responseData.data);
         setTotalPages(responseData.totalPages);
       } catch {
         toast.error('Erro ao carregar usuários.');
       } finally {
         setIsLoading(false);
       }
-    };
+    },
+    [API_URL, pageSize, push]
+  );
 
-    fetchUsers();
-  }, [API_URL, push, currentPage, pageSize]);
+  useEffect(() => {
+    fetchUsers(currentPage);
+  }, [fetchUsers, currentPage]);
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) {
+      return apiUsers;
+    }
+
+    const normalizedQuery = searchQuery.toLowerCase();
+
+    return apiUsers.filter((user) => {
+      // Cria uma string concatenada com os campos relevantes para a busca
+      const searchData = [
+        user.name,
+        formatProfile(user.profile) // Inclui o perfil formatado na busca
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return searchData.includes(normalizedQuery);
+    });
+  }, [apiUsers, searchQuery]);
+
+  // Função para lidar com a mudança na busca
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   const handlePreviousPage = () => {
+    setSearchQuery('');
     setCurrentPage((prev) => Math.max(1, prev - 1));
   };
 
   const handleNextPage = () => {
+    setSearchQuery('');
     setCurrentPage((prev) => Math.min(totalPages, prev + 1));
   };
+
+  const usersToDisplay = filteredUsers;
 
   return (
     <div className="flex flex-col">
       <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
+      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-6">
         Usuários
       </h1>
 
+      {/* --- BARRA DE PESQUISA --- */}
+      <div className="mb-8 flex justify-end">
+        <div className="w-full max-w-lg">
+          <Input
+            type="text"
+            placeholder="Buscar por nome ou perfil"
+            icon={faSearch}
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+      </div>
+
       {isLoading ? (
         <p className="text-center text-gray-500 mt-4">Carregando...</p>
-      ) : users.length === 0 ? (
+      ) : usersToDisplay.length === 0 && !searchQuery ? (
+        // Se não houver usuários E a busca estiver vazia
         <p className="text-center text-gray-500 mt-4">
           Nenhum usuário encontrado.
+        </p>
+      ) : usersToDisplay.length === 0 && searchQuery ? (
+        // Se não houver usuários MAS a busca estiver ativa
+        <p className="text-center text-gray-500 mt-4">
+          Nenhum resultado encontrado para &quot;{searchQuery}&quot;.
         </p>
       ) : (
         <>
           {/* Mobile */}
           <div className="md:hidden flex flex-col gap-2">
-            {users.map((user) => {
+            {usersToDisplay.map((user) => {
               const statusTag = formatStatusTag(user.status);
               const profileText = formatProfile(user.profile);
 
@@ -202,7 +264,7 @@ export default function UsersPage() {
 
           {/* Desktop */}
           <div className="hidden md:grid grid-cols-2 gap-4">
-            {users.map((user) => {
+            {usersToDisplay.map((user) => {
               const statusTag = formatStatusTag(user.status);
               const profileText = formatProfile(user.profile);
 
@@ -227,7 +289,7 @@ export default function UsersPage() {
       )}
 
       {/* --- Seção de Paginação (Lógica 1-indexed) --- */}
-      {!isLoading && totalPages > 1 && (
+      {!isLoading && totalPages > 1 && !searchQuery && (
         <div className="flex justify-center items-center gap-4 mt-8">
           <button
             onClick={handlePreviousPage}
