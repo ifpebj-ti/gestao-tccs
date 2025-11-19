@@ -22,9 +22,6 @@ namespace gestaotcc.WebApi.Validators.User
                 .Must(email => email?.Trim().ToLower().EndsWith(".ifpe.edu.br") == true)
                 .WithMessage("O e-mail deve pertencer ao domínio ifpe.edu.br.");
 
-            RuleFor(x => x.Registration)
-                .NotEmpty().WithMessage("A matrícula é obrigatória.");
-
             RuleFor(x => x.Cpf)
                 .NotEmpty().WithMessage("O campo CPF é obrigatório.")
                 .Matches(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$").WithMessage("O CPF deve estar no formato XXX.XXX.XXX-XX.")
