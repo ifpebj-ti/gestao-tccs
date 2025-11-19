@@ -76,16 +76,25 @@ export function CollapseCard({
     }
   };
 
-  // Formata o Status (Ativo/Inativo)
-  const formattedStatus =
-    status?.toUpperCase() === 'ACTIVE'
-      ? 'Ativo'
-      : status?.toUpperCase() === 'INACTIVE'
-        ? 'Inativo'
-        : '';
+  let statusText: string = '';
+  let isStatusActive: boolean = false;
+
+  const statusUpperCase = status?.toUpperCase();
+
+  if (statusUpperCase === 'ACTIVE') {
+    statusText = 'Ativo';
+    isStatusActive = true;
+  } else if (!status || statusUpperCase === 'INACTIVE') {
+    // Se status for vazio, nulo, undefined OU 'INACTIVE', define como Inativo
+    statusText = 'Inativo';
+    isStatusActive = false;
+  }
 
   // --- Formata o Perfil ---
   const formattedProfile = formatProfile(profile);
+
+  // O Badge de Status só será renderizado se statusText não for vazio
+  const shouldRenderStatusBadge = !!statusText;
 
   return (
     <div
@@ -116,15 +125,15 @@ export function CollapseCard({
               )}
 
               {/* Badge de Status */}
-              {formattedStatus && (
+              {shouldRenderStatusBadge && (
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    status?.toUpperCase() === 'ACTIVE'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                    isStatusActive
+                      ? 'bg-green-100 text-green-800' // ACTIVE
+                      : 'bg-red-100 text-red-800' // INACTIVE ou VAZIO
                   }`}
                 >
-                  {formattedStatus}
+                  {statusText}
                 </span>
               )}
             </div>
