@@ -109,7 +109,7 @@ public class MinioGateway : IMinioGateway
             var publicMinioClient = new MinioClient()
                 .WithEndpoint(_publicDomain.Split("//")[1]) // Sem https://
                 .WithCredentials(_accessKey, _secretKey) // Mesmas credenciais
-                .WithSSL(false) // Público é HTTPS
+                .WithSSL() // Público é HTTPS
                 .Build();
 
             url = await publicMinioClient.PresignedGetObjectAsync(args);
