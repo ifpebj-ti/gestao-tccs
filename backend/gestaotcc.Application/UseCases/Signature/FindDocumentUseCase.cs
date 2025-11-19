@@ -195,7 +195,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" 
         };
 
-        fields["cidade"] = "";
+        fields["cidade"] = user.CampiCourse?.Campi.City ?? "";
         fields["dia"] = date.Day.ToString();
         fields["mes"] = mesesPtBr[date.Month - 1]; 
         fields["ano"] = date.Year.ToString();
