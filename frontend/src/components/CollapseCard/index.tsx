@@ -11,46 +11,23 @@ interface CollapseCardProps {
   icon: IconDefinition;
   indicatorNumber?: number;
   indicatorColor?: string;
-  profile?: string;
-  status?: string;
+  profileText?: string;
+  statusText?: string;
+  statusClass?: string;
   children?: React.ReactNode;
   onClick?: () => void;
   isOpen?: boolean;
   onToggle?: () => void;
 }
 
-// --- Função-auxiliar para formatar o perfil ---
-const formatProfile = (profile?: string): string => {
-  if (!profile) return '';
-
-  switch (profile.toUpperCase()) {
-    case 'ADMIN':
-      return 'Admin';
-    case 'COORDINATOR':
-      return 'Coordenador';
-    case 'SUPERVISOR':
-      return 'Supervisor';
-    case 'ADVISOR':
-      return 'Orientador';
-    case 'STUDENT':
-      return 'Estudante';
-    case 'BANKING':
-      return 'Banca';
-    case 'LIBRARY':
-      return 'Biblioteca';
-    default:
-      // Caso não esteja mapeado, apenas formata (ex: "OTHER" -> "Other")
-      return profile.charAt(0).toUpperCase() + profile.slice(1).toLowerCase();
-  }
-};
-
 export function CollapseCard({
   title,
   icon,
   indicatorNumber,
   indicatorColor = 'bg-blue-500',
-  profile,
-  status,
+  profileText,
+  statusText,
+  statusClass,
   children,
   onClick,
   isOpen: isOpenProp,
@@ -76,25 +53,11 @@ export function CollapseCard({
     }
   };
 
-  let statusText: string = '';
-  let isStatusActive: boolean = false;
+  // O Badge de Perfil só será renderizado se profileText for fornecido
+  const shouldRenderProfileBadge = !!profileText;
 
-  const statusUpperCase = status?.toUpperCase();
-
-  if (statusUpperCase === 'ACTIVE') {
-    statusText = 'Ativo';
-    isStatusActive = true;
-  } else if (!status || statusUpperCase === 'INACTIVE') {
-    // Se status for vazio, nulo, undefined OU 'INACTIVE', define como Inativo
-    statusText = 'Inativo';
-    isStatusActive = false;
-  }
-
-  // --- Formata o Perfil ---
-  const formattedProfile = formatProfile(profile);
-
-  // O Badge de Status só será renderizado se statusText não for vazio
-  const shouldRenderStatusBadge = !!statusText;
+  // O Badge de Status só será renderizado se statusText e statusClass forem fornecidos
+  const shouldRenderStatusBadge = !!statusText && !!statusClass;
 
   return (
     <div
@@ -118,20 +81,16 @@ export function CollapseCard({
 
             <div className="flex items-center gap-2 mt-1">
               {/* --- Badge de Perfil --- */}
-              {formattedProfile && (
+              {shouldRenderProfileBadge && (
                 <span className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full text-xs font-medium">
-                  {formattedProfile}
+                  {profileText}
                 </span>
               )}
 
               {/* Badge de Status */}
               {shouldRenderStatusBadge && (
                 <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    isStatusActive
-                      ? 'bg-green-100 text-green-800' // ACTIVE
-                      : 'bg-red-100 text-red-800' // INACTIVE ou VAZIO
-                  }`}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusClass}`}
                 >
                   {statusText}
                 </span>

@@ -43,6 +43,51 @@ interface ApiResponse {
   totalPages: number;
 }
 
+// FUNÇÃO PARA FORMATAR O STATUS
+const formatStatusTag = (
+  status?: string
+): { text: string; className: string } => {
+  const statusUpperCase = status?.toUpperCase().trim();
+
+  if (statusUpperCase === 'ACTIVE') {
+    return {
+      text: 'Ativo',
+      className: 'bg-green-100 text-green-800'
+    };
+  }
+
+  // Se for INACTIVE, vazio, nulo ou undefined, retorna Inativo (vermelho)
+  return {
+    text: 'Inativo',
+    className: 'bg-red-100 text-red-800'
+  };
+};
+
+// FUNÇÃO PARA FORMATAR O PERFIL
+const formatProfile = (profile?: string): string => {
+  if (!profile) return '';
+
+  switch (profile.toUpperCase()) {
+    case 'ADMIN':
+      return 'Admin';
+    case 'COORDINATOR':
+      return 'Coordenador';
+    case 'SUPERVISOR':
+      return 'Supervisor';
+    case 'ADVISOR':
+      return 'Orientador';
+    case 'STUDENT':
+      return 'Estudante';
+    case 'BANKING':
+      return 'Banca';
+    case 'LIBRARY':
+      return 'Biblioteca';
+    default:
+      // Caso não esteja mapeado, apenas formata (ex: "OTHER" -> "Other")
+      return profile.charAt(0).toUpperCase() + profile.slice(1).toLowerCase();
+  }
+};
+
 export default function UsersPage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
@@ -111,60 +156,72 @@ export default function UsersPage() {
         <>
           {/* Mobile */}
           <div className="md:hidden flex flex-col gap-2">
-            {users.map((user) => (
-              <div key={user.id}>
-                <CollapseCard
-                  title={user.name || 'Usuário sem nome'}
-                  icon={faUser}
-                  profile={user.profile}
-                  status={user.status}
-                  indicatorColor={
-                    user.status === 'ACTIVE' ? 'bg-green-600' : 'bg-red-600'
-                  }
-                >
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => push(`/users/edit?id=${user.id}`)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
-                    >
-                      <FontAwesomeIcon
-                        icon={faPen}
-                        className="text-[#1351B4]"
-                      />
-                      <span>Editar Usuário</span>
-                    </button>
-                    <button
-                      onClick={() => push(`/users/details?id=${user.id}`)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
-                    >
-                      <FontAwesomeIcon
-                        icon={faFile}
-                        className="text-[#1351B4]"
-                      />
-                      <span>Ver Detalhes</span>
-                    </button>
-                  </div>
-                </CollapseCard>
-              </div>
-            ))}
+            {users.map((user) => {
+              const statusTag = formatStatusTag(user.status);
+              const profileText = formatProfile(user.profile);
+
+              return (
+                <div key={user.id}>
+                  <CollapseCard
+                    title={user.name || 'Usuário sem nome'}
+                    icon={faUser}
+                    profileText={profileText}
+                    statusText={statusTag.text}
+                    statusClass={statusTag.className}
+                    indicatorColor={
+                      statusTag.text === 'Ativo' ? 'bg-green-600' : 'bg-red-600'
+                    }
+                  >
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => push(`/users/edit?id=${user.id}`)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
+                      >
+                        <FontAwesomeIcon
+                          icon={faPen}
+                          className="text-[#1351B4]"
+                        />
+                        <span>Editar Usuário</span>
+                      </button>
+                      <button
+                        onClick={() => push(`/users/details?id=${user.id}`)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
+                      >
+                        <FontAwesomeIcon
+                          icon={faFile}
+                          className="text-[#1351B4]"
+                        />
+                        <span>Ver Detalhes</span>
+                      </button>
+                    </div>
+                  </CollapseCard>
+                </div>
+              );
+            })}
           </div>
 
           {/* Desktop */}
           <div className="hidden md:grid grid-cols-2 gap-4">
-            {users.map((user) => (
-              <div key={user.id}>
-                <CollapseCard
-                  title={user.name || 'Usuário sem nome'}
-                  profile={user.profile}
-                  status={user.status}
-                  icon={faUser}
-                  indicatorColor={
-                    user.status === 'ACTIVE' ? 'bg-green-600' : 'bg-red-600'
-                  }
-                  onClick={() => push(`/users/details?id=${user.id}`)}
-                />
-              </div>
-            ))}
+            {users.map((user) => {
+              const statusTag = formatStatusTag(user.status);
+              const profileText = formatProfile(user.profile);
+
+              return (
+                <div key={user.id}>
+                  <CollapseCard
+                    title={user.name || 'Usuário sem nome'}
+                    profileText={profileText}
+                    statusText={statusTag.text}
+                    statusClass={statusTag.className}
+                    icon={faUser}
+                    indicatorColor={
+                      statusTag.text === 'Ativo' ? 'bg-green-600' : 'bg-red-600'
+                    }
+                    onClick={() => push(`/users/details?id=${user.id}`)}
+                  />
+                </div>
+              );
+            })}
           </div>
         </>
       )}
@@ -174,7 +231,7 @@ export default function UsersPage() {
         <div className="flex justify-center items-center gap-4 mt-8">
           <button
             onClick={handlePreviousPage}
-            disabled={currentPage === 1} // Desabilita na primeira página (página 1)
+            disabled={currentPage === 1}
             className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
           >
             Anterior
@@ -186,7 +243,7 @@ export default function UsersPage() {
 
           <button
             onClick={handleNextPage}
-            disabled={currentPage >= totalPages} // Desabilita na última página
+            disabled={currentPage >= totalPages}
             className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
           >
             Próximo
