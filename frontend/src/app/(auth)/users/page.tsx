@@ -150,7 +150,7 @@ export default function UsersPage() {
           </div>
 
           {/* Desktop */}
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="hidden md:grid grid-cols-2 gap-4">
             {users.map((user) => (
               <div key={user.id}>
                 <CollapseCard
