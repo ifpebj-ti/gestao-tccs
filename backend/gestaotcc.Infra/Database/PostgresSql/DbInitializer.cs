@@ -145,6 +145,7 @@ public static class DbInitializer
                 .WithEmail("dev-test@ifpe.edu.br")
                 .WithPassword(password)
                 .WithCampiCourse(course)
+                .WithStatus("ACTIVE")
                 .WithProfile(new List<ProfileEntity>() { profile! })
                 .Build());
             context.SaveChanges();
