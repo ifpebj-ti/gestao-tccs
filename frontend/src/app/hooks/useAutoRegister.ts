@@ -2,7 +2,10 @@
 
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { autoRegisterSchema, AutoRegisterSchemaType } from '@/app/schemas/autoRegisterSchema';
+import {
+  autoRegisterSchema,
+  AutoRegisterSchemaType
+} from '@/app/schemas/autoRegisterSchema';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { env } from 'next-runtime-env';
@@ -18,10 +21,16 @@ export function useAutoRegister() {
       email: '',
       registration: '',
       cpf: '',
-    },
+      phone: '',
+      userClass: '',
+      shift: undefined
+    }
   });
 
-  const { formState: { isSubmitting }, reset } = form;
+  const {
+    formState: { isSubmitting },
+    reset
+  } = form;
 
   const submitForm: SubmitHandler<AutoRegisterSchemaType> = async (data) => {
     try {
@@ -30,14 +39,17 @@ export function useAutoRegister() {
         email: data.email,
         registration: data.registration,
         cpf: data.cpf,
+        phone: data.phone,
+        userClass: data.userClass,
+        shift: Number(data.shift)
       };
 
       const response = await fetch(`${API_URL}/User/autoregister`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
@@ -46,16 +58,22 @@ export function useAutoRegister() {
         push('/newPassword');
       } else {
         const errorData = await response.json();
-        toast.error(errorData.message || "Erro ao realizar cadastro. Verifique os dados e tente novamente.");
+        const errorMessage =
+          errorData.message ||
+          errorData.errors?.message ||
+          'Erro ao realizar cadastro. Verifique os dados e tente novamente.';
+        toast.error(errorMessage);
       }
     } catch {
-      toast.error('Não foi possível conectar ao servidor. Tente novamente mais tarde.');
+      toast.error(
+        'Não foi possível conectar ao servidor. Tente novamente mais tarde.'
+      );
     }
   };
 
-  return { 
-    form, 
-    submitForm, 
+  return {
+    form,
+    submitForm,
     isSubmitting
   };
 }
