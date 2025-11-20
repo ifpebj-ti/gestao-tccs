@@ -2,7 +2,10 @@
 
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { newUserSchema, NewUserSchemaSchemaType } from '@/app/schemas/newUserSchema';
+import {
+  newUserSchema,
+  NewUserSchemaSchemaType
+} from '@/app/schemas/newUserSchema';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
@@ -28,25 +31,37 @@ export function useNewUserForm() {
 
   const [campusData, setCampusData] = useState<CampusWithCourses[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  
+
   const defaultValues: Partial<NewUserSchemaSchemaType> = {
     name: '',
     email: '',
     registration: '',
     cpf: '',
+    phone: '',
+    userClass: '',
+    shift: undefined,
+    titration: '',
     profile: undefined,
     siape: '',
-    campusId: undefined, 
-    courseId: undefined,
+    campusId: undefined,
+    courseId: undefined
   };
 
-  const { handleSubmit, register, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm<NewUserSchemaSchemaType>({
+  const {
+    handleSubmit,
+    register,
+    formState: { errors, isSubmitting },
+    reset,
+    watch,
+    setValue
+  } = useForm<NewUserSchemaSchemaType>({
     resolver: zodResolver(newUserSchema),
     defaultValues: defaultValues
   });
 
   const watchedCampusId = watch('campusId');
 
+  // Busca de Campi e Cursos
   useEffect(() => {
     const fetchCampusData = async () => {
       try {
@@ -54,9 +69,9 @@ export function useNewUserForm() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        }); 
+            Authorization: `Bearer ${token}`
+          }
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -71,12 +86,14 @@ export function useNewUserForm() {
     fetchCampusData();
   }, [API_URL, token]);
 
+  // Lógica de cascata Campus -> Cursos
   useEffect(() => {
     setValue('courseId', 0);
 
     if (watchedCampusId && watchedCampusId > 0) {
-      const selectedCampus = campusData.find(campus => campus.id === Number(watchedCampusId));
-      
+      const selectedCampus = campusData.find(
+        (campus) => campus.id === Number(watchedCampusId)
+      );
       setCourses(selectedCampus ? selectedCampus.courses : []);
     } else {
       setCourses([]);
@@ -88,19 +105,23 @@ export function useNewUserForm() {
       const payload = {
         name: data.name,
         email: data.email,
-        registration: data.registration || "",
+        registration: data.registration || '',
         cpf: data.cpf,
-        siape: data.siape || "",
+        siape: data.siape || '',
         profile: [data.profile],
+        phone: data.phone,
+        userClass: data.userClass || '',
+        shift: data.shift ? Number(data.shift) : 0,
+        titration: data.titration || '',
         courseId: Number(data.courseId),
-        campusId: Number(data.campusId),
+        campusId: Number(data.campusId)
       };
 
       const response = await fetch(`${API_URL}/User`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
@@ -110,21 +131,30 @@ export function useNewUserForm() {
         reset();
         push('/homePage');
       } else {
-        toast.error("Erro ao registrar usuário. Verifique os dados e tente novamente.");
+        const errorData = await response.json().catch(() => null);
+        if (errorData && errorData.errors) {
+          const firstError = Object.values(errorData.errors)[0];
+          toast.error(`Erro: ${firstError}`);
+        } else {
+          toast.error(
+            'Erro ao registrar usuário. Verifique os dados e tente novamente.'
+          );
+        }
       }
     } catch {
       toast.error('Erro ao registrar usuário. Tente novamente mais tarde.');
     }
   };
 
-  return { 
-    register, 
-    submitForm, 
-    handleSubmit, 
-    errors, 
-    isSubmitting, 
+  return {
+    register,
+    submitForm,
+    handleSubmit,
+    errors,
+    isSubmitting,
     watch,
     campus: campusData,
-    courses 
+    courses,
+    setValue
   };
 }

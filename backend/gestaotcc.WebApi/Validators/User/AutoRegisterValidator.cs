@@ -21,5 +21,19 @@ public class AutoRegisterValidator : AbstractValidator<AutoRegisterDTO>
             .NotEmpty().WithMessage("O campo CPF é obrigatório.")
             .Matches(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$").WithMessage("O CPF deve estar no formato XXX.XXX.XXX-XX.")
             .Must(cpf => cpf.Length == 14).WithMessage("O CPF deve ter 14 caracteres, incluindo os pontos e o traço.");
+        
+        RuleFor(x => x.Phone)
+            .NotEmpty().WithMessage("Telefone é obrigatório.")
+            .MinimumLength(10).WithMessage("Telefone inválido, deve conter DDD e número (mínimo 10 dígitos).")
+            .MaximumLength(15).WithMessage("Telefone inválido (máximo 15 dígitos)."); // Ex: (XX) 9XXXX-XXXX
+
+        RuleFor(x => x.UserClass)
+            .NotEmpty().WithMessage("Turma não pode ser vazia.")
+            .When(x => x.UserClass != null);
+
+        RuleFor(x => x.Shift)
+            .IsInEnum().WithMessage("Turno inválido.")
+            .When(x => x.Shift.HasValue);
+
     }
 }

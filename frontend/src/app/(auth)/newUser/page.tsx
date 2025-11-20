@@ -8,7 +8,8 @@ import {
   faEnvelope,
   faGraduationCap,
   faIdCard,
-  faUser
+  faUser,
+  faPhone
 } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 import { useNewUserForm } from '@/app/hooks/useNewUser';
@@ -29,6 +30,7 @@ export default function NewUser() {
   const profileValue = watch('profile');
   const campusValue = watch('campusId');
 
+  // --- Máscaras ---
   const formatCPF = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
     const limitedValue = numericValue.slice(0, 11);
@@ -48,7 +50,49 @@ export default function NewUser() {
     return formattedValue;
   };
 
+  const formatPhone = (value: string) => {
+    if (!value) return '';
+    const numericValue = value.replace(/\D/g, '');
+    const limitedValue = numericValue.slice(0, 11);
+    let formattedValue = limitedValue;
+    if (limitedValue.length > 0)
+      formattedValue = formattedValue.replace(/^(\d{2})/, '($1');
+    if (limitedValue.length > 2)
+      formattedValue = formattedValue.replace(/^(\(\d{2})(\d)/, '$1) $2');
+    if (limitedValue.length > 7) {
+      if (limitedValue.length === 11)
+        formattedValue = formattedValue.replace(
+          /^(\(\d{2}\) \d{5})(\d{4})/,
+          '$1-$2'
+        );
+      else
+        formattedValue = formattedValue.replace(
+          /^(\(\d{2}\) \d{4})(\d{0,4})/,
+          '$1-$2'
+        );
+    }
+    return formattedValue;
+  };
+
   const { onChange: onCpfChange, ...cpfRest } = register('cpf');
+  const { onChange: onPhoneChange, ...phoneRest } = register('phone');
+
+  // Listas de controle de exibição
+  const profilesWithSiape = [
+    'ADMIN',
+    'COORDINATOR',
+    'SUPERVISOR',
+    'ADVISOR',
+    'LIBRARY',
+    'BANKING'
+  ];
+  const profilesWithTitration = [
+    'ADMIN',
+    'COORDINATOR',
+    'SUPERVISOR',
+    'ADVISOR',
+    'BANKING'
+  ];
 
   return (
     <div className="flex flex-col">
@@ -58,11 +102,13 @@ export default function NewUser() {
       </h1>
 
       <form className="flex flex-col gap-8" onSubmit={handleSubmit(submitForm)}>
+        {/* --- SEÇÃO 1: INFORMAÇÕES PESSOAIS --- */}
         <div>
           <h2 className="text-lg font-extrabold uppercase mb-4">
             Informações do usuário
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
+            {/* NOME */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="name">
                 Nome
@@ -76,6 +122,8 @@ export default function NewUser() {
                 {...register('name')}
               />
             </div>
+
+            {/* PERFIL */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="profile">
                 Perfil
@@ -97,6 +145,8 @@ export default function NewUser() {
                 <p className="text-red-500 text-sm">{errors.profile.message}</p>
               )}
             </div>
+
+            {/* EMAIL */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="email">
                 Email
@@ -110,13 +160,15 @@ export default function NewUser() {
                 {...register('email')}
               />
             </div>
+
+            {/* CPF */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="cpf">
                 CPF
               </Label>
               <Input
                 id="cpf"
-                placeholder="Digite o CPF do usuário"
+                placeholder="Digite o CPF (XXX.XXX.XXX-XX)"
                 icon={faIdCard}
                 errorText={errors.cpf?.message}
                 maxLength={14}
@@ -127,24 +179,28 @@ export default function NewUser() {
                 }}
               />
             </div>
-            {profileValue === 'STUDENT' && (
-              <div className="grid items-center gap-1.5">
-                <Label className="font-semibold" htmlFor="registration">
-                  Matrícula
-                </Label>
-                <Input
-                  id="registration"
-                  type="text"
-                  placeholder="Digite a matrícula"
-                  icon={faIdCard}
-                  errorText={errors.registration?.message}
-                  {...register('registration')}
-                />
-              </div>
-            )}
-            {['COORDINATOR', 'SUPERVISOR', 'ADVISOR'].includes(
-              profileValue || ''
-            ) && (
+
+            {/* TELEFONE */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="phone">
+                Telefone
+              </Label>
+              <Input
+                id="phone"
+                placeholder="(XX) 9XXXX-XXXX"
+                icon={faPhone}
+                errorText={errors.phone?.message}
+                maxLength={15}
+                {...phoneRest}
+                onChange={(e) => {
+                  e.target.value = formatPhone(e.target.value);
+                  onPhoneChange(e);
+                }}
+              />
+            </div>
+
+            {/* CAMPO SIAPE */}
+            {profilesWithSiape.includes(profileValue || '') && (
               <div className="grid items-center gap-1.5">
                 <Label className="font-semibold" htmlFor="siape">
                   SIAPE
@@ -159,9 +215,27 @@ export default function NewUser() {
                 />
               </div>
             )}
+
+            {/* CAMPO TITULAÇÃO */}
+            {profilesWithTitration.includes(profileValue || '') && (
+              <div className="grid items-center gap-1.5">
+                <Label className="font-semibold" htmlFor="titration">
+                  Titulação
+                </Label>
+                <Input
+                  id="titration"
+                  type="text"
+                  placeholder="Ex: Doutor, Mestre, Especialista"
+                  icon={faGraduationCap}
+                  errorText={errors.titration?.message}
+                  {...register('titration')}
+                />
+              </div>
+            )}
           </div>
         </div>
 
+        {/* --- SEÇÃO 2: INFORMAÇÕES ACADÊMICAS --- */}
         <div>
           <h2 className="text-lg font-extrabold uppercase mb-4">
             Informações Acadêmicas
@@ -220,6 +294,7 @@ export default function NewUser() {
             onClick={() => push('/homePage')}
             variant="outline"
             className="w-full md:w-fit"
+            type="button"
           >
             Cancelar
           </Button>
