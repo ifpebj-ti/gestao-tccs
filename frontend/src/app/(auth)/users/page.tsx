@@ -2,12 +2,7 @@
 
 import { CollapseCard } from '@/components/CollapseCard';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import {
-  faUser,
-  faPen,
-  faFile,
-  faSearch
-} from '@fortawesome/free-solid-svg-icons';
+import { faUser, faPen, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -236,7 +231,7 @@ export default function UsersPage() {
                   >
                     <div className="flex flex-col gap-2">
                       <button
-                        onClick={() => push(`/users/edit?id=${user.id}`)}
+                        onClick={() => push(`/users/details?id=${user.id}`)}
                         className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
                       >
                         <FontAwesomeIcon
@@ -244,16 +239,6 @@ export default function UsersPage() {
                           className="text-[#1351B4]"
                         />
                         <span>Editar Usuário</span>
-                      </button>
-                      <button
-                        onClick={() => push(`/users/details?id=${user.id}`)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
-                      >
-                        <FontAwesomeIcon
-                          icon={faFile}
-                          className="text-[#1351B4]"
-                        />
-                        <span>Ver Detalhes</span>
                       </button>
                     </div>
                   </CollapseCard>

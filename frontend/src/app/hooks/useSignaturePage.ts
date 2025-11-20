@@ -12,7 +12,7 @@ interface DecodedToken {
 }
 
 export function useSignaturePage() {
-    const { push } = useRouter();
+  const { push } = useRouter();
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +24,8 @@ export function useSignaturePage() {
 
   const documentId = params.documentId as string;
   const tccId = searchParams.get('tccId');
+  const docNameFromParams = searchParams.get('docName');
+
   const API_URL = env('NEXT_PUBLIC_API_URL');
 
   const fetchDocument = useCallback(async () => {
@@ -32,13 +34,17 @@ export function useSignaturePage() {
     setIsLoading(true);
     const token = Cookies.get('token');
     try {
-      const res = await fetch(`${API_URL}/Signature/document?tccId=${tccId}&documentId=${documentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Documento não encontrado ou link expirado.');
+      const res = await fetch(
+        `${API_URL}/Signature/document?tccId=${tccId}&documentId=${documentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      if (!res.ok)
+        throw new Error('Documento não encontrado ou link expirado.');
 
       const data = await res.json();
-      setDocumentUrl("data:application/pdf;base64,"+data.url);
+      setDocumentUrl('data:application/pdf;base64,' + data.url);
 
       if (data.url) {
         const path = data.url.split('?')[0];
@@ -46,7 +52,6 @@ export function useSignaturePage() {
         const filenameDecoded = decodeURIComponent(filenameEncoded);
         setDocumentName(filenameDecoded);
       }
-
     } catch {
       toast.error('Erro ao carregar o documento. O link pode ter expirado.');
     } finally {
@@ -61,40 +66,54 @@ export function useSignaturePage() {
   const handleDownloadDocument = async () => {
     const token = Cookies.get('token');
     if (!tccId || !documentId || !token) {
-        toast.error("Informações insuficientes para realizar o download.");
-        return;
+      toast.error('Informações insuficientes para realizar o download.');
+      return;
     }
 
     try {
-        const res = await fetch(`${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) throw new Error('Erro ao baixar o documento.');
-
-        const contentDisposition = res.headers.get('Content-Disposition');
-        let filename = documentName || 'documento.pdf';
-
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-            if (filenameMatch && filenameMatch[1]) {
-                filename = decodeURIComponent(filenameMatch[1]);
-            }
+      const res = await fetch(
+        `${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
         }
+      );
 
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', filename);
+      if (!res.ok) throw new Error('Erro ao baixar o documento.');
 
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      let filename = docNameFromParams || documentName;
 
+      if (!filename) {
+        const contentDisposition = res.headers.get('Content-Disposition');
+        if (contentDisposition) {
+          const filenameMatch =
+            contentDisposition.match(/filename="?([^"]+)"?/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(filenameMatch[1]);
+          }
+        }
+      }
+
+      if (!filename) {
+        filename = 'documento.pdf';
+      }
+
+      if (!filename.toLowerCase().endsWith('.pdf')) {
+        filename += '.pdf';
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      link.setAttribute('download', filename);
+
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch {
-        toast.error("Não foi possível baixar o documento.");
+      toast.error('Não foi possível baixar o documento.');
     }
   };
 
@@ -105,7 +124,15 @@ export function useSignaturePage() {
     }
     setIsSubmitting(true);
     const token = Cookies.get('token');
-    const userId = jwtDecode<DecodedToken>(token!).userId;
+
+    let userId = '';
+    try {
+      userId = jwtDecode<DecodedToken>(token!).userId;
+    } catch {
+      toast.error('Erro de autenticação.');
+      setIsSubmitting(false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append('File', selectedFile);
@@ -114,18 +141,18 @@ export function useSignaturePage() {
     formData.append('UserId', userId);
 
     try {
-        const res = await fetch(`${API_URL}/Signature`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-        });
-        if(!res.ok) throw new Error('Erro ao submeter a assinatura.');
-        push('/pendingSignatures');
-        toast.success('Documento assinado e enviado com sucesso!');
+      const res = await fetch(`${API_URL}/Signature`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      if (!res.ok) throw new Error('Erro ao submeter a assinatura.');
+      push('/pendingSignatures');
+      toast.success('Documento assinado e enviado com sucesso!');
     } catch {
-        toast.error('Ocorreu um erro ao submeter sua assinatura.');
+      toast.error('Ocorreu um erro ao submeter sua assinatura.');
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -140,6 +167,6 @@ export function useSignaturePage() {
     setSelectedFile,
     handleSignDocument,
     handleDownloadDocument,
-    API_URL,
+    API_URL
   };
 }
