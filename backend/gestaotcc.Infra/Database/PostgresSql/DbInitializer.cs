@@ -170,7 +170,7 @@ public static class DbInitializer
                 new()
                 {
                     Name = "ANEXO VI - TERMO DE COMPROMISSO DO ORIENTANDO", SignatureOrder = 2,
-                    MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString()
+                    MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
                 },
                 new()
                 {
