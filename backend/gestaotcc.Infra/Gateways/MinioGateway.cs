@@ -86,7 +86,7 @@ public class MinioGateway : IMinioGateway
             await Send(objectName, fileByte, "application/pdf", true);
         }
 
-        var file = await Download(fileName, signedDocument);
+        var file = await Download(objectName, signedDocument);
         return Convert.ToBase64String(file);
     }
 
