@@ -40,7 +40,7 @@ public class UpdatePasswordUseCase(IUserGateway userGateway, IBcryptGateway bcry
                 return ResultPattern<string>.FailureResult("Código de acesso já utilizado. Por favor gere outro e tente novamente.", 409);
             }
 
-            logger.LogInformation("Validações concluídas para UserId {UserId}. Atualizando a senha.", userId);
+            logger.LogInformation("Validações concluídas para UserId {UserId}. Atualizando a senha", userId);
             
             user.AccessCode.IsUserUpdatePassword = true;
         }

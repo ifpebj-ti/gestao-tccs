@@ -86,6 +86,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
       - MINIO_BROWSER_REDIRECT_URL=${MINIO_REDIRECT}
+      - MINIO_SERVER_URL=${MINIO_DOMAIN}
     command: server /data --console-address ":9001"
     restart: unless-stopped
     networks:
