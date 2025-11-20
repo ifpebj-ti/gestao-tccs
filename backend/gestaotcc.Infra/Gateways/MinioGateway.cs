@@ -57,7 +57,16 @@ public class MinioGateway : IMinioGateway
     {
         using var ms = new MemoryStream();
 
-        var objectName = signedDocument ? $"signatures/{fileName}" : $"templates/{fileName}";
+        string objectName;
+        
+        if (fileName.StartsWith("filled/"))
+        {
+            objectName = fileName;
+        }
+        else
+        {
+            objectName = signedDocument ? $"signatures/{fileName}" : $"templates/{fileName}";
+        }
 
         await _minioClient.GetObjectAsync(new GetObjectArgs()
             .WithBucket(_bucketName)
