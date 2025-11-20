@@ -19,7 +19,7 @@ public class UpdatePasswordUseCase(IUserGateway userGateway, IBcryptGateway bcry
         var userId = user.Id;
         logger.LogInformation("Usuário encontrado para alteração de senha. UserId: {UserId}", userId);
 
-        if (user.Email != "dev-test@gmail.com")
+        if (user.Email != "dev-test@ifpe.edu.br")
         {
             if (user.AccessCode!.IsActive)
             {

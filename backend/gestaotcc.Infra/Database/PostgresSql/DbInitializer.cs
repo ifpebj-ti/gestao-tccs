@@ -12,7 +12,7 @@ namespace gestaotcc.Infra.Database.PostgresSql;
 
 public static class DbInitializer
 {
-    public static void Initialize(AppDbContext context)
+    public static void Initialize(AppDbContext context, IBcryptGateway bcryptGateway)
     {
         // Seed Profiles
         if (!context.Profiles.Any())
@@ -137,12 +137,13 @@ public static class DbInitializer
         {
             var profile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
             var course = context.CampiCourses.FirstOrDefault(x => x.Id == 22);
+            var password = bcryptGateway.GenerateHashPassword("Senha@123");
 
             context.Users.Add(new UserEntityBuilder()
                 .WithName("dev-test")
                 .WithCpf("000.000.000-00")
-                .WithEmail("dev-test@gmail.com")
-                .WithPassword("Senha@123")
+                .WithEmail("dev-test@ifpe.edu.br")
+                .WithPassword(password)
                 .WithCampiCourse(course)
                 .WithProfile(new List<ProfileEntity>() { profile! })
                 .Build());
