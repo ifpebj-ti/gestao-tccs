@@ -127,6 +127,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
 
     /// <summary>
     /// Auto cadastro de estudantes
+    /// Para o campo de Shift, pode ser as seguintes opções: 1 = MORNING, 2 = AFTERNOON, 3 = NIGHT, 4 = DAYTIME
     /// </summary>
     [HttpPost("autoregister")]
     public async Task<ActionResult<MessageSuccessResponseModel>> AutoRegister([FromBody] AutoRegisterDTO data,

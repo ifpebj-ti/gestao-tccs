@@ -208,7 +208,6 @@ public static class DbInitializer
                     INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") VALUES
                         (1, 4),
                         (2, 4),
-                        (3, 4),
                         (1, 6),
                         (2, 6),
                         (3, 6),
