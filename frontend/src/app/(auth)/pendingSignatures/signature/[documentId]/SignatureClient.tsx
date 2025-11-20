@@ -16,6 +16,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CollapseCard } from '@/components/CollapseCard';
 import { CustomFileInput } from '@/components/CustomFileInput/page';
+import { useSearchParams } from 'next/navigation';
 
 export default function SignatureClient() {
   const {
@@ -28,6 +29,9 @@ export default function SignatureClient() {
     handleSignDocument,
     handleDownloadDocument
   } = useSignaturePage();
+
+  const searchParams = useSearchParams();
+  const docNameFromParams = searchParams.get('docName');
 
   const [downloadClicked, setDownloadClicked] = useState(false);
 
@@ -58,7 +62,9 @@ export default function SignatureClient() {
 
       {/* Passo 2: Assinar (Link Externo) */}
       <div
-        className={`border-t pt-4 space-y-2 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
+        className={`border-t pt-4 space-y-2 transition-opacity ${
+          !downloadClicked ? 'opacity-50' : ''
+        }`}
       >
         <h3 className="font-bold text-base">Passo 2: Assinar o Documento</h3>
         <p className="text-sm text-gray-600">
@@ -82,7 +88,9 @@ export default function SignatureClient() {
 
       {/* Passo 3: Enviar Documento */}
       <div
-        className={`border-t pt-4 space-y-2 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
+        className={`border-t pt-4 space-y-2 transition-opacity ${
+          !downloadClicked ? 'opacity-50' : ''
+        }`}
       >
         <h3 className="font-bold text-base">
           Passo 3: Enviar Documento Assinado
@@ -105,11 +113,12 @@ export default function SignatureClient() {
 
       {/* Passo 4: Confirmar Assinatura */}
       <div
-        className={`border-t pt-4 space-y-4 transition-opacity ${!downloadClicked ? 'opacity-50' : ''}`}
+        className={`border-t pt-4 space-y-4 transition-opacity ${
+          !downloadClicked ? 'opacity-50' : ''
+        }`}
       >
         <h3 className="font-bold text-base">Passo 4: Confirmar Assinatura</h3>
 
-        {/* 2. Bloco de aviso adicionado aqui */}
         <div className="p-3 text-sm text-amber-700 rounded-lg bg-amber-50 border border-amber-200">
           <div className="flex items-start gap-2">
             <FontAwesomeIcon
@@ -168,13 +177,16 @@ export default function SignatureClient() {
     </div>
   );
 
+  const pageTitle =
+    docNameFromParams ||
+    documentName ||
+    (isLoading ? 'Carregando documento...' : 'Erro ao carregar documento');
+
   return (
     <div className="flex flex-col">
       <BreadcrumbAuto />
       <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10 truncate">
-        {isLoading
-          ? 'Carregando documento...'
-          : documentName || 'Erro ao carregar documento'}
+        {pageTitle}
       </h1>
 
       {/* Layout para Telas Grandes (lg em diante) */}

@@ -99,7 +99,9 @@ export default function PendingSignaturesPage() {
               className="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 transition cursor-pointer"
               onClick={() =>
                 push(
-                  `/pendingSignatures/signature/${doc.documentId}?tccId=${tcc.tccId}`
+                  `/pendingSignatures/signature/${doc.documentId}?tccId=${
+                    tcc.tccId
+                  }&docName=${encodeURIComponent(doc.documentName)}`
                 )
               }
             >
@@ -126,7 +128,9 @@ export default function PendingSignaturesPage() {
     return (
       <CollapseCard
         key={userGroup.userId}
-        title={`${userGroup.userName} (${profileLabels[userGroup.userProfile] || userGroup.userProfile})`}
+        title={`${userGroup.userName} (${
+          profileLabels[userGroup.userProfile] || userGroup.userProfile
+        })`}
         icon={faUser}
         indicatorNumber={totalTasks}
         indicatorColor="bg-red-600"
@@ -162,7 +166,13 @@ export default function PendingSignaturesPage() {
                           isActionable
                             ? () =>
                                 push(
-                                  `/pendingSignatures/signature/[${doc.documentId}]?tccId=${tccGroup.tccId}`
+                                  `/pendingSignatures/signature/${
+                                    doc.documentId
+                                  }?tccId=${
+                                    tccGroup.tccId
+                                  }&docName=${encodeURIComponent(
+                                    doc.documentName
+                                  )}`
                                 )
                             : undefined
                         }
