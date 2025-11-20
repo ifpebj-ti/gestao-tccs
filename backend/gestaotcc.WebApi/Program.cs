@@ -1,6 +1,7 @@
 using FluentValidation;
 using gestaotcc.Infra.Database;
 using gestaotcc.Infra.Database.PostgresSql;
+using gestaotcc.Infra.Gateways;
 using gestaotcc.WebApi.Config;
 using gestaotcc.WebApi.Middlewares;
 using gestaotcc.WebApi.SchemaFilters;
@@ -48,7 +49,7 @@ Log.Information("Executando Migrations");
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 dbContext.Database.Migrate();
-DbInitializer.Initialize(dbContext);
+DbInitializer.Initialize(dbContext, new BcryptGateway());
 
 app.UseHangfireExtension(app.Services);
 
