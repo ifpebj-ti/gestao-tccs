@@ -9,7 +9,9 @@ import {
   faUser,
   faEnvelope,
   faGraduationCap,
-  faAddressCard
+  faAddressCard,
+  faPhone,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
@@ -30,6 +32,7 @@ export default function AutoRegister() {
     push('/');
   };
 
+  // --- Máscara de CPF ---
   const formatCPF = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
     const limitedValue = numericValue.slice(0, 11);
@@ -52,7 +55,39 @@ export default function AutoRegister() {
     return formattedValue;
   };
 
+  // --- Máscara de Telefone ---
+  const formatPhone = (value: string) => {
+    if (!value) return '';
+    const numericValue = value.replace(/\D/g, '');
+    const limitedValue = numericValue.slice(0, 11); // Limita a 11 dígitos
+
+    let formattedValue = limitedValue;
+
+    if (limitedValue.length > 0) {
+      formattedValue = formattedValue.replace(/^(\d{2})/, '($1');
+    }
+    if (limitedValue.length > 2) {
+      formattedValue = formattedValue.replace(/^(\(\d{2})(\d)/, '$1) $2');
+    }
+    if (limitedValue.length > 7) {
+      if (limitedValue.length === 11) {
+        formattedValue = formattedValue.replace(
+          /^(\(\d{2}\) \d{5})(\d{4})/,
+          '$1-$2'
+        );
+      } else {
+        formattedValue = formattedValue.replace(
+          /^(\(\d{2}\) \d{4})(\d{0,4})/,
+          '$1-$2'
+        );
+      }
+    }
+    formattedValue = formattedValue.replace(/-$/, '');
+    return formattedValue;
+  };
+
   const { onChange: onCpfChange, ...cpfRest } = register('cpf');
+  const { onChange: onPhoneChange, ...phoneRest } = register('phone');
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen lg:max-h-screen py-10 lg:py-40 px-6 lg:px-10">
@@ -72,9 +107,10 @@ export default function AutoRegister() {
           </Button>
           <h1 className="text-2xl lg:text-4xl font-medium my-6">Cadastro</h1>
           <form
-            className="flex flex-col gap-4"
+            className="grid grid-cols-1 gap-4"
             onSubmit={handleSubmit(submitForm)}
           >
+            {/* 1. Nome Completo */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="name">
                 Nome Completo
@@ -86,6 +122,8 @@ export default function AutoRegister() {
                 {...register('name')}
               />
             </div>
+
+            {/* 2. Email discente */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="email">
                 Email discente
@@ -97,7 +135,8 @@ export default function AutoRegister() {
                 {...register('email')}
               />
             </div>
-            {/* campo matrícula */}
+
+            {/* 3. Matrícula */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="registration">
                 Matrícula
@@ -109,13 +148,14 @@ export default function AutoRegister() {
                 {...register('registration')}
               />
             </div>
-            {/* campo CPF */}
+
+            {/* 4. CPF */}
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="cpf">
                 CPF
               </Label>
               <Input
-                placeholder="Digite seu CPF"
+                placeholder="Digite seu CPF (XXX.XXX.XXX-XX)"
                 icon={faAddressCard}
                 errorText={errors.cpf?.message?.toString()}
                 maxLength={14}
@@ -126,10 +166,67 @@ export default function AutoRegister() {
                 }}
               />
             </div>
-            <Button type="submit">
+
+            {/* 5. Telefone */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="phone">
+                Telefone
+              </Label>
+              <Input
+                placeholder="(XX) 9XXXX-XXXX"
+                icon={faPhone}
+                errorText={errors.phone?.message?.toString()}
+                maxLength={15}
+                {...phoneRest}
+                onChange={(e) => {
+                  e.target.value = formatPhone(e.target.value);
+                  onPhoneChange(e);
+                }}
+              />
+            </div>
+
+            {/* 6. Turma */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="userClass">
+                Turma
+              </Label>
+              <Input
+                placeholder="Ex: 2024.1"
+                icon={faUsers}
+                errorText={errors.userClass?.message?.toString()}
+                {...register('userClass')}
+              />
+            </div>
+
+            {/* 7. Turno */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="shift">
+                Turno
+              </Label>
+              <select
+                id="shift"
+                {...register('shift')}
+                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
+              >
+                <option value="">Selecione o turno</option>
+                <option value="1">Matutino (Manhã)</option>
+                <option value="2">Vespertino (Tarde)</option>
+                <option value="3">Noturno (Noite)</option>
+                <option value="4">Diurno (Integral)</option>
+              </select>
+              {errors.shift && (
+                <p className="text-red-500 text-sm">
+                  {errors.shift.message?.toString()}
+                </p>
+              )}
+            </div>
+
+            <Button type="submit" className="mt-4" disabled={isSubmitting}>
               {isSubmitting ? 'Carregando...' : 'Continuar'}
             </Button>
           </form>
+
+          {/* Botão Voltar Mobile */}
           <Button
             icon={faArrowLeft}
             className="lg:hidden block"
@@ -139,6 +236,7 @@ export default function AutoRegister() {
             Voltar para Login
           </Button>
         </div>
+
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">
           <Image
@@ -154,8 +252,9 @@ export default function AutoRegister() {
           </Link>
         </div>
       </div>
+
       {/* footer mobile */}
-      <div className="flex lg:hidden items-center justify-between w-full">
+      <div className="flex lg:hidden items-center justify-between w-full mt-10">
         <Image src={IFPELogo} alt="Logo IFPE" className="w-32 lg:w-40 h-auto" />
         <Link
           href="/"
