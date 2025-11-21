@@ -9,7 +9,7 @@
 ![Open PRs](https://img.shields.io/github/issues-pr/ifpebj-ti/gestao-tccs)
 ![Forks](https://img.shields.io/github/forks/ifpebj-ti/gestao-tccs)
 ![Stars](https://img.shields.io/github/stars/ifpebj-ti/gestao-tccs)
-![Coverage](https://img.shields.io/badge/Coverage-74%25-brightgreen) <!-- COVERAGE_BADGE -->
+![Coverage](https://img.shields.io/badge/Coverage-73%25-brightgreen) <!-- COVERAGE_BADGE -->
 
 <!--![Tags Versions](https://img.shields.io/github/v/tag/ifpebj-ti/gestao-tccs)--> <!--Adicionar caso o sistema venha a ter versões separadas por tags-->
 
