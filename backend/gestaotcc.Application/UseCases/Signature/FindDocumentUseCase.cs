@@ -15,7 +15,7 @@ namespace gestaotcc.Application.UseCases.Signature;
 public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IUserGateway userGateway, IAppLoggerGateway<FindDocumentUseCase> logger)
 {
     //verificar
-    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long studentId, long campiCourseId)
+    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long? studentId, long campiCourseId)
     {
         logger.LogInformation("Iniciando busca de documento para TccId: {TccId}, DocumentId: {DocumentId}, StudentId: {StudentId}", tccId, documentId, studentId);
         
@@ -38,12 +38,12 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         if (!isSign)
         {
             logger.LogInformation("Documento não assinado. Iniciando processo de preenchimento de dados do template.");
-            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.ADVISOR.ToString()), campiCourseId);
+            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.SUPERVISOR.ToString()), campiCourseId);
             logger.LogInformation("Encontrados {SupervisorCount} usuários com perfil de supervisor.", supervisorsUser.Count);
             
             var onlySupervisorUser = supervisorsUser
                 .FirstOrDefault(u => u.Profile
-                    .Any(p => p.Role != RoleType.COORDINATOR.ToString() && p.Role != RoleType.ADMIN.ToString() && p.Role == RoleType.ADVISOR.ToString()));
+                    .Any(p => p.Role != RoleType.COORDINATOR.ToString() && p.Role != RoleType.ADMIN.ToString() && p.Role == RoleType.SUPERVISOR.ToString()));
             
             logger.LogInformation("Usuário supervisor selecionado: {SupervisorName} (Id: {SupervisorId})", onlySupervisorUser!.Name, onlySupervisorUser.Id);
             fields = FillDataFile(studentId, tcc, templateDocument, tcc.UserTccs, onlySupervisorUser!);
@@ -60,7 +60,7 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
     }
 
     private Dictionary<string, string> FillDataFile(
-        long studentUserId,
+        long? studentUserId,
         TccEntity tcc,
         DocumentTypeEntity documentTypeEntity,
         ICollection<UserTccEntity> usersTccEntity,

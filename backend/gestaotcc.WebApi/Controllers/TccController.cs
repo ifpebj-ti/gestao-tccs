@@ -354,4 +354,35 @@ public class TccController : ControllerBase
 
         return Ok(new MessageSuccessResponseModel(useCaseResult.Message));
     }
+
+    /// <summary>
+    /// Atualizar tcc
+    /// </summary>
+    /// <param name="tccId">Id do tcc</param>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPut("{tccId}")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> Update([FromBody] UpdateTccDTO data,
+        [FromRoute] long tccId, [FromServices] UpdateTccUseCase updateTccUseCase)
+    {
+        var validator = new UpdateTccValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+        
+        var useCaseResult = await updateTccUseCase.Execute(data, tccId);
+        if (useCaseResult.IsFailure)
+        {
+            // Construindo a URL dinamicamente
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+            
+            return useCaseResult.ErrorDetails?.Status is 500
+                ? StatusCode(StatusCodes.Status500InternalServerError, useCaseResult.ErrorDetails)
+                : NotFound();
+        }
+
+        return Ok(new MessageSuccessResponseModel(useCaseResult.Message));
+    }
 }
