@@ -30,26 +30,29 @@ export function useNewTccForm() {
     defaultValues: {
       students: [{ studentEmail: '', courseId: 0 }],
       advisorId: 0,
-      title: '',
-      summary: '',
-    },
+      title: null,
+      summary: null
+    }
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "students"
+    name: 'students'
   });
 
   useEffect(() => {
     const token = Cookies.get('token');
-    
-    const fetchData = async <T>(endpoint: string, setData: (data: T) => void) => {
+
+    const fetchData = async <T>(
+      endpoint: string,
+      setData: (data: T) => void
+    ) => {
       try {
         const res = await fetch(`${API_URL}/${endpoint}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) throw new Error(`Erro ao buscar ${endpoint}`);
-        const data = await res.json() as T;
+        const data = (await res.json()) as T;
         setData(data);
       } catch {
         toast.error(`Erro ao carregar dados de ${endpoint.toLowerCase()}.`);
@@ -57,48 +60,48 @@ export function useNewTccForm() {
     };
 
     fetchData<Advisor[]>('User/filter?Profile=ADVISOR', setAdvisors);
-    fetchData<Course[]>('Campi/all/courses', setCourses); 
-
+    fetchData<Course[]>('Campi/all/courses', setCourses);
   }, [API_URL]);
 
   const submitForm: SubmitHandler<NewTccSchemaType> = async (data) => {
     try {
       const payload = {
         students: data.students,
-        title: data.title,
-        summary: data.summary,
-        advisorId: data.advisorId,
+        title: data.title || null,
+        summary: data.summary || null,
+        advisorId: data.advisorId
       };
 
       const response = await fetch(`${API_URL}/Tcc`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Cookies.get('token')}`,
+          Authorization: `Bearer ${Cookies.get('token')}`
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
         push('/ongoingTCCs');
         toast.success('Proposta de TCC enviada com sucesso!');
       } else {
-        toast.error('Erro ao enviar a proposta de TCC. Verifique os dados e tente novamente.');
+        toast.error(
+          'Erro ao enviar a proposta de TCC. Verifique os dados e tente novamente.'
+        );
       }
     } catch {
       toast.error('Erro ao enviar a proposta de TCC.');
     }
   };
 
-  return { 
-    form, 
-    submitForm, 
-    advisors, 
+  return {
+    form,
+    submitForm,
+    advisors,
     courses,
     fields,
     append,
     remove,
-    isSubmitting: form.formState.isSubmitting 
+    isSubmitting: form.formState.isSubmitting
   };
 }
-
