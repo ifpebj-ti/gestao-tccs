@@ -22,23 +22,30 @@ export default function DetailsClient() {
     cancellationDetails,
     loading,
     profile,
+    // Modais e Visibilidade
     isCancellationModalOpen,
     setIsCancellationModalOpen,
     isBankingFormVisible,
     setIsBankingFormVisible,
     isScheduleFormVisible,
     setIsScheduleFormVisible,
+    isEditingTccInfo,
+    setIsEditingTccInfo,
+    // Forms
     cancellationForm,
     bankingForm,
     allBankingMembers,
     scheduleForm,
+    editTccForm,
+    // Handlers
     handleRequestCancellation,
     handleApproveCancellation,
     handleRegisterBanking,
     handleScheduleSubmit,
     handleSendScheduleEmail,
     handleResendInvite,
-    handleDownloadAllDocuments
+    handleDownloadAllDocuments,
+    handleEditTccInfo
   } = useTccDetails();
 
   if (loading) {
@@ -82,6 +89,10 @@ export default function DetailsClient() {
         <div className="flex flex-col gap-8 mt-10">
           <TccInfoSection
             infoTcc={tccData.infoTcc}
+            isEditingInfo={isEditingTccInfo}
+            onToggleEditInfo={setIsEditingTccInfo}
+            editForm={editTccForm}
+            onEditSubmit={handleEditTccInfo}
             isScheduleFormVisible={isScheduleFormVisible}
             onScheduleCancel={() => setIsScheduleFormVisible(false)}
             scheduleForm={scheduleForm}

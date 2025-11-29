@@ -5,7 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { UseFormReturn, SubmitHandler } from 'react-hook-form';
 import { ScheduleSchemaType } from '@/app/schemas/scheduleSchema';
+import { EditTccSchemaType } from '@/app/schemas/editTccSchema';
 import { useEffect } from 'react';
+import { Pencil, X, Check } from 'lucide-react';
 
 interface TccInfoSectionProps {
   infoTcc: {
@@ -15,6 +17,12 @@ interface TccInfoSectionProps {
     presentationTime: string | null;
     presentationLocation: string;
   };
+
+  isEditingInfo: boolean;
+  onToggleEditInfo: (val: boolean) => void;
+  editForm: UseFormReturn<EditTccSchemaType>;
+  onEditSubmit: SubmitHandler<EditTccSchemaType>;
+
   isScheduleFormVisible?: boolean;
   onScheduleCancel?: () => void;
   scheduleForm?: UseFormReturn<ScheduleSchemaType>;
@@ -23,46 +31,155 @@ interface TccInfoSectionProps {
 
 export function TccInfoSection({
   infoTcc,
+  isEditingInfo,
+  onToggleEditInfo,
+  editForm,
+  onEditSubmit,
   isScheduleFormVisible = false,
   onScheduleCancel = () => {},
   scheduleForm,
   onScheduleSubmit
 }: TccInfoSectionProps) {
-  const { register, handleSubmit, formState, reset } = scheduleForm || {};
-  const { errors, isSubmitting } = formState || {};
+  // Agendamento
+  const {
+    register: registerSchedule,
+    handleSubmit: handleSubmitSchedule,
+    formState: formStateSchedule,
+    reset: resetSchedule
+  } = scheduleForm || {};
+  const { errors: errorsSchedule, isSubmitting: isSubmittingSchedule } =
+    formStateSchedule || {};
 
   const hasSchedule = !!infoTcc.presentationDate;
 
   useEffect(() => {
-    if (hasSchedule && scheduleForm && reset) {
-      reset({
+    if (hasSchedule && scheduleForm && resetSchedule) {
+      resetSchedule({
         scheduleDate: infoTcc.presentationDate ?? '',
         scheduleTime: infoTcc.presentationTime ?? '',
         scheduleLocation: infoTcc.presentationLocation
       });
     }
-  }, [hasSchedule, infoTcc, reset, scheduleForm]);
+  }, [hasSchedule, infoTcc, resetSchedule, scheduleForm]);
+
+  // Edição
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    formState: { isSubmitting: isSubmittingEdit, errors: errorsEdit },
+    reset: resetEdit
+  } = editForm;
+
+  const handleCancelEdit = () => {
+    resetEdit({ title: infoTcc.title ?? '', summary: infoTcc.summary ?? '' });
+    onToggleEditInfo(false);
+  };
 
   return (
     <section>
-      <h2 className="text-lg font-extrabold uppercase">Informações do TCC</h2>
-      <div className="grid md:grid-cols-2 gap-4 mt-4">
-        <div className="grid items-center gap-1.5">
-          <Label className="font-semibold">Título da proposta</Label>
-          <Input value={infoTcc.title} readOnly />
-        </div>
-        <div className="grid items-center gap-1.5">
-          <Label className="font-semibold">Resumo da proposta</Label>
-          <Input value={infoTcc.summary} readOnly />
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-extrabold uppercase">Informações do TCC</h2>
+
+        {!isEditingInfo ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggleEditInfo(true)}
+          >
+            <Pencil className="w-4 h-4" />
+            Editar
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancelEdit}
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+          >
+            <X className="w-4 h-4" />
+            Cancelar Edição
+          </Button>
+        )}
+      </div>
+
+      <form
+        id="edit-tcc-form"
+        onSubmit={handleSubmitEdit(onEditSubmit)}
+        className="grid md:grid-cols-2 gap-4 mt-4"
+      >
+        <div className="grid items-center gap-1.5 md:col-span-2">
+          <Label className="font-semibold" htmlFor="tcc-title">
+            Título da proposta
+          </Label>
+
+          {isEditingInfo ? (
+            <Input
+              key="title-edit"
+              id="tcc-title"
+              className="bg-white"
+              errorText={errorsEdit.title?.message}
+              {...registerEdit('title')}
+            />
+          ) : (
+            <Input
+              key="title-view"
+              id="tcc-title-view"
+              readOnly
+              className="bg-gray-50"
+              value={infoTcc.title || ''}
+            />
+          )}
         </div>
 
+        <div className="grid items-center gap-1.5 md:col-span-2">
+          <Label className="font-semibold" htmlFor="tcc-summary">
+            Resumo da proposta
+          </Label>
+          <div className="relative">
+            {isEditingInfo ? (
+              <Input
+                key="summary-edit"
+                id="tcc-summary"
+                className="bg-white"
+                errorText={errorsEdit.summary?.message}
+                {...registerEdit('summary')}
+              />
+            ) : (
+              <Input
+                key="summary-view"
+                id="tcc-summary-view"
+                readOnly
+                className="bg-gray-50"
+                value={infoTcc.summary || ''}
+              />
+            )}
+          </div>
+        </div>
+
+        {isEditingInfo && (
+          <div className="md:col-span-2 flex justify-end mt-2">
+            <Button type="submit" disabled={isSubmittingEdit}>
+              {isSubmittingEdit ? (
+                'Salvando...'
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-2" /> Salvar Alterações
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </form>
+
+      {/* Área de Agendamento */}
+      <div className="mt-8 border-t pt-4">
         {isScheduleFormVisible &&
         scheduleForm &&
-        handleSubmit &&
+        handleSubmitSchedule &&
         onScheduleSubmit ? (
           <form
-            onSubmit={handleSubmit(onScheduleSubmit)}
-            className="md:col-span-2 flex flex-col gap-4 mt-4 border-t pt-4"
+            onSubmit={handleSubmitSchedule(onScheduleSubmit)}
+            className="flex flex-col gap-4"
           >
             <h3 className="font-semibold text-md text-gray-800">
               Agendar Apresentação
@@ -73,11 +190,11 @@ export function TccInfoSection({
                 <Input
                   id="scheduleDate"
                   type="date"
-                  {...register?.('scheduleDate')}
+                  {...registerSchedule?.('scheduleDate')}
                 />
-                {errors?.scheduleDate && (
+                {errorsSchedule?.scheduleDate && (
                   <p className="text-sm text-red-600">
-                    {errors.scheduleDate.message}
+                    {errorsSchedule.scheduleDate.message}
                   </p>
                 )}
               </div>
@@ -86,11 +203,11 @@ export function TccInfoSection({
                 <Input
                   id="scheduleTime"
                   type="time"
-                  {...register?.('scheduleTime')}
+                  {...registerSchedule?.('scheduleTime')}
                 />
-                {errors?.scheduleTime && (
+                {errorsSchedule?.scheduleTime && (
                   <p className="text-sm text-red-600">
-                    {errors.scheduleTime.message}
+                    {errorsSchedule.scheduleTime.message}
                   </p>
                 )}
               </div>
@@ -99,39 +216,51 @@ export function TccInfoSection({
                 <Input
                   id="scheduleLocation"
                   placeholder="Ex: Sala 20 ou Link do Meet"
-                  {...register?.('scheduleLocation')}
+                  {...registerSchedule?.('scheduleLocation')}
                 />
-                {errors?.scheduleLocation && (
+                {errorsSchedule?.scheduleLocation && (
                   <p className="text-sm text-red-600">
-                    {errors.scheduleLocation.message}
+                    {errorsSchedule.scheduleLocation.message}
                   </p>
                 )}
               </div>
             </div>
             <div className="flex gap-2 self-end">
               <Button type="button" variant="ghost" onClick={onScheduleCancel}>
-                Cancelar
+                Cancelar Agendamento
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Salvando...' : 'Salvar Agendamento'}
+              <Button type="submit" disabled={isSubmittingSchedule}>
+                {isSubmittingSchedule ? 'Salvando...' : 'Salvar Agendamento'}
               </Button>
             </div>
           </form>
         ) : hasSchedule ? (
-          <>
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold">Data da apresentação</Label>
-              <Input value={infoTcc.presentationDate || ''} readOnly />
+              <Input
+                value={infoTcc.presentationDate || ''}
+                readOnly
+                className="bg-gray-50"
+              />
             </div>
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold">Hora da apresentação</Label>
-              <Input value={infoTcc.presentationTime || ''} readOnly />
+              <Input
+                value={infoTcc.presentationTime || ''}
+                readOnly
+                className="bg-gray-50"
+              />
             </div>
             <div className="grid items-center gap-1.5 md:col-span-2">
               <Label className="font-semibold">Local da apresentação</Label>
-              <Input value={infoTcc.presentationLocation} readOnly />
+              <Input
+                value={infoTcc.presentationLocation}
+                readOnly
+                className="bg-gray-50"
+              />
             </div>
-          </>
+          </div>
         ) : null}
       </div>
     </section>
