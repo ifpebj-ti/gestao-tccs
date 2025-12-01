@@ -25,6 +25,7 @@ export function useSignaturePage() {
   const documentId = params.documentId as string;
   const tccId = searchParams.get('tccId');
   const docNameFromParams = searchParams.get('docName');
+  const studentId = searchParams.get('studentId');
 
   const API_URL = env('NEXT_PUBLIC_API_URL');
 
@@ -35,7 +36,7 @@ export function useSignaturePage() {
     const token = Cookies.get('token');
     try {
       const res = await fetch(
-        `${API_URL}/Signature/document?tccId=${tccId}&documentId=${documentId}`,
+        `${API_URL}/Signature/document?tccId=${tccId}&documentId=${documentId}&studentId=${studentId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -57,7 +58,7 @@ export function useSignaturePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [documentId, tccId, API_URL]);
+  }, [documentId, tccId, studentId, API_URL]);
 
   useEffect(() => {
     fetchDocument();
@@ -72,7 +73,7 @@ export function useSignaturePage() {
 
     try {
       const res = await fetch(
-        `${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}`,
+        `${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}&studentId=${studentId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
