@@ -23,6 +23,7 @@ interface PendingDocumentDetail {
   documentId: number;
   documentName: string;
   userDetails: PendingUserDetail[];
+  idDocumentOwner: number;
 }
 
 export interface PendingTcc {
@@ -32,8 +33,9 @@ export interface PendingTcc {
 }
 
 interface TccDocument {
-    documentId: number;
-    documentName: string;
+  documentId: number;
+  documentName: string;
+  studentId: number;
 }
 
 interface UserTccGroup {
@@ -49,7 +51,6 @@ export interface GroupedByUserAndTcc {
   tccGroups: UserTccGroup[];
 }
 
-
 export function usePendingSignatures() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const [pendingData, setPendingData] = useState<PendingTcc[]>([]);
@@ -63,23 +64,23 @@ export function usePendingSignatures() {
     setIsLoading(true);
     const token = Cookies.get('token');
     if (!token) {
-      toast.error("Token não encontrado.");
+      toast.error('Token não encontrado.');
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     setPendingData([]);
-    
+
     const decoded = jwtDecode<DecodedToken>(token);
     if (!profile) setProfile(decoded.role);
     if (!userId) setUserId(decoded.userId);
-    
+
     const canViewAll = Array.isArray(decoded.role)
-      ? decoded.role.some(r => ['ADMIN', 'SUPERVISOR'].includes(r))
+      ? decoded.role.some((r) => ['ADMIN', 'SUPERVISOR'].includes(r))
       : ['ADMIN', 'SUPERVISOR'].includes(decoded.role);
 
     let endpoint = `${API_URL}/Signature/pending`;
-    
+
     if (canViewAll && showAll) {
       // Busca todas as pendências
     } else {
@@ -95,7 +96,7 @@ export function usePendingSignatures() {
       const data = await res.json();
       setPendingData(data);
     } catch {
-      toast.error("Erro ao carregar assinaturas pendentes.");
+      toast.error('Erro ao carregar assinaturas pendentes.');
       setPendingData([]);
     } finally {
       setIsLoading(false);
@@ -114,39 +115,41 @@ export function usePendingSignatures() {
 
     const userMap = new Map<number, GroupedByUserAndTcc>();
 
-    pendingData.forEach(tcc => {
-      tcc.pendingDetails.forEach(doc => {
-        doc.userDetails.forEach(user => {
+    pendingData.forEach((tcc) => {
+      tcc.pendingDetails.forEach((doc) => {
+        doc.userDetails.forEach((user) => {
           if (!userMap.has(user.userId)) {
             userMap.set(user.userId, {
               userId: user.userId,
               userName: user.userName,
               userProfile: user.userProfile,
-              tccGroups: [],
+              tccGroups: []
             });
           }
           const userEntry = userMap.get(user.userId)!;
 
-          let tccGroup = userEntry.tccGroups.find(group => group.tccId === tcc.tccId);
+          let tccGroup = userEntry.tccGroups.find(
+            (group) => group.tccId === tcc.tccId
+          );
           if (!tccGroup) {
             tccGroup = {
               tccId: tcc.tccId,
               studentNames: tcc.studentNames,
-              documents: [],
+              documents: []
             };
             userEntry.tccGroups.push(tccGroup);
           }
-          
+
           tccGroup.documents.push({
             documentId: doc.documentId,
             documentName: doc.documentName,
+            studentId: doc.idDocumentOwner
           });
         });
       });
     });
-    
-    setGroupedByUser(Array.from(userMap.values()));
 
+    setGroupedByUser(Array.from(userMap.values()));
   }, [pendingData, showAll]);
 
   return {
