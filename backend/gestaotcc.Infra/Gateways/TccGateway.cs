@@ -3,6 +3,7 @@ using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
+using gestaotcc.Domain.Enums;
 using gestaotcc.Infra.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,7 +25,12 @@ public class TccGateway(AppDbContext context) : ITccGateway
 
     public async Task<List<TccInviteEntity>> FindAllInviteTcc()
     {
-        return await context.TccInvites.Where(x => x.IsValidCode).ToListAsync();
+        return await context.TccInvites
+            .Where(x => 
+                x.IsValidCode && 
+                x.Tcc.Status != StatusTccType.CANCELED.ToString() 
+                && x.Tcc.Status != StatusTccType.COMPLETED.ToString())
+            .ToListAsync();
     }
 
     public async Task<TccInviteEntity?> FindInviteTccByEmail(string email)
