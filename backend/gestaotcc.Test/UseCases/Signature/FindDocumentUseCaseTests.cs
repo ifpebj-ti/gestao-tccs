@@ -77,7 +77,7 @@ public class FindDocumentUseCaseTests
         var profile = new ProfileEntity
         {
             Id = 1,
-            Role = RoleType.ADVISOR.ToString()
+            Role = RoleType.SUPERVISOR.ToString()
         };
         
         var supervisorUser = new UserEntity
@@ -122,7 +122,7 @@ public class FindDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(1).Returns(tcc);
-        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(u => u.Profile == RoleType.ADVISOR.ToString()), Arg.Any<long>())
+        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(u => u.Profile == RoleType.SUPERVISOR.ToString()), Arg.Any<long>())
             .Returns(new List<UserEntity> { supervisorUser });
         _minioGateway.GetDocumentAsBase64("Proposal.pdf", Arg.Any<System.Collections.Generic.Dictionary<string, string>>(), false)
             .Returns("https://template-doc-url");
