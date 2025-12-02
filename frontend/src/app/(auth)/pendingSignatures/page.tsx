@@ -81,6 +81,7 @@ export default function PendingSignaturesPage() {
       0
     );
     const cardId = `tcc-${tcc.tccId}`;
+
     return (
       <CollapseCard
         key={cardId}
@@ -93,27 +94,31 @@ export default function PendingSignaturesPage() {
         onToggle={() => toggleTccGroup(cardId)}
       >
         <div className="space-y-2">
-          {tcc.pendingDetails.map((doc) => (
-            <div
-              key={doc.documentId}
-              className="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 transition cursor-pointer"
-              onClick={() =>
-                push(
-                  `/pendingSignatures/signature/${doc.documentId}?tccId=${
-                    tcc.tccId
-                  }&docName=${encodeURIComponent(doc.documentName)}`
-                )
-              }
-            >
-              <p className="font-semibold text-gray-700 flex items-center gap-2">
-                <FontAwesomeIcon
-                  icon={faFileSignature}
-                  className="text-gray-500"
-                />
-                {doc.documentName}
-              </p>
-            </div>
-          ))}
+          {tcc.pendingDetails.map((doc) => {
+            const studentId = doc.userDetails[0]?.idDocumentOwner;
+
+            return (
+              <div
+                key={doc.documentId}
+                className="p-3 bg-gray-50 rounded-md border hover:bg-gray-100 transition cursor-pointer"
+                onClick={() =>
+                  push(
+                    `/pendingSignatures/signature/${doc.documentId}?tccId=${
+                      tcc.tccId
+                    }&docName=${encodeURIComponent(doc.documentName)}&studentId=${studentId}`
+                  )
+                }
+              >
+                <p className="font-semibold text-gray-700 flex items-center gap-2">
+                  <FontAwesomeIcon
+                    icon={faFileSignature}
+                    className="text-gray-500"
+                  />
+                  {doc.documentName}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </CollapseCard>
     );
@@ -172,7 +177,7 @@ export default function PendingSignaturesPage() {
                                     tccGroup.tccId
                                   }&docName=${encodeURIComponent(
                                     doc.documentName
-                                  )}`
+                                  )}&studentId=${doc.studentId}`
                                 )
                             : undefined
                         }
