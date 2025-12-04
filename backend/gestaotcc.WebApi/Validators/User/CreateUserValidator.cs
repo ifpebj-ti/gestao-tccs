@@ -15,7 +15,19 @@ public class CreateUserValidator : AbstractValidator<CreateUserDTO>
             .NotNull().WithMessage("O campo Email não pode ser nulo.")
             .NotEmpty().WithMessage("O campo Email é obrigatório.")
             .EmailAddress().WithMessage("O campo Email deve conter um endereço de e-mail válido.")
-            .Must(email => email?.Trim().ToLower().EndsWith(".ifpe.edu.br") == true).WithMessage("O e-mail deve pertencer ao domínio ifpe.edu.br.");
+            .Must((model, email) => 
+            {
+                // 1. Verifica se a lista de perfis contém "BANKING"
+                // O uso do ?. evita erro caso a lista Profile seja nula
+                var isBanking = model.Profile != null && model.Profile.Contains("BANKING");
+
+                // 2. Se for banca, permite qualquer domínio (retorna true)
+                if (isBanking) return true;
+
+                // 3. Caso contrário, valida se termina com ifpe.edu.br
+                return email != null && email.Trim().ToLower().EndsWith(".ifpe.edu.br");
+            })
+            .WithMessage("O e-mail deve pertencer ao domínio ifpe.edu.br.");
 
         RuleFor(x => x.Profile)
             .NotNull().WithMessage("O campo Profile não pode ser nulo.")

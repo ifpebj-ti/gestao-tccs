@@ -36,7 +36,7 @@ export function useSignaturePage() {
     const token = Cookies.get('token');
     try {
       const res = await fetch(
-        `${API_URL}/Signature/document?tccId=${tccId}&documentId=${documentId}&studentId=${studentId}`,
+        `${API_URL}/Signature/document?tccId=${tccId}&documentId=${documentId}&studentId=${studentId == "null" ? 0 : studentId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
