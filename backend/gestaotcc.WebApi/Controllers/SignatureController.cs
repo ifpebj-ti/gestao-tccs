@@ -115,7 +115,7 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<FindDocumentDTO>> FindDocument(
         [FromQuery] long tccId, 
         [FromQuery] long documentId,
-        [FromQuery] long? studentId,
+        [FromQuery] long studentId,
         [FromServices] FindDocumentUseCase findDocumentUseCase)
     {
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
