@@ -21,13 +21,15 @@ import { useSearchParams } from 'next/navigation';
 export default function SignatureClient() {
   const {
     documentUrl,
+    documentHtml,
     documentName,
     isLoading,
     isSubmitting,
     selectedFile,
     setSelectedFile,
     handleSignDocument,
-    handleDownloadDocument
+    handleDownloadDocument,
+    iframeRef
   } = useSignaturePage();
 
   const searchParams = useSearchParams();
@@ -165,6 +167,14 @@ export default function SignatureClient() {
           src={documentUrl}
           className="w-full h-full border rounded-md"
           title="Visualizador de Documento"
+        />
+      ) : documentHtml ? (
+        <iframe
+          ref={iframeRef}
+          srcDoc={documentHtml}
+          sandbox="allow-same-origin allow-forms"
+          className="w-full h-full border rounded-md"
+          title="Visualizador HTML Seguro"
         />
       ) : (
         <div className="w-full h-full bg-gray-100 rounded-md flex items-center justify-center text-center p-4">

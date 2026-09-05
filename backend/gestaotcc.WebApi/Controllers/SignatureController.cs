@@ -61,11 +61,9 @@ public class SignatureController : ControllerBase
         if (useCaseResult.IsFailure)
         {
             
-            // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
-            // Retornando erro apropriado
             return useCaseResult.ErrorDetails?.Status is 409
                 ? Conflict(useCaseResult.ErrorDetails)
                 : NotFound(useCaseResult.ErrorDetails);
@@ -81,10 +79,23 @@ public class SignatureController : ControllerBase
     /// <param name="documentId">Id do documento</param>
     [Authorize]
     [HttpGet("document/download")]
-    public async Task<ActionResult> DownloaDocument([FromQuery] long tccId, [FromQuery] long documentId,
+    public async Task<ActionResult> DownloaDocument([FromQuery] long tccId, [FromQuery] long documentId, [FromQuery] string? studentId,
         [FromServices] DownloadDocumentUseCase downloadDocumentUseCase)
     {
-        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId);
+        long? parsedStudentId = null;
+        if (!string.IsNullOrEmpty(studentId) && studentId != "null" && long.TryParse(studentId, out var parsed))
+        {
+            parsedStudentId = parsed;
+        }
+        else if (studentId == "0") 
+        {
+            parsedStudentId = 0;
+        }
+
+        var campiCourseId = User.FindFirst("campiCourseId")?.Value;
+        if (campiCourseId == null) return Unauthorized();
+
+        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId, parsedStudentId, long.Parse(campiCourseId));
         if (useCaseResult.IsFailure)
         {
             
@@ -93,6 +104,32 @@ public class SignatureController : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
+            return useCaseResult.ErrorDetails?.Status is 409
+                ? Conflict(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+        
+        return File(useCaseResult.Data.File, "application/octet-stream", useCaseResult.Data.FileName);
+    }
+
+    /// <summary>
+    /// Faz o download do documento gerando PDF a partir do HTML fornecido
+    /// </summary>
+    [Authorize]
+    [HttpPost("document/download/html")]
+    public async Task<ActionResult> DownloadDocumentHtml(
+        [FromBody] DownloadDocumentHtmlInputModel input,
+        [FromServices] DownloadDocumentUseCase downloadDocumentUseCase)
+    {
+        var campiCourseId = User.FindFirst("campiCourseId")?.Value;
+        if (campiCourseId == null) return Unauthorized();
+
+        var useCaseResult = await downloadDocumentUseCase.Execute(input.TccId, input.DocumentId, input.HtmlContent);
+        if (useCaseResult.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
             return useCaseResult.ErrorDetails?.Status is 409
                 ? Conflict(useCaseResult.ErrorDetails)
                 : NotFound(useCaseResult.ErrorDetails);
