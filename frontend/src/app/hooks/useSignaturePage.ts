@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
@@ -14,10 +14,12 @@ interface DecodedToken {
 export function useSignaturePage() {
   const { push } = useRouter();
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [documentHtml, setDocumentHtml] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -45,7 +47,13 @@ export function useSignaturePage() {
         throw new Error('Documento não encontrado ou link expirado.');
 
       const data = await res.json();
-      setDocumentUrl('data:application/pdf;base64,' + data.url);
+      if (data.isHtml) {
+        setDocumentHtml(data.url);
+        setDocumentUrl(null);
+      } else {
+        setDocumentUrl('data:application/pdf;base64,' + data.url);
+        setDocumentHtml(null);
+      }
 
       if (data.url) {
         const path = data.url.split('?')[0];
@@ -72,12 +80,53 @@ export function useSignaturePage() {
     }
 
     try {
-      const res = await fetch(
-        `${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}&studentId=${studentId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
+      let res: Response;
+      
+      if (documentHtml) {
+        // Capturar HTML preenchido no iframe
+        let currentHtml = documentHtml;
+        if (iframeRef.current && iframeRef.current.contentDocument) {
+          const doc = iframeRef.current.contentDocument;
+          
+          // Propagar valores dos inputs para os atributos HTML para captura
+          const inputs = doc.querySelectorAll('input');
+          inputs.forEach(input => {
+             if (input.type === 'checkbox' || input.type === 'radio') {
+               if (input.checked) input.setAttribute('checked', 'checked');
+               else input.removeAttribute('checked');
+             } else {
+               input.setAttribute('value', input.value);
+             }
+          });
+          const textareas = doc.querySelectorAll('textarea');
+          textareas.forEach(textarea => {
+             textarea.innerHTML = textarea.value;
+          });
+          
+          currentHtml = doc.documentElement.outerHTML;
         }
-      );
+
+        res = await fetch(`${API_URL}/Signature/document/download/html`, {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({
+             TccId: Number(tccId),
+             DocumentId: Number(documentId),
+             StudentId: studentId,
+             HtmlContent: currentHtml
+          })
+        });
+      } else {
+        res = await fetch(
+          `${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${documentId}&studentId=${studentId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+      }
 
       if (!res.ok) throw new Error('Erro ao baixar o documento.');
 
@@ -161,6 +210,7 @@ export function useSignaturePage() {
     documentId,
     tccId,
     documentUrl,
+    documentHtml,
     documentName,
     isLoading,
     isSubmitting,
@@ -168,6 +218,7 @@ export function useSignaturePage() {
     setSelectedFile,
     handleSignDocument,
     handleDownloadDocument,
-    API_URL
+    API_URL,
+    iframeRef
   };
 }
