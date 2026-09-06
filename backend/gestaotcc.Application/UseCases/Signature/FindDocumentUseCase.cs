@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.IO;
+using System.Text.Encodings.Web;
 using System.Text;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
@@ -9,13 +11,18 @@ using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
+using Scriban;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IUserGateway userGateway, IAppLoggerGateway<FindDocumentUseCase> logger)
+public class FindDocumentUseCase(
+    ITccGateway tccGateway, 
+    IMinioGateway minioGateway, 
+    IUserGateway userGateway, 
+    IITextGateway iTextGateway,
+    IAppLoggerGateway<FindDocumentUseCase> logger)
 {
-    //verificar
-    public async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long? studentId, long campiCourseId)
+    public virtual async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long? studentId, long campiCourseId)
     {
         logger.LogInformation("Iniciando busca de documento para TccId: {TccId}, DocumentId: {DocumentId}, StudentId: {StudentId}", tccId, documentId, studentId);
         
@@ -32,42 +39,50 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         logger.LogInformation("Verificação de assinatura para DocumentId {DocumentId}: IsSigned = {IsSigned}", documentId, isSign);
         
         var templateDocument = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.DocumentType;
-        var document = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.FileName + ".pdf";
+        var documentFileName = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.FileName + ".pdf";
 
-        var fields = new Dictionary<string, string>();
-        if (!isSign)
+        if (isSign)
         {
-            logger.LogInformation("Documento não assinado. Iniciando processo de preenchimento de dados do template.");
-            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.SUPERVISOR.ToString()), campiCourseId);
-            logger.LogInformation("Encontrados {SupervisorCount} usuários com perfil de supervisor.", supervisorsUser.Count);
-            
-            var onlySupervisorUser = supervisorsUser
-                .FirstOrDefault(u => u.Profile
-                    .Any(p => p.Role != RoleType.COORDINATOR.ToString() && p.Role != RoleType.ADMIN.ToString() && p.Role == RoleType.SUPERVISOR.ToString()));
-            
-            logger.LogInformation("Usuário supervisor selecionado: {SupervisorName} (Id: {SupervisorId})", onlySupervisorUser!.Name, onlySupervisorUser.Id);
-            fields = FillDataFile(studentId, tcc, templateDocument, tcc.UserTccs, onlySupervisorUser!);
-            logger.LogInformation("Processo de preenchimento de dados concluído. {FieldCount} campos foram preenchidos.", fields.Count);
+            logger.LogInformation("Documento já assinado. Baixando arquivo assinado do Minio.");
+            var signedBytes = await minioGateway.Download(documentFileName, true);
+            var documentUrlBase64 = Convert.ToBase64String(signedBytes);
+            return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(documentUrlBase64, false));
         }
+        else
+        {
+            logger.LogInformation("Documento não assinado. Retornando HTML gerado pelo Scriban.");
+            
+            var supervisorsUser = await userGateway.FindAllByFilter(new UserFilterDTO(null, null, null, RoleType.SUPERVISOR.ToString()), campiCourseId);
+            var onlySupervisorUser = supervisorsUser
+                .FirstOrDefault(u => u.Profile.Any(p => p.Role != RoleType.COORDINATOR.ToString() && p.Role != RoleType.ADMIN.ToString() && p.Role == RoleType.SUPERVISOR.ToString()));
+            
+            var directory = Directory.GetCurrentDirectory();
+            var templatePath = Path.Combine(directory, "Templates", "Documents", $"{templateDocument.Name}.html");
 
-        var isTemplateOrDocument = isSign ? document : templateDocument.Name + ".pdf";
-        logger.LogInformation("Solicitando URL pré-assinada do Minio para o arquivo: {FileName} com {FieldCount} campos de substituição.", isTemplateOrDocument, fields.Count);
+            if (!File.Exists(templatePath))
+            {
+                logger.LogWarning("Template HTML não encontrado no caminho: {TemplatePath}. Tentando arquivo padrão.", templatePath);
+                templatePath = Path.Combine(directory, "Templates", "Documents", "default-template.html");
+            }
 
-        var documentUrl = await minioGateway.GetDocumentAsBase64(isTemplateOrDocument, fields, isSign);
-        logger.LogInformation("URL pré-assinada para TccId {TccId} recebida com sucesso.", tccId);
+            var htmlContent = await File.ReadAllTextAsync(templatePath);
 
-        return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(documentUrl));
+            var templateData = BuildTemplateVariables(studentId, tcc, templateDocument, tcc.UserTccs, onlySupervisorUser!);
+
+            var template = Template.Parse(htmlContent);
+            var renderedHtml = template.Render(templateData);
+
+            return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(renderedHtml, true));
+        }
     }
 
-    private Dictionary<string, string> FillDataFile(
+    private object BuildTemplateVariables(
         long? studentUserId,
         TccEntity tcc,
         DocumentTypeEntity documentTypeEntity,
         ICollection<UserTccEntity> usersTccEntity,
         UserEntity supervisorUser)
     {
-        logger.LogDebug("Iniciando FillDataFile para o DocumentTypeId: {DocumentTypeId}", documentTypeEntity.Id);
-        var fields = new Dictionary<string, string>();
         var advisor = usersTccEntity.FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString())?.User;
         var student = usersTccEntity.FirstOrDefault(ut => ut.UserId == studentUserId)?.User;
         var students = usersTccEntity
@@ -82,125 +97,70 @@ public class FindDocumentUseCase(ITccGateway tccGateway, IMinioGateway minioGate
         var semester = (tcc.CreationDate.Month <= 6) ? 1 : 2;
         var formattedSemester = $"{tcc.CreationDate.Year}.{semester}";
 
-        switch (documentTypeEntity.Id)
-        {
-            case 1:
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["curso_orientador"] = advisor?.CampiCourse?.Course.Name ?? "";
-                fields["universidade_curso_orientador"] = advisor?.CampiCourse?.Campi.City ?? "";
-                fields["email_orientador"] = advisor?.Email ?? "";
-                fields["telefone_orientador"] = advisor?.Phone ?? "";
-                fields["titulo_orientador"] = advisor?.Titration ?? "";
-                AddCommonDateFields(fields, nowDate, students[0]);
-
-                for (var i = 0; i < students.Count; i++)
-                {
-                    fields[$"nome_orientando_{i + 1}"] = students[i].Name ?? "";
-                    fields[$"curso_orientando_{i + 1}"] = students[i].CampiCourse?.Course.Name ?? "";
-                    fields[$"turma_orientando_{i + 1}"] = students[i].UserClass ?? "";
-                    fields[$"ano_orientando_{i + 1}"] = formattedSemester;
-                    fields[$"turno_orientando_{i + 1}"] = students[i].Shift ?? "";
-                    fields[$"email_orientando_{i + 1}"] = students[i].Email ?? "";
-                    fields[$"telefone_orientando_{i + 1}"] = students[i].Phone ?? "";
-                }
-
-                break;
-
-            case 2:
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["curso_orientador"] = advisor?.CampiCourse?.Course.Name ?? "";
-                fields["universidade_orientador"] = advisor?.CampiCourse?.Campi.Name ?? "";
-                fields["nome_orientando"] = student?.Name ?? "";
-                fields["email_orientador"] = advisor?.Email ?? "";
-                fields["telefone_orientador"] = advisor?.Titration ?? "";
-                fields["titulo_orientador"] = advisor?.Titration ?? "";
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["turma_orientando"] = student?.UserClass ?? "";
-                fields["ano_orientando"] = formattedSemester;
-                fields["turno_orientando"] = student?.Shift ?? "";
-                fields["email_orientando"] = student?.Email ?? "";
-                fields["telefone_orientando"] = student?.Phone ?? "";
-                AddCommonDateFields(fields, nowDate, student!);
-                break;
-
-            case 3:
-                fields["nome_orientando"] = student?.Name ?? "";
-                fields["matricula_orientando"] = student?.Registration ?? "";
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["universidade_cidade_orientando"] = student?.CampiCourse?.Campi.City ?? "";
-                fields["titulo_tcc"] = tccTitle;
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                AddCommonDateFields(fields, nowDate, student!);
-                break;
-
-            case 4:
-                fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["titulo_tcc"] = tccTitle;
-                AddCommonDateFields(fields, nowDate, student!);
-                break;
-
-            case 5:
-                fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["titulo_tcc"] = tccTitle;
-                AddCommonDateFields(fields, nowDate, student!);
-                break;
-
-            case 6:
-                var (tccTitle1, tccTitle2) = SplitTitle(tccTitle, 78);
-                var studentNames = string.Join(", ", students.Select(s => s.Name));
-
-                fields["curso_supervisor"] = supervisorUser.CampiCourse?.Course.Name ?? ""; 
-                fields["universidade_supervisor"] = supervisorUser.CampiCourse?.Campi.City ?? "";
-                fields["titulo_tcc_1"] = tccTitle1;
-                fields["titulo_tcc_2"] = tccTitle2;
-                fields["orientandos"] = studentNames;
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["titulo_tcc"] = tccTitle;
-                fields["dia_apresentacao"] = tccSchedule?.ScheduledDate.Day.ToString() ?? "";
-                fields["mes_apresentacao"] = tccSchedule?.ScheduledDate.Month.ToString() ?? "";
-                fields["ano_apresentacao"] = tccSchedule?.ScheduledDate.Year.ToString() ?? "";
-                fields["hora_apresentacao"] = tccSchedule?.ScheduledDate.Hour.ToString() ?? "";
-                fields["minuto_apresentacao"] = tccSchedule?.ScheduledDate.Minute.ToString() ?? "";
-                fields["local_apresentacao"] = tccSchedule?.Location ?? "";
-                AddCommonDateFields(fields, nowDate, student!);
-                break;
-
-            case 7:
-                fields["nome_orientando"] = student?.Name ?? "";
-                fields["curso_orientando"] = student?.CampiCourse?.Course.Name ?? "";
-                fields["ano_orientando"] = formattedSemester;
-                fields["turma_orientando"] = student?.UserClass ?? "";
-                fields["turno_orientando"] = student?.Shift ?? "";
-                fields["data_apresentacao"] = tccSchedule?.ScheduledDate.ToString("dd/MM/yyyy") ?? "";
-                fields["local_apresentacao"] = tccSchedule?.Location ?? "";
-                fields["nome_orientador"] = advisor?.Name ?? "";
-                fields["titulo_tcc"] = tccTitle;
-                AddCommonDateFields(fields, nowDate, student!);
-                break;
-        }
-
-        logger.LogDebug("FillDataFile concluído para DocumentTypeId: {DocumentTypeId}. {FieldCount} campos preenchidos.", documentTypeEntity.Id, fields.Count);
-        return fields;
-    }
-
-    private void AddCommonDateFields(Dictionary<string, string> fields, DateTime date, UserEntity user)
-    {
         string[] mesesPtBr = { 
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" 
         };
 
-        fields["cidade"] = user.CampiCourse?.Campi.City ?? "";
-        fields["dia"] = date.Day.ToString();
-        fields["mes"] = mesesPtBr[date.Month - 1]; 
-        fields["ano"] = date.Year.ToString();
+        var (tccTitle1, tccTitle2) = SplitTitle(tccTitle, 78);
+
+        var encoder = HtmlEncoder.Default;
+
+        // Retorna um objeto dinâmico / anônimo contendo todas as chaves acessíveis pelo Scriban no HTML
+        return new
+        {
+            nome_orientador = encoder.Encode(advisor?.Name ?? ""),
+            curso_orientador = encoder.Encode(advisor?.CampiCourse?.Course.Name ?? ""),
+            universidade_curso_orientador = encoder.Encode(advisor?.CampiCourse?.Campi.City ?? ""),
+            universidade_orientador = encoder.Encode(advisor?.CampiCourse?.Campi.Name ?? ""),
+            email_orientador = encoder.Encode(advisor?.Email ?? ""),
+            telefone_orientador = encoder.Encode(advisor?.Phone ?? ""),
+            titulo_orientador = encoder.Encode(advisor?.Titration ?? ""),
+            
+            nome_orientando = encoder.Encode(student?.Name ?? ""),
+            curso_orientando = encoder.Encode(student?.CampiCourse?.Course.Name ?? ""),
+            turma_orientando = encoder.Encode(student?.UserClass ?? ""),
+            ano_orientando = encoder.Encode(formattedSemester),
+            turno_orientando = encoder.Encode(student?.Shift ?? ""),
+            email_orientando = encoder.Encode(student?.Email ?? ""),
+            telefone_orientando = encoder.Encode(student?.Phone ?? ""),
+            matricula_orientando = encoder.Encode(student?.Registration ?? ""),
+            universidade_cidade_orientando = encoder.Encode(student?.CampiCourse?.Campi.City ?? ""),
+
+            curso_supervisor = encoder.Encode(supervisorUser?.CampiCourse?.Course.Name ?? ""), 
+            universidade_supervisor = encoder.Encode(supervisorUser?.CampiCourse?.Campi.City ?? ""),
+            
+            titulo_tcc = encoder.Encode(tccTitle),
+            titulo_tcc_1 = encoder.Encode(tccTitle1),
+            titulo_tcc_2 = encoder.Encode(tccTitle2),
+            orientandos = encoder.Encode(string.Join(", ", students.Select(s => s.Name ?? ""))),
+
+            dia_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Day.ToString() ?? ""),
+            mes_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Month.ToString() ?? ""),
+            ano_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Year.ToString() ?? ""),
+            hora_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Hour.ToString() ?? ""),
+            minuto_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Minute.ToString() ?? ""),
+            local_apresentacao = encoder.Encode(tccSchedule?.Location ?? ""),
+            data_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.ToString("dd/MM/yyyy") ?? ""),
+
+            cidade = encoder.Encode(student?.CampiCourse?.Campi.City ?? advisor?.CampiCourse?.Campi.City ?? ""),
+            dia = encoder.Encode(nowDate.Day.ToString()),
+            mes = encoder.Encode(mesesPtBr[nowDate.Month - 1]),
+            ano = encoder.Encode(nowDate.Year.ToString()),
+
+            // Lista estruturada para loops 
+            students = students.Select(s => new {
+                name = encoder.Encode(s.Name ?? ""),
+                course = encoder.Encode(s.CampiCourse?.Course.Name ?? ""),
+                user_class = encoder.Encode(s.UserClass ?? ""),
+                semester_year = encoder.Encode(formattedSemester),
+                shift = encoder.Encode(s.Shift ?? ""),
+                email = encoder.Encode(s.Email ?? ""),
+                phone = encoder.Encode(s.Phone ?? "")
+            }).ToList()
+        };
     }
-    
+
     private (string, string) SplitTitle(string title, int maxLength)
     {
         if (string.IsNullOrEmpty(title))

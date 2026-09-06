@@ -9,7 +9,7 @@
 ![Open PRs](https://img.shields.io/github/issues-pr/ifpebj-ti/gestao-tccs)
 ![Forks](https://img.shields.io/github/forks/ifpebj-ti/gestao-tccs)
 ![Stars](https://img.shields.io/github/stars/ifpebj-ti/gestao-tccs)
-![Coverage](https://img.shields.io/badge/Coverage-83%25-brightgreen) <!-- COVERAGE_BADGE -->
+![Coverage](https://img.shields.io/badge/Coverage-73%25-brightgreen) <!-- COVERAGE_BADGE -->
 
 <!--![Tags Versions](https://img.shields.io/github/v/tag/ifpebj-ti/gestao-tccs)--> <!--Adicionar caso o sistema venha a ter versões separadas por tags-->
 
@@ -28,6 +28,8 @@ Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando
 ## 📖 Documentação e Wiki
 
 Acesse a Wiki do Projeto para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
+
+Acompanhe o [Sprint Report](https://www.canva.com/design/DAGyh_WU0jU/3eeINFORZW4p_HAiuHqmEg/view?utm_content=DAGyh_WU0jU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfb7fd3492f)!
 
 ## 🎨 Protótipo
 

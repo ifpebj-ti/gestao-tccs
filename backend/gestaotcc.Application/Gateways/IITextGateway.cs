@@ -1,6 +1,9 @@
+using System.IO;
+using System.Threading.Tasks;
+
 namespace gestaotcc.Application.Gateways;
 
 public interface IITextGateway
 {
-    Task<MemoryStream> FillPdf(Dictionary<string, string> fields, MemoryStream pdfDocument);
+    Task<byte[]> ConvertHtmlToPdf(string htmlContent);
 }
