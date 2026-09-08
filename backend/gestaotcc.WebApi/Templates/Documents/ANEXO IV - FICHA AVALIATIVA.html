@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -234,5 +234,114 @@
             <div>Orientando/a</div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tables = document.querySelectorAll('.grid-table');
+            if (tables.length < 3) return;
+            
+            const gradeTable = tables[1];
+            const finalTable = tables[2];
+            const rows = gradeTable.querySelectorAll('tr');
+            
+            gradeTable.addEventListener('input', function(e) {
+                if (e.target.tagName === 'INPUT') {
+                    const input = e.target;
+                    const row = input.closest('tr');
+                    
+                    if (row) {
+                        const tds = row.querySelectorAll('td');
+                        // Verifica se a linha tem a indicação de nota máxima na segunda coluna
+                        if (tds.length >= 2) {
+                            const limitText = tds[1].innerText || tds[1].textContent;
+                            const match = limitText.match(/0 a ([\d,]+)/);
+                            
+                            if (match) {
+                                const maxValStr = match[1].replace(',', '.');
+                                const maxVal = parseFloat(maxValStr);
+                                
+                                // Extrai o valor atual digitado ignorando caracteres não numéricos
+                                let currentValStr = input.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                                let currentVal = parseFloat(currentValStr);
+                                
+                                if (!isNaN(currentVal) && currentVal > maxVal) {
+                                    // Se a nota for maior que o permitido, corrige para a nota máxima
+                                    input.value = maxVal.toString().replace('.', ',');
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Recalcula as notas após a validação
+                calculateGrades();
+            });
+            
+            function parseGrade(val) {
+                if (!val) return 0;
+                val = val.replace(',', '.');
+                const num = parseFloat(val);
+                return isNaN(num) ? 0 : num;
+            }
+            
+            function formatGrade(num) {
+                return num.toFixed(2).replace('.', ',');
+            }
+
+            function calculateGrades() {
+                // Cálculo da Apresentação Oral (linhas 2 a 8)
+                let oralParcial = [0, 0, 0];
+                for (let i = 2; i <= 8; i++) {
+                    const inputs = rows[i].querySelectorAll('input');
+                    if(inputs.length === 3) {
+                        oralParcial[0] += parseGrade(inputs[0].value);
+                        oralParcial[1] += parseGrade(inputs[1].value);
+                        oralParcial[2] += parseGrade(inputs[2].value);
+                    }
+                }
+                
+                // Preenche Notas Parciais Oral (linha 9)
+                const oralParcialInputs = rows[9].querySelectorAll('input');
+                if(oralParcialInputs.length === 3) {
+                    oralParcialInputs[0].value = formatGrade(oralParcial[0]);
+                    oralParcialInputs[1].value = formatGrade(oralParcial[1]);
+                    oralParcialInputs[2].value = formatGrade(oralParcial[2]);
+                }
+                
+                // Média Total Oral (linha 10)
+                const totalOral = (oralParcial[0] + oralParcial[1] + oralParcial[2]) / 3;
+                const totalOralInput = rows[10].querySelector('input');
+                if(totalOralInput) totalOralInput.value = formatGrade(totalOral);
+
+                // Cálculo da Produção Textual (linhas 12 a 20)
+                let textParcial = [0, 0, 0];
+                for (let i = 12; i <= 20; i++) {
+                    const inputs = rows[i].querySelectorAll('input');
+                    if(inputs.length === 3) {
+                        textParcial[0] += parseGrade(inputs[0].value);
+                        textParcial[1] += parseGrade(inputs[1].value);
+                        textParcial[2] += parseGrade(inputs[2].value);
+                    }
+                }
+                
+                // Preenche Notas Parciais Textual (linha 21)
+                const textParcialInputs = rows[21].querySelectorAll('input');
+                if(textParcialInputs.length === 3) {
+                    textParcialInputs[0].value = formatGrade(textParcial[0]);
+                    textParcialInputs[1].value = formatGrade(textParcial[1]);
+                    textParcialInputs[2].value = formatGrade(textParcial[2]);
+                }
+                
+                // Média Total Textual (linha 22)
+                const totalText = (textParcial[0] + textParcial[1] + textParcial[2]) / 3;
+                const totalTextInput = rows[22].querySelector('input');
+                if(totalTextInput) totalTextInput.value = formatGrade(totalText);
+
+                // Nota Final (Média entre Oral e Textual)
+                const notaFinal = (totalOral + totalText) / 2;
+                const finalInput = finalTable.querySelector('input');
+                if(finalInput) finalInput.value = formatGrade(notaFinal);
+            }
+        });
+    </script>
 </body>
 </html>
