@@ -22,7 +22,7 @@ public class FindDocumentUseCase(
     IITextGateway iTextGateway,
     IAppLoggerGateway<FindDocumentUseCase> logger)
 {
-    public virtual async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long? studentId, long campiCourseId)
+    public virtual async Task<ResultPattern<FindDocumentDTO>> Execute(long tccId, long documentId, long? studentId, long campiCourseId, bool returnSignedPdfIfAvailable = false)
     {
         logger.LogInformation("Iniciando busca de documento para TccId: {TccId}, DocumentId: {DocumentId}, StudentId: {StudentId}", tccId, documentId, studentId);
         
@@ -41,12 +41,28 @@ public class FindDocumentUseCase(
         var templateDocument = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.DocumentType;
         var documentFileName = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.FileName + ".pdf";
 
-        if (isSign)
+        if (isSign && returnSignedPdfIfAvailable)
         {
             logger.LogInformation("Documento já assinado. Baixando arquivo assinado do Minio.");
-            var signedBytes = await minioGateway.Download(documentFileName, true);
+            
+            // Tenta baixar com .pdf primeiro (legado), se falhar tenta com .html
+            byte[] signedBytes;
+            try 
+            {
+                signedBytes = await minioGateway.Download(documentFileName, true);
+            }
+            catch 
+            {
+                var htmlFileName = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.FileName + ".html";
+                signedBytes = await minioGateway.Download(htmlFileName, true);
+            }
+            
             var documentUrlBase64 = Convert.ToBase64String(signedBytes);
-            return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(documentUrlBase64, false));
+            
+            // Detecta se é HTML (começa com '<' ou 'PGh0' em base64)
+            bool isActuallyHtml = documentUrlBase64.StartsWith("PGh0") || documentUrlBase64.StartsWith("PCFET0");
+            
+            return ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(documentUrlBase64, isActuallyHtml));
         }
         else
         {

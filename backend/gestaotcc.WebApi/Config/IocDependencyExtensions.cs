@@ -10,6 +10,8 @@ using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Dtos.Home;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Infra.Gateways;
+using Microsoft.Extensions.DependencyInjection;
+using gestaotcc.Application.UseCases;
 
 namespace gestaotcc.WebApi.Config;
 
@@ -17,6 +19,11 @@ public static class IocDependencyExtensions
 {
     public static void AddIocDependencies(this IServiceCollection services)
     {
+        // Fake Services
+        services.AddScoped<IEmailSender, EmailSender>();
+        services.AddScoped<IHtmlTemplateEngine, FakeHtmlTemplateEngine>();
+        services.AddScoped<IAuditLogger, FakeAuditLogger>();
+
         // Gateways
         services.AddScoped<IEmailGateway, EmailGateway>();
         services.AddScoped<ICourseGateway, CourseGateway>();
