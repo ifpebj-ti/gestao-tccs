@@ -29,7 +29,18 @@ export const autoRegisterSchema = z.object({
 
   shift: z.coerce
     .number({ invalid_type_error: 'Selecione um turno válido' })
-    .min(1, 'O turno é obrigatório.')
+    .min(1, 'O turno é obrigatório.'),
+
+  password: z
+    .string()
+    .min(8, 'A senha deve ter no mínimo 8 caracteres'),
+
+  confirmPassword: z
+    .string()
+    .min(1, 'A confirmação de senha é obrigatória')
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'As senhas não coincidem',
+  path: ['confirmPassword']
 });
 
 export type AutoRegisterSchemaType = z.infer<typeof autoRegisterSchema>;

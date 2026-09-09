@@ -35,6 +35,7 @@ public class ResendInvitationCodeTccUseCase(IEmailGateway emailGateway, ITccGate
         
         userInvite.Code = code;
         userInvite.IsValidCode = true;
+        userInvite.ExpirationDate = DateTime.UtcNow.AddDays(7);
 
         logger.LogInformation("Atualizando convite no banco de dados para o TccInviteId: {TccInviteId}", userInvite.Id);
         await tccGateway.UpdateTccInvite(userInvite);

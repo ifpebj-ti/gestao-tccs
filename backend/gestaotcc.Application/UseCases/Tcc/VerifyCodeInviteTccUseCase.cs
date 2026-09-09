@@ -26,13 +26,19 @@ public class VerifyCodeInviteTccUseCase(IUserGateway userGateway, ITccGateway tc
         if(!tccInvite!.IsValidCode)
         {
             logger.LogWarning("Falha na verificação para {UserEmail}: o código de convite não é mais válido (TccInviteId: {TccInviteId}).", data.UserEmail, tccInvite.Id);
-            return ResultPattern<bool>.FailureResult("Erro ao verificar código", 409);
+            return ResultPattern<bool>.FailureResult("Código de convite inválido ou já utilizado.", 409);
+        }
+
+        if (tccInvite.ExpirationDate < DateTime.UtcNow)
+        {
+            logger.LogWarning("Falha na verificação para {UserEmail}: o código de convite expirou em {ExpirationDate} (TccInviteId: {TccInviteId}).", data.UserEmail, tccInvite.ExpirationDate, tccInvite.Id);
+            return ResultPattern<bool>.FailureResult("Código de convite expirado. Solicite o reenvio ao seu orientador.", 409);
         }
 
         if (tccInvite!.Code != data.Code)
         {
             logger.LogWarning("Falha na verificação para {UserEmail}: o código de convite fornecido é inválido (TccInviteId: {TccInviteId}).", data.UserEmail, tccInvite.Id);
-            return ResultPattern<bool>.FailureResult("Erro ao verificar código", 409);
+            return ResultPattern<bool>.FailureResult("Código de convite inválido.", 409);
         }
         
         logger.LogInformation("Código de convite verificado com sucesso para {UserEmail}. Invalidando o código...", data.UserEmail);

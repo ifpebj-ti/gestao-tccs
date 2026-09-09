@@ -81,20 +81,6 @@ public class MinioGateway : IMinioGateway
     {
         var objectName = signedDocument ? $"signatures/{fileName}" : $"templates/{fileName}";
 
-        if (!signedDocument)
-        {
-            var fileTemplate = await Download(fileName, signedDocument);
-            var fileStream = new MemoryStream(fileTemplate);
-            fileStream.Position = 0;
-
-            var outputStream = await _iTextGateway.FillPdf(fields ,fileStream);
-            var fileByte = outputStream.ToArray();
-            
-            objectName = $"filled/{Guid.NewGuid()}_{DateTime.Now:dd-MM-yyyy}_{fileName}";
-            
-            await Send(objectName, fileByte, "application/pdf", true);
-        }
-
         var file = await Download(objectName, signedDocument);
         return Convert.ToBase64String(file);
     }

@@ -36,6 +36,12 @@ export function useVerifyTccCode() {
           const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
           document.cookie = `access_token_temp=${result.token}; expires=${expires}; path=/; secure; samesite=Strict`;
 
+          // Armazena temporariamente para evitar redigitação no cadastro e senha
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('first_access_email', data.userEmail);
+            sessionStorage.setItem('first_access_code', data.code);
+          }
+
           toast.success('Código de acesso verificado com sucesso!');
 
           if (window.location.pathname === '/firstAccess') {
@@ -45,7 +51,14 @@ export function useVerifyTccCode() {
           }
 
         } else {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem('first_access_email', data.userEmail);
+            sessionStorage.setItem('first_access_code', data.code);
+          }
           toast.success('Código de acesso verificado com sucesso!');
+          if (window.location.pathname === '/firstAccess') {
+            window.location.href = '/autoRegister';
+          }
         }
       } else {
         toast.error('Código de acesso inválido ou expirado. Tente novamente.');

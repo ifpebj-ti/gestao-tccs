@@ -35,7 +35,9 @@ public class EmailFactory
         variables.Add("code", tccInvite.Code);
         variables.Add("email", tccInvite.Email);
 
-        var chooseSubject = "Solicitação de inclusão de Discente"; 
+        var chooseSubject = typeSend == "RESEND-INVITE-TCC" 
+            ? "Lembrete: Cadastro pendente no Gestão TCC" 
+            : "Convite para participar de projeto de TCC - Gestão TCC"; 
 
         var emailDTO = new SendEmailDTO("", chooseSubject, tccInvite.Email, typeSend, variables);
 
