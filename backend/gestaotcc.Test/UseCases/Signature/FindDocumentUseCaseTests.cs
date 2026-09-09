@@ -62,9 +62,10 @@ public class FindDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(1).Returns(tcc);
+        _userGateway.FindAllByFilter(Arg.Any<UserFilterDTO>(), Arg.Any<long>()).Returns(new List<UserEntity>());
         _minioGateway.Download("signed-doc.pdf", true).Returns(Task.FromResult(new byte[] { 1, 2, 3 }));
 
-        var result = await _useCase.Execute(1, 1, 1, 1);
+        var result = await _useCase.Execute(1, 1, 1, 1, true);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("AQID", result.Data.Url);
