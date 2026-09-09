@@ -3,20 +3,25 @@ using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Errors;
+using gestaotcc.Domain.Dtos.Signature;
 using NSubstitute;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace gestaotcc.Test.UseCases.Signature;
 
 public class DownloadDocumentUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
-    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
-    private readonly DownloadDocumentUseCase _useCase;
+    private readonly FindDocumentUseCase _findDocumentUseCase = Substitute.For<FindDocumentUseCase>(Substitute.For<ITccGateway>(), Substitute.For<IMinioGateway>(), Substitute.For<IUserGateway>(), Substitute.For<IITextGateway>(), Substitute.For<IAppLoggerGateway<FindDocumentUseCase>>());
+    private readonly IITextGateway _iTextGateway = Substitute.For<IITextGateway>();
     private readonly IAppLoggerGateway<DownloadDocumentUseCase> _logger = Substitute.For<IAppLoggerGateway<DownloadDocumentUseCase>>();
+    private readonly DownloadDocumentUseCase _useCase;
 
     public DownloadDocumentUseCaseTests()
     {
-        _useCase = new DownloadDocumentUseCase(_tccGateway, _minioGateway, _logger);
+        _useCase = new DownloadDocumentUseCase(_tccGateway, _findDocumentUseCase, _iTextGateway, _logger);
     }
 
     [Fact]
@@ -24,7 +29,7 @@ public class DownloadDocumentUseCaseTests
     {
         _tccGateway.FindTccById(Arg.Any<long>()).Returns((TccEntity?)null);
 
-        var result = await _useCase.Execute(1, 10);
+        var result = await _useCase.Execute(1, 10, null, 1);
 
         Assert.True(result.IsFailure);
         Assert.Equal(404, result.ErrorDetails?.Status);
@@ -36,7 +41,7 @@ public class DownloadDocumentUseCaseTests
     {
         // Arrange
         var documentId = 10L;
-        var signedDocumentName = "documento_final.pdf";
+        var signedDocumentName = "documento_final.html";
         var docTypeName = "RelatórioFinal";
         var documentBytes = new byte[] { 1, 2, 3 };
 
@@ -61,14 +66,14 @@ public class DownloadDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(tcc.Id).Returns(tcc);
-        _minioGateway.Download("documento_final.pdf", true).Returns(documentBytes);
+        _findDocumentUseCase.Execute(tcc.Id, documentId, null, 1, true).Returns(ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(System.Convert.ToBase64String(documentBytes))));
 
         // Act
-        var result = await _useCase.Execute(tcc.Id, documentId);
+        var result = await _useCase.Execute(tcc.Id, documentId, null, 1);
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("RelatórioFinal.pdf", result.Data.FileName);
+        Assert.Equal("documento_final.pdf", result.Data.FileName);
         Assert.Equal(documentBytes, result.Data.File);
     }
 
@@ -98,10 +103,10 @@ public class DownloadDocumentUseCaseTests
         };
 
         _tccGateway.FindTccById(tcc.Id).Returns(tcc);
-        _minioGateway.Download("TemplateModelo.pdf", false).Returns(documentBytes);
+        _findDocumentUseCase.Execute(tcc.Id, documentId, null, 1, true).Returns(ResultPattern<FindDocumentDTO>.SuccessResult(new FindDocumentDTO(System.Convert.ToBase64String(documentBytes))));
 
         // Act
-        var result = await _useCase.Execute(tcc.Id, documentId);
+        var result = await _useCase.Execute(tcc.Id, documentId, null, 1);
 
         // Assert
         Assert.True(result.IsSuccess);

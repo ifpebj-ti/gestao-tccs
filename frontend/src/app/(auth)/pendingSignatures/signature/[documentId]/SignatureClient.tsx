@@ -102,7 +102,7 @@ export default function SignatureClient() {
             selectedFile={selectedFile}
             onFileSelect={setSelectedFile}
             disabled={!downloadClicked}
-            accept=".pdf"
+            accept=".pdf,.html"
           />
           {!downloadClicked && (
             <p className="text-xs text-gray-500 italic mt-1 flex items-center gap-1">

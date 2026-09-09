@@ -147,7 +147,9 @@ export function useSignaturePage() {
         filename = 'documento.pdf';
       }
 
-      if (!filename.toLowerCase().endsWith('.pdf')) {
+      if (filename.toLowerCase().endsWith('.html')) {
+        filename = filename.substring(0, filename.length - 5) + '.pdf';
+      } else if (!filename.toLowerCase().endsWith('.pdf')) {
         filename += '.pdf';
       }
 

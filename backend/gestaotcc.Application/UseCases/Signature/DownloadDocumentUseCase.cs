@@ -35,7 +35,7 @@ public class DownloadDocumentUseCase(
         var fileName = isSign ? (document.FileName + ".pdf") : (document.DocumentType.Name + ".pdf");
         logger.LogInformation("Resolvido nome de arquivo para download: {FileName}", fileName);
 
-        var findResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, campiCourseId);
+        var findResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, campiCourseId, returnSignedPdfIfAvailable: true);
         
         if (findResult.IsFailure)
         {
