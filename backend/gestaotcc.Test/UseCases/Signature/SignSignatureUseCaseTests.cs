@@ -29,7 +29,7 @@ public class SignSignatureUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnInvalid_WhenFileIsInvalid()
     {
-        var dto = new SignSignatureDTO(1, 1, 1, new byte[0], 6, "application/pdf");
+        var dto = new SignSignatureDTO(1, 1, 1, new byte[0], 6, "application/pdf", "Doc.pdf");
 
         var result = await _useCase.Execute(dto);
 
@@ -83,7 +83,7 @@ public class SignSignatureUseCaseTests
         _tccGateway.FindTccById(1).Returns(tcc);
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { document.DocumentType });
 
-        var dto = new SignSignatureDTO(1, 1, 1, new byte[] { 1 }, 1, "application/pdf");
+        var dto = new SignSignatureDTO(1, 1, 1, new byte[] { 1 }, 1, "application/pdf", "Doc.pdf");
         var result = await _useCase.Execute(dto);
 
         Assert.False(result.IsSuccess);
@@ -142,7 +142,7 @@ public class SignSignatureUseCaseTests
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
         _minioGateway.Send(document.FileName, Arg.Any<byte[]>(), "application/pdf").Returns(Task.CompletedTask);
 
-        var dto = new SignSignatureDTO(1, 1, 1, new byte[] { 1, 2, 3 }, 1, "application/pdf");
+        var dto = new SignSignatureDTO(1, 1, 1, new byte[] { 1, 2, 3 }, 1, "application/pdf", "Doc.pdf");
 
         var result = await _useCase.Execute(dto);
 

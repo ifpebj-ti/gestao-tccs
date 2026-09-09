@@ -54,7 +54,8 @@ public class SignatureController : ControllerBase
             data.UserId, 
             fileBuffer,
             (double)fileStream.Length / (1024 * 1024),
-            data.File.ContentType
+            data.File.ContentType,
+            data.File.FileName
             );
         
         var useCaseResult = await signSignatureUseCase.Execute(dto);

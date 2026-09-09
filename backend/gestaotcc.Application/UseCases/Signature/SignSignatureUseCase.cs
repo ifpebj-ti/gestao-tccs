@@ -43,6 +43,15 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
         var document = tcc.Documents.First(d => d.Id == data.DocumentId);
         
+        if (string.IsNullOrEmpty(data.FileName) || !data.FileName.Contains(document.DocumentType.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning("Falha na assinatura para UserId {UserId}: Nome do arquivo inválido. Esperado conter '{ExpectedName}', recebido '{ReceivedName}'", data.UserId, document.DocumentType.Name, data.FileName);
+            return ResultPattern<string>.FailureResult(
+                "O documento enviado não corresponde ao documento esperado. Verifique se você anexou o arquivo correto.",
+                400
+            );
+        }
+        
         if (!UserCanSignDocument(user, tcc, document))
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário não tem permissão para assinar o DocumentId {DocumentId}.", data.UserId, data.DocumentId);
