@@ -8,7 +8,7 @@ public class TccInviteEntity
     public string Email { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public bool IsValidCode { get; set; } = true;
-    public DateTime ExpirationDate { get; set; } = DateTime.UtcNow.AddDays(7);
+    public DateTime ExpirationDate { get; set; } = DateTime.UtcNow.AddHours(48);
     public long CampiId { get; set; }
     public long CourseId { get; set; }
     public TccEntity Tcc { get; set; } = null!;
