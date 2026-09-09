@@ -12,15 +12,31 @@ import {
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
+import { useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useVerifyTccCode } from '@/app/hooks/useVerifyTccCode';
 
-export default function FirstAccess() {
+function FirstAccessContent() {
+  const searchParams = useSearchParams();
   const { form, submitForm } = useVerifyTccCode();
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting }
   } = form;
+
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    const codeParam = searchParams.get('code');
+
+    if (emailParam) {
+      setValue('userEmail', emailParam, { shouldValidate: true });
+    }
+    if (codeParam) {
+      setValue('code', codeParam, { shouldValidate: true });
+    }
+  }, [searchParams, setValue]);
 
   const handleRedirectToLogin = () => {
     window.location.href = '/';
@@ -113,3 +129,12 @@ export default function FirstAccess() {
     </div>
   );
 }
+
+export default function FirstAccess() {
+  return (
+    <Suspense fallback={null}>
+      <FirstAccessContent />
+    </Suspense>
+  );
+}
+

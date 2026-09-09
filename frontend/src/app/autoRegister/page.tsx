@@ -11,22 +11,36 @@ import {
   faGraduationCap,
   faAddressCard,
   faPhone,
-  faUsers
+  faUsers,
+  faLock
 } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
 import LoginImage from '../../../public/login image.svg';
 import IFPELogo from '../../../public/IFPE Logo.png';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAutoRegister } from '../hooks/useAutoRegister';
 
 export default function AutoRegister() {
   const { push } = useRouter();
   const { form, submitForm, isSubmitting } = useAutoRegister();
+  const [isEmailPreFilled, setIsEmailPreFilled] = useState(false);
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors }
   } = form;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedEmail = sessionStorage.getItem('first_access_email');
+      if (storedEmail) {
+        setValue('email', storedEmail, { shouldValidate: true });
+        setIsEmailPreFilled(true);
+      }
+    }
+  }, [setValue]);
 
   const handleRedirectToLogin = () => {
     push('/');
@@ -131,6 +145,8 @@ export default function AutoRegister() {
               <Input
                 placeholder="Digite seu email"
                 icon={faEnvelope}
+                readOnly={isEmailPreFilled}
+                disabled={isEmailPreFilled}
                 errorText={errors.email?.message?.toString()}
                 {...register('email')}
               />
@@ -221,8 +237,38 @@ export default function AutoRegister() {
               )}
             </div>
 
+            {/* 8. Senha */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="password">
+                Senha de acesso
+              </Label>
+              <Input
+                type="password"
+                placeholder="Crie uma senha segura (mínimo 8 dígitos)"
+                icon={faLock}
+                isPassword={true}
+                errorText={errors.password?.message?.toString()}
+                {...register('password')}
+              />
+            </div>
+
+            {/* 9. Confirmação de Senha */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="confirmPassword">
+                Confirmar senha
+              </Label>
+              <Input
+                type="password"
+                placeholder="Repita sua senha"
+                icon={faLock}
+                isPassword={true}
+                errorText={errors.confirmPassword?.message?.toString()}
+                {...register('confirmPassword')}
+              />
+            </div>
+
             <Button type="submit" className="mt-4" disabled={isSubmitting}>
-              {isSubmitting ? 'Carregando...' : 'Continuar'}
+              {isSubmitting ? 'Concluindo cadastro...' : 'Concluir cadastro e acessar'}
             </Button>
           </form>
 

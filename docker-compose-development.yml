@@ -37,6 +37,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      mailpit:
+        condition: service_started
 
   frontend:
     build:
@@ -93,6 +95,16 @@ services:
       - back_net
       - observability-net
       - management-net
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - back_net
 
 volumes:
   postgres_data:
