@@ -9,15 +9,8 @@ public class ITextGateway : IITextGateway
 {
     public Task<byte[]> ConvertHtmlToPdf(string htmlContent)
     {
-        var outputStream = new MemoryStream();
-        
-        var properties = new ConverterProperties();
-        properties.SetCreateAcroForm(true);
-        
-        properties.SetBaseUri(Directory.GetCurrentDirectory());
-        
-        HtmlConverter.ConvertToPdf(htmlContent, outputStream, properties);
-
-        return Task.FromResult(outputStream.ToArray());
+        using var memoryStream = new MemoryStream();
+        HtmlConverter.ConvertToPdf(htmlContent, memoryStream);
+        return Task.FromResult(memoryStream.ToArray());
     }
 }

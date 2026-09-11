@@ -91,6 +91,11 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
 
     private string CreateTemplate(SendEmailDTO data)
     {
+        if (data.TypeTemplate == "RAW")
+        {
+            return data.EmailBody;
+        }
+
         var corsSettings = configuration.GetSection("CORS_SETTINGS");
         var urlfront = corsSettings.GetValue<string>("URL_FRONT");
         

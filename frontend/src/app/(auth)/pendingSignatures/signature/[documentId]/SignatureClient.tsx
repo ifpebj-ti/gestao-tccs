@@ -172,7 +172,7 @@ export default function SignatureClient() {
         <iframe
           ref={iframeRef}
           srcDoc={documentHtml}
-          sandbox="allow-same-origin allow-forms"
+          sandbox="allow-same-origin allow-forms allow-scripts"
           className="w-full h-full border rounded-md"
           title="Visualizador HTML Seguro"
         />

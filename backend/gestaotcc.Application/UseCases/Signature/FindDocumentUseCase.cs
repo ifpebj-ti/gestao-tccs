@@ -100,7 +100,8 @@ public class FindDocumentUseCase(
         UserEntity supervisorUser)
     {
         var advisor = usersTccEntity.FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString())?.User;
-        var student = usersTccEntity.FirstOrDefault(ut => ut.UserId == studentUserId)?.User;
+        var student = usersTccEntity.FirstOrDefault(ut => ut.UserId == studentUserId)?.User 
+                      ?? usersTccEntity.FirstOrDefault(ut => ut.Profile.Role != RoleType.ADVISOR.ToString())?.User;
         var students = usersTccEntity
             .Where(ut => ut.Profile.Role != RoleType.ADVISOR.ToString())
             .Select(ut => ut.User)
