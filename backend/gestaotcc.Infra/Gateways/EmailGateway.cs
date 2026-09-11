@@ -99,7 +99,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         var corsSettings = configuration.GetSection("CORS_SETTINGS");
         var urlfront = corsSettings.GetValue<string>("URL_FRONT");
         
-        data.Variables.Add("urlfront", urlfront);
+        data.Variables["urlfront"] = urlfront ?? string.Empty;
         
         var emailBody = GetFileTemplate(data.TypeTemplate);
         var template = Template.Parse(emailBody);
