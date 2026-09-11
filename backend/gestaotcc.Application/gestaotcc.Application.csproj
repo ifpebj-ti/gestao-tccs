@@ -10,4 +10,8 @@
       <ProjectReference Include="..\gestaotcc.Domain\gestaotcc.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Scriban" Version="7.4.0" />
+    </ItemGroup>
+
 </Project>

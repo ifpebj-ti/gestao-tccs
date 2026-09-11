@@ -54,10 +54,23 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         var password = mailSettings.GetValue<string>("Password");
         
         var client = new SmtpClient(host, port);
-        client.EnableSsl = true;
-        client.UseDefaultCredentials = false;
-        client.Credentials = new NetworkCredential(username, password);
 
+        client.EnableSsl = port != 1025;
+        //desativado por enquanto 
+        //client.EnableSsl = true;
+        //client.UseDefaultCredentials = false;
+        //client.Credentials = new NetworkCredential(username, password);
+
+        if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+        {
+            client.UseDefaultCredentials = false;
+            client.Credentials = new NetworkCredential(username, password);
+        }
+        else
+        {
+            client.UseDefaultCredentials = true;
+        }
+        
         return client;
     }
     
@@ -78,6 +91,11 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
 
     private string CreateTemplate(SendEmailDTO data)
     {
+        if (data.TypeTemplate == "RAW")
+        {
+            return data.EmailBody;
+        }
+
         var corsSettings = configuration.GetSection("CORS_SETTINGS");
         var urlfront = corsSettings.GetValue<string>("URL_FRONT");
         

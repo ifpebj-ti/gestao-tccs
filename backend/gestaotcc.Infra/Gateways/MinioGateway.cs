@@ -1,7 +1,6 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Minio;
 using Minio.ApiEndpoints;
 using Minio.DataModel;
@@ -13,7 +12,7 @@ public class MinioGateway : IMinioGateway
 {
     private readonly IConfiguration _configuration;
     private readonly IMinioClient _minioClient;
-    private readonly IITextGateway _iTextGateway;
+    private readonly IITextGateway _iTextGateway; // Mantido apenas para a Injeção de Dependência não quebrar
     private readonly string _bucketName;
     private readonly string _env;
     private readonly string? _publicDomain;
@@ -30,7 +29,6 @@ public class MinioGateway : IMinioGateway
         _publicDomain = minioSettings.GetValue<string>("DOMAIN");
         _endpoint = minioSettings.GetValue<string>("ENDPOINT");
         _env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
-        
     }
 
     public async Task Send(string fileName, byte[] file, string contentType, bool isFilledPdfProcess = false)
@@ -79,20 +77,13 @@ public class MinioGateway : IMinioGateway
 
     public async Task<string> GetDocumentAsBase64(string fileName, Dictionary<string, string> fields, bool signedDocument = false)
     {
-        var objectName = signedDocument ? $"signatures/{fileName}" : $"templates/{fileName}";
-
-        if (!signedDocument)
+        // O processo de preenchimento agora ocorre via HTML/Scriban no FindDocumentUseCase!
+        // Este método mantém apenas a responsabilidade de baixar e converter para Base64.
+        var objectName = signedDocument ? $"signatures/{fileName}" : fileName;
+        
+        if (!signedDocument && !fileName.StartsWith("filled/"))
         {
-            var fileTemplate = await Download(fileName, signedDocument);
-            var fileStream = new MemoryStream(fileTemplate);
-            fileStream.Position = 0;
-
-            var outputStream = await _iTextGateway.FillPdf(fields ,fileStream);
-            var fileByte = outputStream.ToArray();
-            
-            objectName = $"filled/{Guid.NewGuid()}_{DateTime.Now:dd-MM-yyyy}_{fileName}";
-            
-            await Send(objectName, fileByte, "application/pdf", true);
+            objectName = $"templates/{fileName}";
         }
 
         var file = await Download(objectName, signedDocument);
@@ -134,6 +125,7 @@ public class MinioGateway : IMinioGateway
         return zipStream.ToArray();
     }
 
+#pragma warning disable CS1998 // Desabilitando aviso de método assíncrono para manter o padrão original
     public async Task<IAsyncEnumerable<StorageObjectDto>> ListBuckets(string folderName)
     {
         return MapObjectsAsync(_minioClient.ListObjectsEnumAsync(
@@ -143,6 +135,7 @@ public class MinioGateway : IMinioGateway
                 .WithRecursive(true)
         ));
     }
+#pragma warning restore CS1998
 
     public async Task Remove(string objectName)
     {
