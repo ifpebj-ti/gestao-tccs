@@ -13,7 +13,7 @@ using System.IO;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
+public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IEmailGateway emailGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -22,6 +22,13 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+    };
+
+    private readonly List<string> _signatureQueueByProfile = new()
+    {
+        RoleType.ADVISOR.ToString(),
+        RoleType.BANKING.ToString(),
+        RoleType.STUDENT.ToString()
     };
 
     public async Task<ResultPattern<string>> Execute(SignSignatureDTO data)
@@ -103,6 +110,40 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         
         logger.LogInformation("Enviando arquivo assinado para o Minio. FileName: {FileName}", document.FileName);
         await minioGateway.Send(document.FileName, data.File, data.FileContentType);
+        
+        // Notificar o próximo usuário da fila se for ONLY_DOCS (fila única)
+        var docType = document.DocumentType;
+        var methodType = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
+        
+        if (methodType == MethoSignatureType.ONLY_DOCS && document.UserId == null)
+        {
+            var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
+            var validUserTccs = tcc.UserTccs.Where(ut => acceptedRoles.Contains(ut.Profile.Role)).ToList();
+            
+            var orderedUserTccs = validUserTccs
+                .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
+                .ThenBy(u => u.Id)
+                .ToList();
+
+            foreach (var currentUser in orderedUserTccs)
+            {
+                var alreadySigned = document.Signatures.Any(s => s.UserId == currentUser.User.Id);
+                if (alreadySigned) continue;
+
+                var index = orderedUserTccs.IndexOf(currentUser);
+                var allPreviousSigned = orderedUserTccs.Take(index)
+                    .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
+
+                if (allPreviousSigned)
+                {
+                    logger.LogInformation("Enviando e-mail de notificação para a próxima pessoa da fila: {UserEmail}", currentUser.User.Email);
+                    var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(docType.Name, null) };
+                    var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(currentUser.User.Email, currentUser.User.Name, details, tcc.Title));
+                    await emailGateway.Send(emailDto);
+                    break;
+                }
+            }
+        }
         
         logger.LogInformation("Processo de assinatura concluído com sucesso para UserId {UserId}, DocumentId {DocumentId}.", data.UserId, data.DocumentId);
         return ResultPattern<string>.SuccessResult();
@@ -208,6 +249,12 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             else
             {
                 var expectedUserIds = validUserTccs.Select(ut => ut.User.Id).ToHashSet();
+                
+                if (document.UserId.HasValue)
+                {
+                    expectedUserIds.RemoveWhere(id => id != document.UserId.Value);
+                }
+
                 var signedUserIds = document.Signatures.Select(s => s.User.Id).ToHashSet();
 
                 if (!expectedUserIds.IsSubsetOf(signedUserIds))
