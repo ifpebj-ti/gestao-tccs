@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<TccInviteEntity> TccInvites { get; set; }
     public DbSet<TccCancellationEntity> TccCancellations { get; set; }
     public DbSet<TccScheduleEntity> TccSchedules { get; set; }
+    public DbSet<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> TccBankingMembers { get; set; }
     public DbSet<DocumentEntity> Documents { get; set; }
     public DbSet<DocumentTypeEntity> DocumentTypes { get; set; }
     public DbSet<SignatureEntity> Signatures { get; set; }

@@ -1,10 +1,12 @@
-﻿using gestaotcc.Application.Factories;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Errors;
+using gestaotcc.Domain.Entities.TccBankingMember;
+using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger)
+public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -27,7 +29,58 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
             logger.LogInformation("Criando e atribuindo agendamento para o TccId: {TccId}", data.IdTcc);
             var tccSchedule = TccScheduleFactory.CreateTccSchedule(data);
             tcc.TccSchedule = tccSchedule;
+
+            if (data.BankingMembers != null && data.BankingMembers.Any())
+            {
+                foreach (var memberDto in data.BankingMembers)
+                {
+                    var token = Guid.NewGuid().ToString("N");
+                    var member = new TccBankingMemberEntity(memberDto.Name, memberDto.Email, memberDto.Role, token, tcc.Id);
+                    tcc.BankingMembers.Add(member);
+                }
+            }
+
             await tccGateway.Update(tcc);
+
+            // Send instant emails and schedule reminders
+            if (tcc.BankingMembers.Any())
+            {
+                foreach (var member in tcc.BankingMembers)
+                {
+                    // Instant invite email
+                    var variables = new Dictionary<string, object>
+                    {
+                        { "name", member.Name },
+                        { "tccTitle", tcc.Title ?? "TCC" },
+                        { "date", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
+                        { "location", tccSchedule.Location },
+                        { "token", member.AccessToken },
+                        { "role", member.Role }
+                    };
+                    
+                    var emailDto = new gestaotcc.Domain.Dtos.Email.SendEmailDTO(
+                        emailBody: string.Empty,
+                        subjet: "Convite para Banca Avaliadora",
+                        recipient: member.Email,
+                        typeTemplate: "BANKING-INVITE",
+                        variables: variables
+                    );
+                    
+                    await emailGateway.Send(emailDto);
+                }
+
+                // Schedule reminder 1 day before
+                var scheduledDateTime = tccSchedule.ScheduledDate;
+                var reminderTime = scheduledDateTime.AddDays(-1);
+                var delay = reminderTime - DateTime.UtcNow;
+
+                if (delay.TotalMinutes > 0)
+                {
+                    backgroundJobClient.Schedule<IBankingEmailJob>(
+                        job => job.SendReminderEmails(tcc.Id), 
+                        delay);
+                }
+            }
         }
         catch (Exception ex)
         {

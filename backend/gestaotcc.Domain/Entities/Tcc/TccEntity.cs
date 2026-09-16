@@ -20,6 +20,7 @@ public class TccEntity
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public TccCancellationEntity? TccCancellation { get; set; } = null;
     public TccScheduleEntity? TccSchedule { get; set; } = null;
+    public ICollection<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> BankingMembers { get; set; } = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>();
     public TccEntity() { }
 
     public TccEntity(

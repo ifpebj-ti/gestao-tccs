@@ -4,6 +4,7 @@ using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccSchedule;
 using NSubstitute;
+using Hangfire;
 
 namespace gestaotcc.Test.UseCases.Tcc;
 
@@ -12,10 +13,12 @@ public class CreateScheduleTccUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly CreateScheduleTccUseCase _useCase;
     private readonly IAppLoggerGateway<CreateScheduleTccUseCase> _logger = Substitute.For<IAppLoggerGateway<CreateScheduleTccUseCase>>();
+    private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
+    private readonly IBackgroundJobClient _backgroundJobClient = Substitute.For<IBackgroundJobClient>();
 
     public CreateScheduleTccUseCaseTests()
     {
-        _useCase = new CreateScheduleTccUseCase(_tccGateway, _logger);
+        _useCase = new CreateScheduleTccUseCase(_tccGateway, _logger, _emailGateway, _backgroundJobClient);
     }
 
     [Fact]

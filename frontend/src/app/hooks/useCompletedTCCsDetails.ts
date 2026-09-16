@@ -15,7 +15,7 @@ interface InfoTcc {
 }
 interface InfoStudent { name: string; registration: string; cpf: string; course: string; email: string; }
 interface InfoAdvisor { name: string; email: string; }
-interface InfoBanking { nameInternal: string; emailInternal: string; nameExternal: string; emailExternal: string; }
+interface InfoBanking { members: { name: string; email: string; role: string }[]; }
 
 export interface CompletedTccDetailsResponse {
   infoTcc: InfoTcc;
