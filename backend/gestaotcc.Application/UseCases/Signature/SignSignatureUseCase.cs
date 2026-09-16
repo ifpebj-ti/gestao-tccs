@@ -7,6 +7,9 @@ using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
+using iText.Kernel.Pdf;
+using iText.Signatures;
+using System.IO;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
@@ -43,7 +46,11 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
         var document = tcc.Documents.First(d => d.Id == data.DocumentId);
         
-        if (string.IsNullOrEmpty(data.FileName) || !data.FileName.Contains(document.DocumentType.Name, StringComparison.OrdinalIgnoreCase))
+        var expectedNameNormalized = new string(RemoveDiacritics(document.DocumentType.Name).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+        
+        var receivedNameNormalized = new string(RemoveDiacritics(System.Uri.UnescapeDataString(data.FileName ?? "")).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+
+        if (string.IsNullOrEmpty(receivedNameNormalized) || !receivedNameNormalized.Contains(expectedNameNormalized))
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Nome do arquivo inválido. Esperado conter '{ExpectedName}', recebido '{ReceivedName}'", data.UserId, document.DocumentType.Name, data.FileName);
             return ResultPattern<string>.FailureResult(
@@ -103,7 +110,24 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
     private static bool IsValidFile(SignSignatureDTO data)
     {
-        return data.FileSize <= 5 && data.FileContentType == "application/pdf";
+        if (data.FileSize > 5 || data.FileContentType != "application/pdf")
+        {
+            return false;
+        }
+
+        try
+        {
+            using var stream = new MemoryStream(data.File);
+            using var pdfReader = new PdfReader(stream);
+            using var pdfDoc = new PdfDocument(pdfReader);
+            var signUtil = new SignatureUtil(pdfDoc);
+            
+            return signUtil.GetSignatureNames().Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static ResultPattern<string> InvalidFileResult()
@@ -112,6 +136,21 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             "Erro ao realizar upload. Por favor verifique o tamanho, o tipo e se já enviou o arquivo enviado e tente novamente.",
             409
         );
+    }
+
+    private static string RemoveDiacritics(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return text;
+        
+        string comAcentos = "áàãâäéèêëíìîïóòõôöúùûüçÁÀÃÂÄÉÈÊËÍÌÎÏÓÒÕÔÖÚÙÛÜÇ";
+        string semAcentos = "aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC";
+        
+        for (int i = 0; i < comAcentos.Length; i++)
+        {
+            text = text.Replace(comAcentos[i].ToString(), semAcentos[i].ToString());
+        }
+        
+        return text;
     }
 
     private static UserEntity GetUserInTcc(TccEntity tcc, long userId)
