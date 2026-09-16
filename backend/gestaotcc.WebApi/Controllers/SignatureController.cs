@@ -159,7 +159,7 @@ public class SignatureController : ControllerBase
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
         if (campiCourseId == null) return Unauthorized();
         
-        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, long.Parse(campiCourseId));
+        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, long.Parse(campiCourseId), true);
         if (useCaseResult.IsFailure)
         {
             
