@@ -28,6 +28,8 @@ services:
       - URL_TEMPO=${URL_TEMPO}
       - URL_LOKI=${URL_LOKI}
     restart: unless-stopped
+    volumes:
+      - ./backend/gestaotcc.WebApi/Templates:/app/Templates
     networks:
       - front_net
       - back_net
@@ -36,6 +38,8 @@ services:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_started
+      mailpit:
         condition: service_started
 
   frontend:
@@ -93,6 +97,16 @@ services:
       - back_net
       - observability-net
       - management-net
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - back_net
 
 volumes:
   postgres_data:

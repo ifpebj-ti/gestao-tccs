@@ -13,6 +13,7 @@ import { TccInfoSection } from '@/components/tcc-details/TccInfoSection';
 import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection';
 import { AdvisorInfoSection } from '@/components/tcc-details/AdvisorInfoSection';
 import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection';
+import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
 import { ActionPanel } from '@/components/tcc-details/ActionPanel';
 import { CancellationModal } from '@/components/tcc-details/CancellationModal';
 
@@ -25,22 +26,17 @@ export default function DetailsClient() {
     // Modais e Visibilidade
     isCancellationModalOpen,
     setIsCancellationModalOpen,
-    isBankingFormVisible,
-    setIsBankingFormVisible,
     isScheduleFormVisible,
     setIsScheduleFormVisible,
     isEditingTccInfo,
     setIsEditingTccInfo,
     // Forms
     cancellationForm,
-    bankingForm,
-    allBankingMembers,
     scheduleForm,
     editTccForm,
     // Handlers
     handleRequestCancellation,
     handleApproveCancellation,
-    handleRegisterBanking,
     handleScheduleSubmit,
     handleSendScheduleEmail,
     handleResendInvite,
@@ -93,10 +89,6 @@ export default function DetailsClient() {
             onToggleEditInfo={setIsEditingTccInfo}
             editForm={editTccForm}
             onEditSubmit={handleEditTccInfo}
-            isScheduleFormVisible={isScheduleFormVisible}
-            onScheduleCancel={() => setIsScheduleFormVisible(false)}
-            scheduleForm={scheduleForm}
-            onScheduleSubmit={handleScheduleSubmit}
           />
           <StudentInfoSection
             students={tccData.infoStudent}
@@ -107,33 +99,26 @@ export default function DetailsClient() {
           {tccData.infoAdvisor.name && (
             <AdvisorInfoSection advisor={tccData.infoAdvisor} />
           )}
-          <BankingInfoSection
-            bankingData={tccData.infoBanking}
-            canRegister={canManageTcc && !tccData.cancellationRequest}
-            isFormVisible={isBankingFormVisible}
-            onCancel={() => setIsBankingFormVisible(false)}
-            form={bankingForm}
-            onSubmit={handleRegisterBanking}
-            allBankingMembers={allBankingMembers}
-          />
+          <BankingInfoSection bankingData={tccData.infoBanking} />
         </div>
+
+        <ScheduleSection 
+          infoTcc={tccData.infoTcc}
+          isScheduleFormVisible={isScheduleFormVisible}
+          onOpenSchedule={() => setIsScheduleFormVisible((prev) => !prev)}
+          onScheduleCancel={() => setIsScheduleFormVisible(false)}
+          scheduleForm={scheduleForm}
+          onScheduleSubmit={handleScheduleSubmit}
+          canSchedule={canManageTcc && !tccData.cancellationRequest}
+          onSendScheduleEmail={handleSendScheduleEmail}
+        />
 
         <ActionPanel
           profile={profile}
           cancellationRequested={tccData.cancellationRequest}
           cancellationDetails={cancellationDetails}
-          hasBanking={
-            !!tccData.infoBanking?.nameInternal ||
-            !!tccData.infoBanking?.nameExternal
-          }
-          isBankingFormVisible={isBankingFormVisible}
-          hasSchedule={!!tccData.infoTcc.presentationDate}
-          isScheduleFormVisible={isScheduleFormVisible}
           onApprove={handleApproveCancellation}
           onRequest={() => setIsCancellationModalOpen(true)}
-          onRegisterBankingClick={() => setIsBankingFormVisible(true)}
-          onScheduleClick={() => setIsScheduleFormVisible((prev) => !prev)}
-          onSendScheduleEmail={handleSendScheduleEmail}
         />
       </div>
 
