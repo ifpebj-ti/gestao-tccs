@@ -20,10 +20,11 @@ public class SignSignatureUseCaseTests
     private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
     private readonly SignSignatureUseCase _useCase;
     private readonly IAppLoggerGateway<SignSignatureUseCase> _logger = Substitute.For<IAppLoggerGateway<SignSignatureUseCase>>();
+    private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
 
     public SignSignatureUseCaseTests()
     {
-        _useCase = new SignSignatureUseCase(_documentTypeGateway, _tccGateway, _minioGateway, _logger);
+        _useCase = new SignSignatureUseCase(_documentTypeGateway, _tccGateway, _minioGateway, _emailGateway, _logger);
     }
 
     [Fact]
