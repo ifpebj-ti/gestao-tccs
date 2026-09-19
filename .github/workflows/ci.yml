@@ -96,3 +96,43 @@ jobs:
           SEMGREP_RULES: >-
             p/security-audit
             p/owasp-top-ten
+
+  # --------------------------------------------------------------------
+  # 4) SECURITY (SCA - TRIVY FS SCAN) ----------------------------------
+  # --------------------------------------------------------------------
+  security-trivy:
+    name: Security SCA (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner on repo
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+  # --------------------------------------------------------------------
+  # 5) SECURITY (DAST - OWASP ZAP) -------------------------------------
+  # --------------------------------------------------------------------
+  security-dast:
+    name: Security DAST (OWASP ZAP)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: 'https://gradusflow.site'
+          issue_title: 'DAST: Alerta de seguranca detectado pelo OWASP ZAP'
+          fail_action: false
