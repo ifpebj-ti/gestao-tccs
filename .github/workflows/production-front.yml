@@ -166,7 +166,9 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest
 
       - name: Trigger Portainer webhook to update Frontend service
-        run: curl -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
+        continue-on-error: true
+        run: |
+          curl -k -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }} || echo "Aviso: Webhook do Portainer indisponivel no momento."
 
   # --------------------------------------------------------------------
   # 3) RELEASE CREATION ------------------------------------------------
