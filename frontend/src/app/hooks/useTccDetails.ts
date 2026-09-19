@@ -45,10 +45,7 @@ interface TccDetailsResponse {
   }[];
   infoAdvisor: { name: string; email: string };
   infoBanking: {
-    nameInternal: string;
-    emailInternal: string;
-    nameExternal: string;
-    emailExternal: string;
+    members: { name: string; email: string; role: string }[];
   };
   cancellationRequest: boolean;
 }

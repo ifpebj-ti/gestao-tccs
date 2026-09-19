@@ -1,4 +1,4 @@
-﻿using gestaotcc.Domain.Dtos.InfosTcc;
+using gestaotcc.Domain.Dtos.InfosTcc;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Enums;
@@ -44,16 +44,12 @@ public class TccInfoFactory
         var advisor = tcc.UserTccs
             .FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString());
 
-        // 4. Membros da banca avaliadora
-        var bankingMembers = tcc.UserTccs
-            .Where(ut => ut.Profile.Role == RoleType.BANKING.ToString())
-            .ToList();
-
-        var internalMember = bankingMembers
-            .FirstOrDefault(ut => ut.User.Email.Contains("@belojardim", StringComparison.OrdinalIgnoreCase));
-
-        var externalMember = bankingMembers
-            .FirstOrDefault(ut => !ut.User.Email.Contains("@belojardim", StringComparison.OrdinalIgnoreCase));
+        // 4. Membros da banca avaliadora (Temporários)
+        var bankingMembersDto = tcc.BankingMembers?.Select(bm => new gestaotcc.Domain.Dtos.Tcc.BankingMemberDto(
+            Name: bm.Name,
+            Email: bm.Email,
+            Role: bm.Role
+        )).ToList() ?? new List<gestaotcc.Domain.Dtos.Tcc.BankingMemberDto>();
 
         // 5. Verificar se o TCC foi solicitado para cancelamento
         bool isCancellationRequest = tcc.TccCancellation is not null;
@@ -76,12 +72,7 @@ public class TccInfoFactory
                 Name: advisor!.User.Name,
                 Email: advisor!.User.Email
             ),
-            InfoBanking: new InfoBankingDTO(
-                NameInternal: internalMember?.User.Name ?? string.Empty,
-                EmailInternal: internalMember?.User.Email ?? string.Empty,
-                NameExternal: externalMember?.User.Name ?? string.Empty,
-                EmailExternal: externalMember?.User.Email ?? string.Empty
-            ),
+            InfoBanking: new InfoBankingDTO(bankingMembersDto),
             CancellationRequest: isCancellationRequest
         );
     }

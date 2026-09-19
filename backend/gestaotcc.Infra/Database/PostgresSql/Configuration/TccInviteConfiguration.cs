@@ -26,5 +26,8 @@ public class TccInviteConfiguration : IEntityTypeConfiguration<TccInviteEntity>
 
         builder.Property(x => x.IsValidCode)
             .IsRequired();
+
+        builder.Property(x => x.ExpirationDate)
+            .IsRequired();
     }
 }

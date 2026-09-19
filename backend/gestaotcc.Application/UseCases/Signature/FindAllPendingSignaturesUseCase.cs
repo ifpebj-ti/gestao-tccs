@@ -131,12 +131,16 @@ public class FindAllPendingSignaturesUseCase(
                             var isEligible = docType.Profiles.Any(p => p.Id == currentUser.Profile.Id);
                             if (!isEligible) continue;
 
+                            if (currentUser.Profile.Role == RoleType.STUDENT.ToString() && doc.UserId != currentUser.User.Id)
+                                continue;
+
                             var currentProfileIndex = _signatureQueueByProfile.IndexOf(currentUser.Profile.Role);
 
                             var allPreviousProfilesSigned = orderedUserTccs
                                 .Where(u =>
                                     _signatureQueueByProfile.IndexOf(u.Profile.Role) < currentProfileIndex &&
-                                    docType.Profiles.Any(p => p.Id == u.Profile.Id))
+                                    docType.Profiles.Any(p => p.Id == u.Profile.Id) &&
+                                    (u.Profile.Role != RoleType.STUDENT.ToString() || doc.UserId == u.User.Id))
                                 .All(prev =>
                                     doc.Signatures.Any(sig => sig.UserId == prev.User.Id));
 

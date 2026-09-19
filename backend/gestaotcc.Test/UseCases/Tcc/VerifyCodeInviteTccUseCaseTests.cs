@@ -57,7 +57,33 @@ public class VerifyCodeInviteTccUseCaseTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(409, result.ErrorDetails.Status);
-        Assert.Equal("Erro ao verificar código", result.Message);
+        Assert.Equal("Código de convite inválido ou já utilizado.", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturn409_WhenCodeIsExpired()
+    {
+        // Arrange
+        var dto = new VerifyCodeInviteTccDTO("email@teste.com", "123456");
+        _userGateway.FindByEmail(dto.UserEmail).Returns((UserEntity?)null);
+
+        var invite = new TccInviteEntity
+        {
+            Email = dto.UserEmail,
+            Code = "123456",
+            IsValidCode = true,
+            ExpirationDate = DateTime.UtcNow.AddMinutes(-5)
+        };
+
+        _tccGateway.FindInviteTccByEmail(dto.UserEmail).Returns(invite);
+
+        // Act
+        var result = await _useCase.Execute(dto);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(409, result.ErrorDetails.Status);
+        Assert.Equal("Código de convite expirado. Solicite o reenvio ao seu orientador.", result.Message);
     }
 
     [Fact]
@@ -82,7 +108,7 @@ public class VerifyCodeInviteTccUseCaseTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(409, result.ErrorDetails.Status);
-        Assert.Equal("Erro ao verificar código", result.Message);
+        Assert.Equal("Código de convite inválido.", result.Message);
     }
 
     [Fact]

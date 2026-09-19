@@ -10,6 +10,7 @@ public class TccInviteEntityBuilder
     private long _campiId;
     private long _courseId;
     private TccEntity _tcc = null!;
+    private DateTime? _expirationDate;
 
     public TccInviteEntityBuilder WithId(long id)
     {
@@ -26,6 +27,12 @@ public class TccInviteEntityBuilder
     public TccInviteEntityBuilder WithCode(string code)
     {
         _code = code;
+        return this;
+    }
+
+    public TccInviteEntityBuilder WithExpirationDate(DateTime expirationDate)
+    {
+        _expirationDate = expirationDate;
         return this;
     }
 
@@ -49,6 +56,6 @@ public class TccInviteEntityBuilder
 
     public TccInviteEntity Build()
     {
-        return new TccInviteEntity(_id, _email, _code, _tcc, _campiId, _courseId);
+        return new TccInviteEntity(_id, _email, _code, _tcc, _campiId, _courseId, _expirationDate);
     }
 }

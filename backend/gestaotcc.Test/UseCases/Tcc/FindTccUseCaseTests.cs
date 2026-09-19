@@ -65,17 +65,13 @@ public class FindTccUseCaseTests
             Email = "orientador@email.com"
         };
 
-        var bankingInternalUser = new UserEntity
-        {
-            Name = "Membro Interno",
-            Email = "user@belojardim.edu.br"
-        };
+        var bankingInternalMember = new gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity(
+            "Membro Interno", "user@belojardim.edu.br", "IFPE", "token123", 1
+        );
 
-        var bankingExternalUser = new UserEntity
-        {
-            Name = "Membro Externo",
-            Email = "external@gmail.com"
-        };
+        var bankingExternalMember = new gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity(
+            "Membro Externo", "external@gmail.com", "UFRPE", "token456", 1
+        );
 
         var tccSchedule = new TccScheduleEntity
         {
@@ -85,21 +81,25 @@ public class FindTccUseCaseTests
 
         var tcc = new TccEntity
         {
+            Id = 1,
             Title = "Título do TCC",
             Summary = "Resumo do TCC",
             TccSchedule = tccSchedule,
             UserTccs = new List<UserTccEntity>
             {
                 new UserTccEntity { User = studentUser, Profile = studentProfile },
-                new UserTccEntity { User = advisorUser, Profile = advisorProfile },
-                new UserTccEntity { User = bankingInternalUser, Profile = bankingProfile },
-                new UserTccEntity { User = bankingExternalUser, Profile = bankingProfile }
+                new UserTccEntity { User = advisorUser, Profile = advisorProfile }
+            },
+            BankingMembers = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>
+            {
+                bankingInternalMember,
+                bankingExternalMember
             },
             TccInvites = new List<TccInviteEntity>(),
             TccCancellation = null
         };
 
-        _tccGateway.FindTccInformations(Arg.Any<long>()).Returns(Task.FromResult(tcc));
+        _tccGateway.FindTccInformations(Arg.Any<long>()).Returns(Task.FromResult((TccEntity?)tcc));
 
         // Act
         var result = await _useCase.Execute(1);
@@ -126,10 +126,11 @@ public class FindTccUseCaseTests
         Assert.Equal("Orientador 1", dto.InfoAdvisor.Name);
         Assert.Equal("orientador@email.com", dto.InfoAdvisor.Email);
 
-        Assert.Equal("Membro Interno", dto.InfoBanking.NameInternal);
-        Assert.Equal("user@belojardim.edu.br", dto.InfoBanking.EmailInternal);
-        Assert.Equal("Membro Externo", dto.InfoBanking.NameExternal);
-        Assert.Equal("external@gmail.com", dto.InfoBanking.EmailExternal);
+        Assert.Equal(2, dto.InfoBanking.Members.Count);
+        Assert.Equal("Membro Interno", dto.InfoBanking.Members[0].Name);
+        Assert.Equal("user@belojardim.edu.br", dto.InfoBanking.Members[0].Email);
+        Assert.Equal("Membro Externo", dto.InfoBanking.Members[1].Name);
+        Assert.Equal("external@gmail.com", dto.InfoBanking.Members[1].Email);
 
         Assert.False(dto.CancellationRequest);
     }

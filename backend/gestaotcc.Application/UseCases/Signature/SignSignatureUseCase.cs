@@ -7,10 +7,13 @@ using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
+using iText.Kernel.Pdf;
+using iText.Signatures;
+using System.IO;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
+public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IEmailGateway emailGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -19,6 +22,13 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+    };
+
+    private readonly List<string> _signatureQueueByProfile = new()
+    {
+        RoleType.ADVISOR.ToString(),
+        RoleType.BANKING.ToString(),
+        RoleType.STUDENT.ToString()
     };
 
     public async Task<ResultPattern<string>> Execute(SignSignatureDTO data)
@@ -42,6 +52,19 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         }
 
         var document = tcc.Documents.First(d => d.Id == data.DocumentId);
+        
+        var expectedNameNormalized = new string(RemoveDiacritics(document.DocumentType.Name).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+        
+        var receivedNameNormalized = new string(RemoveDiacritics(System.Uri.UnescapeDataString(data.FileName ?? "")).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+
+        if (string.IsNullOrEmpty(receivedNameNormalized) || !receivedNameNormalized.Contains(expectedNameNormalized))
+        {
+            logger.LogWarning("Falha na assinatura para UserId {UserId}: Nome do arquivo inválido. Esperado conter '{ExpectedName}', recebido '{ReceivedName}'", data.UserId, document.DocumentType.Name, data.FileName);
+            return ResultPattern<string>.FailureResult(
+                "O documento enviado não corresponde ao documento esperado. Verifique se você anexou o arquivo correto.",
+                400
+            );
+        }
         
         if (!UserCanSignDocument(user, tcc, document))
         {
@@ -88,13 +111,64 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         logger.LogInformation("Enviando arquivo assinado para o Minio. FileName: {FileName}", document.FileName);
         await minioGateway.Send(document.FileName, data.File, data.FileContentType);
         
+        // Notificar o próximo usuário da fila se for ONLY_DOCS (fila única)
+        var docType = document.DocumentType;
+        var methodType = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
+        
+        if (methodType == MethoSignatureType.ONLY_DOCS && document.UserId == null)
+        {
+            var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
+            var validUserTccs = tcc.UserTccs.Where(ut => acceptedRoles.Contains(ut.Profile.Role)).ToList();
+            
+            var orderedUserTccs = validUserTccs
+                .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
+                .ThenBy(u => u.Id)
+                .ToList();
+
+            foreach (var currentUser in orderedUserTccs)
+            {
+                var alreadySigned = document.Signatures.Any(s => s.UserId == currentUser.User.Id);
+                if (alreadySigned) continue;
+
+                var index = orderedUserTccs.IndexOf(currentUser);
+                var allPreviousSigned = orderedUserTccs.Take(index)
+                    .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
+
+                if (allPreviousSigned)
+                {
+                    logger.LogInformation("Enviando e-mail de notificação para a próxima pessoa da fila: {UserEmail}", currentUser.User.Email);
+                    var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(docType.Name, null) };
+                    var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(currentUser.User.Email, currentUser.User.Name, details, tcc.Title));
+                    await emailGateway.Send(emailDto);
+                    break;
+                }
+            }
+        }
+        
         logger.LogInformation("Processo de assinatura concluído com sucesso para UserId {UserId}, DocumentId {DocumentId}.", data.UserId, data.DocumentId);
         return ResultPattern<string>.SuccessResult();
     }
 
     private static bool IsValidFile(SignSignatureDTO data)
     {
-        return data.FileSize <= 5 && data.FileContentType == "application/pdf";
+        if (data.FileSize > 5 || data.FileContentType != "application/pdf")
+        {
+            return false;
+        }
+
+        try
+        {
+            using var stream = new MemoryStream(data.File);
+            using var pdfReader = new PdfReader(stream);
+            using var pdfDoc = new PdfDocument(pdfReader);
+            var signUtil = new SignatureUtil(pdfDoc);
+            
+            return signUtil.GetSignatureNames().Count > 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static ResultPattern<string> InvalidFileResult()
@@ -103,6 +177,21 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             "Erro ao realizar upload. Por favor verifique o tamanho, o tipo e se já enviou o arquivo enviado e tente novamente.",
             409
         );
+    }
+
+    private static string RemoveDiacritics(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return text;
+        
+        string comAcentos = "áàãâäéèêëíìîïóòõôöúùûüçÁÀÃÂÄÉÈÊËÍÌÎÏÓÒÕÔÖÚÙÛÜÇ";
+        string semAcentos = "aaaaaeeeeiiiiooooouuuucAAAAAEEEEIIIIOOOOOUUUUC";
+        
+        for (int i = 0; i < comAcentos.Length; i++)
+        {
+            text = text.Replace(comAcentos[i].ToString(), semAcentos[i].ToString());
+        }
+        
+        return text;
     }
 
     private static UserEntity GetUserInTcc(TccEntity tcc, long userId)
@@ -160,6 +249,12 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             else
             {
                 var expectedUserIds = validUserTccs.Select(ut => ut.User.Id).ToHashSet();
+                
+                if (document.UserId.HasValue)
+                {
+                    expectedUserIds.RemoveWhere(id => id != document.UserId.Value);
+                }
+
                 var signedUserIds = document.Signatures.Select(s => s.User.Id).ToHashSet();
 
                 if (!expectedUserIds.IsSubsetOf(signedUserIds))

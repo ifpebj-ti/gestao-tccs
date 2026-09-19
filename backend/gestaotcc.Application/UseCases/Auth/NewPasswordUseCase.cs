@@ -1,4 +1,4 @@
-﻿using gestaotcc.Application.Factories;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Auth;
 using gestaotcc.Domain.Entities.User;
@@ -49,6 +49,16 @@ public class NewPasswordUseCase(
                 userId);
             return ResultPattern<string>.FailureResult(
                 "Erro ao criar nova senha. Por favor verifique as informações e tente novamente.", 409);
+        }
+
+        if (tccInvite.ExpirationDate < DateTime.UtcNow)
+        {
+            logger.LogWarning(
+                "Falha na validação do código de convite para o UserId: {UserId}. O convite expirou em {ExpirationDate}.",
+                userId,
+                tccInvite.ExpirationDate);
+            return ResultPattern<string>.FailureResult(
+                "Código de convite expirado. Solicite o reenvio ao seu orientador.", 409);
         }
 
         logger.LogInformation("Validação do convite bem-sucedida para o UserId: {UserId}", userId);

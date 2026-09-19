@@ -175,22 +175,22 @@ public static class DbInitializer
                 new()
                 {
                     Name = "ANEXO III - CRONOGRAMA DE ENCONTROS", SignatureOrder = 3,
-                    MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString()
+                    MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
                 },
                 new()
                 {
                     Name = "ANEXO VII - FICHA DE ACOMPANHAMENTO", SignatureOrder = 3,
-                    MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString()
+                    MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
                 },
                 new()
                 {
                     Name = "ANEXO VIII - TERMO DE ENTREGA DO TCC PARA APRESENTAÇÃO PÚBLICA", SignatureOrder = 4,
-                    MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString()
+                    MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
                 },
                 new()
                 {
                     Name = "ANEXO IV - FICHA AVALIATIVA", SignatureOrder = 5,
-                    MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString()
+                    MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
                 }
             });
             context.SaveChanges();

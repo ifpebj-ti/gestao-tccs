@@ -1,3 +1,3 @@
 namespace gestaotcc.Domain.Dtos.Signature;
 
-public record FindDocumentDTO(string Url);
+public record FindDocumentDTO(string Url, bool IsHtml = false);

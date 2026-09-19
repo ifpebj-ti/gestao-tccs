@@ -29,6 +29,9 @@ public class TccFactory
 
         foreach (var docType in documentTypes)
         {
+            if (docType.Name != null && docType.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA"))
+                continue;
+
             var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
             var method = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
 

@@ -37,7 +37,6 @@ const protectedRoutes: Record<string, string[]> = {
 
 const tempProtectedRoutes = [
   '/autoRegister',
-  '/newPassword',
   '/updatePassword'
 ];
 
