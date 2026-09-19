@@ -1,23 +1,23 @@
 ---
-name: Bug Report
+name: Relato de Erro (Bug Report)
 about: Relatar um erro ou comportamento inesperado no sistema
 title: 'fix: '
 labels: 'bug'
 assignees: ''
 ---
 
-## Descricao do Problema
-Descricao clara e objetiva sobre o comportamento inesperado encontrado.
+## Descrição do Problema
+Descrição clara e objetiva sobre o comportamento inesperado encontrado.
 
 ## Passos para Reproduzir
 1. Acessar a tela '...'
-2. Executar a acao '...'
+2. Executar a ação '...'
 3. Notar o comportamento incorreto '...'
 
 ## Comportamento Esperado
-Descricao clara do comportamento correto esperado pelo sistema.
+Descrição clara do comportamento correto esperado pelo sistema.
 
 ## Ambiente
 - Navegador / Sistema Operacional:
 - Perfil de Acesso (Estudante, Orientador, Banca, Coordenador):
-- Versao da aplicacao:
+- Versão da aplicação:

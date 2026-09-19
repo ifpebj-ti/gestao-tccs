@@ -1,18 +1,18 @@
 ---
-name: Tarefa Tecnica (Task / Chore)
-about: Tarefas de seguranca, DevOps, refatoracao ou governanca
+name: Tarefa Técnica (Task / Chore)
+about: Tarefas de segurança, DevOps, refatoração ou governança
 title: 'chore: '
 labels: 'chore'
 assignees: ''
 ---
 
 ## Objetivo da Tarefa
-Descricao tecnica do que precisa ser implementado, refatorado ou configurado.
+Descrição técnica do que precisa ser implementado, refatorado ou configurado.
 
 ## Escopo de Atividades
 - [ ] Item 1
 - [ ] Item 2
-- [ ] Validacao e testes
+- [ ] Validação e testes
 
 ## Impactos no Sistema
-Impactos esperados na esteira CI/CD, banco de dados ou integracoes externas.
+Impactos esperados na esteira de CI/CD, banco de dados ou integrações externas.
