@@ -212,15 +212,13 @@ jobs:
         run: |
           docker tag ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:$CREATED_TAG ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:latest
 
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
       - name: Scan Backend Image for Critical Vulnerabilities (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:${{ env.CREATED_TAG }}
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
+        run: |
+          trivy image --severity CRITICAL --exit-code 1 --ignore-unfixed ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:$CREATED_TAG
 
       - name: Push Docker images (version and latest)
         run: |
