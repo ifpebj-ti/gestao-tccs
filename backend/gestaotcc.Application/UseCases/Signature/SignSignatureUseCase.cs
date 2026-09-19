@@ -252,7 +252,8 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
                 
                 if (document.UserId.HasValue)
                 {
-                    expectedUserIds.RemoveWhere(id => id != document.UserId.Value);
+                    var targetUserId = document.UserId.Value;
+                    expectedUserIds.RemoveWhere(id => id != targetUserId);
                 }
 
                 var signedUserIds = document.Signatures.Select(s => s.User.Id).ToHashSet();
