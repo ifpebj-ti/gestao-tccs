@@ -1,3 +1,4 @@
+using System.IO;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Domain.Dtos.Signature;
@@ -9,6 +10,7 @@ using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
+using iText.Kernel.Pdf;
 using NSubstitute;
 
 namespace gestaotcc.Test.UseCases.Signature;
@@ -84,7 +86,8 @@ public class SignSignatureUseCaseTests
         _tccGateway.FindTccById(1).Returns(tcc);
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { document.DocumentType });
 
-        var dto = new SignSignatureDTO(1, 1, 1, new byte[] { 1 }, 1, "application/pdf", "Doc.pdf");
+        var validPdf = CreateSignedPdfBytes();
+        var dto = new SignSignatureDTO(1, 1, 1, validPdf, 1, "application/pdf", "Doc.pdf");
         var result = await _useCase.Execute(dto);
 
         Assert.False(result.IsSuccess);
@@ -143,12 +146,42 @@ public class SignSignatureUseCaseTests
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
         _minioGateway.Send(document.FileName, Arg.Any<byte[]>(), "application/pdf").Returns(Task.CompletedTask);
 
-        var dto = new SignSignatureDTO(1, 1, 1, new byte[] { 1, 2, 3 }, 1, "application/pdf", "Doc.pdf");
+        var validPdf = CreateSignedPdfBytes();
+        var dto = new SignSignatureDTO(1, 1, 1, validPdf, 1, "application/pdf", "Doc.pdf");
 
         var result = await _useCase.Execute(dto);
 
         Assert.True(result.IsSuccess);
 
         await _minioGateway.Received(1).Send(document.FileName, dto.File, dto.FileContentType);
+    }
+
+    private static byte[] CreateSignedPdfBytes()
+    {
+        using var ms = new MemoryStream();
+        using (var writer = new PdfWriter(ms))
+        using (var pdfDoc = new PdfDocument(writer))
+        {
+            pdfDoc.AddNewPage();
+
+            var sigDict = new PdfDictionary();
+            sigDict.Put(PdfName.Type, PdfName.Sig);
+            sigDict.Put(PdfName.Filter, PdfName.Adobe_PPKLite);
+            sigDict.Put(PdfName.SubFilter, PdfName.Adbe_pkcs7_detached);
+            sigDict.Put(PdfName.ByteRange, new PdfArray(new int[] { 0, 100, 200, 100 }));
+            sigDict.Put(PdfName.Contents, new PdfString("0000000000").SetHexWriting(true));
+            sigDict.Put(PdfName.Name, new PdfString("Assinador"));
+            sigDict.MakeIndirect(pdfDoc);
+
+            var fieldDict = new PdfDictionary();
+            fieldDict.Put(PdfName.FT, PdfName.Sig);
+            fieldDict.Put(PdfName.T, new PdfString("SignatureField1"));
+            fieldDict.Put(PdfName.V, sigDict);
+            fieldDict.MakeIndirect(pdfDoc);
+
+            var form = iText.Forms.PdfAcroForm.GetAcroForm(pdfDoc, true);
+            form.GetPdfObject().GetAsArray(PdfName.Fields).Add(fieldDict);
+        }
+        return ms.ToArray();
     }
 }
