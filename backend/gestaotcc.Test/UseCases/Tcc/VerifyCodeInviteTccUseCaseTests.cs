@@ -36,6 +36,23 @@ public class VerifyCodeInviteTccUseCaseTests
     }
 
     [Fact]
+    public async Task Execute_ShouldReturn404_WhenInviteNotFound()
+    {
+        // Arrange
+        var dto = new VerifyCodeInviteTccDTO("email@teste.com", "123456");
+        _userGateway.FindByEmail(dto.UserEmail).Returns((UserEntity?)null);
+        _tccGateway.FindInviteTccByEmail(dto.UserEmail).Returns((TccInviteEntity?)null);
+
+        // Act
+        var result = await _useCase.Execute(dto);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(404, result.ErrorDetails.Status);
+        Assert.Equal("Convite não encontrado para o e-mail informado.", result.Message);
+    }
+
+    [Fact]
     public async Task Execute_ShouldReturn409_WhenInviteIsInvalid()
     {
         // Arrange

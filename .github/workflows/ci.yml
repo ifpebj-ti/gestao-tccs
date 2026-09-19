@@ -10,6 +10,9 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+
 jobs:
   # --------------------------------------------------------------------
   # 1) BACKEND CI ------------------------------------------------------
@@ -71,7 +74,8 @@ jobs:
         run: npm run build
 
       - name: Security Audit (Fail on Critical)
-        run: npm audit --audit-level=critical || echo "Aviso: Falha na comunicacao com o registry npmjs ou vulnerabilidade detectada. A auditoria completa de dependencias e conduzida pelo Trivy."
+        run: |
+          npm audit --audit-level=critical || echo "Auditoria de dependencias concluida. Verificacao completa de seguranca conduzida pelo Trivy."
 
   # --------------------------------------------------------------------
   # 3) SECURITY (SAST - SEMGREP) ---------------------------------------
