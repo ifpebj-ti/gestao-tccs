@@ -123,6 +123,65 @@ public class FindDocumentUseCase(
 
         var encoder = HtmlEncoder.Default;
 
+        string oral1 = "", oral2 = "", oral3 = "";
+        string textual1 = "", textual2 = "", textual3 = "";
+        string totalOral = "", totalTextual = "", notaFinal = "";
+
+        if (tcc.BankingMembers != null && tcc.BankingMembers.Any(m => m.Grade.HasValue))
+        {
+            var avaliacoes = tcc.BankingMembers.Where(m => m.Grade.HasValue).ToList();
+            decimal sumOral = 0m, sumTextual = 0m;
+            int countOral = 0, countTextual = 0;
+
+            for (int i = 0; i < avaliacoes.Count; i++)
+            {
+                var member = avaliacoes[i];
+                decimal memberOral = 0m;
+                decimal memberTextual = 0m;
+
+                if (!string.IsNullOrEmpty(member.EvaluationDetails))
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(member.EvaluationDetails);
+                        if (doc.RootElement.TryGetProperty("oral", out var oralObj))
+                        {
+                            foreach (var prop in oralObj.EnumerateObject())
+                            {
+                                if (decimal.TryParse(prop.Value.GetString()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var val))
+                                    memberOral += val;
+                            }
+                        }
+                        if (doc.RootElement.TryGetProperty("textual", out var textualObj))
+                        {
+                            foreach (var prop in textualObj.EnumerateObject())
+                            {
+                                if (decimal.TryParse(prop.Value.GetString()?.Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var val))
+                                    memberTextual += val;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                
+                string oralStr = memberOral.ToString("0.00");
+                string textualStr = memberTextual.ToString("0.00");
+
+                if (i == 0) { oral1 = oralStr; textual1 = textualStr; }
+                if (i == 1) { oral2 = oralStr; textual2 = textualStr; }
+                if (i == 2) { oral3 = oralStr; textual3 = textualStr; }
+
+                sumOral += memberOral;
+                countOral++;
+                sumTextual += memberTextual;
+                countTextual++;
+            }
+
+            if (countOral > 0) totalOral = Math.Round(sumOral / countOral, 2).ToString("0.00");
+            if (countTextual > 0) totalTextual = Math.Round(sumTextual / countTextual, 2).ToString("0.00");
+            if (avaliacoes.Any()) notaFinal = Math.Round(avaliacoes.Average(m => m.Grade.Value), 2).ToString("0.00");
+        }
+
         // Retorna um objeto dinâmico / anônimo contendo todas as chaves acessíveis pelo Scriban no HTML
         return new
         {
@@ -164,6 +223,16 @@ public class FindDocumentUseCase(
             dia = encoder.Encode(nowDate.Day.ToString()),
             mes = encoder.Encode(mesesPtBr[nowDate.Month - 1]),
             ano = encoder.Encode(nowDate.Year.ToString()),
+
+            oral_1 = encoder.Encode(oral1),
+            oral_2 = encoder.Encode(oral2),
+            oral_3 = encoder.Encode(oral3),
+            textual_1 = encoder.Encode(textual1),
+            textual_2 = encoder.Encode(textual2),
+            textual_3 = encoder.Encode(textual3),
+            total_oral = encoder.Encode(totalOral),
+            total_textual = encoder.Encode(totalTextual),
+            nota_final = encoder.Encode(notaFinal),
 
             // Lista estruturada para loops 
             students = students.Select(s => new {

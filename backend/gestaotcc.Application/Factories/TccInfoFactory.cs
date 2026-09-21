@@ -59,6 +59,7 @@ public class TccInfoFactory
             InfoTcc: new InfoTccDTO(
                 Title: tcc.Title ?? string.Empty,
                 Summary: tcc.Summary ?? string.Empty,
+                Status: tcc.Status,
                 PresentationDate: tcc.TccSchedule != null
                     ? DateOnly.FromDateTime(tcc.TccSchedule.ScheduledDate)
                     : (DateOnly?)null,

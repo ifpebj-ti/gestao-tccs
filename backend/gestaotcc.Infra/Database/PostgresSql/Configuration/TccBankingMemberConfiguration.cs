@@ -34,6 +34,14 @@ public class TccBankingMemberConfiguration : IEntityTypeConfiguration<TccBanking
         builder.Property(t => t.TokenExpiryDate)
             .IsRequired(false);
 
+        builder.Property(t => t.Grade)
+            .HasColumnType("numeric(5,2)")
+            .IsRequired(false);
+
+        builder.Property(t => t.EvaluationComments)
+            .HasColumnType("text")
+            .IsRequired(false);
+
         builder.HasOne(t => t.Tcc)
             .WithMany(t => t.BankingMembers)
             .HasForeignKey(t => t.TccId)

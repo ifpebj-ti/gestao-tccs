@@ -16,7 +16,8 @@ import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection'
 import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
 import { ActionPanel } from '@/components/tcc-details/ActionPanel';
 import { CancellationModal } from '@/components/tcc-details/CancellationModal';
-
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AvaliacaoForm } from '@/components/AvaliacaoForm';
 export default function DetailsClient() {
   const {
     tccData,
@@ -35,13 +36,18 @@ export default function DetailsClient() {
     scheduleForm,
     editTccForm,
     // Handlers
+    // Handlers
     handleRequestCancellation,
     handleApproveCancellation,
     handleScheduleSubmit,
     handleSendScheduleEmail,
     handleResendInvite,
     handleDownloadAllDocuments,
-    handleEditTccInfo
+    handleEditTccInfo,
+    handleConcludePresentation,
+    isConcluding,
+    orientadorToken,
+    setOrientadorToken
   } = useTccDetails();
 
   if (loading) {
@@ -111,6 +117,9 @@ export default function DetailsClient() {
           onScheduleSubmit={handleScheduleSubmit}
           canSchedule={canManageTcc && !tccData.cancellationRequest}
           onSendScheduleEmail={handleSendScheduleEmail}
+          isCompleted={tccData.infoTcc.status === 'COMPLETED'}
+          onConcludePresentation={handleConcludePresentation}
+          isConcluding={isConcluding}
         />
 
         <ActionPanel
@@ -128,6 +137,16 @@ export default function DetailsClient() {
         form={cancellationForm}
         onSubmit={handleRequestCancellation}
       />
+
+      <Dialog open={!!orientadorToken} onOpenChange={(open) => { if (!open) setOrientadorToken(null); }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-5xl max-h-[90vh] overflow-y-auto">
+          <AvaliacaoForm 
+            token={orientadorToken} 
+            onSuccessCallback={() => setOrientadorToken(null)}
+            hideLogoAndMinHeight={true}
+          />
+        </DialogContent>
+      </Dialog>
     </FormProvider>
   );
 }

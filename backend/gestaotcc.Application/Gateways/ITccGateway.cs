@@ -18,4 +18,6 @@ public interface ITccGateway
     Task<TccEntity?> FindTccCancellation(long id);
     Task<TccEntity?> FindTccScheduling(long id);
     Task<TccEntity?> FindTccInformations(long id);
+    Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token);
+    Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member);
 }

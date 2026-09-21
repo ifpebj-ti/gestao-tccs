@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { UseFormReturn, SubmitHandler } from 'react-hook-form';
 import { ScheduleSchemaType } from '@/app/schemas/scheduleSchema';
-import { Pencil, X, Calendar } from 'lucide-react';
+import { Pencil, X, Calendar, Check, CheckCircle } from 'lucide-react';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -22,6 +22,9 @@ interface ScheduleSectionProps {
   onScheduleSubmit?: SubmitHandler<ScheduleSchemaType>;
   canSchedule: boolean;
   onSendScheduleEmail?: () => void;
+  isCompleted?: boolean;
+  onConcludePresentation?: () => void;
+  isConcluding?: boolean;
 }
 
 export function ScheduleSection({
@@ -32,7 +35,10 @@ export function ScheduleSection({
   scheduleForm,
   onScheduleSubmit,
   canSchedule,
-  onSendScheduleEmail
+  onSendScheduleEmail,
+  isCompleted,
+  onConcludePresentation,
+  isConcluding
 }: ScheduleSectionProps) {
   const hasSchedule = !!infoTcc.presentationDate;
   
@@ -49,12 +55,24 @@ export function ScheduleSection({
     <section className="mt-4 border p-6 rounded-lg bg-white shadow-sm">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h2 className="text-xl font-extrabold uppercase text-gray-800">Apresentação</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-extrabold uppercase text-gray-800">Apresentação</h2>
+            {isCompleted && (
+              <span className="flex items-center text-sm font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                <CheckCircle className="w-4 h-4 mr-1" /> Concluída
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-500 mt-1">Gerencie a data, local e os examinadores da banca do TCC.</p>
         </div>
 
-        {canSchedule && !isScheduleFormVisible && onOpenSchedule && (
-          <div className="flex gap-2 w-full md:w-auto">
+        {!isCompleted && canSchedule && !isScheduleFormVisible && onOpenSchedule && (
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+            {hasSchedule && onConcludePresentation && (
+              <Button variant="default" className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white" onClick={onConcludePresentation} disabled={isConcluding}>
+                <Check className="w-4 h-4 mr-2" /> {isConcluding ? 'Concluindo...' : 'Concluir Apresentação'}
+              </Button>
+            )}
             {hasSchedule && onSendScheduleEmail && (
               <Button variant="outline" size="default" className="w-full md:w-auto" onClick={onSendScheduleEmail}>
                 <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Enviar Agenda

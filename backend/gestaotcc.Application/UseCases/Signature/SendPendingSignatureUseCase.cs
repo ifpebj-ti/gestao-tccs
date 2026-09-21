@@ -93,6 +93,11 @@ public class SendPendingSignatureUseCase(
 
                                 if (allPreviousSigned)
                                 {
+                                    if (docType.SignatureOrder == 5)
+                                    {
+                                        var allGraded = tcc.BankingMembers.Any() && tcc.BankingMembers.All(m => m.Grade.HasValue);
+                                        if (!allGraded) continue;
+                                    }
                                     NotifyUser(usersToNotify, currentUser.User, tcc.Title!, docType.Name, "Doc-Compatilhado");
                                 }
                                 break;

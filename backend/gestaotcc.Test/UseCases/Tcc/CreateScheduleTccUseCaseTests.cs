@@ -56,7 +56,7 @@ public class CreateScheduleTccUseCaseTests
         var scheduleTime = new TimeOnly(9, 30);
         var location = "Auditório";
 
-        var tcc = new TccEntity { Id = 1, TccSchedule = null };
+        var tcc = new TccEntity { Id = 1, TccSchedule = null, Step = gestaotcc.Domain.Enums.StepTccType.PRESENTATION_AND_EVALUATION.ToString() };
         _tccGateway.FindTccScheduling(1).Returns(tcc);
 
         var dto = new ScheduleTccDTO(scheduleDate, scheduleTime, location, 1);
@@ -82,7 +82,7 @@ public class CreateScheduleTccUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnServerError_WhenUpdateFails()
     {
-        var tcc = new TccEntity { Id = 1, TccSchedule = null };
+        var tcc = new TccEntity { Id = 1, TccSchedule = null, Step = gestaotcc.Domain.Enums.StepTccType.PRESENTATION_AND_EVALUATION.ToString() };
         _tccGateway.FindTccScheduling(1).Returns(tcc);
         _tccGateway.When(g => g.Update(tcc)).Do(x => throw new Exception("DB Error"));
 

@@ -50,6 +50,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.TccInvites)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
+            .Include(x => x.BankingMembers)
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)
                     .ThenInclude(u => u.CampiCourse)
@@ -91,8 +92,11 @@ public class TccGateway(AppDbContext context) : ITccGateway
     {
         return await context.Tccs
             .Include(x => x.TccSchedule)
+            .Include(x => x.BankingMembers)
             .Include(x => x.UserTccs)
-            .ThenInclude(x => x.User)
+                .ThenInclude(x => x.User)
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -148,6 +152,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
             query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
         
         return await query
+            .Include(x => x.BankingMembers)
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)
                     .ThenInclude(x => x.Profile)
@@ -156,5 +161,16 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.Documents)
                 .ThenInclude(x => x.Signatures)
             .ToListAsync();
+    }
+
+    public async Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token)
+    {
+        return await context.TccBankingMembers.FirstOrDefaultAsync(x => x.AccessToken == token);
+    }
+
+    public async Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member)
+    {
+        context.TccBankingMembers.Update(member);
+        await context.SaveChangesAsync();
     }
 }

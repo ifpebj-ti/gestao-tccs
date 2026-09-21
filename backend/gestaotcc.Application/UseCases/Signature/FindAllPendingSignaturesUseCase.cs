@@ -112,6 +112,11 @@ public class FindAllPendingSignaturesUseCase(
 
                                 if (allPreviousSigned)
                                 {
+                                    if (docType.SignatureOrder == 5)
+                                    {
+                                        var allGraded = tcc.BankingMembers.Any() && tcc.BankingMembers.All(m => m.Grade.HasValue);
+                                        if (!allGraded) continue;
+                                    }
                                     pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
                                 }
                                 break;

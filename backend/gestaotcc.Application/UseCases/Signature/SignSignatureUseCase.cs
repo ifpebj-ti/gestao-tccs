@@ -1,6 +1,7 @@
 using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
+using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
 using gestaotcc.Domain.Entities.Document;
@@ -10,6 +11,7 @@ using gestaotcc.Domain.Entities.User;
 using iText.Kernel.Pdf;
 using iText.Signatures;
 using System.IO;
+using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
@@ -53,7 +55,8 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
         var document = tcc.Documents.First(d => d.Id == data.DocumentId);
         
-        var expectedNameNormalized = new string(RemoveDiacritics(document.DocumentType.Name).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+        var expectedPrefix = document.DocumentType.Name.Split('-')[0];
+        var expectedNameNormalized = new string(RemoveDiacritics(expectedPrefix).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
         
         var receivedNameNormalized = new string(RemoveDiacritics(System.Uri.UnescapeDataString(data.FileName ?? "")).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
 
@@ -97,8 +100,35 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         if (AllDocumentsInStepAreSigned(tcc, documentsInStep))
         {
             var oldStep = tcc.Step;
-            tcc.Step = GetNextStep(tccStep);
-            logger.LogInformation("Todas as assinaturas da etapa {OldStep} foram concluídas. Avançando TccId {TccId} para a etapa {NewStep}.", oldStep, tcc.Id, tcc.Step);
+            if (tccStep == StepTccType.PRESENTATION_AND_EVALUATION)
+            {
+                tcc.Status = StatusTccType.COMPLETED.ToString();
+                logger.LogInformation("Todas as assinaturas da etapa final foram concluídas. TCC marcado como COMPLETED.");
+            }
+            else
+            {
+                tcc.Step = GetNextStep(tccStep);
+                logger.LogInformation("Todas as assinaturas da etapa {OldStep} foram concluídas. Avançando TccId {TccId} para a etapa {NewStep}.", oldStep, tcc.Id, tcc.Step);
+
+                if (oldStep == StepTccType.PREPARATION_FOR_PRESENTATION.ToString() && tcc.Step == StepTccType.PRESENTATION_AND_EVALUATION.ToString())
+                {
+                    var studentUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role != gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User;
+                    var advisorUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User;
+                    
+                    if (advisorUser != null)
+                    {
+                        var templateVars = new Dictionary<string, object> { { "studentName", advisorUser.Name } };
+                        var emailDto = new SendEmailDTO(
+                            "", 
+                            "Agendamento de Defesa Liberado", 
+                            advisorUser.Email, 
+                            "SCHEDULE-ALLOWED", 
+                            templateVars);
+                        
+                        BackgroundJob.Enqueue(() => emailGateway.Send(emailDto));
+                    }
+                }
+            }
         }
         else
         {
@@ -277,7 +307,7 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         return nextStep.ToString();
     }
     
-    private static bool UserCanSignDocument(UserEntity user, TccEntity tcc, DocumentEntity document)
+    private bool UserCanSignDocument(UserEntity user, TccEntity tcc, DocumentEntity document)
     {
         var userTcc = tcc.UserTccs.FirstOrDefault(ut => ut.User.Id == user.Id);
         if (userTcc == null) return false;
@@ -289,10 +319,38 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             return false;
 
         var method = Enum.Parse<MethoSignatureType>(document.DocumentType.MethodSignature);
-
-        if (method == MethoSignatureType.NOT_ONLY_DOCS && profile.Role == RoleType.STUDENT.ToString())
+        
+        if (document.DocumentType.SignatureOrder == 5)
         {
-            return document.UserId == user.Id;
+            var allGraded = tcc.BankingMembers.Any() && tcc.BankingMembers.All(m => m.Grade.HasValue);
+            if (!allGraded) return false;
+        }
+
+        if (method == MethoSignatureType.ONLY_DOCS && document.UserId == null)
+        {
+            var validUserTccs = tcc.UserTccs.Where(ut => allowedRoles.Contains(ut.Profile.Role)).ToList();
+            
+            var orderedUserTccs = validUserTccs
+                .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
+                .ThenBy(u => u.Id)
+                .ToList();
+
+            var index = orderedUserTccs.FindIndex(u => u.User.Id == user.Id);
+            if (index > 0)
+            {
+                var allPreviousSigned = orderedUserTccs.Take(index)
+                    .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
+                if (!allPreviousSigned)
+                    return false;
+            }
+        }
+        else if (method == MethoSignatureType.NOT_ONLY_DOCS)
+        {
+            if (profile.Role == RoleType.STUDENT.ToString())
+            {
+                if (document.UserId.HasValue && document.UserId.Value != user.Id)
+                    return false;
+            }
         }
 
         return true;

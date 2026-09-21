@@ -40,20 +40,16 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromForm] SignSignatureInputModel data,
         [FromServices] SignSignatureUseCase signSignatureUseCase)
     {
-        using Stream fileStream = data.File.OpenReadStream();
-        var fileBuffer = new byte[fileStream.Length];
-
-        using (fileStream)
-        {
-            await fileStream.ReadAsync(fileBuffer, 0, (int)fileStream.Length);
-        }
+        using var memoryStream = new System.IO.MemoryStream();
+        await data.File.CopyToAsync(memoryStream);
+        var fileBuffer = memoryStream.ToArray();
         
         var dto = new SignSignatureDTO(
             data.TccId, 
             data.DocumentId, 
             data.UserId, 
             fileBuffer,
-            (double)fileStream.Length / (1024 * 1024),
+            (double)fileBuffer.Length / (1024 * 1024),
             data.File.ContentType,
             data.File.FileName
             );
