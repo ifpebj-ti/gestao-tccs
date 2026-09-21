@@ -32,6 +32,7 @@ interface TccDetailsResponse {
   infoTcc: {
     title: string;
     summary: string;
+    status: string;
     presentationDate: string | null;
     presentationTime: string | null;
     presentationLocation: string;
@@ -79,6 +80,7 @@ export function useTccDetails() {
   const [isBankingFormVisible, setIsBankingFormVisible] = useState(false);
   const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
   const [isEditingTccInfo, setIsEditingTccInfo] = useState(false);
+  const [isConcluding, setIsConcluding] = useState(false);
 
   const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
 
@@ -397,6 +399,41 @@ export function useTccDetails() {
     }
   };
 
+  const [orientadorToken, setOrientadorToken] = useState<string | null>(null);
+
+  const handleConcludePresentation = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+    setIsConcluding(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/conclude-presentation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!res.ok) {
+        throw new Error('Falha ao concluir a apresentação.');
+      }
+      
+      const resData = await res.json();
+      toast.success('Apresentação concluída! Os convites para avaliação foram enviados.');
+      
+      if (resData.token) {
+        setOrientadorToken(resData.token);
+      }
+      fetchTccDetails();
+    } catch {
+      toast.error('Erro ao concluir a apresentação do TCC.');
+    } finally {
+      setIsConcluding(false);
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -423,6 +460,10 @@ export function useTccDetails() {
     resendingInviteTo,
     handleResendInvite,
     handleDownloadAllDocuments,
-    handleEditTccInfo
+    handleEditTccInfo,
+    handleConcludePresentation,
+    isConcluding,
+    orientadorToken,
+    setOrientadorToken
   };
 }

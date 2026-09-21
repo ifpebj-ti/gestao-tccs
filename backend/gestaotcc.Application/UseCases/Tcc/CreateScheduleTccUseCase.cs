@@ -24,13 +24,19 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
             return ResultPattern<string>.FailureResult("TCC já possui agendamento de defesa", 409);
         }
 
+        if (tcc.Step != gestaotcc.Domain.Enums.StepTccType.PRESENTATION_AND_EVALUATION.ToString())
+        {
+            logger.LogWarning("Falha na criação de agendamento para TccId {TccId}: TCC não está na etapa de Apresentação e Avaliação. Etapa atual: {Step}", data.IdTcc, tcc.Step);
+            return ResultPattern<string>.FailureResult("O agendamento da defesa só é permitido após a conclusão da etapa 4 (Preparação para Apresentação).", 400);
+        }
+
         try
         {
             logger.LogInformation("Criando e atribuindo agendamento para o TccId: {TccId}", data.IdTcc);
             var tccSchedule = TccScheduleFactory.CreateTccSchedule(data);
             tcc.TccSchedule = tccSchedule;
 
-            if (data.BankingMembers != null && data.BankingMembers.Any())
+            if (data.BankingMembers != null)
             {
                 foreach (var memberDto in data.BankingMembers)
                 {
@@ -38,6 +44,15 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
                     var member = new TccBankingMemberEntity(memberDto.Name, memberDto.Email, memberDto.Role, token, tcc.Id);
                     tcc.BankingMembers.Add(member);
                 }
+            }
+
+            // Ensure the advisor is always a banking member
+            var advisorUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User;
+            if (advisorUser != null && !tcc.BankingMembers.Any(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                var token = Guid.NewGuid().ToString("N");
+                var advisorMember = new TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id);
+                tcc.BankingMembers.Add(advisorMember);
             }
 
             await tccGateway.Update(tcc);
@@ -50,10 +65,11 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
                     // Instant invite email
                     var variables = new Dictionary<string, object>
                     {
-                        { "name", member.Name },
-                        { "tccTitle", tcc.Title ?? "TCC" },
-                        { "date", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
-                        { "location", tccSchedule.Location },
+                        { "username", member.Name },
+                        { "titulo_tcc", tcc.Title ?? "TCC" },
+                        { "resumo_tcc", tcc.Summary ?? "Resumo não informado." },
+                        { "data_horario", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
+                        { "local", tccSchedule.Location },
                         { "token", member.AccessToken },
                         { "role", member.Role }
                     };

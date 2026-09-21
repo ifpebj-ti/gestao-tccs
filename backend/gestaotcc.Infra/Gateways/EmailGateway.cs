@@ -121,7 +121,11 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "LINK-BANKING-USER" ? Path.Combine(directory, "Templates", "link-banking-user-template.html")
             : typeTemplate == "SEND-PENDING-SIGNATURE" ? Path.Combine(directory, "Templates", "send-pending-signature-template.html")
             : typeTemplate == "SCHEDULE-TCC" ? Path.Combine(directory, "Templates", "schedule-tcc-template.html")
-            : Path.Combine(directory, "Templates", "update-password-template.html");
+            : typeTemplate == "BANKING-INVITE" ? Path.Combine(directory, "Templates", "banking-invite-template.html")
+            : typeTemplate == "BANKING-EVALUATION" ? Path.Combine(directory, "Templates", "banking-evaluation-template.html")
+            : typeTemplate == "UPDATE-PASSWORD" ? Path.Combine(directory, "Templates", "update-password-template.html")
+            : typeTemplate == "SCHEDULE-ALLOWED" ? Path.Combine(directory, "Templates", "schedule-allowed-template.html")
+            : throw new ArgumentException($"Template type {typeTemplate} not found.");
         return File.ReadAllText(filePath);
     }
 }

@@ -385,4 +385,47 @@ public class TccController : ControllerBase
 
         return Ok(new MessageSuccessResponseModel(useCaseResult.Message));
     }
+    /// <summary>
+    /// Concluir a apresentação do TCC e enviar emails para a banca com links para avaliação
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [HttpPost("{tccId}/conclude-presentation")]
+    public async Task<ActionResult<object>> ConcludePresentation([FromRoute] long tccId,
+        [FromServices] ConcludePresentationUseCase concludePresentationUseCase)
+    {
+        var result = await concludePresentationUseCase.Execute(tccId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new { message = result.Message, token = result.Data });
+    }
+
+    /// <summary>
+    /// Receber a avaliação de um membro da banca (Nota e Parecer)
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("evaluate")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> Evaluate([FromBody] EvaluateTccDTO data,
+        [FromServices] EvaluateTccUseCase evaluateTccUseCase)
+    {
+        var result = await evaluateTccUseCase.Execute(data);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 401
+                ? Unauthorized(result.ErrorDetails)
+                : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
 }
