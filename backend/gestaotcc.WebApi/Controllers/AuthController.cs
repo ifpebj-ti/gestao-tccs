@@ -1,4 +1,4 @@
-﻿using gestaotcc.Application.UseCases.Auth;
+using gestaotcc.Application.UseCases.Auth;
 using gestaotcc.Domain.Dtos.Auth;
 using gestaotcc.WebApi.ResponseModels;
 using gestaotcc.WebApi.ResponseModels.Auth;
@@ -101,5 +101,30 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         }
 
         return Ok(new MessageSuccessResponseModel("Senha criada com sucesso"));
+    }
+
+    /// <summary>
+    /// Realiza login no sistema para avaliador externo
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("banking-login")]
+    public async Task<ActionResult<LoginResponseModel>> BankingLogin([FromQuery] string token, [FromServices] BankingLoginUseCase bankingLoginUseCase)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest(new { message = "Token não informado." });
+
+        var useCaseResult = await bankingLoginUseCase.Execute(token);
+
+        if (!useCaseResult.IsSuccess)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            useCaseResult.ErrorDetails!.Type = endpointUrl;
+
+            return useCaseResult.ErrorDetails?.Status is 401
+                ? Unauthorized(useCaseResult.ErrorDetails)
+                : NotFound(useCaseResult.ErrorDetails);
+        }
+
+        return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken, useCaseResult.Data.IsDevTest, useCaseResult.Data.IsTempDevTestPassword));
     }
 }

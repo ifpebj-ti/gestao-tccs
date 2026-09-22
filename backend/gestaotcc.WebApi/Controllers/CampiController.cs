@@ -32,9 +32,13 @@ public class CampiController: ControllerBase
         [FromServices] FindAllCourseByCampiCourseIdUseCase findAllCourseByCampiCourseIdUseCase)
     {
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
 
-        var result = await findAllCourseByCampiCourseIdUseCase.Execute(long.Parse(campiCourseId));
+        var result = await findAllCourseByCampiCourseIdUseCase.Execute(parsedCampiCourseId);
 
         return Ok(result.Data);
     }

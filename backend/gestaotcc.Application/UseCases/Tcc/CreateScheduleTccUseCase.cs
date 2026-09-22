@@ -6,7 +6,7 @@ using gestaotcc.Domain.Entities.TccBankingMember;
 using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
+public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -24,20 +24,61 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
             return ResultPattern<string>.FailureResult("TCC já possui agendamento de defesa", 409);
         }
 
+        if (tcc.Step != gestaotcc.Domain.Enums.StepTccType.PRESENTATION_AND_EVALUATION.ToString())
+        {
+            logger.LogWarning("Falha na criação de agendamento para TccId {TccId}: TCC não está na etapa de Apresentação e Avaliação. Etapa atual: {Step}", data.IdTcc, tcc.Step);
+            return ResultPattern<string>.FailureResult("O agendamento da defesa só é permitido após a conclusão da etapa 4 (Preparação para Apresentação).", 400);
+        }
+
         try
         {
             logger.LogInformation("Criando e atribuindo agendamento para o TccId: {TccId}", data.IdTcc);
             var tccSchedule = TccScheduleFactory.CreateTccSchedule(data);
             tcc.TccSchedule = tccSchedule;
 
-            if (data.BankingMembers != null && data.BankingMembers.Any())
+            if (data.BankingMembers != null)
             {
+                var bankingProfile = await profileGateway.FindByRole("BANKING");
+                var baseUser = tcc.UserTccs.FirstOrDefault()?.User;
+
                 foreach (var memberDto in data.BankingMembers)
                 {
                     var token = Guid.NewGuid().ToString("N");
                     var member = new TccBankingMemberEntity(memberDto.Name, memberDto.Email, memberDto.Role, token, tcc.Id);
                     tcc.BankingMembers.Add(member);
+
+                    var existingUser = await userGateway.FindByEmail(memberDto.Email);
+                    if (existingUser == null && bankingProfile != null)
+                    {
+                        var tempUser = new gestaotcc.Domain.Entities.User.UserEntity
+                        {
+                            Name = memberDto.Name,
+                            Email = memberDto.Email,
+                            Password = Guid.NewGuid().ToString("N"), // Random password
+                            Status = "ACTIVE",
+                            CampiCourseId = baseUser?.CampiCourseId,
+                            Profile = new List<gestaotcc.Domain.Entities.Profile.ProfileEntity> { bankingProfile }
+                        };
+
+                        TccFactory.UpdateUsersTccToCreateBanking(tcc, tempUser, bankingProfile);
+                    }
+                    else if (existingUser != null && bankingProfile != null)
+                    {
+                        if (!tcc.UserTccs.Any(ut => ut.UserId == existingUser.Id))
+                        {
+                            TccFactory.UpdateUsersTccToCreateBanking(tcc, existingUser, bankingProfile);
+                        }
+                    }
                 }
+            }
+
+            // Ensure the advisor is always a banking member
+            var advisorUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User;
+            if (advisorUser != null && !tcc.BankingMembers.Any(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                var token = Guid.NewGuid().ToString("N");
+                var advisorMember = new TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id);
+                tcc.BankingMembers.Add(advisorMember);
             }
 
             await tccGateway.Update(tcc);
@@ -50,10 +91,11 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
                     // Instant invite email
                     var variables = new Dictionary<string, object>
                     {
-                        { "name", member.Name },
-                        { "tccTitle", tcc.Title ?? "TCC" },
-                        { "date", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
-                        { "location", tccSchedule.Location },
+                        { "username", member.Name },
+                        { "titulo_tcc", tcc.Title ?? "TCC" },
+                        { "resumo_tcc", tcc.Summary ?? "Resumo não informado." },
+                        { "data_horario", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
+                        { "local", tccSchedule.Location },
                         { "token", member.AccessToken },
                         { "role", member.Role }
                     };

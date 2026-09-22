@@ -25,9 +25,14 @@ public class SignatureController : ControllerBase
         [FromServices] FindAllPendingSignaturesUseCase findAllPendingSignaturesUseCase)
     {
         var campiIdClaim = User.FindFirst("campiCourseId")?.Value;
-        if (campiIdClaim == null) return Unauthorized();
         
-        var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId, long.Parse(campiIdClaim));
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiIdClaim))
+        {
+            long.TryParse(campiIdClaim, out parsedCampiCourseId);
+        }
+        
+        var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId, parsedCampiCourseId);
         
         return Ok(useCaseResult.Data);
     }
@@ -40,20 +45,16 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromForm] SignSignatureInputModel data,
         [FromServices] SignSignatureUseCase signSignatureUseCase)
     {
-        using Stream fileStream = data.File.OpenReadStream();
-        var fileBuffer = new byte[fileStream.Length];
-
-        using (fileStream)
-        {
-            await fileStream.ReadAsync(fileBuffer, 0, (int)fileStream.Length);
-        }
+        using var memoryStream = new System.IO.MemoryStream();
+        await data.File.CopyToAsync(memoryStream);
+        var fileBuffer = memoryStream.ToArray();
         
         var dto = new SignSignatureDTO(
             data.TccId, 
             data.DocumentId, 
             data.UserId, 
             fileBuffer,
-            (double)fileStream.Length / (1024 * 1024),
+            (double)fileBuffer.Length / (1024 * 1024),
             data.File.ContentType,
             data.File.FileName
             );
@@ -94,9 +95,14 @@ public class SignatureController : ControllerBase
         }
 
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
+        
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
 
-        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId, parsedStudentId, long.Parse(campiCourseId));
+        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId, parsedStudentId, parsedCampiCourseId);
         if (useCaseResult.IsFailure)
         {
             
@@ -157,9 +163,14 @@ public class SignatureController : ControllerBase
         [FromServices] FindDocumentUseCase findDocumentUseCase)
     {
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
         
-        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, long.Parse(campiCourseId), true);
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
+        
+        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, parsedCampiCourseId, true);
         if (useCaseResult.IsFailure)
         {
             

@@ -92,7 +92,7 @@ public class FindDocumentUseCase(
         }
     }
 
-    private object BuildTemplateVariables(
+    private Dictionary<string, object> BuildTemplateVariables(
         long? studentUserId,
         TccEntity tcc,
         DocumentTypeEntity documentTypeEntity,
@@ -123,50 +123,48 @@ public class FindDocumentUseCase(
 
         var encoder = HtmlEncoder.Default;
 
-        // Retorna um objeto dinâmico / anônimo contendo todas as chaves acessíveis pelo Scriban no HTML
-        return new
+        var dict = new Dictionary<string, object>
         {
-            nome_orientador = encoder.Encode(advisor?.Name ?? ""),
-            curso_orientador = encoder.Encode(advisor?.CampiCourse?.Course.Name ?? ""),
-            universidade_curso_orientador = encoder.Encode(advisor?.CampiCourse?.Campi.City ?? ""),
-            universidade_orientador = encoder.Encode(advisor?.CampiCourse?.Campi.Name ?? ""),
-            email_orientador = encoder.Encode(advisor?.Email ?? ""),
-            telefone_orientador = encoder.Encode(advisor?.Phone ?? ""),
-            titulo_orientador = encoder.Encode(advisor?.Titration ?? ""),
+            { "nome_orientador", encoder.Encode(advisor?.Name ?? "") },
+            { "curso_orientador", encoder.Encode(advisor?.CampiCourse?.Course.Name ?? "") },
+            { "universidade_curso_orientador", encoder.Encode(advisor?.CampiCourse?.Campi.City ?? "") },
+            { "universidade_orientador", encoder.Encode(advisor?.CampiCourse?.Campi.Name ?? "") },
+            { "email_orientador", encoder.Encode(advisor?.Email ?? "") },
+            { "telefone_orientador", encoder.Encode(advisor?.Phone ?? "") },
+            { "titulo_orientador", encoder.Encode(advisor?.Titration ?? "") },
             
-            nome_orientando = encoder.Encode(student?.Name ?? ""),
-            curso_orientando = encoder.Encode(student?.CampiCourse?.Course.Name ?? ""),
-            turma_orientando = encoder.Encode(student?.UserClass ?? ""),
-            ano_orientando = encoder.Encode(formattedSemester),
-            turno_orientando = encoder.Encode(student?.Shift ?? ""),
-            email_orientando = encoder.Encode(student?.Email ?? ""),
-            telefone_orientando = encoder.Encode(student?.Phone ?? ""),
-            matricula_orientando = encoder.Encode(student?.Registration ?? ""),
-            universidade_cidade_orientando = encoder.Encode(student?.CampiCourse?.Campi.City ?? ""),
+            { "nome_orientando", encoder.Encode(student?.Name ?? "") },
+            { "curso_orientando", encoder.Encode(student?.CampiCourse?.Course.Name ?? "") },
+            { "turma_orientando", encoder.Encode(student?.UserClass ?? "") },
+            { "ano_orientando", encoder.Encode(formattedSemester) },
+            { "turno_orientando", encoder.Encode(student?.Shift ?? "") },
+            { "email_orientando", encoder.Encode(student?.Email ?? "") },
+            { "telefone_orientando", encoder.Encode(student?.Phone ?? "") },
+            { "matricula_orientando", encoder.Encode(student?.Registration ?? "") },
+            { "universidade_cidade_orientando", encoder.Encode(student?.CampiCourse?.Campi.City ?? "") },
 
-            curso_supervisor = encoder.Encode(supervisorUser?.CampiCourse?.Course.Name ?? ""), 
-            universidade_supervisor = encoder.Encode(supervisorUser?.CampiCourse?.Campi.City ?? ""),
+            { "curso_supervisor", encoder.Encode(supervisorUser?.CampiCourse?.Course.Name ?? "") },
+            { "universidade_supervisor", encoder.Encode(supervisorUser?.CampiCourse?.Campi.City ?? "") },
             
-            titulo_tcc = encoder.Encode(tccTitle),
-            titulo_tcc_1 = encoder.Encode(tccTitle1),
-            titulo_tcc_2 = encoder.Encode(tccTitle2),
-            orientandos = encoder.Encode(string.Join(", ", students.Select(s => s.Name ?? ""))),
+            { "titulo_tcc", encoder.Encode(tccTitle) },
+            { "titulo_tcc_1", encoder.Encode(tccTitle1) },
+            { "titulo_tcc_2", encoder.Encode(tccTitle2) },
+            { "orientandos", encoder.Encode(string.Join(", ", students.Select(s => s.Name ?? ""))) },
 
-            dia_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Day.ToString() ?? ""),
-            mes_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Month.ToString() ?? ""),
-            ano_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Year.ToString() ?? ""),
-            hora_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Hour.ToString() ?? ""),
-            minuto_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.Minute.ToString() ?? ""),
-            local_apresentacao = encoder.Encode(tccSchedule?.Location ?? ""),
-            data_apresentacao = encoder.Encode(tccSchedule?.ScheduledDate.ToString("dd/MM/yyyy") ?? ""),
+            { "dia_apresentacao", encoder.Encode(tccSchedule?.ScheduledDate.Day.ToString() ?? "") },
+            { "mes_apresentacao", encoder.Encode(tccSchedule?.ScheduledDate.Month.ToString() ?? "") },
+            { "ano_apresentacao", encoder.Encode(tccSchedule?.ScheduledDate.Year.ToString() ?? "") },
+            { "hora_apresentacao", encoder.Encode(tccSchedule?.ScheduledDate.Hour.ToString() ?? "") },
+            { "minuto_apresentacao", encoder.Encode(tccSchedule?.ScheduledDate.Minute.ToString() ?? "") },
+            { "local_apresentacao", encoder.Encode(tccSchedule?.Location ?? "") },
+            { "data_apresentacao", encoder.Encode(tccSchedule?.ScheduledDate.ToString("dd/MM/yyyy") ?? "") },
 
-            cidade = encoder.Encode(student?.CampiCourse?.Campi.City ?? advisor?.CampiCourse?.Campi.City ?? ""),
-            dia = encoder.Encode(nowDate.Day.ToString()),
-            mes = encoder.Encode(mesesPtBr[nowDate.Month - 1]),
-            ano = encoder.Encode(nowDate.Year.ToString()),
+            { "cidade", encoder.Encode(student?.CampiCourse?.Campi.City ?? advisor?.CampiCourse?.Campi.City ?? "") },
+            { "dia", encoder.Encode(nowDate.Day.ToString()) },
+            { "mes", encoder.Encode(mesesPtBr[nowDate.Month - 1]) },
+            { "ano", encoder.Encode(nowDate.Year.ToString()) },
 
-            // Lista estruturada para loops 
-            students = students.Select(s => new {
+            { "students", students.Select(s => new {
                 name = encoder.Encode(s.Name ?? ""),
                 course = encoder.Encode(s.CampiCourse?.Course.Name ?? ""),
                 user_class = encoder.Encode(s.UserClass ?? ""),
@@ -174,8 +172,104 @@ public class FindDocumentUseCase(
                 shift = encoder.Encode(s.Shift ?? ""),
                 email = encoder.Encode(s.Email ?? ""),
                 phone = encoder.Encode(s.Phone ?? "")
-            }).ToList()
+            }).ToList() }
         };
+
+        for (int i = 1; i <= 3; i++)
+        {
+            dict[$"oral_{i}"] = "";
+            dict[$"textual_{i}"] = "";
+            dict[$"parecer_final_{i}"] = "";
+
+            dict[$"oral_postura_{i}"] = "";
+            dict[$"oral_usoTempo_{i}"] = "";
+            dict[$"oral_usoAudiovisual_{i}"] = "";
+            dict[$"oral_dominioAssunto_{i}"] = "";
+            dict[$"oral_clarezaComunicacao_{i}"] = "";
+            dict[$"oral_exposicaoIdeias_{i}"] = "";
+            dict[$"oral_articulacao_{i}"] = "";
+
+            dict[$"textual_relevanciaTema_{i}"] = "";
+            dict[$"textual_clarezaObjetividade_{i}"] = "";
+            dict[$"textual_coerencia_{i}"] = "";
+            dict[$"textual_desenvolvimento_{i}"] = "";
+            dict[$"textual_originalidade_{i}"] = "";
+            dict[$"textual_conteudoCientifico_{i}"] = "";
+            dict[$"textual_referencias_{i}"] = "";
+            dict[$"textual_conclusoes_{i}"] = "";
+            dict[$"textual_normatizacao_{i}"] = "";
+        }
+        
+        dict["total_oral"] = "";
+        dict["total_textual"] = "";
+        dict["nota_final"] = "";
+
+        if (tcc.BankingMembers != null && tcc.BankingMembers.Any(m => m.Grade.HasValue))
+        {
+            var avaliacoes = tcc.BankingMembers.Where(m => m.Grade.HasValue).ToList();
+            decimal sumOral = 0m, sumTextual = 0m;
+            int countOral = 0, countTextual = 0;
+
+            for (int i = 0; i < avaliacoes.Count; i++)
+            {
+                var member = avaliacoes[i];
+                decimal memberOral = 0m;
+                decimal memberTextual = 0m;
+                int idx = i + 1;
+                
+                dict[$"parecer_final_{idx}"] = encoder.Encode(member.EvaluationComments ?? "");
+
+                if (!string.IsNullOrEmpty(member.EvaluationDetails))
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(member.EvaluationDetails);
+                        if (doc.RootElement.TryGetProperty("oral", out var oralObj))
+                        {
+                            foreach (var prop in oralObj.EnumerateObject())
+                            {
+                                var valStr = prop.Value.GetString()?.Replace(",", ".");
+                                if (decimal.TryParse(valStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var val))
+                                {
+                                    memberOral += val;
+                                    dict[$"oral_{prop.Name}_{idx}"] = encoder.Encode(val.ToString("0.00"));
+                                }
+                            }
+                        }
+                        if (doc.RootElement.TryGetProperty("textual", out var textualObj))
+                        {
+                            foreach (var prop in textualObj.EnumerateObject())
+                            {
+                                var valStr = prop.Value.GetString()?.Replace(",", ".");
+                                if (decimal.TryParse(valStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var val))
+                                {
+                                    memberTextual += val;
+                                    dict[$"textual_{prop.Name}_{idx}"] = encoder.Encode(val.ToString("0.00"));
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                
+                string oralStr = memberOral.ToString("0.00");
+                string textualStr = memberTextual.ToString("0.00");
+
+                dict[$"oral_{idx}"] = encoder.Encode(oralStr);
+                dict[$"textual_{idx}"] = encoder.Encode(textualStr);
+
+                sumOral += memberOral;
+                countOral++;
+                sumTextual += memberTextual;
+                countTextual++;
+            }
+
+            if (countOral > 0) dict["total_oral"] = encoder.Encode(Math.Round(sumOral / countOral, 2).ToString("0.00"));
+            if (countTextual > 0) dict["total_textual"] = encoder.Encode(Math.Round(sumTextual / countTextual, 2).ToString("0.00"));
+            if (avaliacoes.Any()) dict["nota_final"] = encoder.Encode(Math.Round(avaliacoes.Average(m => m.Grade.Value), 2).ToString("0.00"));
+        }
+
+        return dict;
     }
 
     private (string, string) SplitTitle(string title, int maxLength)

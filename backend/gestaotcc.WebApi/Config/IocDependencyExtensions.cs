@@ -43,6 +43,7 @@ public static class IocDependencyExtensions
 
         // Auth
         services.AddScoped<LoginUseCase>();
+        services.AddScoped<BankingLoginUseCase>();
         services.AddScoped<UpdatePasswordUseCase>();
         services.AddScoped<NewPasswordUseCase>();
 
@@ -71,6 +72,8 @@ public static class IocDependencyExtensions
         services.AddScoped<FindTccUseCase>();
         services.AddScoped<ResendInvitationCodeTccUseCase>();
         services.AddScoped<UpdateTccUseCase>();
+        services.AddScoped<ConcludePresentationUseCase>();
+        services.AddScoped<EvaluateTccUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();

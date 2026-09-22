@@ -10,6 +10,9 @@ public class TccBankingMemberEntity
     public string Role { get; set; } = string.Empty; // e.g. "Examinador Interno", "Examinador Externo"
     public string AccessToken { get; set; } = string.Empty;
     public DateTime? TokenExpiryDate { get; set; }
+    public decimal? Grade { get; set; }
+    public string? EvaluationComments { get; set; }
+    public string? EvaluationDetails { get; set; }
     public long TccId { get; set; }
     public TccEntity Tcc { get; set; } = null!;
 

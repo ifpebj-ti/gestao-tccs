@@ -143,7 +143,8 @@ public class FindTccWorkflowUseCaseTests
             Id = 10,
             Name = "Doc Only Docs",
             SignatureOrder = signatureOrder,
-            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { profileStudent }
         };
 
         // DocumentType NOT_ONLY_DOCS with SignatureOrder 3
@@ -152,7 +153,8 @@ public class FindTccWorkflowUseCaseTests
             Id = 11,
             Name = "Doc Not Only Docs",
             SignatureOrder = signatureOrder,
-            MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString()
+            MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { profileAdvisor }
         };
 
         profileStudent.DocumentTypes.Add(docTypeOnlyDocs);

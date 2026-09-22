@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using gestaotcc.Infra.Database;
@@ -11,9 +12,11 @@ using gestaotcc.Infra.Database;
 namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260920005435_AddTccBankingMemberGradeAndComments")]
+    partial class AddTccBankingMemberGradeAndComments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,11 +312,8 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Property<string>("EvaluationComments")
                         .HasColumnType("text");
 
-                    b.Property<string>("EvaluationDetails")
-                        .HasColumnType("text");
-
                     b.Property<decimal?>("Grade")
-                        .HasColumnType("numeric(5,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Name")
                         .IsRequired()

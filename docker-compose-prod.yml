@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   backend:
-    image: ghcr.io/ifpebj-ti/gestaotccs-backend:latest
+    image: ghcr.io/ifpebj-ti/gestaotccs-backend:${APP_VERSION:-latest}
     container_name: gestao-backend
     ports:
       - "${PORT_MACHINE_BACKEND}:8080"
@@ -37,7 +37,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: ghcr.io/ifpebj-ti/gestaotccs-frontend:latest
+    image: ghcr.io/ifpebj-ti/gestaotccs-frontend:${APP_VERSION:-latest}
     container_name: gestao-frontend
     ports:
       - "${PORT_MACHINE_FRONTEND}:3000"
