@@ -1,4 +1,4 @@
-name: Backend CI/CD Workflow
+name: Production CI/CD & Release Workflow
 
 on:
   pull_request:
@@ -8,13 +8,16 @@ on:
       - closed
     paths:
       - "backend/**"
+      - "frontend/**"
       - ".github/workflows/**"
+      - "docker-compose-prod.yml"
 
   workflow_dispatch:
 
 permissions:
   contents: write
   packages: write
+  security-events: write
 
 jobs:
   # --------------------------------------------------------------------
@@ -23,7 +26,7 @@ jobs:
   tag-creation:
     name: 0. Automatic Creation Process of New Tags
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     outputs:
       created_tag: ${{ steps.created_tag.outputs.created_tag }}
       change_type: ${{ steps.change_type.outputs.change_type }}
@@ -37,6 +40,11 @@ jobs:
       - name: Extract type of change from PR
         id: change_type
         run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "change_type=nova-feature-refactor" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "${{ github.event.pull_request.body }}" > body.txt
 
           change_type=""
@@ -74,12 +82,12 @@ jobs:
               patch=$((patch + 1))
               ;;
             nova-feature-refactor)
-              minor=$((minor + 1)); 
+              minor=$((minor + 1))
               patch=0
               ;;
             novo-marco)
-              major=$((major + 1)); 
-              minor=0; 
+              major=$((major + 1))
+              minor=0
               patch=0
               ;;
             outros) 
@@ -94,13 +102,11 @@ jobs:
   # 1) BACKEND DOCKER --------------------------------------------------
   # --------------------------------------------------------------------
   backend-docker:
-    name: 1. Backend CI/CD
+    name: 1. Backend CI/CD & Image Build
     runs-on: ubuntu-latest
     needs: tag-creation
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
-    if: >
-      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')
     permissions:
       contents: write
       packages: write
@@ -113,7 +119,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Clones rasos devem ser desativados para uma melhor relevância da análise do SonarQube
+          fetch-depth: 0
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
@@ -126,14 +132,12 @@ jobs:
       - name: Run Tests and Code Coverage
         id: test-coverage
         run: |
-          # Garante que as ferramentas para ler XML estejam instaladas
           sudo apt-get update && sudo apt-get install -y libxml2-utils
 
           dotnet test --collect:"XPlat Code Coverage" --settings ./coverlet.runsettings --results-directory ./coverage/
 
           COVERAGE_FILE=$(find ./coverage -name coverage.opencover.xml -print -quit)
 
-          # Verifica se o arquivo foi encontrado
           if [ -z "$COVERAGE_FILE" ]; then
             echo "❌ Arquivo coverage.opencover.xml não encontrado!"
             exit 1
@@ -141,12 +145,10 @@ jobs:
 
           echo "Arquivo de cobertura encontrado em: $COVERAGE_FILE"
 
-          # Extrai a porcentagem do arquivo encontrado
           RAW_COVERAGE=$(xmllint --xpath 'string(/CoverageSession/Summary/@sequenceCoverage)' $COVERAGE_FILE)
           COVERAGE_PERCENTAGE=$(echo $RAW_COVERAGE | cut -d. -f1)
           echo "Porcentagem final para o badge: $COVERAGE_PERCENTAGE"
 
-          # Define os outputs para os próximos passos usarem
           echo "report_path=$COVERAGE_FILE" >> $GITHUB_OUTPUT
           echo "coverage_percentage=${COVERAGE_PERCENTAGE:-0}" >> $GITHUB_OUTPUT
 
@@ -155,10 +157,8 @@ jobs:
           BADGE="![Coverage](https://img.shields.io/badge/Coverage-${{ steps.test-coverage.outputs.coverage_percentage }}%25-brightgreen)"
           sed -i '0,/<!-- COVERAGE_BADGE -->/s|.*<!-- COVERAGE_BADGE -->|'"$BADGE"' <!-- COVERAGE_BADGE -->|' ../README.md
 
-          # Configurar autenticação com GitHub CLI
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-          # Fazer commit e push via GitHub API
           gh api \
             --method PUT \
             -H "Accept: application/vnd.github.v3+json" \
@@ -166,38 +166,6 @@ jobs:
             -f message="ci: atualizar badge de cobertura para ${{ steps.test-coverage.outputs.coverage_percentage }}%" \
             -f content="$(base64 -w0 ../README.md)" \
             -f sha="$(gh api repos/${{ github.repository }}/contents/README.md --jq .sha)"
-
-      # - name: Set up JDK 17 for SonarQube analysis
-      #   uses: actions/setup-java@v4
-      #   with:
-      #     java-version: 17
-      #     distribution: 'zulu' # Alternative distribution options are available.
-
-      # - name: Cache SonarQube packages
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.sonar/cache
-      #     key: ${{ runner.os }}-sonar
-      #     restore-keys: ${{ runner.os }}-sonar
-
-      # - name: Cache SonarQube scanner
-      #   id: cache-sonar-scanner
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ./.sonar/scanner
-      #     key: ${{ runner.os }}-sonar-scanner
-      #     restore-keys: ${{ runner.os }}-sonar-scanner
-
-      # - name: Install SonarQube scanner
-      #   if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-      #   run: |
-      #     dotnet tool install dotnet-sonarscanner --tool-path ./.sonar/scanner
-
-      # - name: SonarQube Build and analyze
-      #   run: |
-      #     ./.sonar/scanner/dotnet-sonarscanner begin /k:"gestao-tccs-back" /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.cs.opencover.reportsPaths="${{ steps.test-coverage.outputs.report_path }}"
-      #     dotnet build --no-incremental
-      #     ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN_BACK }}"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -235,12 +203,82 @@ jobs:
           curl -k -X POST ${{ secrets.PORTAINER_WEBHOOK_BACKEND }} || echo "Aviso: Webhook do Portainer indisponivel no momento."
 
   # --------------------------------------------------------------------
+  # 2) FRONTEND DOCKER -------------------------------------------------
+  # --------------------------------------------------------------------
+  frontend-docker:
+    name: 2. Frontend CI/CD & Image Build
+    runs-on: ubuntu-latest
+    needs: tag-creation
+    env:
+      CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_APP_VERSION=$CREATED_TAG \
+            -t ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG \
+            -f Dockerfile .
+
+      - name: Tag image as latest
+        run: |
+          docker tag ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Scan Frontend Image for Critical Vulnerabilities (Trivy)
+        run: |
+          trivy image --severity CRITICAL --exit-code 1 --ignore-unfixed ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG
+
+      - name: Push Docker images (version and latest)
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:$CREATED_TAG
+          docker push ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:latest
+
+      - name: Trigger Portainer webhook to update Frontend service
+        continue-on-error: true
+        run: |
+          curl -k -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }} || echo "Aviso: Webhook do Portainer indisponivel no momento."
+
+  # --------------------------------------------------------------------
   # 3) RELEASE CREATION ------------------------------------------------
   # --------------------------------------------------------------------
   release-creation:
     name: 3. Automatic Creation Process of New Releases
     runs-on: ubuntu-latest
-    needs: [tag-creation, backend-docker]
+    needs: [tag-creation, backend-docker, frontend-docker]
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
       CHANGE_TYPE: ${{ needs.tag-creation.outputs.change_type }}
@@ -256,5 +294,9 @@ jobs:
           body: |
             Release automatically generated from the request #${{ github.event.pull_request.number }}
             Type of change: ${{ env.CHANGE_TYPE }}
+            
+            Images published:
+            - ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:${{ env.CREATED_TAG }}
+            - ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:${{ env.CREATED_TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
