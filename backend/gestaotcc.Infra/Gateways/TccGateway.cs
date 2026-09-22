@@ -120,6 +120,8 @@ public class TccGateway(AppDbContext context) : ITccGateway
                         .ThenInclude(p => p.DocumentTypes)
             .Include(x => x.UserTccs)
                 .ThenInclude(ut => ut.Profile)
+            .Include(x => x.UserTccs)
+                .ThenInclude(ut => ut.User)
             .Include(x => x.Documents)
                 .ThenInclude(d => d.DocumentType)
             .Include(x => x.Documents)

@@ -110,16 +110,20 @@ public class FindAllPendingSignaturesUseCase(
                                 var allPreviousSigned = orderedUserTccs.Take(index)
                                     .All(prev => doc.Signatures.Any(s => s.UserId == prev.User.Id));
 
-                                if (allPreviousSigned)
+                                // For Ata and Anexo IV (SignatureOrder == 5), allow parallel signatures
+                                // and do not require all grades to be submitted first.
+                                if (docType.SignatureOrder == 5)
                                 {
-                                    if (docType.SignatureOrder == 5)
-                                    {
-                                        var allGraded = tcc.BankingMembers.Any() && tcc.BankingMembers.All(m => m.Grade.HasValue);
-                                        if (!allGraded) continue;
-                                    }
                                     pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
                                 }
-                                break;
+                                else
+                                {
+                                    if (allPreviousSigned)
+                                    {
+                                        pendingDetails.Add(CreateDetail(doc, docType, currentUser, methodType));
+                                    }
+                                    break;
+                                }
                             }
                         }
                     }

@@ -119,7 +119,9 @@ public class TccFactory
     
     public static TccEntity UpdateUsersTccToCreateBanking(TccEntity tcc, UserEntity user, ProfileEntity profile)
     {
-        var alreadyAdded = tcc.UserTccs.Any(ut => ut.UserId == user.Id);
+        var alreadyAdded = user.Id != 0 
+            ? tcc.UserTccs.Any(ut => ut.UserId == user.Id)
+            : tcc.UserTccs.Any(ut => ut.User.Email == user.Email);
         
         if (!alreadyAdded)
         {

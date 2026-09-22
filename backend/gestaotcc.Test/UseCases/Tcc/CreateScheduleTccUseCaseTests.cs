@@ -11,6 +11,8 @@ namespace gestaotcc.Test.UseCases.Tcc;
 public class CreateScheduleTccUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
+    private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
+    private readonly IProfileGateway _profileGateway = Substitute.For<IProfileGateway>();
     private readonly CreateScheduleTccUseCase _useCase;
     private readonly IAppLoggerGateway<CreateScheduleTccUseCase> _logger = Substitute.For<IAppLoggerGateway<CreateScheduleTccUseCase>>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
@@ -18,7 +20,7 @@ public class CreateScheduleTccUseCaseTests
 
     public CreateScheduleTccUseCaseTests()
     {
-        _useCase = new CreateScheduleTccUseCase(_tccGateway, _logger, _emailGateway, _backgroundJobClient);
+        _useCase = new CreateScheduleTccUseCase(_tccGateway, _userGateway, _profileGateway, _logger, _emailGateway, _backgroundJobClient);
     }
 
     [Fact]

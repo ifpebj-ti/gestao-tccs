@@ -196,6 +196,23 @@ public static class DbInitializer
             context.SaveChanges();
         }
 
+        if (!context.DocumentTypes.Any(dt => dt.Name == "ATA DE TRABALHO DE CONCLUSÃO DE CURSO"))
+        {
+            var ataType = new DocumentTypeEntity
+            {
+                Name = "ATA DE TRABALHO DE CONCLUSÃO DE CURSO", 
+                SignatureOrder = 5,
+                MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
+            };
+            context.DocumentTypes.Add(ataType);
+            context.SaveChanges();
+
+            context.Database.ExecuteSqlRaw($@"
+                INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
+                VALUES ({ataType.Id}, 4), ({ataType.Id}, 5);
+            ");
+        }
+
         SeedDocumentTypeProfile(context);
     }
 

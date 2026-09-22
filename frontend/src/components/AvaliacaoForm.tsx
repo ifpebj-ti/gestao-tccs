@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,11 +7,25 @@ import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
 import { CheckCircle2, FileText, Mic, BookOpen } from 'lucide-react';
 import Image from 'next/image';
-
+import { BankingSignatures, FindAllPendingSignatureDTO } from './BankingSignatures';
+import { jwtDecode } from 'jwt-decode';
 interface AvaliacaoFormProps {
   token?: string | null;
   onSuccessCallback?: () => void;
   hideLogoAndMinHeight?: boolean;
+}
+
+interface BackendDocumentDTO {
+  documentId: number;
+  documentName: string;
+  userDetails?: { idDocumentOwner: number | null }[];
+}
+
+interface BackendSignatureDTO {
+  tccId: number;
+  studentNames: string[];
+  pendingDetails?: BackendDocumentDTO[];
+  documents?: BackendDocumentDTO[];
 }
 
 export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight = false }: AvaliacaoFormProps) {
@@ -44,6 +58,51 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [pendingSignaturesCount, setPendingSignaturesCount] = useState(0);
+  const [pendingSignaturesData, setPendingSignaturesData] = useState<FindAllPendingSignatureDTO[]>([]);
+  const [bankingJwt, setBankingJwt] = useState('');
+  const [evaluatedTccId, setEvaluatedTccId] = useState<number | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  useEffect(() => {
+    if (success && token) {
+      const checkDocs = async () => {
+        try {
+           const authRes = await fetch(`${API_URL}/Auth/banking-login?token=${token}`, { method: 'POST' });
+           if (authRes.ok) {
+             const { accessToken } = await authRes.json();
+             setBankingJwt(accessToken);
+             const decoded = jwtDecode<{ userId: string }>(accessToken);
+             const userId = decoded.userId;
+             const sigRes = await fetch(`${API_URL}/Signature/pending?userId=${userId}`, {
+               headers: { 'Authorization': `Bearer ${accessToken}` }
+             });
+              if (sigRes.ok) {
+               const sigs = await sigRes.json();
+               const mappedSigs = sigs.map((s: BackendSignatureDTO) => ({
+                 tccId: s.tccId,
+                 studentNames: s.studentNames,
+                 documents: (s.pendingDetails || s.documents || []).map((doc: BackendDocumentDTO) => ({
+                   documentId: doc.documentId,
+                   documentName: doc.documentName,
+                   studentId: doc.userDetails && doc.userDetails.length > 0 ? doc.userDetails[0].idDocumentOwner : null
+                 }))
+               }));
+               const filteredSigs = evaluatedTccId !== null 
+                 ? mappedSigs.filter((s: BackendSignatureDTO) => s.tccId === evaluatedTccId)
+                 : mappedSigs;
+               const count = filteredSigs.reduce((acc: number, curr: { documents: unknown[] }) => acc + curr.documents.length, 0);
+               setPendingSignaturesData(filteredSigs);
+               setPendingSignaturesCount(count);
+             }
+           }
+        } catch (err) {
+          console.error("Erro ao buscar documentos pendentes:", err);
+        }
+      };
+      checkDocs();
+    }
+  }, [success, token, API_URL, refetchTrigger]);
 
   // Helper to parse grades
   const parseGrade = (val: string) => {
@@ -63,6 +122,16 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
     return (totalOral + totalTextual) / 2;
   }, [totalOral, totalTextual]);
 
+  const validateGrades = () => {
+    for (const [, val] of Object.entries(oralGrades)) {
+      if (val === '') return false;
+    }
+    for (const [, val] of Object.entries(textualGrades)) {
+      if (val === '') return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -71,40 +140,54 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
       return;
     }
 
+    if (!validateGrades()) {
+      toast.error('Por favor, preencha todas as notas antes de enviar.');
+      return;
+    }
+
     if (totalOral > 10 || totalTextual > 10) {
       toast.error('O total parcial não pode ultrapassar 10 pontos.');
       return;
     }
 
+    if (!comments.trim()) {
+      toast.error('O parecer sobre a apresentação é obrigatório.');
+      return;
+    }
+
     const evaluationDetails = JSON.stringify({ oral: oralGrades, textual: textualGrades });
 
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
+
       const res = await fetch(`${API_URL}/Tcc/evaluate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          token, 
-          grade: parseFloat(finalGrade.toFixed(2)), 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          grade: parseFloat(finalGrade.toFixed(2)),
           evaluationComments: comments,
           evaluationDetails
         })
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.title || 'Erro ao enviar a avaliação.');
+        throw new Error('Falha ao enviar a avaliação');
       }
 
+      const data = await res.json();
+      if (data && data.tccId) {
+        setEvaluatedTccId(data.tccId);
+      }
+
+      toast.success('Avaliação enviada com sucesso!');
       setSuccess(true);
       if (onSuccessCallback) {
         onSuccessCallback();
       }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao enviar a avaliação.';
-      toast.error(errorMessage);
+    } catch (error) {
+      toast.error('Ocorreu um erro ao enviar a avaliação. Tente novamente.');
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -136,11 +219,22 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   if (success && !onSuccessCallback) {
     // Se tiver callback de success, não renderiza a tela de sucesso, deixa quem chamou tratar
     return (
-      <div className={hideLogoAndMinHeight ? "w-full p-4" : "min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4"}>
-        <div className="w-full bg-white p-10 rounded-xl shadow-md text-center flex flex-col items-center max-w-md mx-auto">
+      <div className={hideLogoAndMinHeight ? "w-full p-4" : "min-h-screen flex flex-col items-center py-12 bg-gray-50 p-4"}>
+        <div className="w-full bg-white p-10 rounded-xl shadow-md text-center flex flex-col items-center max-w-2xl mx-auto">
           <CheckCircle2 className="w-20 h-20 text-green-500 mb-6" />
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Avaliação Concluída!</h1>
           <p className="text-gray-600">A sua nota e o seu parecer foram registrados com sucesso. Muito obrigado pela sua contribuição!</p>
+          {pendingSignaturesCount > 0 ? (
+            <BankingSignatures 
+              signatures={pendingSignaturesData} 
+              jwt={bankingJwt} 
+              onSuccess={() => setRefetchTrigger(prev => prev + 1)} 
+            />
+          ) : (
+            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg w-full">
+               <p className="text-sm text-amber-800 font-medium">Aguardando o documento da ata de defesa (Anexo IV) ser gerado para que seja disponibilizado para sua assinatura no sistema. Isso ocorrerá assim que todos os membros da banca concluírem suas avaliações.</p>
+            </div>
+          )}
         </div>
       </div>
     );

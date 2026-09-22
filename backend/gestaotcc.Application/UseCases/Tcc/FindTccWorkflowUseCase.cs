@@ -126,7 +126,8 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
             {
                 if (doc.User is null)
                 {
-                    foreach (var userTcc in userTccs)
+                    var eligibleUsers = userTccs.Where(u => documentType.Profiles.Any(p => p.Id == u.Profile.Id)).ToList();
+                    foreach (var userTcc in eligibleUsers)
                     {
                         var isSigned = doc.Signatures.Any(s => s.User.Id == userTcc.User.Id);
                         details.Add(new FindTccWorkflowSignatureDetailsOnlyDocsDTO(
