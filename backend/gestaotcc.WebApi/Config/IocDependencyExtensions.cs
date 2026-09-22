@@ -43,6 +43,7 @@ public static class IocDependencyExtensions
 
         // Auth
         services.AddScoped<LoginUseCase>();
+        services.AddScoped<BankingLoginUseCase>();
         services.AddScoped<UpdatePasswordUseCase>();
         services.AddScoped<NewPasswordUseCase>();
 

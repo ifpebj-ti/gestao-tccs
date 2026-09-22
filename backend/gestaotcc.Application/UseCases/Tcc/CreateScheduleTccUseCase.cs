@@ -6,7 +6,7 @@ using gestaotcc.Domain.Entities.TccBankingMember;
 using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
+public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -38,11 +38,37 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<
 
             if (data.BankingMembers != null)
             {
+                var bankingProfile = await profileGateway.FindByRole("BANKING");
+                var baseUser = tcc.UserTccs.FirstOrDefault()?.User;
+
                 foreach (var memberDto in data.BankingMembers)
                 {
                     var token = Guid.NewGuid().ToString("N");
                     var member = new TccBankingMemberEntity(memberDto.Name, memberDto.Email, memberDto.Role, token, tcc.Id);
                     tcc.BankingMembers.Add(member);
+
+                    var existingUser = await userGateway.FindByEmail(memberDto.Email);
+                    if (existingUser == null && bankingProfile != null)
+                    {
+                        var tempUser = new gestaotcc.Domain.Entities.User.UserEntity
+                        {
+                            Name = memberDto.Name,
+                            Email = memberDto.Email,
+                            Password = Guid.NewGuid().ToString("N"), // Random password
+                            Status = "ACTIVE",
+                            CampiCourseId = baseUser?.CampiCourseId,
+                            Profile = new List<gestaotcc.Domain.Entities.Profile.ProfileEntity> { bankingProfile }
+                        };
+
+                        TccFactory.UpdateUsersTccToCreateBanking(tcc, tempUser, bankingProfile);
+                    }
+                    else if (existingUser != null && bankingProfile != null)
+                    {
+                        if (!tcc.UserTccs.Any(ut => ut.UserId == existingUser.Id))
+                        {
+                            TccFactory.UpdateUsersTccToCreateBanking(tcc, existingUser, bankingProfile);
+                        }
+                    }
                 }
             }
 

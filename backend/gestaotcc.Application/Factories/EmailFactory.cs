@@ -63,6 +63,10 @@ public class EmailFactory
         variables.Add("username", data.UserName);
         variables.Add("tccTitle", data.TccTitle);
         variables.Add("details", data.Details);  // Passa a lista de detalhes para o template
+        if (!string.IsNullOrEmpty(data.Token))
+        {
+            variables.Add("token", data.Token);
+        }
 
         var chooseSubject = "Assinatura pendente";
 

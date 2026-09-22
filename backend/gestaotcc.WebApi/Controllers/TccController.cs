@@ -88,9 +88,13 @@ public class TccController : ControllerBase
         [FromServices] FindAllTccByFilterUseCase findAllTccByFilterUseCase)
     {
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
         
-        var useCaseResult = await findAllTccByFilterUseCase.Execute(tccFilter, long.Parse(campiCourseId));
+        var useCaseResult = await findAllTccByFilterUseCase.Execute(tccFilter, parsedCampiCourseId);
 
         return Ok(useCaseResult.Data);
     }
@@ -411,7 +415,7 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("evaluate")]
-    public async Task<ActionResult<MessageSuccessResponseModel>> Evaluate([FromBody] EvaluateTccDTO data,
+    public async Task<ActionResult<object>> Evaluate([FromBody] EvaluateTccDTO data,
         [FromServices] EvaluateTccUseCase evaluateTccUseCase)
     {
         var result = await evaluateTccUseCase.Execute(data);
@@ -425,7 +429,6 @@ public class TccController : ControllerBase
                 ? Unauthorized(result.ErrorDetails)
                 : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
         }
-
-        return Ok(new MessageSuccessResponseModel(result.Message));
+        return Ok(new { message = "Avaliação salva com sucesso!", tccId = result.Data });
     }
 }

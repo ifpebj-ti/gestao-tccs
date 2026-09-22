@@ -25,9 +25,14 @@ public class SignatureController : ControllerBase
         [FromServices] FindAllPendingSignaturesUseCase findAllPendingSignaturesUseCase)
     {
         var campiIdClaim = User.FindFirst("campiCourseId")?.Value;
-        if (campiIdClaim == null) return Unauthorized();
         
-        var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId, long.Parse(campiIdClaim));
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiIdClaim))
+        {
+            long.TryParse(campiIdClaim, out parsedCampiCourseId);
+        }
+        
+        var useCaseResult = await findAllPendingSignaturesUseCase.Execute(userId, parsedCampiCourseId);
         
         return Ok(useCaseResult.Data);
     }
@@ -90,9 +95,14 @@ public class SignatureController : ControllerBase
         }
 
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
+        
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
 
-        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId, parsedStudentId, long.Parse(campiCourseId));
+        var useCaseResult = await downloadDocumentUseCase.Execute(tccId, documentId, parsedStudentId, parsedCampiCourseId);
         if (useCaseResult.IsFailure)
         {
             
@@ -153,9 +163,14 @@ public class SignatureController : ControllerBase
         [FromServices] FindDocumentUseCase findDocumentUseCase)
     {
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
         
-        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, long.Parse(campiCourseId), true);
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
+        
+        var useCaseResult = await findDocumentUseCase.Execute(tccId, documentId, studentId, parsedCampiCourseId, true);
         if (useCaseResult.IsFailure)
         {
             

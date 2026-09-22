@@ -1,4 +1,4 @@
-﻿using gestaotcc.Application.UseCases.User;
+using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Utils;
 using gestaotcc.WebApi.ResponseModels;
@@ -118,9 +118,13 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
         }
         
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
-        if (campiCourseId == null) return Unauthorized();
+        long parsedCampiCourseId = 0;
+        if (!string.IsNullOrEmpty(campiCourseId))
+        {
+            long.TryParse(campiCourseId, out parsedCampiCourseId);
+        }
         
-        var useCaseResult = await findAllUserByFilterUseCase.Execute(data, long.Parse(campiCourseId));
+        var useCaseResult = await findAllUserByFilterUseCase.Execute(data, parsedCampiCourseId);
         
         return Ok(useCaseResult.Data);
     }
