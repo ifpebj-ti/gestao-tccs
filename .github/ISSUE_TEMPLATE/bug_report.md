@@ -2,7 +2,7 @@
 name: Relato de Erro (Bug Report)
 about: Relatar um erro ou comportamento inesperado no sistema
 title: 'fix: '
-labels: 'bug'
+labels: ["bug"]
 assignees: ''
 ---
 

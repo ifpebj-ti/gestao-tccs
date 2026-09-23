@@ -2,7 +2,7 @@
 name: Tarefa Técnica (Task / Chore)
 about: Tarefas de segurança, DevOps, refatoração ou governança
 title: 'chore: '
-labels: 'chore'
+labels: ["chore"]
 assignees: ''
 ---
 
