@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { VerifyTccCodeSchemaType, verifyTccCodeSchema } from '@/app/schemas/verifyTccCodeSchema';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+import Cookies from 'js-cookie';
 
 export function useVerifyTccCode() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
@@ -81,14 +82,14 @@ export function useVerifyTccCode() {
           sessionStorage.setItem('first_access_code', data.code.trim().toUpperCase());
         }
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const result = await response.json();
-          if (result.token) {
-            const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-            document.cookie = `access_token_temp=${result.token}; expires=${expires}; path=/; secure; samesite=Strict`;
-          }
-        }
+        // Define cookie temporário para permitir acesso às rotas /autoRegister e /newPassword protegidas pelo middleware
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        Cookies.set('access_token_temp', `verified_${encodeURIComponent(data.userEmail.trim())}`, {
+          expires: 15 / (24 * 60), // 15 minutos
+          path: '/',
+          sameSite: 'lax',
+          secure: isHttps
+        });
 
         toast.success('Código de acesso verificado com sucesso!');
 

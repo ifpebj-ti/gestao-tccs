@@ -92,6 +92,7 @@ export function useAutoRegister() {
           sessionStorage.removeItem('first_access_email');
           sessionStorage.removeItem('first_access_code');
         }
+        Cookies.remove('access_token_temp');
 
         toast.success('Cadastro e senha configurados com sucesso! Bem-vindo(a).');
         reset();
@@ -102,6 +103,7 @@ export function useAutoRegister() {
           sessionStorage.removeItem('first_access_email');
           sessionStorage.removeItem('first_access_code');
         }
+        Cookies.remove('access_token_temp');
         toast.success('Cadastro finalizado com sucesso! Faça login para continuar.');
         reset();
         push('/');

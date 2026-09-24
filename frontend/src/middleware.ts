@@ -97,15 +97,12 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (tempProtectedRoutes.some((r) => path.startsWith(r)) && !tempToken) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
   const isTempProtectedRoute = tempProtectedRoutes.some((r) =>
     path.startsWith(r)
   );
+
   if (isTempProtectedRoute) {
-    // Permitir acesso se o token temporário existir
+    // Permitir acesso se o cookie temporário existir (código de verificação validado)
     if (tempToken) {
       return NextResponse.next();
     }
@@ -118,7 +115,7 @@ export function middleware(request: NextRequest) {
           return NextResponse.next();
         }
       } catch {
-        toast.error('Erro ao decodificar token');
+        // Ignora erro de decodificação e redireciona
       }
     }
     return NextResponse.redirect(new URL('/', request.url));
