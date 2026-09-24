@@ -66,7 +66,8 @@ public class TccInfoFactory
                 PresentationTime: tcc.TccSchedule != null
                     ? TimeOnly.FromDateTime(tcc.TccSchedule.ScheduledDate)
                     : (TimeOnly?)null,
-                PresentationLocation: tcc.TccSchedule?.Location ?? string.Empty
+                PresentationLocation: tcc.TccSchedule?.Location ?? string.Empty,
+                RejectionReason: tcc.RejectionReason
             ),
             InfoStudent: students,
             InfoAdvisor: new InfoAdvisorDTO(

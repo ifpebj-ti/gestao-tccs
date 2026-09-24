@@ -19,6 +19,7 @@ public class AutoRegisterUseCase(
     IEmailGateway emailGateway,
     IDocumentTypeGateway documentTypeGateway,
     CreateAccessCodeUseCase createAccessCodeUseCase,
+    IBcryptGateway bcryptGateway,
     IAppLoggerGateway<AutoRegisterUseCase> logger)
 {
     public async Task<ResultPattern<UserEntity>> Execute(AutoRegisterDTO data, string combination)
@@ -28,40 +29,49 @@ public class AutoRegisterUseCase(
         if (user is not null)
         {
             logger.LogError("Estudante com o e-mail: {UserEmail} já cadastrado", data.Email);
-            return ResultPattern<UserEntity>.FailureResult("Erro ao cadastrar estudante", 500);
+            return ResultPattern<UserEntity>.FailureResult("Estudante já cadastrado no sistema", 409);
         }
         
         var userInvite = await tccGateway.FindInviteTccByEmail(data.Email);
-        if (userInvite is null)
+        long campiId = data.CampiId ?? userInvite?.CampiId ?? 1;
+        long courseId = data.CourseId ?? userInvite?.CourseId ?? 1;
+
+        var campiCourse = await courseGateway.FindByCampiAndCourseId(campiId, courseId);
+        if (campiCourse is null)
         {
-            logger.LogError("Convite para estudante com o e-mail: {UserEmail} não encontrado", data.Email);
-            return ResultPattern<UserEntity>.FailureResult("Erro ao cadastrar estudante", 500);
+            var campis = await courseGateway.FindAllCampis();
+            campiCourse = campis.SelectMany(c => c.CampiCourses).FirstOrDefault();
+            if (campiCourse is null)
+            {
+                logger.LogError("Nenhum curso associado encontrado para o campus {CampiId} e curso {CourseId}", campiId, courseId);
+                return ResultPattern<UserEntity>.FailureResult("Curso não encontrado para o cadastro", 404);
+            }
         }
         
-        var documentTypes = await documentTypeGateway.FindAll();
         var expandedProfileRoles = ProfileHelper.ExpandProfiles(["STUDENT"]);
         var profile = await profileGateway.FindByRole(expandedProfileRoles);
-        var campiCourse = await courseGateway.FindByCampiAndCourseId(userInvite!.CampiId, userInvite.CourseId);
         var accessCode = createAccessCodeUseCase.Execute(combination).Data;
 
+        string? hashedPassword = !string.IsNullOrWhiteSpace(data.Password)
+            ? bcryptGateway.GenerateHashPassword(data.Password)
+            : null;
+
         logger.LogInformation("Criando nova entidade de usuário para {UserEmail}...", data.Email);
-        var newStudent = UserFactory.CreateUser(data, profile, campiCourse, accessCode);
+        var newStudent = UserFactory.CreateUser(data, profile, campiCourse, accessCode, hashedPassword);
         
         await userGateway.Save(newStudent);
         logger.LogInformation("Usuário {UserEmail} salvo com sucesso no banco de dados. Novo UserId: {UserId}",
             newStudent.Email, newStudent.Id);
         
-        logger.LogInformation("Usuário {UserId} é apenas um estudante. Executando fluxo de vinculação de TCC.",
-            newStudent.Id);
-        var tccInvite = await tccGateway.FindInviteTccByEmail(data.Email);
-        var profileEntity = await profileGateway.FindByRole("STUDENT");
-        if (tccInvite is not null)
+        // Se houver convite prévio, vincula ao TCC existente
+        if (userInvite is not null)
         {
-            var tcc = await tccGateway.FindTccById(tccInvite.TccId);
+            logger.LogInformation("Usuário {UserId} possui convite pendente. Executando fluxo de vinculação de TCC.", newStudent.Id);
+            var tcc = await tccGateway.FindTccById(userInvite.TccId);
             if (tcc is not null)
             {
-                logger.LogInformation(
-                    "TCC {TccId} encontrado para o convite. Vinculando usuário e criando documentos...", tcc.Id);
+                var documentTypes = await documentTypeGateway.FindAll();
+                var profileEntity = await profileGateway.FindByRole("STUDENT");
                 TccFactory.UpdateUsersTccToCreateUser(tcc, newStudent, profileEntity!);
                 CreateDocumentForUser(newStudent, documentTypes, tcc.Documents, tcc.Title);
 
@@ -77,18 +87,15 @@ public class AutoRegisterUseCase(
                 await tccGateway.Update(tcc);
                 logger.LogInformation("TCC {TccId} atualizado com sucesso.", tcc.Id);
             }
+
+            var sendStudent = await emailGateway.Send(EmailFactory.CreateSendEmailDTO(newStudent, "ADD-USER-TCC"));
+            if (sendStudent.IsFailure)
+            {
+                logger.LogWarning("Falha ao enviar e-mail 'ADD-USER-TCC' para {UserEmail}.", newStudent.Email);
+            }
         }
 
-        var sendStudent = await emailGateway.Send(EmailFactory.CreateSendEmailDTO(newStudent, "ADD-USER-TCC"));
-        if (sendStudent.IsFailure)
-        {
-            logger.LogError("Falha ao enviar e-mail 'ADD-USER-TCC' para {UserEmail}. Motivo: {ErrorMessage}",
-                newStudent.Email, sendStudent.Message);
-            return ResultPattern<UserEntity>.FailureResult(sendStudent.Message, 500);
-        }
-
-        return ResultPattern<UserEntity>.SuccessResult();
-
+        return ResultPattern<UserEntity>.SuccessResult(newStudent);
     }
 
     private void CreateDocumentForUser(UserEntity user, List<DocumentTypeEntity> documentTypes,

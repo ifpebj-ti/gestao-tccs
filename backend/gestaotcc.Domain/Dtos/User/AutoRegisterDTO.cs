@@ -9,4 +9,7 @@ public record AutoRegisterDTO(
     string CPF,
     string Phone,
     string? UserClass,
-    ShiftType? Shift);
+    ShiftType? Shift,
+    long? CourseId = null,
+    long? CampiId = null,
+    string? Password = null);

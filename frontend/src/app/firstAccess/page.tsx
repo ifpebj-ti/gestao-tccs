@@ -91,6 +91,15 @@ function FirstAccessContent() {
             <Button type="submit">
               {isSubmitting ? 'Carregando...' : 'Continuar'}
             </Button>
+            <div className="text-center mt-2">
+              <span className="text-sm text-gray-500">Não tem um código de convite? </span>
+              <Link
+                href="/autoRegister"
+                className="text-blue-600 text-sm font-semibold underline hover:text-blue-800"
+              >
+                Cadastre-se diretamente aqui
+              </Link>
+            </div>
           </form>
           <Button
             icon={faArrowLeft}

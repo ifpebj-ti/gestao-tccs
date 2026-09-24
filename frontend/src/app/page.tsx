@@ -93,9 +93,26 @@ export default function Login() {
               {isSubmitting ? 'Carregando...' : 'Entrar'}
             </Button>
           </form>
-          <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
-            Primeiro acesso?
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              onClick={() => {
+                window.location.href = '/autoRegister';
+              }}
+              variant={'outline'}
+              className="w-full text-blue-700 border-blue-600 hover:bg-blue-50"
+            >
+              Novo por aqui? Criar conta de discente
+            </Button>
+            <Button
+              type="button"
+              onClick={handleRedirectToFirstAccess}
+              variant={'ghost'}
+              className="w-full text-gray-600"
+            >
+              Tenho um código de convite (Primeiro acesso)
+            </Button>
+          </div>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">
