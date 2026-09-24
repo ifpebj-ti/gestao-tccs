@@ -96,21 +96,11 @@ export default function Login() {
           <div className="flex flex-col gap-2">
             <Button
               type="button"
-              onClick={() => {
-                window.location.href = '/autoRegister';
-              }}
+              onClick={handleRedirectToFirstAccess}
               variant={'outline'}
               className="w-full text-blue-700 border-blue-600 hover:bg-blue-50"
             >
-              Novo por aqui? Criar conta de discente
-            </Button>
-            <Button
-              type="button"
-              onClick={handleRedirectToFirstAccess}
-              variant={'ghost'}
-              className="w-full text-gray-600"
-            >
-              Tenho um código de convite (Primeiro acesso)
+              Primeiro acesso (Criar conta de estudante)
             </Button>
           </div>
         </div>

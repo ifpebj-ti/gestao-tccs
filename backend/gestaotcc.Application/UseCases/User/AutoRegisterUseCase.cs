@@ -63,11 +63,11 @@ public class AutoRegisterUseCase(
         logger.LogInformation("Usuário {UserEmail} salvo com sucesso no banco de dados. Novo UserId: {UserId}",
             newStudent.Email, newStudent.Id);
         
-        // Se houver convite prévio, vincula ao TCC existente
-        if (userInvite is not null)
+        // Se houver convite prévio com TCC, vincula ao TCC existente
+        if (userInvite is not null && userInvite.TccId.HasValue && userInvite.TccId.Value > 0)
         {
             logger.LogInformation("Usuário {UserId} possui convite pendente. Executando fluxo de vinculação de TCC.", newStudent.Id);
-            var tcc = await tccGateway.FindTccById(userInvite.TccId);
+            var tcc = await tccGateway.FindTccById(userInvite.TccId.Value);
             if (tcc is not null)
             {
                 var documentTypes = await documentTypeGateway.FindAll();

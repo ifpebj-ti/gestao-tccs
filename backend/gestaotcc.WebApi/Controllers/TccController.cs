@@ -45,6 +45,36 @@ public class TccController : ControllerBase
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
     /// <summary>
+    /// Enviar código de verificação para o e-mail do estudante (Primeiro Acesso)
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("code/send")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> SendVerificationCode(
+        [FromBody] SendStudentVerificationCodeDTO data,
+        [FromServices] SendStudentVerificationCodeUseCase sendStudentVerificationCodeUseCase)
+    {
+        var validator = new SendStudentVerificationCodeValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var result = await sendStudentVerificationCodeUseCase.Execute(data);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : BadRequest(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel("Código de acesso enviado com sucesso para o e-mail informado."));
+    }
+
+    /// <summary>
     /// Verificar código de primeiro acesso enviado no cadastro de proposta
     /// </summary>
     [AllowAnonymous]

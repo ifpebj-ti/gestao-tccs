@@ -166,7 +166,7 @@ public class CreateUserUseCaseTests
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Do<UserEntity>(u => newUser = u)).Returns(Task.CompletedTask);
         _tccGateway.FindInviteTccByEmail(createUserDto.Email).Returns(Task.FromResult(tccInvite));
-        _tccGateway.FindTccById(tccInvite.TccId).Returns(Task.FromResult((TccEntity)null));
+        _tccGateway.FindTccById(tccInvite.TccId.Value).Returns(Task.FromResult((TccEntity)null));
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(Task.FromResult(ResultPattern<bool>.SuccessResult()));
 
         // Act
@@ -326,7 +326,7 @@ public class CreateUserUseCaseTests
 
         var tccInvite1 = new TccInviteEntity { TccId = 1, Email = createUserDto.Email, IsValidCode = true };
         var tccInvite2 = new TccInviteEntity { TccId = tccInvite1.TccId, Email = "yet_another@example.com", IsValidCode = true };
-        var tcc = new TccEntity { Id = tccInvite1.TccId, Documents = new List<DocumentEntity>(), TccInvites = new List<TccInviteEntity> { tccInvite1, tccInvite2 }, Step = StepTccType.PROPOSAL_REGISTRATION.ToString() };
+        var tcc = new TccEntity { Id = 1, Documents = new List<DocumentEntity>(), TccInvites = new List<TccInviteEntity> { tccInvite1, tccInvite2 }, Step = StepTccType.PROPOSAL_REGISTRATION.ToString() };
 
         _userGateway.FindByEmail(createUserDto.Email).Returns((UserEntity)null);
         _documentTypeGateway.FindAll().Returns(Task.FromResult(new List<DocumentTypeEntity>()));
@@ -334,7 +334,7 @@ public class CreateUserUseCaseTests
         _createAccessCodeUseCase.Execute(Arg.Any<string>()).Returns(ResultPattern<AccessCodeEntity>.SuccessResult(accessCode));
         _userGateway.Save(Arg.Do<UserEntity>(u => newUser = u)).Returns(Task.CompletedTask);
         _tccGateway.FindInviteTccByEmail(createUserDto.Email).Returns(Task.FromResult(tccInvite1));
-        _tccGateway.FindTccById(tccInvite1.TccId).Returns(Task.FromResult(tcc));
+        _tccGateway.FindTccById(tccInvite1.TccId.Value).Returns(Task.FromResult(tcc));
         _tccGateway.Update(Arg.Any<TccEntity>()).Returns(Task.CompletedTask);
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(Task.FromResult(ResultPattern<bool>.SuccessResult()));
 

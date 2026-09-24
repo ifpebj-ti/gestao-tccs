@@ -59,6 +59,7 @@ public static class IocDependencyExtensions
         // Tcc
         services.AddScoped<CreateTccUseCase>();
         services.AddScoped<ResendInvitationTccEmailUseCase>();
+        services.AddScoped<SendStudentVerificationCodeUseCase>();
         services.AddScoped<VerifyCodeInviteTccUseCase>();
         services.AddScoped<FindAllTccByFilterUseCase>();
         services.AddScoped<FindTccWorkflowUseCase>();

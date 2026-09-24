@@ -19,10 +19,13 @@ public class TccInviteConfiguration : IEntityTypeConfiguration<TccInviteEntity>
             .HasMaxLength(10);
 
         builder.Property(x => x.CampiId)
-            .IsRequired();
+            .IsRequired(false);
 
         builder.Property(x => x.CourseId)
-            .IsRequired();
+            .IsRequired(false);
+
+        builder.Property(x => x.TccId)
+            .IsRequired(false);
 
         builder.Property(x => x.IsValidCode)
             .IsRequired();

@@ -11,6 +11,7 @@ public interface ITccGateway
     Task Update(TccEntity tcc);
     Task<List<TccInviteEntity>> FindAllInviteTcc();
     Task<TccInviteEntity?> FindInviteTccByEmail(string email);
+    Task SaveTccInvite(TccInviteEntity tccInvite);
     Task UpdateTccInvite(TccInviteEntity tccInvite);
     Task<TccEntity?> FindTccById(long id);
     Task<TccEntity?> FindTccWorkflow(long? tccId, long userId);
