@@ -147,45 +147,41 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         
         if (methodType == MethoSignatureType.ONLY_DOCS && document.UserId == null)
         {
-            // For Ata and Anexo IV (SignatureOrder == 5), signatures are parallel, so there is no "next" person to notify
-            if (docType.SignatureOrder != 5)
+            var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
+            var validUserTccs = tcc.UserTccs.Where(ut => acceptedRoles.Contains(ut.Profile.Role)).ToList();
+            
+            var orderedUserTccs = validUserTccs
+                .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
+                .ThenBy(u => u.Id)
+                .ToList();
+
+            foreach (var currentUser in orderedUserTccs)
             {
-                var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
-                var validUserTccs = tcc.UserTccs.Where(ut => acceptedRoles.Contains(ut.Profile.Role)).ToList();
-                
-                var orderedUserTccs = validUserTccs
-                    .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
-                    .ThenBy(u => u.Id)
-                    .ToList();
+                var alreadySigned = document.Signatures.Any(s => s.UserId == currentUser.User.Id);
+                if (alreadySigned) continue;
 
-                foreach (var currentUser in orderedUserTccs)
+                var index = orderedUserTccs.IndexOf(currentUser);
+                var allPreviousSigned = orderedUserTccs.Take(index)
+                    .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
+
+                if (allPreviousSigned)
                 {
-                    var alreadySigned = document.Signatures.Any(s => s.UserId == currentUser.User.Id);
-                    if (alreadySigned) continue;
-
-                    var index = orderedUserTccs.IndexOf(currentUser);
-                    var allPreviousSigned = orderedUserTccs.Take(index)
-                        .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
-
-                    if (allPreviousSigned)
+                    if (currentUser.Profile.Role == gestaotcc.Domain.Enums.RoleType.BANKING.ToString())
                     {
-                        if (currentUser.Profile.Role == gestaotcc.Domain.Enums.RoleType.BANKING.ToString())
-                        {
-                            logger.LogInformation("Próxima pessoa da fila é da banca (BANKING). O e-mail não será enviado pois eles assinam na mesma tela de avaliação: {UserEmail}", currentUser.User.Email);
-                        }
-                        else
-                        {
-                            logger.LogInformation("Enviando e-mail de notificação para a próxima pessoa da fila: {UserEmail}", currentUser.User.Email);
-                            var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(docType.Name, null) };
-                            
-                            var bankingMember = tcc.BankingMembers.FirstOrDefault(m => m.Email == currentUser.User.Email);
-                            var token = bankingMember?.AccessToken;
-                            
-                            var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(currentUser.User.Email, currentUser.User.Name, details, tcc.Title, token));
-                            await emailGateway.Send(emailDto);
-                        }
-                        break;
+                        logger.LogInformation("Próxima pessoa da fila é da banca (BANKING). O e-mail não será enviado pois eles assinam na mesma tela de avaliação: {UserEmail}", currentUser.User.Email);
                     }
+                    else
+                    {
+                        logger.LogInformation("Enviando e-mail de notificação para a próxima pessoa da fila: {UserEmail}", currentUser.User.Email);
+                        var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(docType.Name, null) };
+                        
+                        var bankingMember = tcc.BankingMembers.FirstOrDefault(m => m.Email == currentUser.User.Email);
+                        var token = bankingMember?.AccessToken;
+                        
+                        var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(currentUser.User.Email, currentUser.User.Name, details, tcc.Title, token));
+                        await emailGateway.Send(emailDto);
+                    }
+                    break;
                 }
             }
         }

@@ -34,7 +34,7 @@ export function BankingSignatures({ signatures, jwt, onSuccess }: BankingSignatu
 
   const handleDownload = async (docId: number, tccId: number, studentId: number | null, docName: string) => {
     try {
-      const url = `${API_URL}/Signature/download/${docId}?tccId=${tccId}${studentId ? `&studentId=${studentId}` : ''}`;
+      const url = `${API_URL}/Signature/document/download?tccId=${tccId}&documentId=${docId}${studentId ? `&studentId=${studentId}` : ''}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${jwt}` }
       });
@@ -69,7 +69,7 @@ export function BankingSignatures({ signatures, jwt, onSuccess }: BankingSignatu
       
       // Precisamos do UserId do JWT
       const tokenPayload = JSON.parse(atob(jwt.split('.')[1]));
-      const userId = tokenPayload.id || tokenPayload.nameid || tokenPayload.sub;
+      const userId = tokenPayload.userId || tokenPayload.id || tokenPayload.nameid || tokenPayload.sub;
 
       const formData = new FormData();
       formData.append('File', file);
