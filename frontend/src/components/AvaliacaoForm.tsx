@@ -65,44 +65,58 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    if (success && token) {
-      const checkDocs = async () => {
-        try {
-           const authRes = await fetch(`${API_URL}/Auth/banking-login?token=${token}`, { method: 'POST' });
-           if (authRes.ok) {
-             const { accessToken } = await authRes.json();
-             setBankingJwt(accessToken);
-             const decoded = jwtDecode<{ userId: string }>(accessToken);
-             const userId = decoded.userId;
-             const sigRes = await fetch(`${API_URL}/Signature/pending?userId=${userId}`, {
-               headers: { 'Authorization': `Bearer ${accessToken}` }
-             });
-              if (sigRes.ok) {
-               const sigs = await sigRes.json();
-               const mappedSigs = sigs.map((s: BackendSignatureDTO) => ({
-                 tccId: s.tccId,
-                 studentNames: s.studentNames,
-                 documents: (s.pendingDetails || s.documents || []).map((doc: BackendDocumentDTO) => ({
-                   documentId: doc.documentId,
-                   documentName: doc.documentName,
-                   studentId: doc.userDetails && doc.userDetails.length > 0 ? doc.userDetails[0].idDocumentOwner : null
-                 }))
-               }));
-               const filteredSigs = evaluatedTccId !== null 
-                 ? mappedSigs.filter((s: BackendSignatureDTO) => s.tccId === evaluatedTccId)
-                 : mappedSigs;
-               const count = filteredSigs.reduce((acc: number, curr: { documents: unknown[] }) => acc + curr.documents.length, 0);
-               setPendingSignaturesData(filteredSigs);
-               setPendingSignaturesCount(count);
+    let intervalId: NodeJS.Timeout;
+
+    const checkDocs = async () => {
+      if (!success || !token) return;
+      try {
+         const authRes = await fetch(`${API_URL}/Auth/banking-login?token=${token}`, { method: 'POST' });
+         if (authRes.ok) {
+           const { accessToken } = await authRes.json();
+           setBankingJwt(accessToken);
+           const decoded = jwtDecode<{ userId: string }>(accessToken);
+           const userId = decoded.userId;
+           const sigRes = await fetch(`${API_URL}/Signature/pending?userId=${userId}`, {
+             headers: { 'Authorization': `Bearer ${accessToken}` }
+           });
+            if (sigRes.ok) {
+             const sigs = await sigRes.json();
+             const mappedSigs = sigs.map((s: BackendSignatureDTO) => ({
+               tccId: s.tccId,
+               studentNames: s.studentNames,
+               documents: (s.pendingDetails || s.documents || []).map((doc: BackendDocumentDTO) => ({
+                 documentId: doc.documentId,
+                 documentName: doc.documentName,
+                 studentId: doc.userDetails && doc.userDetails.length > 0 ? doc.userDetails[0].idDocumentOwner : null
+               }))
+             }));
+             const filteredSigs = evaluatedTccId !== null 
+               ? mappedSigs.filter((s: BackendSignatureDTO) => s.tccId === evaluatedTccId)
+               : mappedSigs;
+             const count = filteredSigs.reduce((acc: number, curr: { documents: unknown[] }) => acc + curr.documents.length, 0);
+             setPendingSignaturesData(filteredSigs);
+             setPendingSignaturesCount(count);
+
+             // Se encontrou assinaturas, não precisa continuar fazendo polling
+             if (count > 0 && intervalId) {
+                clearInterval(intervalId);
              }
            }
-        } catch (err) {
-          console.error("Erro ao buscar documentos pendentes:", err);
-        }
-      };
+         }
+      } catch (err) {
+        console.error("Erro ao buscar documentos pendentes:", err);
+      }
+    };
+
+    if (success && token) {
       checkDocs();
+      intervalId = setInterval(checkDocs, 10000);
     }
-  }, [success, token, API_URL, refetchTrigger]);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [success, token, API_URL, refetchTrigger, evaluatedTccId]);
 
   // Helper to parse grades
   const parseGrade = (val: string) => {
@@ -232,7 +246,7 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
             />
           ) : (
             <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg w-full">
-               <p className="text-sm text-amber-800 font-medium">Aguardando o documento da ata de defesa (Anexo IV) ser gerado para que seja disponibilizado para sua assinatura no sistema. Isso ocorrerá assim que todos os membros da banca concluírem suas avaliações.</p>
+               <p className="text-sm text-amber-800 font-medium">Aguardando a disponibilização do documento para sua assinatura. Isso ocorrerá após todos os membros concluírem as avaliações e os membros anteriores na fila assinarem o documento.</p>
             </div>
           )}
         </div>
