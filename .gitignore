@@ -1,6 +1,7 @@
 # --- GENERAL ---
-.env.prod
-.env.dev
+.env
+.env.*
+!.env.example
 .vs
 
 # --- FRONTEND ---

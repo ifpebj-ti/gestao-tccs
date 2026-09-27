@@ -7,9 +7,9 @@ public class TccInviteEntityBuilder
     private long _id;
     private string _email = string.Empty;
     private string _code = string.Empty;
-    private long _campiId;
-    private long _courseId;
-    private TccEntity _tcc = null!;
+    private long? _campiId;
+    private long? _courseId;
+    private TccEntity? _tcc;
     private DateTime? _expirationDate;
 
     public TccInviteEntityBuilder WithId(long id)
@@ -36,19 +36,19 @@ public class TccInviteEntityBuilder
         return this;
     }
 
-    public TccInviteEntityBuilder WithCampiId(long campiId)
+    public TccInviteEntityBuilder WithCampiId(long? campiId)
     {
         _campiId = campiId;
         return this;
     }
 
-    public TccInviteEntityBuilder WithCourseId(long courseId)
+    public TccInviteEntityBuilder WithCourseId(long? courseId)
     {
         _courseId = courseId;
         return this;
     }
 
-    public TccInviteEntityBuilder WithTcc(TccEntity tcc)
+    public TccInviteEntityBuilder WithTcc(TccEntity? tcc)
     {
         _tcc = tcc;
         return this;

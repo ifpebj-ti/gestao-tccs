@@ -45,10 +45,11 @@ export function useAutoRegister() {
         cpf: data.cpf,
         phone: data.phone,
         userClass: data.userClass,
-        shift: Number(data.shift)
+        shift: Number(data.shift),
+        password: data.password
       };
 
-      // Passo 1: Autocadastro do estudante
+      // Passo 1: Autocadastro do estudante com senha
       const autoRegisterResponse = await fetch(`${API_URL}/User/autoregister`, {
         method: 'POST',
         headers: {
@@ -67,35 +68,7 @@ export function useAutoRegister() {
         return;
       }
 
-      // Passo 2: Definição da senha
-      const inviteCode =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem('first_access_code') || ''
-          : '';
-
-      const passwordResponse = await fetch(`${API_URL}/Auth/new-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          inviteCode: inviteCode
-        })
-      });
-
-      if (!passwordResponse.ok) {
-        const passwordError = await passwordResponse.json();
-        toast.error(
-          passwordError.message ||
-            'Cadastro realizado, mas ocorreu um erro ao definir sua senha. Você será redirecionado para a tela de definição de senha.'
-        );
-        push('/newPassword');
-        return;
-      }
-
-      // Passo 3: Login automático
+      // Passo 2: Login automático
       const loginResponse = await fetch(`${API_URL}/Auth/login`, {
         method: 'POST',
         headers: {
@@ -119,6 +92,7 @@ export function useAutoRegister() {
           sessionStorage.removeItem('first_access_email');
           sessionStorage.removeItem('first_access_code');
         }
+        Cookies.remove('access_token_temp');
 
         toast.success('Cadastro e senha configurados com sucesso! Bem-vindo(a).');
         reset();
@@ -129,6 +103,7 @@ export function useAutoRegister() {
           sessionStorage.removeItem('first_access_email');
           sessionStorage.removeItem('first_access_code');
         }
+        Cookies.remove('access_token_temp');
         toast.success('Cadastro finalizado com sucesso! Faça login para continuar.');
         reset();
         push('/');

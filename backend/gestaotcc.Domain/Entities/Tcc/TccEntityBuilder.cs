@@ -15,6 +15,7 @@ public class TccEntityBuilder
     private ICollection<UserTccEntity> _userTccs = new List<UserTccEntity>();
     private ICollection<TccInviteEntity> _tccInvites = new List<TccInviteEntity>();
     private ICollection<DocumentEntity> _documents = new List<DocumentEntity>();
+    private string? _rejectionReason;
 
     public TccEntityBuilder WithId(long id)
     {
@@ -70,8 +71,16 @@ public class TccEntityBuilder
         return this;
     }
 
+    public TccEntityBuilder WithRejectionReason(string? rejectionReason)
+    {
+        _rejectionReason = rejectionReason;
+        return this;
+    }
+
     public TccEntity Build()
     {
-        return new TccEntity(_id, _title, _summary, _status, _step, _creationDate, _userTccs, _tccInvites, _documents);
+        var entity = new TccEntity(_id, _title, _summary, _status, _step, _creationDate, _userTccs, _tccInvites, _documents);
+        entity.RejectionReason = _rejectionReason;
+        return entity;
     }
 }

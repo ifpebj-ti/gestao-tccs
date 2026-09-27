@@ -9,13 +9,13 @@ public class TccInviteEntity
     public string Code { get; set; } = string.Empty;
     public bool IsValidCode { get; set; } = true;
     public DateTime ExpirationDate { get; set; } = DateTime.UtcNow.AddHours(48);
-    public long CampiId { get; set; }
-    public long CourseId { get; set; }
-    public TccEntity Tcc { get; set; } = null!;
-    public long TccId { get; set; }
+    public long? CampiId { get; set; }
+    public long? CourseId { get; set; }
+    public TccEntity? Tcc { get; set; }
+    public long? TccId { get; set; }
     public TccInviteEntity() { }
 
-    public TccInviteEntity(long id, string email, string code, TccEntity tcc, long campiId, long courseId, DateTime? expirationDate = null)
+    public TccInviteEntity(long id, string email, string code, TccEntity? tcc, long? campiId, long? courseId, DateTime? expirationDate = null)
     {
         Id = id;
         Email = email;
@@ -23,6 +23,10 @@ public class TccInviteEntity
         Tcc = tcc;
         CampiId = campiId;
         CourseId = courseId;
+        if (tcc != null)
+        {
+            TccId = tcc.Id;
+        }
         if (expirationDate.HasValue)
         {
             ExpirationDate = expirationDate.Value;
