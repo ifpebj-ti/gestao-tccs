@@ -64,8 +64,18 @@ public class AutoRegisterUseCaseTests
             CampiId: 1,
             Password: "SecurePassword123!");
 
+        var validInvite = new TccInviteEntity
+        {
+            Id = 1,
+            Email = dto.Email,
+            Code = "123456",
+            CampiId = 1,
+            CourseId = 1,
+            IsValidCode = false,
+            ExpirationDate = DateTime.UtcNow.AddMinutes(15)
+        };
         _userGateway.FindByEmail(dto.Email).Returns(Task.FromResult<UserEntity?>(null));
-        _tccGateway.FindInviteTccByEmail(dto.Email).Returns(Task.FromResult<TccInviteEntity?>(null));
+        _tccGateway.FindInviteTccByEmail(dto.Email).Returns(Task.FromResult<TccInviteEntity?>(validInvite));
 
         var course = new CourseEntity { Id = 1, Name = "TADS" };
         var campi = new CampiEntity { Id = 1, Name = "Belo Jardim" };
@@ -110,7 +120,8 @@ public class AutoRegisterUseCaseTests
             CampiId = 1,
             CourseId = 1,
             TccId = 42,
-            IsValidCode = true
+            IsValidCode = false,
+            ExpirationDate = DateTime.UtcNow.AddMinutes(15)
         };
 
         _userGateway.FindByEmail(dto.Email).Returns(Task.FromResult<UserEntity?>(null));

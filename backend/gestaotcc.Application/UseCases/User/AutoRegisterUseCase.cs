@@ -33,8 +33,15 @@ public class AutoRegisterUseCase(
         }
         
         var userInvite = await tccGateway.FindInviteTccByEmail(data.Email);
-        long campiId = data.CampiId ?? userInvite?.CampiId ?? 1;
-        long courseId = data.CourseId ?? userInvite?.CourseId ?? 1;
+        
+        if (userInvite is null || userInvite.IsValidCode || userInvite.ExpirationDate < DateTime.UtcNow)
+        {
+            logger.LogWarning("Falha no auto cadastro: Código de convite não verificado ou expirado para {UserEmail}", data.Email);
+            return ResultPattern<UserEntity>.FailureResult("Código de verificação não validado ou expirado.", 403);
+        }
+
+        long campiId = data.CampiId ?? userInvite.CampiId ?? 1;
+        long courseId = data.CourseId ?? userInvite.CourseId ?? 1;
 
         var campiCourse = await courseGateway.FindByCampiAndCourseId(campiId, courseId);
         if (campiCourse is null)

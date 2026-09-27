@@ -13,7 +13,7 @@ interface DecodedToken {
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [],
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'STUDENT'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/ongoingTCCs': [
     'ADMIN',
@@ -35,10 +35,7 @@ const protectedRoutes: Record<string, string[]> = {
   '/users': ['ADMIN', 'COORDINATOR', 'SUPERVISOR']
 };
 
-const tempProtectedRoutes = [
-  '/autoRegister',
-  '/updatePassword'
-];
+const tempProtectedRoutes: string[] = [];
 
 function hasPermission(
   userRoles: string | string[],
@@ -129,9 +126,7 @@ export const config = {
     '/homePage',
     '/newTCC',
     '/newUser',
-    '/autoRegister',
     '/newPassword',
-    '/updatePassword',
     '/ongoingTCCs/:path*',
     '/myTCC/:path*',
     '/completedTCCs/:path*',

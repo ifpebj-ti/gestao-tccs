@@ -49,6 +49,7 @@ public class UserFactory
             .WithProfile(profile)
             .WithCampiCourse(campiCourse)
             .WithAccessCode(accessCode)
+            .WithStatus("ACTIVE")
             .Build();
     }
     

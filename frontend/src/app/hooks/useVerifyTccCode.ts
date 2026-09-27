@@ -5,10 +5,12 @@ import { VerifyTccCodeSchemaType, verifyTccCodeSchema } from '@/app/schemas/veri
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 export function useVerifyTccCode() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const [isSendingCode, setIsSendingCode] = useState(false);
+  const { push } = useRouter();
 
   const form = useForm<VerifyTccCodeSchemaType>({
     resolver: zodResolver(verifyTccCodeSchema),
@@ -94,9 +96,9 @@ export function useVerifyTccCode() {
         toast.success('Código de acesso verificado com sucesso!');
 
         if (window.location.pathname === '/firstAccess') {
-          window.location.href = '/autoRegister';
+          push('/autoRegister');
         } else if (window.location.pathname === '/forgotPassword') {
-          window.location.href = '/newPassword';
+          push('/newPassword');
         }
       } else {
         let errorMessage = 'Código de acesso inválido ou expirado. Tente novamente.';
