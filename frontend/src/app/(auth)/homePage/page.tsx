@@ -24,7 +24,6 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  faBan,
   faCheck,
   faClock,
   faExclamationTriangle,
@@ -33,7 +32,6 @@ import {
   faFileSignature,
   faGraduationCap,
   faInbox,
-  faRotateRight,
   faTimes,
   faUserPlus,
   faUsers
@@ -333,6 +331,13 @@ export default function HomePage() {
     return false;
   };
 
+  const canShowPendingSignatures = () => {
+    if (isStudent()) {
+      return userTCCs.length > 0 || completedUserTCC.length > 0;
+    }
+    return canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY', 'BANKING']);
+  };
+
   const handleMyTccClick = () => {
     if (completedUserTCC.length > 0) {
       push(`/completedTCCs/${completedUserTCC[0].tccId}`);
@@ -458,117 +463,64 @@ export default function HomePage() {
 
       {/* BANNER DISCENTE: PROPOSTA PENDENTE DE APROVAÇÃO */}
       {isStudent() && pendingProposal && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-6 mb-8 shadow-sm">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div className="flex-1 min-w-[280px]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-amber-200 text-amber-900 text-xs font-semibold rounded-full flex items-center gap-1.5">
-                  <FontAwesomeIcon icon={faClock} />
-                  Proposta em Análise pelo Orientador
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {pendingProposal.title}
-              </h2>
-              <p className="text-sm text-gray-700 mb-2">
-                <strong>Orientador indicado:</strong>{' '}
-                {pendingProposal.advisorName || 'Aguardando confirmação'}
-              </p>
-              {pendingProposal.summary && (
-                <div className="mt-2 text-sm text-gray-700 bg-white/80 p-3 rounded-md border border-amber-200">
-                  <p className="font-semibold text-xs text-gray-500 uppercase mb-1">
-                    Resumo da proposta:
-                  </p>
-                  <p className="whitespace-pre-line line-clamp-3">
-                    {pendingProposal.summary}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="destructive"
-                className="cursor-pointer"
-                onClick={() => {
-                  setProposalToCancelId(pendingProposal.tccId);
-                  setIsCancelProposalDialogOpen(true);
-                }}
-                disabled={actionLoading}
-              >
-                <FontAwesomeIcon icon={faBan} className="mr-2" />
-                Cancelar Proposta
-              </Button>
-            </div>
-          </div>
+        <div className="mb-8 flex items-center justify-between border-b pb-4">
+          <p className="text-gray-700">
+            <FontAwesomeIcon icon={faClock} className="text-amber-500 mr-2" />
+            Sua proposta <strong>{pendingProposal.title}</strong> está em análise por <strong>{pendingProposal.advisorName || 'seu orientador'}</strong>.
+          </p>
+          <Button
+            variant="link"
+            className="text-red-600 p-0 h-auto font-normal"
+            onClick={() => {
+              setProposalToCancelId(pendingProposal.tccId);
+              setIsCancelProposalDialogOpen(true);
+            }}
+            disabled={actionLoading}
+          >
+            Cancelar proposta
+          </Button>
         </div>
       )}
 
       {/* BANNER DISCENTE: PROPOSTA RECUSADA / REFORMULAR */}
       {isStudent() && rejectedProposal && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6 mb-8 shadow-sm">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div className="flex-1 min-w-[280px]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-red-200 text-red-900 text-xs font-semibold rounded-full flex items-center gap-1.5">
-                  <FontAwesomeIcon icon={faExclamationTriangle} />
-                  Proposta Devolvida / Recusada
-                </span>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">
-                {rejectedProposal.title}
-              </h2>
-              <p className="text-sm text-gray-700 mb-3">
-                <strong>Orientador:</strong>{' '}
-                {rejectedProposal.advisorName || 'Não especificado'}
-              </p>
-              <div className="p-4 bg-white rounded-lg border border-red-200 mb-3">
-                <p className="text-xs uppercase font-bold text-red-700 mb-1 tracking-wider">
-                  Motivo informado pelo docente:
-                </p>
-                <p className="text-sm text-gray-800 italic">
-                  &ldquo;{rejectedProposal.rejectionReason || 'Sem justificativa informada.'}&rdquo;
-                </p>
-              </div>
-              <p className="text-xs text-gray-600">
-                Você pode reformular os dados da proposta e reenviá-la ao docente, ou cancelar para iniciar uma proposta nova.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+        <div className="mb-8 border-b pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-gray-700">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 mr-2" />
+              Sua proposta <strong>{rejectedProposal.title}</strong> foi devolvida por <strong>{rejectedProposal.advisorName}</strong>.
+            </p>
+            <div className="flex gap-4">
               <Button
-                className="bg-[#1351B4] hover:bg-[#0c3c88] text-white cursor-pointer"
+                variant="link"
+                className="text-[#1351B4] p-0 h-auto font-normal"
                 onClick={() => push(`/newTCC?reformulate=${rejectedProposal.tccId}`)}
                 disabled={actionLoading}
               >
-                <FontAwesomeIcon icon={faRotateRight} className="mr-2" />
-                Reformular Proposta
+                Reformular
               </Button>
               <Button
-                variant="destructive"
-                className="cursor-pointer"
+                variant="link"
+                className="text-red-600 p-0 h-auto font-normal"
                 onClick={() => {
                   setProposalToCancelId(rejectedProposal.tccId);
                   setIsCancelProposalDialogOpen(true);
                 }}
                 disabled={actionLoading}
               >
-                <FontAwesomeIcon icon={faBan} className="mr-2" />
-                Cancelar Proposta
+                Cancelar
               </Button>
             </div>
           </div>
+          <p className="text-sm text-gray-500 italic">
+            Motivo: &ldquo;{rejectedProposal.rejectionReason || 'Sem justificativa informada.'}&rdquo;
+          </p>
         </div>
       )}
 
       {/* MOBILE (Collapse) */}
       <div className="md:hidden">
-        {canView([
-          'COORDINATOR',
-          'SUPERVISOR',
-          'ADVISOR',
-          'LIBRARY',
-          'BANKING',
-          'STUDENT'
-        ]) && (
+        {canShowPendingSignatures() && (
           <CollapseCard
             title="Assinaturas pendentes"
             icon={faFileSignature}
@@ -668,14 +620,7 @@ export default function HomePage() {
           isLimitedView() ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
         }`}
       >
-        {canView([
-          'COORDINATOR',
-          'SUPERVISOR',
-          'ADVISOR',
-          'LIBRARY',
-          'BANKING',
-          'STUDENT'
-        ]) && (
+        {canShowPendingSignatures() && (
           <CardHome
             title="Assinaturas pendentes"
             icon={faFileSignature}
