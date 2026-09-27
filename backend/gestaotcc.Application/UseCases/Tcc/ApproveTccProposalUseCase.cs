@@ -2,6 +2,7 @@ using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
+using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Enums;
@@ -46,8 +47,7 @@ public class ApproveTccProposalUseCase(
         if (tcc.Documents.Count == 0)
         {
             var documentTypes = await documentTypeGateway.FindAll();
-            var users = tcc.UserTccs.Select(ut => ut.User).ToList();
-            GenerateDocumentsForTcc(tcc, documentTypes, users);
+            GenerateDocumentsForTcc(tcc, documentTypes);
         }
 
         await tccGateway.Update(tcc);
@@ -70,8 +70,30 @@ public class ApproveTccProposalUseCase(
         return ResultPattern<string>.SuccessResult("Proposta de TCC aprovada com sucesso!");
     }
 
-    private void GenerateDocumentsForTcc(TccEntity tcc, List<DocumentTypeEntity> documentTypes, List<UserEntity> users)
+    private void GenerateDocumentsForTcc(TccEntity tcc, List<DocumentTypeEntity> documentTypes)
     {
+        // Garante que cada UserEntity tenha seu Profile preenchido a partir do UserTccEntity
+        foreach (var ut in tcc.UserTccs)
+        {
+            if (ut.User != null && ut.Profile != null)
+            {
+                if (ut.User.Profile == null)
+                {
+                    ut.User.Profile = new List<ProfileEntity>();
+                }
+                if (!ut.User.Profile.Any(p => p.Role == ut.Profile.Role))
+                {
+                    ut.User.Profile.Add(ut.Profile);
+                }
+            }
+        }
+
+        var users = tcc.UserTccs
+            .Where(ut => ut.User != null)
+            .Select(ut => ut.User)
+            .DistinctBy(u => u.Id)
+            .ToList();
+
         foreach (var docType in documentTypes)
         {
             if (docType.Name != null && docType.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA"))
@@ -81,7 +103,7 @@ public class ApproveTccProposalUseCase(
             var method = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
 
             var usersWithAcceptedProfile = users
-                .Where(user => user.Profile.Any(p => acceptedRoles.Contains(p.Role)))
+                .Where(user => user.Profile != null && user.Profile.Any(p => acceptedRoles.Contains(p.Role)))
                 .ToList();
 
             if (method == MethoSignatureType.ONLY_DOCS)
@@ -93,7 +115,7 @@ public class ApproveTccProposalUseCase(
                 else if (docType.Profiles.Count == 1)
                 {
                     var profileRole = docType.Profiles.First().Role;
-                    var user = usersWithAcceptedProfile.FirstOrDefault(u => u.Profile.Any(p => p.Role == profileRole));
+                    var user = usersWithAcceptedProfile.FirstOrDefault(u => u.Profile != null && u.Profile.Any(p => p.Role == profileRole));
                     if (user != null)
                     {
                         tcc.Documents.Add(DocumentFactory.CreateDocument(docType, tcc.Title ?? "", user));
@@ -104,7 +126,9 @@ public class ApproveTccProposalUseCase(
             {
                 foreach (var user in usersWithAcceptedProfile)
                 {
-                    var profile = user.Profile.First();
+                    var profile = user.Profile?.FirstOrDefault();
+                    if (profile == null) continue;
+
                     if (profile.Role != RoleType.STUDENT.ToString() && docType.Profiles.Count > 1)
                         continue;
 
