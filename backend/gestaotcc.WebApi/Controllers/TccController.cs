@@ -431,4 +431,35 @@ public class TccController : ControllerBase
         }
         return Ok(new { message = "Avaliação salva com sucesso!", tccId = result.Data });
     }
+
+    /// <summary>
+    /// Fazer upload do arquivo PDF do TCC (Monografia)
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
+    [HttpPost("{tccId}/upload-file")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> UploadTccFile([FromRoute] long tccId, [FromForm] IFormFile file,
+        [FromServices] UploadTccFileUseCase uploadTccFileUseCase)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "Nenhum arquivo enviado" });
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        var fileBytes = memoryStream.ToArray();
+
+        var result = await uploadTccFileUseCase.Execute(tccId, fileBytes, file.FileName, file.ContentType);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 404
+                ? NotFound(result.ErrorDetails)
+                : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
 }

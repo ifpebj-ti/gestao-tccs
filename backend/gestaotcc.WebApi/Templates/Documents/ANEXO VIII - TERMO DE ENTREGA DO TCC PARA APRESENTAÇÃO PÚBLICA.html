@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -187,22 +187,34 @@
         </div>
         <table class="inline-table">
             <tr>
-                <td style="width: 1%; white-space: nowrap;">sua apresentação/defesa marcada para o dia </td>
-                <td class="field-value" style="width: 40px;">{{ dia_apresentacao }}</td>
-                <td style="width: 1%; white-space: nowrap; padding: 0 2px;">/</td>
-                <td class="field-value" style="width: 40px;">{{ mes_apresentacao }}</td>
-                <td style="width: 1%; white-space: nowrap; padding: 0 2px;">/</td>
-                <td class="field-value" style="width: 60px;">{{ ano_apresentacao }}</td>
+                <td style="width: 1%; white-space: nowrap;">sua apresentação/defesa marcada para a data </td>
+                <td class="field-value" style="width: auto;">
+                    {{ if dia_apresentacao != "" }}
+                        {{ dia_apresentacao }}/{{ mes_apresentacao }}/{{ ano_apresentacao }}
+                    {{ else }}
+                        <input type="date" name="data_defesa" style="border: none; border-bottom: 1px solid black; outline: none; font-family: inherit; font-size: inherit; width: 140px; text-align: center; background: transparent;">
+                    {{ end }}
+                </td>
                 <td style="width: 1%; white-space: nowrap; padding: 0 5px;">, às </td>
-                <td class="field-value" style="width: 50px;">{{ hora_apresentacao }}</td>
-                <td style="width: 1%; white-space: nowrap; padding: 0 2px;">h</td>
-                <td class="field-value" style="width: 50px;">{{ minuto_apresentacao }}</td>
+                <td class="field-value" style="width: auto;">
+                    {{ if hora_apresentacao != "" }}
+                        {{ hora_apresentacao }}h{{ minuto_apresentacao }}
+                    {{ else }}
+                        <input type="time" name="hora_defesa" style="border: none; border-bottom: 1px solid black; outline: none; font-family: inherit; font-size: inherit; width: 100px; text-align: center; background: transparent;">
+                    {{ end }}
+                </td>
                 <td style="width: 1%; white-space: nowrap; padding: 0 5px;">, no(a)</td>
             </tr>
         </table>
         <table class="inline-table">
             <tr>
-                <td class="field-value" style="width: auto;">{{ local_apresentacao }}</td>
+                <td class="field-value" style="width: auto;">
+                    {{ if local_apresentacao != "" }}
+                        {{ local_apresentacao }}
+                    {{ else }}
+                        <input type="text" name="local_defesa" placeholder="Digite o local da apresentação" style="border: none; border-bottom: 1px solid black; outline: none; font-family: inherit; font-size: inherit; width: 100%; text-align: center; background: transparent;">
+                    {{ end }}
+                </td>
                 <td style="width: 1%; white-space: nowrap; padding-left: 5px;"> do IFPE.</td>
             </tr>
         </table>

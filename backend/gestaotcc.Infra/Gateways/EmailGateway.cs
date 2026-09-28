@@ -86,6 +86,14 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         mailMessage.IsBodyHtml = true;
         mailMessage.Body = data.EmailBody;
         
+        if (data.Attachments != null && data.Attachments.Any())
+        {
+            foreach (var attachment in data.Attachments)
+            {
+                mailMessage.Attachments.Add(new Attachment(new MemoryStream(attachment.FileBytes), attachment.FileName, attachment.ContentType));
+            }
+        }
+
         return mailMessage;
     }
 

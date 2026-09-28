@@ -27,9 +27,13 @@ export default function SignatureClient() {
     isSubmitting,
     selectedFile,
     setSelectedFile,
+    tccFile,
+    setTccFile,
     handleSignDocument,
     handleDownloadDocument,
-    iframeRef
+    iframeRef,
+    isAnexoVIII,
+    isAdvisor
   } = useSignaturePage();
 
   const searchParams = useSearchParams();
@@ -113,6 +117,30 @@ export default function SignatureClient() {
         </div>
       </div>
 
+      {/* Passo Especial: Enviar TCC (Obrigatório para Orientador no Anexo VIII) */}
+      {isAnexoVIII && isAdvisor && (
+        <div
+          className={`border-t pt-4 space-y-2 transition-opacity ${
+            !downloadClicked ? 'opacity-50' : ''
+          }`}
+        >
+          <h3 className="font-bold text-base">
+            Enviar Arquivo do TCC
+          </h3>
+          <p className="text-sm text-gray-600 mb-2">
+            Como orientador(a), você deve enviar o arquivo final do TCC (Monografia) junto com este termo.
+          </p>
+          <div>
+            <CustomFileInput
+              selectedFile={tccFile}
+              onFileSelect={setTccFile}
+              disabled={!downloadClicked}
+              accept=".pdf"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Passo 4: Confirmar Assinatura */}
       <div
         className={`border-t pt-4 space-y-4 transition-opacity ${
@@ -137,7 +165,12 @@ export default function SignatureClient() {
 
         <Button
           onClick={handleSignDocument}
-          disabled={!downloadClicked || !selectedFile || isSubmitting}
+          disabled={
+            !downloadClicked || 
+            !selectedFile || 
+            (isAnexoVIII && isAdvisor && !tccFile) || 
+            isSubmitting
+          }
           className="w-full"
         >
           {isSubmitting ? (
