@@ -1,10 +1,10 @@
-﻿using gestaotcc.Application.Factories;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
+public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IMinioGateway minioGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(LinkBankingUserDTO data)
     {
@@ -44,11 +44,32 @@ public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGat
         await tccGateway.Update(tcc);
         
         logger.LogInformation("Enviando e-mails de notificação para os usuários da banca...");
+
+        List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>? attachments = null;
+        if (!string.IsNullOrEmpty(tcc.TccFile))
+        {
+            try
+            {
+                var fileBytes = await minioGateway.Download(tcc.TccFile, false);
+                var contentType = "application/pdf"; 
+                attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
+                {
+                    new gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO(tcc.TccFile.Replace("filled/", ""), fileBytes, contentType)
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Não foi possível baixar o arquivo do TCC {TccFile} para o e-mail de vinculação da banca do TccId {TccId}", tcc.TccFile, tcc.Id);
+            }
+        }
+
         var emailDtoInternal = EmailFactory.CreateSendEmailDTO(userInternal, tcc, "LINK-BANKING-USER");
+        emailDtoInternal.Attachments = attachments;
         logger.LogDebug("Enviando e-mail para usuário interno: {UserEmail}", userInternal.Email);
         await emailGateway.Send(emailDtoInternal);
         
         var emailDtoExternal = EmailFactory.CreateSendEmailDTO(userExternal, tcc, "LINK-BANKING-USER");
+        emailDtoExternal.Attachments = attachments;
         logger.LogDebug("Enviando e-mail para usuário externo: {UserEmail}", userExternal.Email);
         await emailGateway.Send(emailDtoExternal);
 

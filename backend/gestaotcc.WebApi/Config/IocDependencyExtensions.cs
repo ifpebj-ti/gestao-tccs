@@ -75,6 +75,8 @@ public static class IocDependencyExtensions
         services.AddScoped<UpdateTccUseCase>();
         services.AddScoped<ConcludePresentationUseCase>();
         services.AddScoped<EvaluateTccUseCase>();
+        services.AddScoped<SaveScheduleInfoUseCase>();
+        services.AddScoped<UploadTccFileUseCase>();
         services.AddScoped<SubmitTccProposalUseCase>();
         services.AddScoped<ApproveTccProposalUseCase>();
         services.AddScoped<RejectTccProposalUseCase>();

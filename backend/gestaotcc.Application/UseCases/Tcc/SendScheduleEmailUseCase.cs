@@ -1,9 +1,9 @@
-﻿using gestaotcc.Application.Factories;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emailGateway, IAppLoggerGateway<SendScheduleEmailUseCase> logger)
+public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emailGateway, IMinioGateway minioGateway, IAppLoggerGateway<SendScheduleEmailUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(long tccId)
     {
@@ -23,10 +23,31 @@ public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emai
         try
         {
             logger.LogInformation("Enviando e-mails de agendamento para {UserCount} usuários do TccId {TccId}.", tcc.UserTccs.Count, tccId);
+            
+            // Tenta baixar o arquivo do TCC se houver
+            List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>? attachments = null;
+            if (!string.IsNullOrEmpty(tcc.TccFile))
+            {
+                try
+                {
+                    var fileBytes = await minioGateway.Download(tcc.TccFile, false);
+                    var contentType = "application/pdf"; 
+                    attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
+                    {
+                        new gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO(tcc.TccFile.Replace("filled/", ""), fileBytes, contentType)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Não foi possível baixar o arquivo do TCC {TccFile} para o e-mail de agendamento do TccId {TccId}", tcc.TccFile, tccId);
+                }
+            }
+
             foreach (var userTcc in tcc.UserTccs)
             {
                 logger.LogDebug("Enviando e-mail de agendamento para o usuário: {UserEmail} (UserId: {UserId})", userTcc.User.Email, userTcc.User.Id);
                 var emailDto = EmailFactory.CreateSendEmailDTO(userTcc.User, tcc, tcc.TccSchedule);
+                emailDto.Attachments = attachments;
                 await emailGateway.Send(emailDto);
             }
         }

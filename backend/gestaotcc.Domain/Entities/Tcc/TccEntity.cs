@@ -14,6 +14,7 @@ public class TccEntity
     public string? Summary { get; set; }
     public string Status { get; set; } = string.Empty;
     public string Step { get; set; } = string.Empty;
+    public string? TccFile { get; set; }
     public DateTime CreationDate { get; set; }
     public ICollection<UserTccEntity> UserTccs { get; set; } = new List<UserTccEntity>();
     public ICollection<TccInviteEntity> TccInvites { get; set; } = new List<TccInviteEntity>();

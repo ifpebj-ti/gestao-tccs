@@ -15,12 +15,13 @@ public class SendScheduleEmailUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
+    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
     private readonly SendScheduleEmailUseCase _useCase;
     private readonly IAppLoggerGateway<SendScheduleEmailUseCase> _logger = Substitute.For<IAppLoggerGateway<SendScheduleEmailUseCase>>();
 
     public SendScheduleEmailUseCaseTests()
     {
-        _useCase = new SendScheduleEmailUseCase(_tccGateway, _emailGateway, _logger);
+        _useCase = new SendScheduleEmailUseCase(_tccGateway, _emailGateway, _minioGateway, _logger);
     }
 
     [Fact]

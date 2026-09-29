@@ -434,6 +434,40 @@ export function useTccDetails() {
     }
   };
 
+  const handleUploadTccFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      toast.info('Fazendo upload do arquivo...', { autoClose: 2000 });
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/upload-file`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) {
+        throw new Error('Falha no upload do TCC.');
+      }
+
+      toast.success('Arquivo do TCC enviado com sucesso!');
+      fetchTccDetails();
+    } catch {
+      toast.error('Erro ao tentar enviar o arquivo do TCC.');
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -462,6 +496,7 @@ export function useTccDetails() {
     handleDownloadAllDocuments,
     handleEditTccInfo,
     handleConcludePresentation,
+    handleUploadTccFile,
     isConcluding,
     orientadorToken,
     setOrientadorToken

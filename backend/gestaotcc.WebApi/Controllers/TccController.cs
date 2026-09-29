@@ -463,6 +463,32 @@ public class TccController : ControllerBase
     }
 
     /// <summary>
+    /// Fazer upload do arquivo PDF do TCC (Monografia)
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
+    [HttpPost("{tccId}/upload-file")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> UploadTccFile([FromRoute] long tccId, [FromForm] IFormFile file,
+        [FromServices] UploadTccFileUseCase uploadTccFileUseCase)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "Nenhum arquivo enviado" });
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null) return Unauthorized();
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        var fileBytes = memoryStream.ToArray();
+        var result = await uploadTccFileUseCase.Execute(tccId, fileBytes, file.FileName, file.ContentType);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 404
+                ? NotFound(result.ErrorDetails)
+                : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
+        }
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
+        
     /// Submeter proposta de TCC pelo estudante
     /// </summary>
     [Authorize(Roles = "STUDENT")]
@@ -477,13 +503,11 @@ public class TccController : ControllerBase
         {
             throw new ValidationException(validationResult.ToString());
         }
-
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var studentUserId))
         {
             return Unauthorized();
         }
-
         var result = await submitTccProposalUseCase.Execute(data, studentUserId);
         if (result.IsFailure)
         {
@@ -497,9 +521,9 @@ public class TccController : ControllerBase
                 ? BadRequest(result.ErrorDetails)
                 : NotFound(result.ErrorDetails);
         }
-
         return Ok(new MessageSuccessResponseModel($"Proposta submetida com sucesso. ID: {result.Data}"));
     }
+
 
     /// <summary>
     /// Aprovar proposta de TCC pelo orientador
@@ -639,3 +663,4 @@ public class TccController : ControllerBase
         return Ok(new MessageSuccessResponseModel(result.Data));
     }
 }
+

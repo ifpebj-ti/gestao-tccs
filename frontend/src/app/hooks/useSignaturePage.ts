@@ -9,6 +9,7 @@ import { env } from 'next-runtime-env';
 
 interface DecodedToken {
   userId: string;
+  role: string | string[];
 }
 
 export function useSignaturePage() {
@@ -19,6 +20,7 @@ export function useSignaturePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [tccFile, setTccFile] = useState<File | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const params = useParams();
@@ -104,6 +106,46 @@ export function useSignaturePage() {
           });
           
           currentHtml = doc.documentElement.outerHTML;
+          
+          // Extrair informações de agendamento (Anexo VIII)
+          const dataDefesaInput = doc.querySelector('input[name="data_defesa"]') as HTMLInputElement;
+          const horaDefesaInput = doc.querySelector('input[name="hora_defesa"]') as HTMLInputElement;
+          const localDefesaInput = doc.querySelector('input[name="local_defesa"]') as HTMLInputElement;
+
+          if (dataDefesaInput && horaDefesaInput && localDefesaInput) {
+            const dataDefesa = dataDefesaInput.value;
+            const horaDefesa = horaDefesaInput.value;
+            const localDefesa = localDefesaInput.value;
+            
+            if (dataDefesa && horaDefesa && localDefesa) {
+               
+               const [year, month, day] = dataDefesa.split('-');
+               const dataFormatada = `${day}/${month}/${year}`;
+               const horaFormatada = horaDefesa.replace(':', 'h');
+               
+               currentHtml = currentHtml.replace(/<input[^>]*name="data_defesa"[^>]*>/i, dataFormatada);
+               currentHtml = currentHtml.replace(/<input[^>]*name="hora_defesa"[^>]*>/i, horaFormatada);
+               currentHtml = currentHtml.replace(/<input[^>]*name="local_defesa"[^>]*>/i, localDefesa);
+
+               try {
+                   await fetch(`${API_URL}/Tcc/${tccId}/schedule-info`, {
+                      method: 'POST',
+                      headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                        scheduleDate: dataDefesa,
+                        scheduleTime: horaDefesa,
+                        scheduleLocation: localDefesa,
+                        idTcc: Number(tccId)
+                      })
+                   });
+               } catch (e) {
+                   console.error("Erro ao salvar infos de agendamento", e);
+               }
+            }
+          }
         }
 
         res = await fetch(`${API_URL}/Signature/document/download/html`, {
@@ -193,13 +235,29 @@ export function useSignaturePage() {
     formData.append('UserId', userId);
 
     try {
+      if (tccFile) {
+        const formDataTcc = new FormData();
+        formDataTcc.append('file', tccFile);
+        
+        await fetch(`${API_URL}/Tcc/${tccId}/upload-file`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formDataTcc
+        });
+      }
+
       const res = await fetch(`${API_URL}/Signature`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
       if (!res.ok) throw new Error('Erro ao submeter a assinatura.');
-      push('/pendingSignatures');
+      
+      if (documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII")) {
+        push(`/ongoingTCCs/details?id=${tccId}`);
+      } else {
+        push('/pendingSignatures');
+      }
       toast.success('Documento assinado e enviado com sucesso!');
     } catch {
       toast.error('Ocorreu um erro ao submeter sua assinatura.');
@@ -207,6 +265,20 @@ export function useSignaturePage() {
       setIsSubmitting(false);
     }
   };
+
+  const isAnexoVIII = documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII");
+  let isAdvisor = false;
+  
+  if (typeof window !== 'undefined') {
+    const token = Cookies.get('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode<DecodedToken>(token);
+        const roles = Array.isArray(decoded.role) ? decoded.role : [decoded.role];
+        isAdvisor = roles.includes('ADVISOR');
+      } catch {}
+    }
+  }
 
   return {
     documentId,
@@ -218,9 +290,13 @@ export function useSignaturePage() {
     isSubmitting,
     selectedFile,
     setSelectedFile,
+    tccFile,
+    setTccFile,
     handleSignDocument,
     handleDownloadDocument,
     API_URL,
-    iframeRef
+    iframeRef,
+    isAnexoVIII,
+    isAdvisor
   };
 }

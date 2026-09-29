@@ -7,6 +7,7 @@ public class SendEmailDTO
     public string Recipient;
     public string TypeTemplate;
     public Dictionary<string, Object> Variables;
+    public List<EmailAttachmentDTO>? Attachments { get; set; }
 
     public SendEmailDTO(string emailBody, string subjet, string recipient, string typeTemplate, Dictionary<string, Object> variables)
     {
