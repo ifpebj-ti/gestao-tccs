@@ -6,7 +6,7 @@ using gestaotcc.Domain.Entities.TccBankingMember;
 using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
+public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient, IMinioGateway minioGateway)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -119,6 +119,25 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
                         typeTemplate: "BANKING-INVITE",
                         variables: variables
                     );
+                    
+                    if (!string.IsNullOrEmpty(tcc.TccFile))
+                    {
+                        try 
+                        {
+                            var tccBytes = await minioGateway.Download(tcc.TccFile, false);
+                            if (tccBytes != null && tccBytes.Length > 0)
+                            {
+                                emailDto.Attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
+                                {
+                                    new gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO(tcc.TccFile.Replace("filled/", ""), tccBytes, "application/pdf")
+                                };
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning("Falha ao baixar arquivo do TCC para anexo no email da banca. Erro: {Erro}", ex.Message);
+                        }
+                    }
                     
                     await emailGateway.Send(emailDto);
                 }

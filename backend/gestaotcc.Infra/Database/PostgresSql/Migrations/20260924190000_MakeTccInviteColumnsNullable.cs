@@ -1,10 +1,13 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using gestaotcc.Infra.Database;
 
 #nullable disable
 
 namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260924190000_MakeTccInviteColumnsNullable")]
     public partial class MakeTccInviteColumnsNullable : Migration
     {
         /// <inheritdoc />

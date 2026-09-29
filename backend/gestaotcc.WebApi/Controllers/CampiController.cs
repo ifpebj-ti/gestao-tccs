@@ -60,4 +60,15 @@ public class CampiController: ControllerBase
 
         return Ok(courses);
     }
+
+    /// <summary>
+    /// Retornar os campis com seus cursos de forma pública
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("public/all")]
+    public async Task<ActionResult<List<FindAllCampiDTO>>> FindAllCampiPublic([FromServices] FindAllCampiUseCase findAllCampiUseCase)
+    {
+        var result = await findAllCampiUseCase.Execute(); 
+        return Ok(result.Data);
+    }
 }
