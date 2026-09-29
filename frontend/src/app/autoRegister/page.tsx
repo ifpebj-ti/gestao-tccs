@@ -23,7 +23,7 @@ import { useAutoRegister } from '../hooks/useAutoRegister';
 
 export default function AutoRegister() {
   const { push } = useRouter();
-  const { form, submitForm, isSubmitting } = useAutoRegister();
+  const { form, submitForm, isSubmitting, campus, courses } = useAutoRegister();
   const [isEmailPreFilled, setIsEmailPreFilled] = useState(false);
   const {
     register,
@@ -233,6 +233,55 @@ export default function AutoRegister() {
               {errors.shift && (
                 <p className="text-red-500 text-sm">
                   {errors.shift.message?.toString()}
+                </p>
+              )}
+            </div>
+
+            {/* Campus */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="campusId">
+                Campus
+              </Label>
+              <select
+                id="campusId"
+                {...register('campusId')}
+                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
+              >
+                <option value="">Selecione um campus</option>
+                {campus?.map((camp: { id: number; name: string }) => (
+                  <option key={camp.id} value={camp.id}>
+                    {camp.name}
+                  </option>
+                ))}
+              </select>
+              {errors.campusId && (
+                <p className="text-red-500 text-sm">
+                  {errors.campusId.message?.toString()}
+                </p>
+              )}
+            </div>
+
+            {/* Course */}
+            <div className="grid items-center gap-1.5">
+              <Label className="font-semibold" htmlFor="courseId">
+                Curso
+              </Label>
+              <select
+                id="courseId"
+                {...register('courseId')}
+                disabled={!courses || courses.length === 0}
+                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">Selecione um curso</option>
+                {courses?.map((course: { id: number; name: string }) => (
+                  <option key={course.id} value={course.id}>
+                    {course.name}
+                  </option>
+                ))}
+              </select>
+              {errors.courseId && (
+                <p className="text-red-500 text-sm">
+                  {errors.courseId.message?.toString()}
                 </p>
               )}
             </div>

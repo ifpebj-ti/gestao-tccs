@@ -17,10 +17,11 @@ public class CreateScheduleTccUseCaseTests
     private readonly IAppLoggerGateway<CreateScheduleTccUseCase> _logger = Substitute.For<IAppLoggerGateway<CreateScheduleTccUseCase>>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly IBackgroundJobClient _backgroundJobClient = Substitute.For<IBackgroundJobClient>();
+    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
 
     public CreateScheduleTccUseCaseTests()
     {
-        _useCase = new CreateScheduleTccUseCase(_tccGateway, _userGateway, _profileGateway, _logger, _emailGateway, _backgroundJobClient);
+        _useCase = new CreateScheduleTccUseCase(_tccGateway, _userGateway, _profileGateway, _logger, _emailGateway, _backgroundJobClient, _minioGateway);
     }
 
     [Fact]

@@ -31,6 +31,14 @@ export const autoRegisterSchema = z.object({
     .number({ invalid_type_error: 'Selecione um turno válido' })
     .min(1, 'O turno é obrigatório.'),
 
+  campusId: z.coerce
+    .number({ invalid_type_error: 'Selecione um campus' })
+    .min(1, 'Campus é obrigatório'),
+    
+  courseId: z.coerce
+    .number({ invalid_type_error: 'Selecione um curso' })
+    .min(1, 'Curso é obrigatório'),
+
   password: z
     .string()
     .min(8, 'A senha deve ter no mínimo 8 caracteres'),
