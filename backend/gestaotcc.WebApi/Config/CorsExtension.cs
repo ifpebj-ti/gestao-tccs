@@ -7,7 +7,7 @@ public static class CorsExtension
         var corsSettings = configuration.GetSection("CORS_SETTINGS");
         var urlFront = corsSettings.GetValue<string>("URL_FRONT");
         
-        var allowedOrigins = new List<string> { "https://gestao-tcc.local", "https://localhost" };
+        var allowedOrigins = new List<string> { "https://gestao-tcc.local", "https://localhost", "http://localhost:3000", "http://localhost" };
         if (!string.IsNullOrEmpty(urlFront) && !allowedOrigins.Contains(urlFront))
         {
             allowedOrigins.Add(urlFront);

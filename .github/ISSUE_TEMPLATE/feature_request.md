@@ -2,7 +2,7 @@
 name: Solicitação de Funcionalidade (Feature Request)
 about: Propor uma nova funcionalidade ou melhoria de arquitetura
 title: 'feat: '
-labels: 'enhancement'
+labels: ["enhancement"]
 assignees: ''
 ---
 

@@ -93,9 +93,16 @@ export default function Login() {
               {isSubmitting ? 'Carregando...' : 'Entrar'}
             </Button>
           </form>
-          <Button onClick={handleRedirectToFirstAccess} variant={'ghost'}>
-            Primeiro acesso?
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              onClick={handleRedirectToFirstAccess}
+              variant={'outline'}
+              className="w-full text-blue-700 border-blue-600 hover:bg-blue-50"
+            >
+              Primeiro acesso (Criar conta de estudante)
+            </Button>
+          </div>
         </div>
         {/* footer desktop */}
         <div className="lg:flex hidden items-center justify-between w-full">

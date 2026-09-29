@@ -148,6 +148,6 @@ public class TccFactory
         if (!studentNames.Any())
             studentNames = tcc.TccInvites.Select(x => x.Email).ToList();
 
-        return new FindAllTccByFilterDTO(tcc.Id, studentNames);
+        return new FindAllTccByFilterDTO(tcc.Id, studentNames, tcc.Title, tcc.Status);
     }
 }

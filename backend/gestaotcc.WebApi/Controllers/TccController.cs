@@ -45,6 +45,36 @@ public class TccController : ControllerBase
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
     /// <summary>
+    /// Enviar código de verificação para o e-mail do estudante (Primeiro Acesso)
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("code/send")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> SendVerificationCode(
+        [FromBody] SendStudentVerificationCodeDTO data,
+        [FromServices] SendStudentVerificationCodeUseCase sendStudentVerificationCodeUseCase)
+    {
+        var validator = new SendStudentVerificationCodeValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var result = await sendStudentVerificationCodeUseCase.Execute(data);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : BadRequest(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel("Código de acesso enviado com sucesso para o e-mail informado."));
+    }
+
+    /// <summary>
     /// Verificar código de primeiro acesso enviado no cadastro de proposta
     /// </summary>
     [AllowAnonymous]
@@ -442,14 +472,11 @@ public class TccController : ControllerBase
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { Message = "Nenhum arquivo enviado" });
-
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
-
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();
-
         var result = await uploadTccFileUseCase.Execute(tccId, fileBytes, file.FileName, file.ContentType);
         if (result.IsFailure)
         {
@@ -459,7 +486,181 @@ public class TccController : ControllerBase
                 ? NotFound(result.ErrorDetails)
                 : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
         }
-
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
+        
+    /// Submeter proposta de TCC pelo estudante
+    /// </summary>
+    [Authorize(Roles = "STUDENT")]
+    [HttpPost("proposal")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> SubmitProposal(
+        [FromBody] SubmitTccProposalDTO data,
+        [FromServices] SubmitTccProposalUseCase submitTccProposalUseCase)
+    {
+        var validator = new SubmitTccProposalValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var studentUserId))
+        {
+            return Unauthorized();
+        }
+        var result = await submitTccProposalUseCase.Execute(data, studentUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+        return Ok(new MessageSuccessResponseModel($"Proposta submetida com sucesso. ID: {result.Data}"));
+    }
+
+
+    /// <summary>
+    /// Aprovar proposta de TCC pelo orientador
+    /// </summary>
+    [Authorize(Roles = "ADVISOR, COORDINATOR, SUPERVISOR, ADMIN")]
+    [HttpPatch("{id}/approve-proposal")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ApproveProposal(
+        [FromRoute] long id,
+        [FromServices] ApproveTccProposalUseCase approveTccProposalUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var advisorUserId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await approveTccProposalUseCase.Execute(id, advisorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data));
+    }
+
+    /// <summary>
+    /// Recusar proposta de TCC pelo orientador (com justificativa)
+    /// </summary>
+    [Authorize(Roles = "ADVISOR, COORDINATOR, SUPERVISOR, ADMIN")]
+    [HttpPatch("{id}/reject-proposal")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> RejectProposal(
+        [FromRoute] long id,
+        [FromBody] RejectTccProposalDTO data,
+        [FromServices] RejectTccProposalUseCase rejectTccProposalUseCase)
+    {
+        var validator = new RejectTccProposalValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var advisorUserId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await rejectTccProposalUseCase.Execute(id, data, advisorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data));
+    }
+
+    /// <summary>
+    /// Reformular proposta de TCC recusada pelo estudante
+    /// </summary>
+    [Authorize(Roles = "STUDENT")]
+    [HttpPatch("{id}/reformulate-proposal")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ReformulateProposal(
+        [FromRoute] long id,
+        [FromBody] ReformulateTccProposalDTO data,
+        [FromServices] ReformulateTccProposalUseCase reformulateTccProposalUseCase)
+    {
+        var validator = new ReformulateTccProposalValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var studentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await reformulateTccProposalUseCase.Execute(id, data, studentUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data));
+    }
+
+    /// <summary>
+    /// Cancelar proposta de TCC pelo estudante
+    /// </summary>
+    [Authorize(Roles = "STUDENT")]
+    [HttpPatch("{id}/cancel-proposal")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> CancelProposal(
+        [FromRoute] long id,
+        [FromServices] CancelTccProposalUseCase cancelTccProposalUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var studentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await cancelTccProposalUseCase.Execute(id, studentUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data));
+    }
 }
+

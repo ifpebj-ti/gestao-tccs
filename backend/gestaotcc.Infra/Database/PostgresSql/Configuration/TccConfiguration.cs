@@ -22,6 +22,10 @@ public class TccConfiguration : IEntityTypeConfiguration<TccEntity>
             .IsRequired()
             .HasMaxLength(30);
 
+        builder.Property(x => x.RejectionReason)
+            .IsRequired(false)
+            .HasMaxLength(1000);
+
         builder.Property(x => x.Step)
             .IsRequired()
             .HasMaxLength(40);

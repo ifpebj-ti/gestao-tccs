@@ -59,6 +59,7 @@ public static class IocDependencyExtensions
         // Tcc
         services.AddScoped<CreateTccUseCase>();
         services.AddScoped<ResendInvitationTccEmailUseCase>();
+        services.AddScoped<SendStudentVerificationCodeUseCase>();
         services.AddScoped<VerifyCodeInviteTccUseCase>();
         services.AddScoped<FindAllTccByFilterUseCase>();
         services.AddScoped<FindTccWorkflowUseCase>();
@@ -76,6 +77,11 @@ public static class IocDependencyExtensions
         services.AddScoped<EvaluateTccUseCase>();
         services.AddScoped<SaveScheduleInfoUseCase>();
         services.AddScoped<UploadTccFileUseCase>();
+        services.AddScoped<SubmitTccProposalUseCase>();
+        services.AddScoped<ApproveTccProposalUseCase>();
+        services.AddScoped<RejectTccProposalUseCase>();
+        services.AddScoped<ReformulateTccProposalUseCase>();
+        services.AddScoped<CancelTccProposalUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();

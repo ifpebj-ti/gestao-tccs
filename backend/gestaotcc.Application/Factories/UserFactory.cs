@@ -1,4 +1,4 @@
-﻿using gestaotcc.Application.Helpers;
+using gestaotcc.Application.Helpers;
 using gestaotcc.Domain.Dtos.User;
 using gestaotcc.Domain.Entities.AccessCode;
 using gestaotcc.Domain.Entities.CampiCourse;
@@ -31,22 +31,25 @@ public class UserFactory
             .WithAccessCode(accessCode)
             .Build();
     }
-    public static UserEntity CreateUser(AutoRegisterDTO data, List<ProfileEntity> profile, CampiCourseEntity campiCourse, AccessCodeEntity accessCode)
+    public static UserEntity CreateUser(AutoRegisterDTO data, List<ProfileEntity> profile, CampiCourseEntity campiCourse, AccessCodeEntity accessCode, string? hashedPassword = null)
     {
-        var randomPassword = PasswordHelper.GenerateRandomPassword();
+        var password = !string.IsNullOrWhiteSpace(hashedPassword)
+            ? hashedPassword
+            : PasswordHelper.GenerateRandomPassword();
 
         return new UserEntityBuilder()
             .WithName(data.Name)
             .WithEmail(data.Email)
             .WithRegistration(data.Registration ?? "")
             .WithCpf(data.CPF)
-            .WithPassword(randomPassword)
+            .WithPassword(password)
             .WithPhone(data.Phone)
             .WithUserClass(data.UserClass)
             .WithShift(EnumExtension.GetDescription(data.Shift))
             .WithProfile(profile)
             .WithCampiCourse(campiCourse)
             .WithAccessCode(accessCode)
+            .WithStatus("ACTIVE")
             .Build();
     }
     
