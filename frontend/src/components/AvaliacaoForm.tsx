@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
 import { CheckCircle2, FileText, Mic, BookOpen } from 'lucide-react';
@@ -55,7 +54,6 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
     normatizacao: ''
   });
 
-  const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [pendingSignaturesCount, setPendingSignaturesCount] = useState(0);
@@ -164,12 +162,8 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
       return;
     }
 
-    if (!comments.trim()) {
-      toast.error('O parecer sobre a apresentação é obrigatório.');
-      return;
-    }
-
     const evaluationDetails = JSON.stringify({ oral: oralGrades, textual: textualGrades });
+    const autoParecer = finalGrade >= 7 ? 'Aprovado' : 'Reprovado';
 
     try {
       setIsSubmitting(true);
@@ -180,7 +174,7 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
         body: JSON.stringify({
           token,
           grade: parseFloat(finalGrade.toFixed(2)),
-          evaluationComments: comments,
+          evaluationComments: autoParecer,
           evaluationDetails
         })
       });
@@ -367,17 +361,13 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
             <span className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2 z-10">Nota Final do TCC</span>
             <span className="text-6xl font-black text-amber-400 drop-shadow-md z-10">{finalGrade.toFixed(2)}</span>
             <span className="text-slate-400 text-sm mt-3 font-medium z-10">Média aritmética entre Oral e Textual</span>
-          </div>
-
-          <div className="grid gap-3">
-            <Label htmlFor="comments" className="text-lg font-bold text-slate-800">Parecer Final / Considerações <span className="text-slate-400 font-normal text-sm ml-2">(Opcional)</span></Label>
-            <Textarea
-              id="comments"
-              placeholder="Escreva aqui o seu parecer final descritivo sobre o trabalho do estudante..."
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              className="min-h-[140px] bg-white border-slate-300 focus:border-blue-500 text-base p-4 rounded-xl shadow-sm resize-y"
-            />
+            <div className="mt-4 z-10">
+              <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold ${
+                finalGrade >= 7 ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+              }`}>
+                Parecer: {finalGrade >= 7 ? 'Aprovado' : 'Reprovado'}
+              </span>
+            </div>
           </div>
 
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full text-lg mt-4 py-7 font-bold rounded-xl shadow-md hover:shadow-lg transition-all">
