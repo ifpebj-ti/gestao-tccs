@@ -116,7 +116,10 @@ export default function DetailsClient() {
           {tccData.infoAdvisor.name && (
             <AdvisorInfoSection advisor={tccData.infoAdvisor} />
           )}
-          <BankingInfoSection bankingData={tccData.infoBanking} />
+          <BankingInfoSection 
+            bankingData={tccData.infoBanking} 
+            isCompleted={tccData.infoTcc.status === 'COMPLETED'} 
+          />
         </div>
 
         <ScheduleSection 

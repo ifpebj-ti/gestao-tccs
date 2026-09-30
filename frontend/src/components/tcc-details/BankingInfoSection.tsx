@@ -8,10 +8,12 @@ interface BankingInfo {
 
 interface BankingInfoSectionProps {
   bankingData: BankingInfo | null;
+  isCompleted?: boolean;
 }
 
 export function BankingInfoSection({
   bankingData,
+  isCompleted = false,
 }: BankingInfoSectionProps) {
   const hasBanking = bankingData && bankingData.members && bankingData.members.length > 0;
 
@@ -38,6 +40,10 @@ export function BankingInfoSection({
             </div>
           ))}
         </div>
+      ) : isCompleted ? (
+        <p className="text-gray-500 italic mt-4">
+          Banca examinadora composta pelo(a) professor(a) orientador(a).
+        </p>
       ) : (
         <p className="text-gray-600 italic mt-4">
           Aguardando cadastro da banca.

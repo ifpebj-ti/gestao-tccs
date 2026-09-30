@@ -51,6 +51,19 @@ public class TccInfoFactory
             Role: bm.Role
         )).ToList() ?? new List<gestaotcc.Domain.Dtos.Tcc.BankingMemberDto>();
 
+        // 4.1 Cálculo da média final e parecer se houver avaliações
+        decimal? finalGrade = null;
+        string? finalOpinion = null;
+        if (tcc.BankingMembers != null && tcc.BankingMembers.Any(m => m.Grade.HasValue))
+        {
+            var avaliacoes = tcc.BankingMembers.Where(m => m.Grade.HasValue).ToList();
+            if (avaliacoes.Any())
+            {
+                finalGrade = Math.Round(avaliacoes.Average(m => m.Grade.Value), 2);
+                finalOpinion = finalGrade >= 7.00m ? "Aprovado" : "Reprovado";
+            }
+        }
+
         // 5. Verificar se o TCC foi solicitado para cancelamento
         bool isCancellationRequest = tcc.TccCancellation is not null;
 
@@ -67,7 +80,9 @@ public class TccInfoFactory
                     ? TimeOnly.FromDateTime(tcc.TccSchedule.ScheduledDate)
                     : (TimeOnly?)null,
                 PresentationLocation: tcc.TccSchedule?.Location ?? string.Empty,
-                RejectionReason: tcc.RejectionReason
+                RejectionReason: tcc.RejectionReason,
+                FinalGrade: finalGrade,
+                FinalOpinion: finalOpinion
             ),
             InfoStudent: students,
             InfoAdvisor: new InfoAdvisorDTO(

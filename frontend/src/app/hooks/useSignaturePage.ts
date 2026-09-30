@@ -21,6 +21,11 @@ export function useSignaturePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [tccFile, setTccFile] = useState<File | null>(null);
+  const [signatureSuccess, setSignatureSuccess] = useState<{
+    isOpen: boolean;
+    isDefenseDocument: boolean;
+    tccId: string | null;
+  } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const params = useParams();
@@ -271,13 +276,29 @@ export function useSignaturePage() {
         body: formData
       });
       if (!res.ok) throw new Error('Erro ao submeter a assinatura.');
-      
-      if (documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII")) {
+      const isDefesaDoc =
+        documentName.toUpperCase().includes('ATA') ||
+        documentName.toUpperCase().includes('AVALIATIVA') ||
+        documentName.toUpperCase().includes('CONCLUSÃO') ||
+        (docNameFromParams && (
+          docNameFromParams.toUpperCase().includes('ATA') ||
+          docNameFromParams.toUpperCase().includes('AVALIATIVA') ||
+          docNameFromParams.toUpperCase().includes('CONCLUSÃO')
+        ));
+
+      toast.success('Documento assinado e enviado com sucesso!');
+
+      if (isDefesaDoc) {
+        setSignatureSuccess({
+          isOpen: true,
+          isDefenseDocument: true,
+          tccId
+        });
+      } else if (documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII")) {
         push(`/ongoingTCCs/details?id=${tccId}`);
       } else {
         push('/pendingSignatures');
       }
-      toast.success('Documento assinado e enviado com sucesso!');
     } catch {
       toast.error('Ocorreu um erro ao submeter sua assinatura.');
     } finally {
@@ -316,6 +337,8 @@ export function useSignaturePage() {
     API_URL,
     iframeRef,
     isAnexoVIII,
-    isAdvisor
+    isAdvisor,
+    signatureSuccess,
+    setSignatureSuccess
   };
 }
