@@ -130,6 +130,21 @@ export function useTccDetails() {
         summary: result.infoTcc.summary ?? ''
       });
 
+      scheduleForm.reset({
+        scheduleDate: result.infoTcc.presentationDate 
+          ? result.infoTcc.presentationDate.split('/').reverse().join('-') 
+          : '',
+        scheduleTime: result.infoTcc.presentationTime 
+          ? result.infoTcc.presentationTime.replace('h', ':') 
+          : '',
+        scheduleLocation: result.infoTcc.presentationLocation ?? '',
+        bankingMembers: result.infoBanking?.members?.map(m => ({
+          name: m.name,
+          email: m.email,
+          role: m.role
+        })) || []
+      });
+
       if (result.cancellationRequest) {
         const detailsRes = await fetch(
           `${API_URL}/Tcc/cancellation?tccId=${tccId}`,

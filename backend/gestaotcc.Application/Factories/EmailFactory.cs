@@ -78,16 +78,21 @@ public class EmailFactory
 
     public static SendEmailDTO CreateSendEmailDTO(UserEntity user, TccEntity tcc, TccScheduleEntity tccSchedule)
     {
+        return CreateSendEmailDTO(user.Name, user.Email, tcc, tccSchedule);
+    }
+
+    public static SendEmailDTO CreateSendEmailDTO(string name, string email, TccEntity tcc, TccScheduleEntity tccSchedule)
+    {
         Dictionary<string, Object> variables = new Dictionary<string, Object>();
-        variables.Add("username", user.Name);
-        variables.Add("titulo_tcc", tcc.Title!);
-        variables.Add("resumo_tcc", tcc.Summary!);
+        variables.Add("username", name);
+        variables.Add("titulo_tcc", tcc.Title ?? string.Empty);
+        variables.Add("resumo_tcc", tcc.Summary ?? string.Empty);
         variables.Add("data_horario", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm"));
         variables.Add("local", tccSchedule.Location);
         
         var chooseSubject = "Agendamento de defesa do TCC"; 
         
-        var emailDTO = new SendEmailDTO("", chooseSubject, user.Email, "SCHEDULE-TCC", variables);
+        var emailDTO = new SendEmailDTO("", chooseSubject, email, "SCHEDULE-TCC", variables);
         
         return emailDTO;
     }

@@ -74,7 +74,7 @@ export function useSignaturePage() {
     fetchDocument();
   }, [fetchDocument]);
 
-  const handleDownloadDocument = async () => {
+  const handleDownloadDocument = async (scheduleData?: { date: string, time: string, location: string }) => {
     const token = Cookies.get('token');
     if (!tccId || !documentId || !token) {
       toast.error('Informações insuficientes para realizar o download.');
@@ -82,8 +82,10 @@ export function useSignaturePage() {
     }
 
     try {
+
       let res: Response;
       
+      // Sempre processar documentHtml se existir, para injetar valores e converter para PDF no backend
       if (documentHtml) {
         // Capturar HTML preenchido no iframe
         let currentHtml = documentHtml;
@@ -107,43 +109,54 @@ export function useSignaturePage() {
           
           currentHtml = doc.documentElement.outerHTML;
           
-          // Extrair informações de agendamento (Anexo VIII)
-          const dataDefesaInput = doc.querySelector('input[name="data_defesa"]') as HTMLInputElement;
-          const horaDefesaInput = doc.querySelector('input[name="hora_defesa"]') as HTMLInputElement;
-          const localDefesaInput = doc.querySelector('input[name="local_defesa"]') as HTMLInputElement;
+          // Se temos os dados do formulário externo, usamos eles diretamente!
+          if (scheduleData && scheduleData.date && scheduleData.time && scheduleData.location) {
+             const [year, month, day] = scheduleData.date.split('-');
+             const dataFormatada = `${day}/${month}/${year}`;
+             const horaFormatada = scheduleData.time.replace(':', 'h');
+             
+             currentHtml = currentHtml.replace(/<input[^>]*name="data_defesa"[^>]*>/i, dataFormatada);
+             currentHtml = currentHtml.replace(/<input[^>]*name="hora_defesa"[^>]*>/i, horaFormatada);
+             currentHtml = currentHtml.replace(/<input[^>]*name="local_defesa"[^>]*>/i, scheduleData.location);
+          } else {
+            // Fallback original: tenta ler as informações (Anexo VIII) diretamente do iframe
+            const dataDefesaInput = doc.querySelector('input[name="data_defesa"]') as HTMLInputElement;
+            const horaDefesaInput = doc.querySelector('input[name="hora_defesa"]') as HTMLInputElement;
+            const localDefesaInput = doc.querySelector('input[name="local_defesa"]') as HTMLInputElement;
 
-          if (dataDefesaInput && horaDefesaInput && localDefesaInput) {
-            const dataDefesa = dataDefesaInput.value;
-            const horaDefesa = horaDefesaInput.value;
-            const localDefesa = localDefesaInput.value;
-            
-            if (dataDefesa && horaDefesa && localDefesa) {
-               
-               const [year, month, day] = dataDefesa.split('-');
-               const dataFormatada = `${day}/${month}/${year}`;
-               const horaFormatada = horaDefesa.replace(':', 'h');
-               
-               currentHtml = currentHtml.replace(/<input[^>]*name="data_defesa"[^>]*>/i, dataFormatada);
-               currentHtml = currentHtml.replace(/<input[^>]*name="hora_defesa"[^>]*>/i, horaFormatada);
-               currentHtml = currentHtml.replace(/<input[^>]*name="local_defesa"[^>]*>/i, localDefesa);
+            if (dataDefesaInput && horaDefesaInput && localDefesaInput) {
+              const dataDefesa = dataDefesaInput.value;
+              const horaDefesa = horaDefesaInput.value;
+              const localDefesa = localDefesaInput.value;
+              
+              if (dataDefesa && horaDefesa && localDefesa) {
+                 
+                 const [year, month, day] = dataDefesa.split('-');
+                 const dataFormatada = `${day}/${month}/${year}`;
+                 const horaFormatada = horaDefesa.replace(':', 'h');
+                 
+                 currentHtml = currentHtml.replace(/<input[^>]*name="data_defesa"[^>]*>/i, dataFormatada);
+                 currentHtml = currentHtml.replace(/<input[^>]*name="hora_defesa"[^>]*>/i, horaFormatada);
+                 currentHtml = currentHtml.replace(/<input[^>]*name="local_defesa"[^>]*>/i, localDefesa);
 
-               try {
-                   await fetch(`${API_URL}/Tcc/${tccId}/schedule-info`, {
-                      method: 'POST',
-                      headers: { 
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({
-                        scheduleDate: dataDefesa,
-                        scheduleTime: horaDefesa,
-                        scheduleLocation: localDefesa,
-                        idTcc: Number(tccId)
-                      })
-                   });
-               } catch (e) {
-                   console.error("Erro ao salvar infos de agendamento", e);
-               }
+                 try {
+                     await fetch(`${API_URL}/Tcc/${tccId}/schedule-info`, {
+                        method: 'POST',
+                        headers: { 
+                          Authorization: `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          scheduleDate: dataDefesa,
+                          scheduleTime: horaDefesa,
+                          scheduleLocation: localDefesa,
+                          idTcc: Number(tccId)
+                        })
+                     });
+                 } catch (e) {
+                     console.error("Erro ao salvar infos de agendamento", e);
+                 }
+              }
             }
           }
         }
@@ -211,7 +224,7 @@ export function useSignaturePage() {
     }
   };
 
-  const handleSignDocument = async () => {
+  const handleSignDocument = async (scheduleData?: { date: string, time: string, location: string }) => {
     if (!selectedFile) {
       toast.warn('Por favor, selecione um arquivo para assinar.');
       return;
@@ -233,6 +246,12 @@ export function useSignaturePage() {
     formData.append('TccId', tccId!);
     formData.append('DocumentId', documentId);
     formData.append('UserId', userId);
+
+    if (scheduleData) {
+      if (scheduleData.date) formData.append('ScheduleDate', scheduleData.date);
+      if (scheduleData.time) formData.append('ScheduleTime', scheduleData.time);
+      if (scheduleData.location) formData.append('ScheduleLocation', scheduleData.location);
+    }
 
     try {
       if (tccFile) {

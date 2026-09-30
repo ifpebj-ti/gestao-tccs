@@ -1,9 +1,15 @@
-﻿using gestaotcc.Application.Gateways;
+using gestaotcc.Application.Gateways;
+using gestaotcc.Application.Factories;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Errors;
+using gestaotcc.Domain.Entities.TccBankingMember;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class EditScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<EditScheduleTccUseCase> logger)
+public class EditScheduleTccUseCase(
+    ITccGateway tccGateway, 
+    IAppLoggerGateway<EditScheduleTccUseCase> logger,
+    IUserGateway? userGateway = null, 
+    IProfileGateway? profileGateway = null)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -35,6 +41,63 @@ public class EditScheduleTccUseCase(ITccGateway tccGateway, IAppLoggerGateway<Ed
             {
                 logger.LogInformation("Atualizando local do agendamento para: {NewLocation}", data.ScheduleLocation);
                 tcc.TccSchedule.Location = data.ScheduleLocation;
+            }
+
+            if (data.BankingMembers != null)
+            {
+                var bankingProfile = profileGateway != null ? await profileGateway.FindByRole("BANKING") : null;
+                var baseUser = tcc.UserTccs.FirstOrDefault()?.User;
+
+                foreach (var memberDto in data.BankingMembers)
+                {
+                    var existingMember = tcc.BankingMembers.FirstOrDefault(m => m.Email.Equals(memberDto.Email, StringComparison.OrdinalIgnoreCase));
+                    if (existingMember != null)
+                    {
+                        existingMember.Name = memberDto.Name;
+                        existingMember.Role = memberDto.Role;
+                    }
+                    else
+                    {
+                        var token = Guid.NewGuid().ToString("N");
+                        var member = new TccBankingMemberEntity(memberDto.Name, memberDto.Email, memberDto.Role, token, tcc.Id);
+                        tcc.BankingMembers.Add(member);
+                    }
+
+                    if (userGateway != null && bankingProfile != null)
+                    {
+                        var existingUser = await userGateway.FindByEmail(memberDto.Email);
+                        if (existingUser == null)
+                        {
+                            var tempUser = new gestaotcc.Domain.Entities.User.UserEntity
+                            {
+                                Name = memberDto.Name,
+                                Email = memberDto.Email,
+                                Password = Guid.NewGuid().ToString("N"),
+                                Status = "ACTIVE",
+                                CampiCourseId = baseUser?.CampiCourseId,
+                                Profile = new List<gestaotcc.Domain.Entities.Profile.ProfileEntity> { bankingProfile }
+                            };
+
+                            TccFactory.UpdateUsersTccToCreateBanking(tcc, tempUser, bankingProfile);
+                        }
+                        else
+                        {
+                            if (!tcc.UserTccs.Any(ut => ut.UserId == existingUser.Id))
+                            {
+                                TccFactory.UpdateUsersTccToCreateBanking(tcc, existingUser, bankingProfile);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Garante que o orientador esteja presente na banca
+            var advisorUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile?.Role == gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User;
+            if (advisorUser != null && !tcc.BankingMembers.Any(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                var token = Guid.NewGuid().ToString("N");
+                var advisorMember = new TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id);
+                tcc.BankingMembers.Add(advisorMember);
             }
             
             logger.LogInformation("Salvando alterações do agendamento para o TccId: {TccId}", data.IdTcc);

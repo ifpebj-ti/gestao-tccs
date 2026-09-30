@@ -69,6 +69,57 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             );
         }
         
+        try
+        {
+            using var stream = new MemoryStream(data.File);
+            using var pdfReader = new PdfReader(stream);
+            using var pdfDoc = new PdfDocument(pdfReader);
+            var strategy = new iText.Kernel.Pdf.Canvas.Parser.Listener.SimpleTextExtractionStrategy();
+            string extractedText = iText.Kernel.Pdf.Canvas.Parser.PdfTextExtractor.GetTextFromPage(pdfDoc.GetFirstPage(), strategy);
+            
+            var extractedTextNormalized = new string(RemoveDiacritics(extractedText).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+            
+            if (!extractedTextNormalized.Contains(expectedNameNormalized))
+            {
+                logger.LogWarning("Falha na assinatura para UserId {UserId}: O conteúdo do PDF não contém o cabeçalho esperado '{ExpectedPrefix}'.", data.UserId, expectedPrefix);
+                return ResultPattern<string>.FailureResult(
+                    $"O conteúdo do documento enviado não corresponde ao cabeçalho esperado ({expectedPrefix.Trim()}). Documento inválido.",
+                    400
+                );
+            }
+
+            if (expectedPrefix.Trim().ToUpperInvariant() == "ANEXO VIII")
+            {
+                if (!string.IsNullOrWhiteSpace(data.ScheduleDate) && !string.IsNullOrWhiteSpace(data.ScheduleTime) && !string.IsNullOrWhiteSpace(data.ScheduleLocation))
+                {
+                    if (DateTime.TryParse($"{data.ScheduleDate} {data.ScheduleTime}", out var parsedDate))
+                    {
+                        var scheduledDate = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+                        if (tcc.TccSchedule == null)
+                        {
+                            tcc.TccSchedule = new gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity
+                            {
+                                ScheduledDate = scheduledDate,
+                                Location = data.ScheduleLocation,
+                                TccId = tcc.Id
+                            };
+                        }
+                        else
+                        {
+                            tcc.TccSchedule.ScheduledDate = scheduledDate;
+                            tcc.TccSchedule.Location = data.ScheduleLocation;
+                        }
+                        logger.LogInformation("Agendamento atualizado via dados enviados no formulário de assinatura. TccId: {TccId}", tcc.Id);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao extrair texto do PDF para validação. DocumentId: {DocumentId}", data.DocumentId);
+            return ResultPattern<string>.FailureResult("Falha ao ler o conteúdo do documento PDF.", 400);
+        }
+
         if (!UserCanSignDocument(user, tcc, document))
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário não tem permissão para assinar o DocumentId {DocumentId}.", data.UserId, data.DocumentId);

@@ -56,7 +56,10 @@ public class SignatureController : ControllerBase
             fileBuffer,
             (double)fileBuffer.Length / (1024 * 1024),
             data.File.ContentType,
-            data.File.FileName
+            data.File.FileName,
+            data.ScheduleDate,
+            data.ScheduleTime,
+            data.ScheduleLocation
             );
         
         var useCaseResult = await signSignatureUseCase.Execute(dto);
