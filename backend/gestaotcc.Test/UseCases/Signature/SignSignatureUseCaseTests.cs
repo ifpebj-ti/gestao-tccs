@@ -162,7 +162,15 @@ public class SignSignatureUseCaseTests
         using (var writer = new PdfWriter(ms))
         using (var pdfDoc = new PdfDocument(writer))
         {
-            pdfDoc.AddNewPage();
+            var page = pdfDoc.AddNewPage();
+            
+            var canvas = new iText.Kernel.Pdf.Canvas.PdfCanvas(page);
+            canvas.BeginText()
+                  .SetFontAndSize(iText.Kernel.Font.PdfFontFactory.CreateFont(iText.IO.Font.Constants.StandardFonts.HELVETICA), 12)
+                  .MoveText(100, 700)
+                  .ShowText("DOC")
+                  .EndText();
+
 
             var sigDict = new PdfDictionary();
             sigDict.Put(PdfName.Type, PdfName.Sig);

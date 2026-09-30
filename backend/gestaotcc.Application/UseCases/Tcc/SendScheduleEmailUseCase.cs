@@ -43,12 +43,45 @@ public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emai
                 }
             }
 
+            var sentEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // 1. Enviar para os membros da banca (examinadores com anexo)
+            if (tcc.BankingMembers != null)
+            {
+                foreach (var member in tcc.BankingMembers)
+                {
+                    if (string.IsNullOrWhiteSpace(member.Email) || sentEmails.Contains(member.Email))
+                        continue;
+
+                    logger.LogInformation("Enviando e-mail de agendamento para examinador da banca: {UserEmail} ({Name})", member.Email, member.Name);
+                    var emailDto = EmailFactory.CreateSendEmailDTO(member.Name, member.Email, tcc, tcc.TccSchedule);
+                    emailDto.Attachments = attachments;
+                    await emailGateway.Send(emailDto);
+                    sentEmails.Add(member.Email);
+                }
+            }
+
+            // 2. Enviar para os usuários vinculados ao TCC (aluno sem anexo, orientador/outros com anexo)
             foreach (var userTcc in tcc.UserTccs)
             {
+                if (userTcc.User == null || string.IsNullOrWhiteSpace(userTcc.User.Email) || sentEmails.Contains(userTcc.User.Email))
+                    continue;
+
                 logger.LogDebug("Enviando e-mail de agendamento para o usuário: {UserEmail} (UserId: {UserId})", userTcc.User.Email, userTcc.User.Id);
-                var emailDto = EmailFactory.CreateSendEmailDTO(userTcc.User, tcc, tcc.TccSchedule);
-                emailDto.Attachments = attachments;
+                var emailDto = EmailFactory.CreateSendEmailDTO(userTcc.User.Name, userTcc.User.Email, tcc, tcc.TccSchedule);
+
+                var isStudent = string.Equals(userTcc.Profile?.Role, "STUDENT", StringComparison.OrdinalIgnoreCase);
+                if (!isStudent)
+                {
+                    emailDto.Attachments = attachments;
+                }
+                else
+                {
+                    emailDto.Attachments = null; // Aluno não recebe o anexo do TCC
+                }
+
                 await emailGateway.Send(emailDto);
+                sentEmails.Add(userTcc.User.Email);
             }
         }
         catch (Exception ex)
