@@ -38,7 +38,9 @@ public class EvaluateTccUseCase(
         }
 
         member.Grade = data.Grade;
-        member.EvaluationComments = data.EvaluationComments;
+        member.EvaluationComments = !string.IsNullOrWhiteSpace(data.EvaluationComments)
+            ? data.EvaluationComments
+            : (data.Grade >= 7m ? "Aprovado" : "Reprovado");
         member.EvaluationDetails = data.EvaluationDetails;
         
         // Do NOT invalidate token here, as the external examiner will need it later to log in and sign documents.

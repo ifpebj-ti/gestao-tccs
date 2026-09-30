@@ -101,11 +101,16 @@ public class FindDocumentUseCase(
     {
         var advisor = usersTccEntity.FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString())?.User;
         var student = usersTccEntity.FirstOrDefault(ut => ut.UserId == studentUserId)?.User 
-                      ?? usersTccEntity.FirstOrDefault(ut => ut.Profile.Role != RoleType.ADVISOR.ToString())?.User;
+                      ?? usersTccEntity.FirstOrDefault(ut => ut.Profile.Role == RoleType.STUDENT.ToString())?.User
+                      ?? usersTccEntity.FirstOrDefault(ut => ut.Profile.Role != RoleType.ADVISOR.ToString() && ut.Profile.Role != "BANKING")?.User;
         var students = usersTccEntity
-            .Where(ut => ut.Profile.Role != RoleType.ADVISOR.ToString())
+            .Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString())
             .Select(ut => ut.User)
             .ToList();
+        if (!students.Any() && student != null)
+        {
+            students.Add(student);
+        }
 
         var tccTitle = tcc.Title ?? string.Empty;
         var tccSchedule = tcc.TccSchedule;
@@ -203,6 +208,7 @@ public class FindDocumentUseCase(
         dict["total_oral"] = "";
         dict["total_textual"] = "";
         dict["nota_final"] = "";
+        dict["parecer_final"] = "";
 
         if (tcc.BankingMembers != null && tcc.BankingMembers.Any(m => m.Grade.HasValue))
         {
@@ -216,8 +222,6 @@ public class FindDocumentUseCase(
                 decimal memberOral = 0m;
                 decimal memberTextual = 0m;
                 int idx = i + 1;
-                
-                dict[$"parecer_final_{idx}"] = encoder.Encode(member.EvaluationComments ?? "");
 
                 if (!string.IsNullOrEmpty(member.EvaluationDetails))
                 {
@@ -266,7 +270,20 @@ public class FindDocumentUseCase(
 
             if (countOral > 0) dict["total_oral"] = encoder.Encode(Math.Round(sumOral / countOral, 2).ToString("0.00"));
             if (countTextual > 0) dict["total_textual"] = encoder.Encode(Math.Round(sumTextual / countTextual, 2).ToString("0.00"));
-            if (avaliacoes.Any()) dict["nota_final"] = encoder.Encode(Math.Round(avaliacoes.Average(m => m.Grade.Value), 2).ToString("0.00"));
+            if (avaliacoes.Any())
+            {
+                var mediaFinal = Math.Round(avaliacoes.Average(m => m.Grade.Value), 2);
+                dict["nota_final"] = encoder.Encode(mediaFinal.ToString("0.00"));
+
+                string parecerTexto = mediaFinal >= 7.00m
+                    ? "Aprovado(a) — O discente cumpriu com êxito todos os requisitos de apresentação e avaliação do Trabalho de Conclusão de Curso."
+                    : "Reprovado(a) — O discente não atingiu a média mínima exigida (7,0) para aprovação do Trabalho de Conclusão de Curso.";
+
+                dict["parecer_final"] = encoder.Encode(parecerTexto);
+                dict["parecer_final_1"] = encoder.Encode(parecerTexto);
+                dict["parecer_final_2"] = encoder.Encode(parecerTexto);
+                dict["parecer_final_3"] = encoder.Encode(parecerTexto);
+            }
         }
 
         return dict;
