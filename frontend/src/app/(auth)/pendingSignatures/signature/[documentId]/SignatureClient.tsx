@@ -16,9 +16,18 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CollapseCard } from '@/components/CollapseCard';
 import { CustomFileInput } from '@/components/CustomFileInput/page';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Award, ArrowRight } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 export default function SignatureClient() {
+  const router = useRouter();
   const {
     documentUrl,
     documentHtml,
@@ -33,7 +42,9 @@ export default function SignatureClient() {
     handleDownloadDocument,
     iframeRef,
     isAnexoVIII,
-    isAdvisor
+    isAdvisor,
+    signatureSuccess,
+    tccId
   } = useSignaturePage();
 
   const searchParams = useSearchParams();
@@ -302,6 +313,51 @@ export default function SignatureClient() {
           <ActionPanel />
         </div>
       </div>
+
+      <Dialog open={!!signatureSuccess?.isOpen} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md p-6 text-center sm:text-left">
+          <div className="flex flex-col items-center text-center p-2">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 shadow-inner">
+              <Award className="w-8 h-8" />
+            </div>
+            
+            <DialogHeader className="items-center text-center">
+              <DialogTitle className="text-xl font-black text-gray-900">
+                Assinatura Registrada com Sucesso!
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 mt-2">
+                Parabéns! Sua assinatura no documento da banca avaliadora foi homologada no sistema.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="w-full mt-4 p-4 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800">
+              O documento assinado agora compõe o histórico oficial do TCC e as avaliações da comissão examinadora estão disponíveis para consulta.
+            </div>
+
+            <div className="flex flex-col w-full gap-2 mt-6">
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                onClick={() => {
+                  router.push(`/myTCC/details?id=${signatureSuccess?.tccId || tccId || ''}`);
+                }}
+              >
+                Acessar Informações do Meu TCC
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  router.push('/pendingSignatures');
+                }}
+              >
+                Voltar às Assinaturas Pendentes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

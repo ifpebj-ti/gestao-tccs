@@ -225,22 +225,35 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   }
 
   if (success && !onSuccessCallback) {
-    // Se tiver callback de success, não renderiza a tela de sucesso, deixa quem chamou tratar
     return (
       <div className={hideLogoAndMinHeight ? "w-full p-4" : "min-h-screen flex flex-col items-center py-12 bg-gray-50 p-4"}>
-        <div className="w-full bg-white p-10 rounded-xl shadow-md text-center flex flex-col items-center max-w-2xl mx-auto">
-          <CheckCircle2 className="w-20 h-20 text-green-500 mb-6" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Avaliação Concluída!</h1>
-          <p className="text-gray-600">A sua nota e o seu parecer foram registrados com sucesso. Muito obrigado pela sua contribuição!</p>
+        <div className="w-full bg-white p-10 rounded-2xl shadow-md text-center flex flex-col items-center max-w-2xl mx-auto border border-gray-100">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+            <CheckCircle2 className="w-12 h-12" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Avaliação Registrada com Sucesso!</h1>
+          <p className="text-gray-600 text-base max-w-md">As notas foram computadas com êxito na ata de defesa do TCC.</p>
+          
           {pendingSignaturesCount > 0 ? (
-            <BankingSignatures 
-              signatures={pendingSignaturesData} 
-              jwt={bankingJwt} 
-              onSuccess={() => setRefetchTrigger(prev => prev + 1)} 
-            />
+            <div className="w-full mt-6">
+              <BankingSignatures 
+                signatures={pendingSignaturesData} 
+                jwt={bankingJwt} 
+                onSuccess={() => setRefetchTrigger(prev => prev + 1)} 
+              />
+            </div>
           ) : (
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg w-full">
-               <p className="text-sm text-amber-800 font-medium">Aguardando a disponibilização do documento para sua assinatura. Isso ocorrerá após todos os membros concluírem as avaliações e os membros anteriores na fila assinarem o documento.</p>
+            <div className="mt-8 p-8 bg-gradient-to-b from-blue-50/60 to-slate-50 border border-blue-100 rounded-2xl w-full text-center flex flex-col items-center shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
+                <BookOpen className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800 mb-2">Muito Obrigado por sua Contribuição!</h2>
+              <p className="text-slate-600 text-sm md:text-base max-w-lg leading-relaxed">
+                Sua avaliação técnica foi registrada com sucesso no sistema institucional. Agradecemos imensamente sua dedicação e contribuição para a formação acadêmica do discente e a excelência do nosso corpo de avaliadores.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" /> Avaliação Oficial Homologada
+              </div>
             </div>
           )}
         </div>

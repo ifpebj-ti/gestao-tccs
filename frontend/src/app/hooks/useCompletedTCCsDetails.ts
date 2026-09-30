@@ -9,9 +9,12 @@ import { env } from 'next-runtime-env';
 interface InfoTcc {
   title: string;
   summary: string;
+  status?: string;
   presentationDate: string | null;
   presentationTime: string | null;
   presentationLocation: string;
+  finalGrade?: number | null;
+  finalOpinion?: string | null;
 }
 interface InfoStudent { name: string; registration: string; cpf: string; course: string; email: string; }
 interface InfoAdvisor { name: string; email: string; }
