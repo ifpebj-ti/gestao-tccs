@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
 import { CheckCircle2, FileText, Mic, BookOpen } from 'lucide-react';
@@ -55,7 +54,6 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
     normatizacao: ''
   });
 
-  const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [pendingSignaturesCount, setPendingSignaturesCount] = useState(0);
@@ -65,44 +63,58 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    if (success && token) {
-      const checkDocs = async () => {
-        try {
-           const authRes = await fetch(`${API_URL}/Auth/banking-login?token=${token}`, { method: 'POST' });
-           if (authRes.ok) {
-             const { accessToken } = await authRes.json();
-             setBankingJwt(accessToken);
-             const decoded = jwtDecode<{ userId: string }>(accessToken);
-             const userId = decoded.userId;
-             const sigRes = await fetch(`${API_URL}/Signature/pending?userId=${userId}`, {
-               headers: { 'Authorization': `Bearer ${accessToken}` }
-             });
-              if (sigRes.ok) {
-               const sigs = await sigRes.json();
-               const mappedSigs = sigs.map((s: BackendSignatureDTO) => ({
-                 tccId: s.tccId,
-                 studentNames: s.studentNames,
-                 documents: (s.pendingDetails || s.documents || []).map((doc: BackendDocumentDTO) => ({
-                   documentId: doc.documentId,
-                   documentName: doc.documentName,
-                   studentId: doc.userDetails && doc.userDetails.length > 0 ? doc.userDetails[0].idDocumentOwner : null
-                 }))
-               }));
-               const filteredSigs = evaluatedTccId !== null 
-                 ? mappedSigs.filter((s: BackendSignatureDTO) => s.tccId === evaluatedTccId)
-                 : mappedSigs;
-               const count = filteredSigs.reduce((acc: number, curr: { documents: unknown[] }) => acc + curr.documents.length, 0);
-               setPendingSignaturesData(filteredSigs);
-               setPendingSignaturesCount(count);
+    let intervalId: NodeJS.Timeout;
+
+    const checkDocs = async () => {
+      if (!success || !token) return;
+      try {
+         const authRes = await fetch(`${API_URL}/Auth/banking-login?token=${token}`, { method: 'POST' });
+         if (authRes.ok) {
+           const { accessToken } = await authRes.json();
+           setBankingJwt(accessToken);
+           const decoded = jwtDecode<{ userId: string }>(accessToken);
+           const userId = decoded.userId;
+           const sigRes = await fetch(`${API_URL}/Signature/pending?userId=${userId}`, {
+             headers: { 'Authorization': `Bearer ${accessToken}` }
+           });
+            if (sigRes.ok) {
+             const sigs = await sigRes.json();
+             const mappedSigs = sigs.map((s: BackendSignatureDTO) => ({
+               tccId: s.tccId,
+               studentNames: s.studentNames,
+               documents: (s.pendingDetails || s.documents || []).map((doc: BackendDocumentDTO) => ({
+                 documentId: doc.documentId,
+                 documentName: doc.documentName,
+                 studentId: doc.userDetails && doc.userDetails.length > 0 ? doc.userDetails[0].idDocumentOwner : null
+               }))
+             }));
+             const filteredSigs = evaluatedTccId !== null 
+               ? mappedSigs.filter((s: BackendSignatureDTO) => s.tccId === evaluatedTccId)
+               : mappedSigs;
+             const count = filteredSigs.reduce((acc: number, curr: { documents: unknown[] }) => acc + curr.documents.length, 0);
+             setPendingSignaturesData(filteredSigs);
+             setPendingSignaturesCount(count);
+
+             // Se encontrou assinaturas, não precisa continuar fazendo polling
+             if (count > 0 && intervalId) {
+                clearInterval(intervalId);
              }
            }
-        } catch (err) {
-          console.error("Erro ao buscar documentos pendentes:", err);
-        }
-      };
+         }
+      } catch (err) {
+        console.error("Erro ao buscar documentos pendentes:", err);
+      }
+    };
+
+    if (success && token) {
       checkDocs();
+      intervalId = setInterval(checkDocs, 10000);
     }
-  }, [success, token, API_URL, refetchTrigger]);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [success, token, API_URL, refetchTrigger, evaluatedTccId]);
 
   // Helper to parse grades
   const parseGrade = (val: string) => {
@@ -150,12 +162,8 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
       return;
     }
 
-    if (!comments.trim()) {
-      toast.error('O parecer sobre a apresentação é obrigatório.');
-      return;
-    }
-
     const evaluationDetails = JSON.stringify({ oral: oralGrades, textual: textualGrades });
+    const autoParecer = finalGrade >= 7 ? 'Aprovado' : 'Reprovado';
 
     try {
       setIsSubmitting(true);
@@ -166,7 +174,7 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
         body: JSON.stringify({
           token,
           grade: parseFloat(finalGrade.toFixed(2)),
-          evaluationComments: comments,
+          evaluationComments: autoParecer,
           evaluationDetails
         })
       });
@@ -217,22 +225,35 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   }
 
   if (success && !onSuccessCallback) {
-    // Se tiver callback de success, não renderiza a tela de sucesso, deixa quem chamou tratar
     return (
       <div className={hideLogoAndMinHeight ? "w-full p-4" : "min-h-screen flex flex-col items-center py-12 bg-gray-50 p-4"}>
-        <div className="w-full bg-white p-10 rounded-xl shadow-md text-center flex flex-col items-center max-w-2xl mx-auto">
-          <CheckCircle2 className="w-20 h-20 text-green-500 mb-6" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Avaliação Concluída!</h1>
-          <p className="text-gray-600">A sua nota e o seu parecer foram registrados com sucesso. Muito obrigado pela sua contribuição!</p>
+        <div className="w-full bg-white p-10 rounded-2xl shadow-md text-center flex flex-col items-center max-w-2xl mx-auto border border-gray-100">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+            <CheckCircle2 className="w-12 h-12" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Avaliação Registrada com Sucesso!</h1>
+          <p className="text-gray-600 text-base max-w-md">As notas foram computadas com êxito na ata de defesa do TCC.</p>
+          
           {pendingSignaturesCount > 0 ? (
-            <BankingSignatures 
-              signatures={pendingSignaturesData} 
-              jwt={bankingJwt} 
-              onSuccess={() => setRefetchTrigger(prev => prev + 1)} 
-            />
+            <div className="w-full mt-6">
+              <BankingSignatures 
+                signatures={pendingSignaturesData} 
+                jwt={bankingJwt} 
+                onSuccess={() => setRefetchTrigger(prev => prev + 1)} 
+              />
+            </div>
           ) : (
-            <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg w-full">
-               <p className="text-sm text-amber-800 font-medium">Aguardando o documento da ata de defesa (Anexo IV) ser gerado para que seja disponibilizado para sua assinatura no sistema. Isso ocorrerá assim que todos os membros da banca concluírem suas avaliações.</p>
+            <div className="mt-8 p-8 bg-gradient-to-b from-blue-50/60 to-slate-50 border border-blue-100 rounded-2xl w-full text-center flex flex-col items-center shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
+                <BookOpen className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800 mb-2">Muito Obrigado por sua Contribuição!</h2>
+              <p className="text-slate-600 text-sm md:text-base max-w-lg leading-relaxed">
+                Sua avaliação técnica foi registrada com sucesso no sistema institucional. Agradecemos imensamente sua dedicação e contribuição para a formação acadêmica do discente e a excelência do nosso corpo de avaliadores.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" /> Avaliação Oficial Homologada
+              </div>
             </div>
           )}
         </div>
@@ -353,17 +374,13 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
             <span className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2 z-10">Nota Final do TCC</span>
             <span className="text-6xl font-black text-amber-400 drop-shadow-md z-10">{finalGrade.toFixed(2)}</span>
             <span className="text-slate-400 text-sm mt-3 font-medium z-10">Média aritmética entre Oral e Textual</span>
-          </div>
-
-          <div className="grid gap-3">
-            <Label htmlFor="comments" className="text-lg font-bold text-slate-800">Parecer Final / Considerações <span className="text-slate-400 font-normal text-sm ml-2">(Opcional)</span></Label>
-            <Textarea
-              id="comments"
-              placeholder="Escreva aqui o seu parecer final descritivo sobre o trabalho do estudante..."
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              className="min-h-[140px] bg-white border-slate-300 focus:border-blue-500 text-base p-4 rounded-xl shadow-sm resize-y"
-            />
+            <div className="mt-4 z-10">
+              <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold ${
+                finalGrade >= 7 ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+              }`}>
+                Parecer: {finalGrade >= 7 ? 'Aprovado' : 'Reprovado'}
+              </span>
+            </div>
           </div>
 
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full text-lg mt-4 py-7 font-bold rounded-xl shadow-md hover:shadow-lg transition-all">

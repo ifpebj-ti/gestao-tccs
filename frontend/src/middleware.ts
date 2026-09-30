@@ -13,7 +13,7 @@ interface DecodedToken {
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [],
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR'],
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'STUDENT'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/ongoingTCCs': [
     'ADMIN',
@@ -35,10 +35,7 @@ const protectedRoutes: Record<string, string[]> = {
   '/users': ['ADMIN', 'COORDINATOR', 'SUPERVISOR']
 };
 
-const tempProtectedRoutes = [
-  '/autoRegister',
-  '/updatePassword'
-];
+const tempProtectedRoutes: string[] = [];
 
 function hasPermission(
   userRoles: string | string[],
@@ -97,15 +94,12 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (tempProtectedRoutes.some((r) => path.startsWith(r)) && !tempToken) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
   const isTempProtectedRoute = tempProtectedRoutes.some((r) =>
     path.startsWith(r)
   );
+
   if (isTempProtectedRoute) {
-    // Permitir acesso se o token temporário existir
+    // Permitir acesso se o cookie temporário existir (código de verificação validado)
     if (tempToken) {
       return NextResponse.next();
     }
@@ -118,7 +112,7 @@ export function middleware(request: NextRequest) {
           return NextResponse.next();
         }
       } catch {
-        toast.error('Erro ao decodificar token');
+        // Ignora erro de decodificação e redireciona
       }
     }
     return NextResponse.redirect(new URL('/', request.url));
@@ -132,9 +126,7 @@ export const config = {
     '/homePage',
     '/newTCC',
     '/newUser',
-    '/autoRegister',
     '/newPassword',
-    '/updatePassword',
     '/ongoingTCCs/:path*',
     '/myTCC/:path*',
     '/completedTCCs/:path*',

@@ -17,12 +17,13 @@ public class LinkBankingUserUseCaseTests
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly IProfileGateway _profileGateway = Substitute.For<IProfileGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
+    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
     private readonly LinkBankingUserUseCase _useCase;
     private readonly IAppLoggerGateway<LinkBankingUserUseCase> _logger = Substitute.For<IAppLoggerGateway<LinkBankingUserUseCase>>();
 
     public LinkBankingUserUseCaseTests()
     {
-        _useCase = new LinkBankingUserUseCase(_tccGateway, _userGateway, _profileGateway, _emailGateway, _logger);
+        _useCase = new LinkBankingUserUseCase(_tccGateway, _userGateway, _profileGateway, _emailGateway, _minioGateway, _logger);
     }
 
     [Fact]
@@ -84,7 +85,7 @@ public class LinkBankingUserUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_ShouldLinkUsersAndSendEmails_WhenAllValid()
+    public async Task Execute_ShouldLinkUsers_WhenAllValid()
     {
         // Arrange
         var dto = new LinkBankingUserDTO(1, 2, 3);
@@ -110,8 +111,7 @@ public class LinkBankingUserUseCaseTests
         _userGateway.FindById(dto.idInternalBanking).Returns(userInternal);
         _userGateway.FindById(dto.idExternalBanking).Returns(userExternal);
         _profileGateway.FindByRole("BANKING").Returns(profileBanking);
-        _emailGateway.Send(Arg.Any<SendEmailDTO>())
-            .Returns(ResultPattern<bool>.SuccessResult(true));
+
 
         // Act
         var result = await _useCase.Execute(dto);
@@ -126,7 +126,5 @@ public class LinkBankingUserUseCaseTests
             t.UserTccs.Any(u => u.User.Id == userExternal.Id)
         ));
 
-        // Verifica se os e-mails foram enviados
-        await _emailGateway.Received(2).Send(Arg.Any<SendEmailDTO>());
     }
 }

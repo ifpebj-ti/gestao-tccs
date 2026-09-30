@@ -6,7 +6,7 @@ using gestaotcc.Domain.Entities.TccBankingMember;
 using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient)
+public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient, IMinioGateway minioGateway)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -20,21 +20,33 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
         }
         if (tcc.TccSchedule is not null)
         {
-            logger.LogWarning("Falha na criação de agendamento para TccId {TccId}: TCC já possui um agendamento.", data.IdTcc);
-            return ResultPattern<string>.FailureResult("TCC já possui agendamento de defesa", 409);
+            logger.LogInformation("TCC {TccId} já possui agendamento. Atualizando dados se fornecidos.", data.IdTcc);
+            if (data.ScheduleDate is not null && data.ScheduleTime is not null)
+            {
+                var newDateTime = DateTime.SpecifyKind(data.ScheduleDate.Value.ToDateTime(data.ScheduleTime.Value), DateTimeKind.Utc);
+                tcc.TccSchedule.ScheduledDate = newDateTime;
+            }
+            if (data.ScheduleLocation is not null)
+            {
+                tcc.TccSchedule.Location = data.ScheduleLocation;
+            }
         }
-
-        if (tcc.Step != gestaotcc.Domain.Enums.StepTccType.PRESENTATION_AND_EVALUATION.ToString())
+        else
         {
-            logger.LogWarning("Falha na criação de agendamento para TccId {TccId}: TCC não está na etapa de Apresentação e Avaliação. Etapa atual: {Step}", data.IdTcc, tcc.Step);
-            return ResultPattern<string>.FailureResult("O agendamento da defesa só é permitido após a conclusão da etapa 4 (Preparação para Apresentação).", 400);
+            if (tcc.Step != gestaotcc.Domain.Enums.StepTccType.PRESENTATION_AND_EVALUATION.ToString())
+            {
+                logger.LogWarning("Falha na criação de agendamento para TccId {TccId}: TCC não está na etapa de Apresentação e Avaliação. Etapa atual: {Step}", data.IdTcc, tcc.Step);
+                return ResultPattern<string>.FailureResult("O agendamento da defesa só é permitido após a conclusão da etapa 4 (Preparação para Apresentação).", 400);
+            }
+
+            logger.LogInformation("Criando agendamento para o TccId: {TccId}", data.IdTcc);
+            var tccSchedule = TccScheduleFactory.CreateTccSchedule(data);
+            tcc.TccSchedule = tccSchedule;
         }
 
         try
         {
-            logger.LogInformation("Criando e atribuindo agendamento para o TccId: {TccId}", data.IdTcc);
-            var tccSchedule = TccScheduleFactory.CreateTccSchedule(data);
-            tcc.TccSchedule = tccSchedule;
+            var tccSchedule = tcc.TccSchedule;
 
             if (data.BankingMembers != null)
             {
@@ -107,6 +119,25 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
                         typeTemplate: "BANKING-INVITE",
                         variables: variables
                     );
+                    
+                    if (!string.IsNullOrEmpty(tcc.TccFile))
+                    {
+                        try 
+                        {
+                            var tccBytes = await minioGateway.Download(tcc.TccFile, false);
+                            if (tccBytes != null && tccBytes.Length > 0)
+                            {
+                                emailDto.Attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
+                                {
+                                    new gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO(tcc.TccFile.Replace("filled/", ""), tccBytes, "application/pdf")
+                                };
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning("Falha ao baixar arquivo do TCC para anexo no email da banca. Erro: {Erro}", ex.Message);
+                        }
+                    }
                     
                     await emailGateway.Send(emailDto);
                 }

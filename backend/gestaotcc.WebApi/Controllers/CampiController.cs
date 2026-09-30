@@ -1,3 +1,4 @@
+using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Campi;
 using gestaotcc.Domain.Dtos.Campi;
 using Microsoft.AspNetCore.Authorization;
@@ -40,6 +41,34 @@ public class CampiController: ControllerBase
 
         var result = await findAllCourseByCampiCourseIdUseCase.Execute(parsedCampiCourseId);
 
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Buscar todos os cursos disponíveis publicamente para cadastro
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("public/courses")]
+    public async Task<ActionResult<List<FindAllCourseByCampiCourseIdDTO>>> FindAllPublicCourses(
+        [FromServices] ICourseGateway courseGateway)
+    {
+        var campis = await courseGateway.FindAllCampis();
+        var courses = campis
+            .SelectMany(c => c.CampiCourses.Select(cc => new FindAllCourseByCampiCourseIdDTO(cc.Course.Id, cc.Course.Name)))
+            .DistinctBy(c => c.Id)
+            .ToList();
+
+        return Ok(courses);
+    }
+
+    /// <summary>
+    /// Retornar os campis com seus cursos de forma pública
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("public/all")]
+    public async Task<ActionResult<List<FindAllCampiDTO>>> FindAllCampiPublic([FromServices] FindAllCampiUseCase findAllCampiUseCase)
+    {
+        var result = await findAllCampiUseCase.Execute(); 
         return Ok(result.Data);
     }
 }

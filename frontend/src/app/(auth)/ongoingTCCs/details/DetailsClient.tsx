@@ -45,6 +45,7 @@ export default function DetailsClient() {
     handleDownloadAllDocuments,
     handleEditTccInfo,
     handleConcludePresentation,
+    handleUploadTccFile,
     isConcluding,
     orientadorToken,
     setOrientadorToken
@@ -78,14 +79,24 @@ export default function DetailsClient() {
             infoStudent={tccData.infoStudent}
             cancellationRequested={tccData.cancellationRequest}
           />
-          <Button
-            variant="outline"
-            onClick={handleDownloadAllDocuments}
-            className="w-full md:w-fit"
-            icon={faFileArchive}
-          >
-            Baixar Todos os Documentos
-          </Button>
+          <div className="flex flex-col gap-2 w-full md:w-fit">
+            <Button
+              variant="outline"
+              onClick={handleDownloadAllDocuments}
+              className="w-full"
+              icon={faFileArchive}
+            >
+              Baixar Todos os Documentos
+            </Button>
+            
+            <input 
+              id="tccUploadInput" 
+              type="file" 
+              accept=".pdf" 
+              className="hidden" 
+              onChange={handleUploadTccFile} 
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-8 mt-10">
@@ -105,7 +116,10 @@ export default function DetailsClient() {
           {tccData.infoAdvisor.name && (
             <AdvisorInfoSection advisor={tccData.infoAdvisor} />
           )}
-          <BankingInfoSection bankingData={tccData.infoBanking} />
+          <BankingInfoSection 
+            bankingData={tccData.infoBanking} 
+            isCompleted={tccData.infoTcc.status === 'COMPLETED'} 
+          />
         </div>
 
         <ScheduleSection 

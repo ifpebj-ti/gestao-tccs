@@ -9,6 +9,7 @@ import { env } from 'next-runtime-env';
 
 interface DecodedToken {
   userId: string;
+  role: string | string[];
 }
 
 export function useSignaturePage() {
@@ -19,6 +20,12 @@ export function useSignaturePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [tccFile, setTccFile] = useState<File | null>(null);
+  const [signatureSuccess, setSignatureSuccess] = useState<{
+    isOpen: boolean;
+    isDefenseDocument: boolean;
+    tccId: string | null;
+  } | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const params = useParams();
@@ -72,7 +79,7 @@ export function useSignaturePage() {
     fetchDocument();
   }, [fetchDocument]);
 
-  const handleDownloadDocument = async () => {
+  const handleDownloadDocument = async (scheduleData?: { date: string, time: string, location: string }) => {
     const token = Cookies.get('token');
     if (!tccId || !documentId || !token) {
       toast.error('Informações insuficientes para realizar o download.');
@@ -80,8 +87,10 @@ export function useSignaturePage() {
     }
 
     try {
+
       let res: Response;
       
+      // Sempre processar documentHtml se existir, para injetar valores e converter para PDF no backend
       if (documentHtml) {
         // Capturar HTML preenchido no iframe
         let currentHtml = documentHtml;
@@ -104,6 +113,57 @@ export function useSignaturePage() {
           });
           
           currentHtml = doc.documentElement.outerHTML;
+          
+          // Se temos os dados do formulário externo, usamos eles diretamente!
+          if (scheduleData && scheduleData.date && scheduleData.time && scheduleData.location) {
+             const [year, month, day] = scheduleData.date.split('-');
+             const dataFormatada = `${day}/${month}/${year}`;
+             const horaFormatada = scheduleData.time.replace(':', 'h');
+             
+             currentHtml = currentHtml.replace(/<input[^>]*name="data_defesa"[^>]*>/i, dataFormatada);
+             currentHtml = currentHtml.replace(/<input[^>]*name="hora_defesa"[^>]*>/i, horaFormatada);
+             currentHtml = currentHtml.replace(/<input[^>]*name="local_defesa"[^>]*>/i, scheduleData.location);
+          } else {
+            // Fallback original: tenta ler as informações (Anexo VIII) diretamente do iframe
+            const dataDefesaInput = doc.querySelector('input[name="data_defesa"]') as HTMLInputElement;
+            const horaDefesaInput = doc.querySelector('input[name="hora_defesa"]') as HTMLInputElement;
+            const localDefesaInput = doc.querySelector('input[name="local_defesa"]') as HTMLInputElement;
+
+            if (dataDefesaInput && horaDefesaInput && localDefesaInput) {
+              const dataDefesa = dataDefesaInput.value;
+              const horaDefesa = horaDefesaInput.value;
+              const localDefesa = localDefesaInput.value;
+              
+              if (dataDefesa && horaDefesa && localDefesa) {
+                 
+                 const [year, month, day] = dataDefesa.split('-');
+                 const dataFormatada = `${day}/${month}/${year}`;
+                 const horaFormatada = horaDefesa.replace(':', 'h');
+                 
+                 currentHtml = currentHtml.replace(/<input[^>]*name="data_defesa"[^>]*>/i, dataFormatada);
+                 currentHtml = currentHtml.replace(/<input[^>]*name="hora_defesa"[^>]*>/i, horaFormatada);
+                 currentHtml = currentHtml.replace(/<input[^>]*name="local_defesa"[^>]*>/i, localDefesa);
+
+                 try {
+                     await fetch(`${API_URL}/Tcc/${tccId}/schedule-info`, {
+                        method: 'POST',
+                        headers: { 
+                          Authorization: `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          scheduleDate: dataDefesa,
+                          scheduleTime: horaDefesa,
+                          scheduleLocation: localDefesa,
+                          idTcc: Number(tccId)
+                        })
+                     });
+                 } catch (e) {
+                     console.error("Erro ao salvar infos de agendamento", e);
+                 }
+              }
+            }
+          }
         }
 
         res = await fetch(`${API_URL}/Signature/document/download/html`, {
@@ -169,7 +229,7 @@ export function useSignaturePage() {
     }
   };
 
-  const handleSignDocument = async () => {
+  const handleSignDocument = async (scheduleData?: { date: string, time: string, location: string }) => {
     if (!selectedFile) {
       toast.warn('Por favor, selecione um arquivo para assinar.');
       return;
@@ -192,21 +252,73 @@ export function useSignaturePage() {
     formData.append('DocumentId', documentId);
     formData.append('UserId', userId);
 
+    if (scheduleData) {
+      if (scheduleData.date) formData.append('ScheduleDate', scheduleData.date);
+      if (scheduleData.time) formData.append('ScheduleTime', scheduleData.time);
+      if (scheduleData.location) formData.append('ScheduleLocation', scheduleData.location);
+    }
+
     try {
+      if (tccFile) {
+        const formDataTcc = new FormData();
+        formDataTcc.append('file', tccFile);
+        
+        await fetch(`${API_URL}/Tcc/${tccId}/upload-file`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formDataTcc
+        });
+      }
+
       const res = await fetch(`${API_URL}/Signature`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
       if (!res.ok) throw new Error('Erro ao submeter a assinatura.');
-      push('/pendingSignatures');
+      const isDefesaDoc =
+        documentName.toUpperCase().includes('ATA') ||
+        documentName.toUpperCase().includes('AVALIATIVA') ||
+        documentName.toUpperCase().includes('CONCLUSÃO') ||
+        (docNameFromParams && (
+          docNameFromParams.toUpperCase().includes('ATA') ||
+          docNameFromParams.toUpperCase().includes('AVALIATIVA') ||
+          docNameFromParams.toUpperCase().includes('CONCLUSÃO')
+        ));
+
       toast.success('Documento assinado e enviado com sucesso!');
+
+      if (isDefesaDoc) {
+        setSignatureSuccess({
+          isOpen: true,
+          isDefenseDocument: true,
+          tccId
+        });
+      } else if (documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII")) {
+        push(`/ongoingTCCs/details?id=${tccId}`);
+      } else {
+        push('/pendingSignatures');
+      }
     } catch {
       toast.error('Ocorreu um erro ao submeter sua assinatura.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isAnexoVIII = documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII");
+  let isAdvisor = false;
+  
+  if (typeof window !== 'undefined') {
+    const token = Cookies.get('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode<DecodedToken>(token);
+        const roles = Array.isArray(decoded.role) ? decoded.role : [decoded.role];
+        isAdvisor = roles.includes('ADVISOR');
+      } catch {}
+    }
+  }
 
   return {
     documentId,
@@ -218,9 +330,15 @@ export function useSignaturePage() {
     isSubmitting,
     selectedFile,
     setSelectedFile,
+    tccFile,
+    setTccFile,
     handleSignDocument,
     handleDownloadDocument,
     API_URL,
-    iframeRef
+    iframeRef,
+    isAnexoVIII,
+    isAdvisor,
+    signatureSuccess,
+    setSignatureSuccess
   };
 }

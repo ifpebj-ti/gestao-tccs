@@ -9,115 +9,123 @@ import { faEnvelope, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/navigation';
 import { useNewTccForm } from '@/app/hooks/useNewTcc';
+import { Suspense } from 'react';
 
-export default function NewTcc() {
+function NewTccContent() {
   const { push } = useRouter();
   const {
-    form,
-    submitForm,
+    register,
+    errors,
+    onSubmit,
     advisors,
     courses,
     fields,
     append,
     remove,
+    isStudent,
+    isReformulating,
     isSubmitting
   } = useNewTccForm();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = form;
+
+  const pageTitle = isStudent
+    ? isReformulating
+      ? 'Reformular Proposta de TCC'
+      : 'Cadastrar Nova Proposta de TCC'
+    : 'Nova Proposta de TCC';
 
   return (
     <div className="flex flex-col">
       <BreadcrumbAuto />
       <h1 className="md:text-4xl text-3xl font-semibold md:font-normal mb-10">
-        Nova Proposta de TCC
+        {pageTitle}
       </h1>
 
-      <form className="flex flex-col gap-8" onSubmit={handleSubmit(submitForm)}>
-        <div>
-          <h2 className="text-lg font-extrabold uppercase mb-4">
-            Informações do(s) estudante(s)
-          </h2>
+      <form className="flex flex-col gap-8" onSubmit={onSubmit}>
+        {/* Mostra campo de estudantes apenas se NÃO for discente */}
+        {!isStudent && (
+          <div>
+            <h2 className="text-lg font-extrabold uppercase mb-4">
+              Informações do(s) estudante(s)
+            </h2>
 
-          {/* Mapeamento dinâmico dos campos de estudante */}
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 mb-4 items-end"
-            >
-              {/* Campo de Email */}
-              <div className="grid items-center gap-1.5">
-                <Label
-                  className="font-semibold"
-                  htmlFor={`students.${index}.studentEmail`}
-                >
-                  Estudante {index + 1}
-                </Label>
-                <Input
-                  id={`students.${index}.studentEmail`}
-                  placeholder="Digite o email do estudante"
-                  icon={faEnvelope}
-                  errorText={errors.students?.[index]?.studentEmail?.message}
-                  {...register(`students.${index}.studentEmail`)}
-                />
-              </div>
+            {/* Mapeamento dinâmico dos campos de estudante */}
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 mb-4 items-end"
+              >
+                {/* Campo de Email */}
+                <div className="grid items-center gap-1.5">
+                  <Label
+                    className="font-semibold"
+                    htmlFor={`students.${index}.studentEmail`}
+                  >
+                    Estudante {index + 1}
+                  </Label>
+                  <Input
+                    id={`students.${index}.studentEmail`}
+                    placeholder="Digite o email do estudante"
+                    icon={faEnvelope}
+                    errorText={errors.students?.[index]?.studentEmail?.message}
+                    {...register(`students.${index}.studentEmail`)}
+                  />
+                </div>
 
-              {/* Campo de Curso */}
-              <div className="grid items-center gap-1.5">
-                <Label
-                  className="font-semibold"
-                  htmlFor={`students.${index}.courseId`}
-                >
-                  Curso do Estudante {index + 1}
-                </Label>
-                <select
-                  id={`students.${index}.courseId`}
-                  {...register(`students.${index}.courseId`)}
-                  className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
-                >
-                  <option value={0}>Selecione um curso</option>
-                  {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.students?.[index]?.courseId && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.students?.[index]?.courseId?.message}
-                  </p>
+                {/* Campo de Curso */}
+                <div className="grid items-center gap-1.5">
+                  <Label
+                    className="font-semibold"
+                    htmlFor={`students.${index}.courseId`}
+                  >
+                    Curso do Estudante {index + 1}
+                  </Label>
+                  <select
+                    id={`students.${index}.courseId`}
+                    {...register(`students.${index}.courseId`)}
+                    className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
+                  >
+                    <option value={0}>Selecione um curso</option>
+                    {courses.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        {course.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.students?.[index]?.courseId && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.students?.[index]?.courseId?.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Botão de Remover */}
+                {fields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-600 hover:text-red-800"
+                    onClick={() => remove(index)}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
                 )}
               </div>
+            ))}
 
-              {/* Botão de Remover */}
-              {fields.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-red-600 hover:text-red-800"
-                  onClick={() => remove(index)}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              )}
-            </div>
-          ))}
-
-          {/* Botão de Adicionar */}
-          {fields.length < 4 && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-fit self-end"
-              onClick={() => append({ studentEmail: '', courseId: 0 })}
-            >
-              <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              Adicionar estudante
-            </Button>
-          )}
-        </div>
+            {/* Botão de Adicionar */}
+            {fields.length < 4 && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-fit self-end"
+                onClick={() => append({ studentEmail: '', courseId: 0 })}
+              >
+                <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                Adicionar estudante
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Informações da Orientação e TCC */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -127,7 +135,7 @@ export default function NewTcc() {
             </h2>
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="orientador">
-                Orientador
+                {isStudent ? 'Selecione o Professor Orientador' : 'Orientador'}
               </Label>
               <select
                 id="orientador"
@@ -186,6 +194,7 @@ export default function NewTcc() {
 
         <div className="flex gap-2 md:self-end mt-4">
           <Button
+            type="button"
             onClick={() => push('/homePage')}
             variant="outline"
             className="w-full md:w-fit"
@@ -197,10 +206,24 @@ export default function NewTcc() {
             className="w-full md:w-fit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Submetendo...' : 'Submeter Proposta'}
+            {isSubmitting
+              ? 'Submetendo...'
+              : isStudent
+              ? isReformulating
+                ? 'Reenviar Proposta'
+                : 'Submeter Proposta ao Orientador'
+              : 'Submeter Proposta'}
           </Button>
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewTcc() {
+  return (
+    <Suspense fallback={null}>
+      <NewTccContent />
+    </Suspense>
   );
 }

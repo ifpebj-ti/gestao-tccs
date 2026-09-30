@@ -28,14 +28,20 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await context.TccInvites
             .Where(x => 
                 x.IsValidCode && 
-                x.Tcc.Status != StatusTccType.CANCELED.ToString() 
-                && x.Tcc.Status != StatusTccType.COMPLETED.ToString())
+                (x.Tcc == null || (x.Tcc.Status != StatusTccType.CANCELED.ToString() 
+                && x.Tcc.Status != StatusTccType.COMPLETED.ToString())))
             .ToListAsync();
     }
 
     public async Task<TccInviteEntity?> FindInviteTccByEmail(string email)
     {
         return await context.TccInvites.FirstOrDefaultAsync(x => x.Email == email);
+    }
+
+    public async Task SaveTccInvite(TccInviteEntity tccInvite)
+    {
+        context.TccInvites.Add(tccInvite);
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateTccInvite(TccInviteEntity tccInvite)
@@ -60,6 +66,9 @@ public class TccGateway(AppDbContext context) : ITccGateway
                     .ThenInclude(u => u.CampiCourse)
                         .ThenInclude(cc => cc!.Campi)
             .Include(x => x.UserTccs)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(u => u.Profile)
+            .Include(x => x.UserTccs)
                 .ThenInclude(x => x.Profile)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.Signatures)
@@ -75,6 +84,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
             .Include(x => x.TccInvites)
+            .Include(x => x.BankingMembers)
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.Profile)
             .Include(x => x.UserTccs)

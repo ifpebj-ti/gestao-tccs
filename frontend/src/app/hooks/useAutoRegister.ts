@@ -11,10 +11,25 @@ import { useRouter } from 'next/navigation';
 import { env } from 'next-runtime-env';
 
 import Cookies from 'js-cookie';
+import { useState, useEffect } from 'react';
+
+interface Course {
+  id: number;
+  name: string;
+}
+
+interface CampusWithCourses {
+  id: number;
+  name: string;
+  courses: Course[];
+}
 
 export function useAutoRegister() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
+
+  const [campusData, setCampusData] = useState<CampusWithCourses[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
 
   const form = useForm<AutoRegisterSchemaType>({
     resolver: zodResolver(autoRegisterSchema),
@@ -26,6 +41,8 @@ export function useAutoRegister() {
       phone: '',
       userClass: '',
       shift: undefined,
+      campusId: undefined,
+      courseId: undefined,
       password: '',
       confirmPassword: ''
     }
@@ -33,8 +50,48 @@ export function useAutoRegister() {
 
   const {
     formState: { isSubmitting },
-    reset
+    reset,
+    watch,
+    setValue
   } = form;
+
+  const watchedCampusId = watch('campusId');
+
+  useEffect(() => {
+    const fetchCampusData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/Campi/public/all`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCampusData(data);
+        } else {
+          toast.error('Não foi possível carregar os dados de campi e cursos.');
+        }
+      } catch {
+        toast.error('Erro de conexão ao buscar dados de campi e cursos.');
+      }
+    };
+    fetchCampusData();
+  }, [API_URL]);
+
+  useEffect(() => {
+    setValue('courseId', 0);
+
+    if (watchedCampusId && watchedCampusId > 0) {
+      const selectedCampus = campusData.find(
+        (campus) => campus.id === Number(watchedCampusId)
+      );
+      setCourses(selectedCampus ? selectedCampus.courses : []);
+    } else {
+      setCourses([]);
+    }
+  }, [watchedCampusId, campusData, setValue]);
 
   const submitForm: SubmitHandler<AutoRegisterSchemaType> = async (data) => {
     try {
@@ -45,10 +102,13 @@ export function useAutoRegister() {
         cpf: data.cpf,
         phone: data.phone,
         userClass: data.userClass,
-        shift: Number(data.shift)
+        shift: Number(data.shift),
+        campiId: Number(data.campusId),
+        courseId: Number(data.courseId),
+        password: data.password
       };
 
-      // Passo 1: Autocadastro do estudante
+      // Passo 1: Autocadastro do estudante com senha
       const autoRegisterResponse = await fetch(`${API_URL}/User/autoregister`, {
         method: 'POST',
         headers: {
@@ -67,35 +127,7 @@ export function useAutoRegister() {
         return;
       }
 
-      // Passo 2: Definição da senha
-      const inviteCode =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem('first_access_code') || ''
-          : '';
-
-      const passwordResponse = await fetch(`${API_URL}/Auth/new-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          inviteCode: inviteCode
-        })
-      });
-
-      if (!passwordResponse.ok) {
-        const passwordError = await passwordResponse.json();
-        toast.error(
-          passwordError.message ||
-            'Cadastro realizado, mas ocorreu um erro ao definir sua senha. Você será redirecionado para a tela de definição de senha.'
-        );
-        push('/newPassword');
-        return;
-      }
-
-      // Passo 3: Login automático
+      // Passo 2: Login automático
       const loginResponse = await fetch(`${API_URL}/Auth/login`, {
         method: 'POST',
         headers: {
@@ -119,6 +151,7 @@ export function useAutoRegister() {
           sessionStorage.removeItem('first_access_email');
           sessionStorage.removeItem('first_access_code');
         }
+        Cookies.remove('access_token_temp');
 
         toast.success('Cadastro e senha configurados com sucesso! Bem-vindo(a).');
         reset();
@@ -129,6 +162,7 @@ export function useAutoRegister() {
           sessionStorage.removeItem('first_access_email');
           sessionStorage.removeItem('first_access_code');
         }
+        Cookies.remove('access_token_temp');
         toast.success('Cadastro finalizado com sucesso! Faça login para continuar.');
         reset();
         push('/');
@@ -143,6 +177,8 @@ export function useAutoRegister() {
   return {
     form,
     submitForm,
-    isSubmitting
+    isSubmitting,
+    campus: campusData,
+    courses
   };
 }

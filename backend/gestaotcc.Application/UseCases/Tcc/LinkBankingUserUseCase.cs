@@ -1,10 +1,10 @@
-﻿using gestaotcc.Application.Factories;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
+public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IMinioGateway minioGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(LinkBankingUserDTO data)
     {
@@ -42,15 +42,7 @@ public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGat
 
         logger.LogInformation("Salvando alterações no TCC {TccId}...", tcc.Id);
         await tccGateway.Update(tcc);
-        
-        logger.LogInformation("Enviando e-mails de notificação para os usuários da banca...");
-        var emailDtoInternal = EmailFactory.CreateSendEmailDTO(userInternal, tcc, "LINK-BANKING-USER");
-        logger.LogDebug("Enviando e-mail para usuário interno: {UserEmail}", userInternal.Email);
-        await emailGateway.Send(emailDtoInternal);
-        
-        var emailDtoExternal = EmailFactory.CreateSendEmailDTO(userExternal, tcc, "LINK-BANKING-USER");
-        logger.LogDebug("Enviando e-mail para usuário externo: {UserEmail}", userExternal.Email);
-        await emailGateway.Send(emailDtoExternal);
+
 
         logger.LogInformation("Usuários de banca vinculados com sucesso ao TccId: {TccId}", data.idTcc);
         return ResultPattern<string>.SuccessResult("Usuário de banca vinculado com sucesso.");

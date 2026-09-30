@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { verifyAccessCodeSchema, VerifyAccessCodeSchemaType } from '@/app/schemas/verifyAccessCodeSchema';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+import Cookies from 'js-cookie';
 
 export function useVerifyAccessCode() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
@@ -28,24 +29,20 @@ export function useVerifyAccessCode() {
       });
 
       if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const result = await response.json();
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        Cookies.set('access_token_temp', `verified_${encodeURIComponent(data.userEmail.trim())}`, {
+          expires: 15 / (24 * 60),
+          path: '/',
+          sameSite: 'lax',
+          secure: isHttps
+        });
 
-          // Cookie que expira em 5 minutos
-          const expires = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
-          document.cookie = `access_token_temp=${result.token}; expires=${expires}; path=/; secure; samesite=Strict`;
+        toast.success('Código de acesso verificado com sucesso!');
 
-          toast.success('Código de acesso verificado com sucesso!');
-
-          if (window.location.pathname === '/firstAccess') {
-            window.location.href = '/autoRegister';
-          } else if (window.location.pathname === '/forgotPassword') {
-            window.location.href = '/updatePassword';
-          }
-
-        } else {
-          toast.success('Código de acesso verificado com sucesso!');
+        if (window.location.pathname === '/firstAccess') {
+          window.location.href = '/autoRegister';
+        } else if (window.location.pathname === '/forgotPassword') {
+          window.location.href = '/updatePassword';
         }
       } else {
         toast.error('Código de acesso inválido ou expirado. Tente novamente.');

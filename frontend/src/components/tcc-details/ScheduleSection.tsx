@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { UseFormReturn, SubmitHandler } from 'react-hook-form';
 import { ScheduleSchemaType } from '@/app/schemas/scheduleSchema';
-import { Pencil, X, Calendar, Check, CheckCircle } from 'lucide-react';
+import { Pencil, X, Calendar, Check, Award, CheckCircle2, XCircle } from 'lucide-react';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -14,13 +14,15 @@ interface ScheduleSectionProps {
     presentationDate: string | null;
     presentationTime: string | null;
     presentationLocation: string;
+    finalGrade?: number | null;
+    finalOpinion?: string | null;
   };
-  isScheduleFormVisible: boolean;
+  isScheduleFormVisible?: boolean;
   onOpenSchedule?: () => void;
-  onScheduleCancel: () => void;
+  onScheduleCancel?: () => void;
   scheduleForm?: UseFormReturn<ScheduleSchemaType>;
   onScheduleSubmit?: SubmitHandler<ScheduleSchemaType>;
-  canSchedule: boolean;
+  canSchedule?: boolean;
   onSendScheduleEmail?: () => void;
   isCompleted?: boolean;
   onConcludePresentation?: () => void;
@@ -29,18 +31,21 @@ interface ScheduleSectionProps {
 
 export function ScheduleSection({
   infoTcc,
-  isScheduleFormVisible,
+  isScheduleFormVisible = false,
   onOpenSchedule,
-  onScheduleCancel,
+  onScheduleCancel = () => {},
   scheduleForm,
   onScheduleSubmit,
-  canSchedule,
+  canSchedule = false,
   onSendScheduleEmail,
-  isCompleted,
+  isCompleted = false,
   onConcludePresentation,
   isConcluding
 }: ScheduleSectionProps) {
   const hasSchedule = !!infoTcc.presentationDate;
+  const isApproved =
+    infoTcc.finalOpinion?.toLowerCase().includes('aprovado') ||
+    (infoTcc.finalGrade !== undefined && infoTcc.finalGrade !== null && infoTcc.finalGrade >= 7);
   
   const {
     register: registerSchedule,
@@ -56,14 +61,20 @@ export function ScheduleSection({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-extrabold uppercase text-gray-800">Apresentação</h2>
+            <h2 className="text-xl font-extrabold uppercase text-gray-800">
+              {isCompleted ? 'Apresentação & Resultado da Banca' : 'Apresentação'}
+            </h2>
             {isCompleted && (
-              <span className="flex items-center text-sm font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                <CheckCircle className="w-4 h-4 mr-1" /> Concluída
+              <span className="flex items-center text-sm font-semibold bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                <CheckCircle2 className="w-4 h-4 mr-1 text-green-600" /> Apresentação Concluída
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-1">Gerencie a data, local e os examinadores da banca do TCC.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {isCompleted 
+              ? 'Consulte o parecer final, nota da banca e informações da defesa.' 
+              : 'Gerencie a data, local e os examinadores da banca do TCC.'}
+          </p>
         </div>
 
         {!isCompleted && canSchedule && !isScheduleFormVisible && onOpenSchedule && (
@@ -92,6 +103,64 @@ export function ScheduleSection({
           </div>
         )}
       </div>
+
+      {/* Card de Parecer e Nota Final da Banca quando concluído */}
+      {isCompleted && (
+        <div
+          className={`mb-6 p-6 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-6 ${
+            isApproved
+              ? 'bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-emerald-200 text-emerald-950 shadow-sm'
+              : 'bg-gradient-to-r from-red-50 via-rose-50 to-orange-50 border-red-200 text-red-950 shadow-sm'
+          }`}
+        >
+          <div className="flex items-start gap-4">
+            <div
+              className={`p-3 rounded-full flex-shrink-0 ${
+                isApproved ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+              }`}
+            >
+              {isApproved ? <Award className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    isApproved ? 'bg-emerald-200 text-emerald-800' : 'bg-red-200 text-red-800'
+                  }`}
+                >
+                  {infoTcc.finalOpinion || (isApproved ? 'Aprovado' : 'Reprovado')}
+                </span>
+                <span className="text-xs text-gray-500 font-medium">Parecer Final</span>
+              </div>
+              <h3 className="text-lg font-bold mt-2">
+                {isApproved
+                  ? 'Trabalho Aprovado pela Comissão Examinadora'
+                  : 'Trabalho Reprovado pela Comissão Examinadora'}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1 max-w-xl">
+                {isApproved
+                  ? 'Parabéns! Todas as avaliações da banca e do(a) orientador(a) foram registradas com sucesso e o trabalho obteve aprovação.'
+                  : 'O trabalho não atingiu a média mínima institucional (7,0) para aprovação.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white border border-gray-100 shadow-sm min-w-[140px] self-stretch md:self-auto">
+            <span className="text-xs font-semibold uppercase text-gray-400">
+              {infoTcc.finalGrade !== undefined && infoTcc.finalGrade !== null ? 'Média da Banca' : 'Status'}
+            </span>
+            <span
+              className={`text-3xl font-black mt-1 ${
+                isApproved ? 'text-emerald-600' : 'text-red-600'
+              }`}
+            >
+              {infoTcc.finalGrade !== undefined && infoTcc.finalGrade !== null 
+                ? infoTcc.finalGrade.toFixed(1).replace('.', ',')
+                : (isApproved ? 'Aprovado' : 'Reprovado')}
+            </span>
+          </div>
+        </div>
+      )}
 
       {isScheduleFormVisible &&
       scheduleForm &&
@@ -257,7 +326,7 @@ export function ScheduleSection({
       ) : (
         <div className="flex items-center justify-center p-6 bg-gray-50 rounded-lg border border-dashed">
           <p className="text-gray-500 text-center">
-            Nenhuma apresentação agendada para este TCC ainda.
+            {isCompleted ? 'Apresentação concluída.' : 'Nenhuma apresentação agendada para este TCC ainda.'}
           </p>
         </div>
       )}

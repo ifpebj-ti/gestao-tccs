@@ -16,9 +16,18 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CollapseCard } from '@/components/CollapseCard';
 import { CustomFileInput } from '@/components/CustomFileInput/page';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Award, ArrowRight } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 export default function SignatureClient() {
+  const router = useRouter();
   const {
     documentUrl,
     documentHtml,
@@ -27,15 +36,24 @@ export default function SignatureClient() {
     isSubmitting,
     selectedFile,
     setSelectedFile,
+    tccFile,
+    setTccFile,
     handleSignDocument,
     handleDownloadDocument,
-    iframeRef
+    iframeRef,
+    isAnexoVIII,
+    isAdvisor,
+    signatureSuccess,
+    tccId
   } = useSignaturePage();
 
   const searchParams = useSearchParams();
   const docNameFromParams = searchParams.get('docName');
-
   const [downloadClicked, setDownloadClicked] = useState(false);
+
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleLocation, setScheduleLocation] = useState('');
 
   const ActionPanel = () => (
     <div className="p-6 border rounded-lg shadow-sm bg-white space-y-6">
@@ -46,14 +64,57 @@ export default function SignatureClient() {
         </p>
       </div>
 
-      {/* Passo 1: Baixar Documento */}
-      <div className="space-y-2">
-        <h3 className="font-bold text-base">Passo 1: Baixar Documento</h3>
+      {/* Passo 1: Agendamento (Obrigatório para Orientador no Anexo VIII) */}
+      {isAnexoVIII && isAdvisor && (
+        <div className="space-y-2">
+          <h3 className="font-bold text-base text-amber-700">
+            Passo 1: Agendamento da Apresentação
+          </h3>
+          <p className="text-sm text-gray-600 mb-2">
+            Preencha a data, horário e local antes de baixar o documento. Ele será gerado com esses dados.
+          </p>
+          <div className="flex flex-col gap-3 mt-2">
+            <div>
+              <label className="text-sm font-semibold mb-1 block">Data da apresentação</label>
+              <input 
+                type="date" 
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                className="w-full p-2 border rounded text-sm disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold mb-1 block">Hora da apresentação</label>
+              <input 
+                type="time" 
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+                className="w-full p-2 border rounded text-sm disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold mb-1 block">Local/Link</label>
+              <input 
+                type="text" 
+                value={scheduleLocation}
+                onChange={(e) => setScheduleLocation(e.target.value)}
+                placeholder="Ex: Sala 20 ou Link do Meet"
+                className="w-full p-2 border rounded text-sm disabled:opacity-50"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Passo 2: Baixar Documento */}
+      <div className={`${isAnexoVIII && isAdvisor ? 'border-t pt-4 ' : ''}space-y-2`}>
+        <h3 className="font-bold text-base">{isAnexoVIII && isAdvisor ? 'Passo 2' : 'Passo 1'}: Baixar Documento</h3>
         <Button
           variant="outline"
           className="w-full"
+          disabled={isAnexoVIII && isAdvisor && (!scheduleDate || !scheduleTime || !scheduleLocation)}
           onClick={() => {
-            handleDownloadDocument();
+            handleDownloadDocument({ date: scheduleDate, time: scheduleTime, location: scheduleLocation });
             setDownloadClicked(true);
           }}
         >
@@ -62,13 +123,13 @@ export default function SignatureClient() {
         </Button>
       </div>
 
-      {/* Passo 2: Assinar (Link Externo) */}
+      {/* Passo 3: Assinar (Link Externo) */}
       <div
         className={`border-t pt-4 space-y-2 transition-opacity ${
           !downloadClicked ? 'opacity-50' : ''
         }`}
       >
-        <h3 className="font-bold text-base">Passo 2: Assinar o Documento</h3>
+        <h3 className="font-bold text-base">{isAnexoVIII && isAdvisor ? 'Passo 3' : 'Passo 2'}: Assinar o Documento</h3>
         <p className="text-sm text-gray-600">
           Não tem um assinador? Utilize o serviço gratuito do Governo Federal.
         </p>
@@ -88,14 +149,14 @@ export default function SignatureClient() {
         </a>
       </div>
 
-      {/* Passo 3: Enviar Documento */}
+      {/* Passo 4: Enviar Documento */}
       <div
         className={`border-t pt-4 space-y-2 transition-opacity ${
           !downloadClicked ? 'opacity-50' : ''
         }`}
       >
         <h3 className="font-bold text-base">
-          Passo 3: Enviar Documento Assinado
+          {isAnexoVIII && isAdvisor ? 'Passo 4' : 'Passo 3'}: Enviar Documento Assinado
         </h3>
         <div>
           <CustomFileInput
@@ -113,13 +174,37 @@ export default function SignatureClient() {
         </div>
       </div>
 
-      {/* Passo 4: Confirmar Assinatura */}
+      {/* Passo Especial: Enviar TCC (Obrigatório para Orientador no Anexo VIII) */}
+      {isAnexoVIII && isAdvisor && (
+        <div
+          className={`border-t pt-4 space-y-2 transition-opacity ${
+            !downloadClicked ? 'opacity-50' : ''
+          }`}
+        >
+          <h3 className="font-bold text-base">
+            Passo 5: Enviar Arquivo do TCC
+          </h3>
+          <p className="text-sm text-gray-600 mb-2">
+            Como orientador(a), você deve enviar o arquivo final do TCC (Monografia) junto com este termo.
+          </p>
+          <div>
+            <CustomFileInput
+              selectedFile={tccFile}
+              onFileSelect={setTccFile}
+              disabled={!downloadClicked}
+              accept=".pdf"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Passo Final: Confirmar Assinatura */}
       <div
         className={`border-t pt-4 space-y-4 transition-opacity ${
           !downloadClicked ? 'opacity-50' : ''
         }`}
       >
-        <h3 className="font-bold text-base">Passo 4: Confirmar Assinatura</h3>
+        <h3 className="font-bold text-base">{isAnexoVIII && isAdvisor ? 'Passo 6' : 'Passo 4'}: Confirmar Assinatura</h3>
 
         <div className="p-3 text-sm text-amber-700 rounded-lg bg-amber-50 border border-amber-200">
           <div className="flex items-start gap-2">
@@ -136,8 +221,14 @@ export default function SignatureClient() {
         </div>
 
         <Button
-          onClick={handleSignDocument}
-          disabled={!downloadClicked || !selectedFile || isSubmitting}
+          onClick={() => handleSignDocument({ date: scheduleDate, time: scheduleTime, location: scheduleLocation })}
+          disabled={
+            !downloadClicked || 
+            !selectedFile || 
+            (isAnexoVIII && isAdvisor && !tccFile) || 
+            (isAnexoVIII && isAdvisor && (!scheduleDate || !scheduleTime || !scheduleLocation)) ||
+            isSubmitting
+          }
           className="w-full"
         >
           {isSubmitting ? (
@@ -222,6 +313,51 @@ export default function SignatureClient() {
           <ActionPanel />
         </div>
       </div>
+
+      <Dialog open={!!signatureSuccess?.isOpen} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md p-6 text-center sm:text-left">
+          <div className="flex flex-col items-center text-center p-2">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 shadow-inner">
+              <Award className="w-8 h-8" />
+            </div>
+            
+            <DialogHeader className="items-center text-center">
+              <DialogTitle className="text-xl font-black text-gray-900">
+                Assinatura Registrada com Sucesso!
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 mt-2">
+                Parabéns! Sua assinatura no documento da banca avaliadora foi homologada no sistema.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="w-full mt-4 p-4 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800">
+              O documento assinado agora compõe o histórico oficial do TCC e as avaliações da comissão examinadora estão disponíveis para consulta.
+            </div>
+
+            <div className="flex flex-col w-full gap-2 mt-6">
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                onClick={() => {
+                  router.push(`/myTCC/details?id=${signatureSuccess?.tccId || tccId || ''}`);
+                }}
+              >
+                Acessar Informações do Meu TCC
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  router.push('/pendingSignatures');
+                }}
+              >
+                Voltar às Assinaturas Pendentes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

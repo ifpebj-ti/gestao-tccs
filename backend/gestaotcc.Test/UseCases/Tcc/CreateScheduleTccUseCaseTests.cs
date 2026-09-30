@@ -17,10 +17,11 @@ public class CreateScheduleTccUseCaseTests
     private readonly IAppLoggerGateway<CreateScheduleTccUseCase> _logger = Substitute.For<IAppLoggerGateway<CreateScheduleTccUseCase>>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
     private readonly IBackgroundJobClient _backgroundJobClient = Substitute.For<IBackgroundJobClient>();
+    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
 
     public CreateScheduleTccUseCaseTests()
     {
-        _useCase = new CreateScheduleTccUseCase(_tccGateway, _userGateway, _profileGateway, _logger, _emailGateway, _backgroundJobClient);
+        _useCase = new CreateScheduleTccUseCase(_tccGateway, _userGateway, _profileGateway, _logger, _emailGateway, _backgroundJobClient, _minioGateway);
     }
 
     [Fact]
@@ -37,7 +38,7 @@ public class CreateScheduleTccUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_ShouldReturnConflict_WhenTccAlreadyHasSchedule()
+    public async Task Execute_ShouldUpdate_WhenTccAlreadyHasSchedule()
     {
         var tcc = new TccEntity { Id = 1, TccSchedule = new TccScheduleEntity() };
         _tccGateway.FindTccScheduling(1).Returns(tcc);
@@ -45,9 +46,9 @@ public class CreateScheduleTccUseCaseTests
         var dto = new ScheduleTccDTO(DateOnly.FromDateTime(DateTime.Today), new TimeOnly(14, 0), "Sala 202", 1);
         var result = await _useCase.Execute(dto);
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(409, result.ErrorDetails?.Status);
-        Assert.Equal("TCC já possui agendamento de defesa", result.Message);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Operação realizada com sucesso.", result.Message);
+        Assert.Equal("Sala 202", tcc.TccSchedule.Location);
     }
 
     [Fact]

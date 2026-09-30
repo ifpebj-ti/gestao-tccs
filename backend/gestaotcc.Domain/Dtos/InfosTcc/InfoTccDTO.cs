@@ -1,2 +1,11 @@
 namespace gestaotcc.Domain.Dtos.InfosTcc;
-public record InfoTccDTO(string Title, string Summary, string Status, DateOnly? PresentationDate, TimeOnly? PresentationTime, string? PresentationLocation);
+public record InfoTccDTO(
+    string Title, 
+    string Summary, 
+    string Status, 
+    DateOnly? PresentationDate, 
+    TimeOnly? PresentationTime, 
+    string? PresentationLocation, 
+    string? RejectionReason = null,
+    decimal? FinalGrade = null,
+    string? FinalOpinion = null);

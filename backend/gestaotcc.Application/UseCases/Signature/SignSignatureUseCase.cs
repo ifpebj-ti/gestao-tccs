@@ -69,6 +69,57 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             );
         }
         
+        try
+        {
+            using var stream = new MemoryStream(data.File);
+            using var pdfReader = new PdfReader(stream);
+            using var pdfDoc = new PdfDocument(pdfReader);
+            var strategy = new iText.Kernel.Pdf.Canvas.Parser.Listener.SimpleTextExtractionStrategy();
+            string extractedText = iText.Kernel.Pdf.Canvas.Parser.PdfTextExtractor.GetTextFromPage(pdfDoc.GetFirstPage(), strategy);
+            
+            var extractedTextNormalized = new string(RemoveDiacritics(extractedText).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
+            
+            if (!extractedTextNormalized.Contains(expectedNameNormalized))
+            {
+                logger.LogWarning("Falha na assinatura para UserId {UserId}: O conteúdo do PDF não contém o cabeçalho esperado '{ExpectedPrefix}'.", data.UserId, expectedPrefix);
+                return ResultPattern<string>.FailureResult(
+                    $"O conteúdo do documento enviado não corresponde ao cabeçalho esperado ({expectedPrefix.Trim()}). Documento inválido.",
+                    400
+                );
+            }
+
+            if (expectedPrefix.Trim().ToUpperInvariant() == "ANEXO VIII")
+            {
+                if (!string.IsNullOrWhiteSpace(data.ScheduleDate) && !string.IsNullOrWhiteSpace(data.ScheduleTime) && !string.IsNullOrWhiteSpace(data.ScheduleLocation))
+                {
+                    if (DateTime.TryParse($"{data.ScheduleDate} {data.ScheduleTime}", out var parsedDate))
+                    {
+                        var scheduledDate = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+                        if (tcc.TccSchedule == null)
+                        {
+                            tcc.TccSchedule = new gestaotcc.Domain.Entities.TccSchedule.TccScheduleEntity
+                            {
+                                ScheduledDate = scheduledDate,
+                                Location = data.ScheduleLocation,
+                                TccId = tcc.Id
+                            };
+                        }
+                        else
+                        {
+                            tcc.TccSchedule.ScheduledDate = scheduledDate;
+                            tcc.TccSchedule.Location = data.ScheduleLocation;
+                        }
+                        logger.LogInformation("Agendamento atualizado via dados enviados no formulário de assinatura. TccId: {TccId}", tcc.Id);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao extrair texto do PDF para validação. DocumentId: {DocumentId}", data.DocumentId);
+            return ResultPattern<string>.FailureResult("Falha ao ler o conteúdo do documento PDF.", 400);
+        }
+
         if (!UserCanSignDocument(user, tcc, document))
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário não tem permissão para assinar o DocumentId {DocumentId}.", data.UserId, data.DocumentId);
@@ -147,45 +198,41 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         
         if (methodType == MethoSignatureType.ONLY_DOCS && document.UserId == null)
         {
-            // For Ata and Anexo IV (SignatureOrder == 5), signatures are parallel, so there is no "next" person to notify
-            if (docType.SignatureOrder != 5)
+            var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
+            var validUserTccs = tcc.UserTccs.Where(ut => acceptedRoles.Contains(ut.Profile.Role)).ToList();
+            
+            var orderedUserTccs = validUserTccs
+                .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
+                .ThenBy(u => u.Id)
+                .ToList();
+
+            foreach (var currentUser in orderedUserTccs)
             {
-                var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
-                var validUserTccs = tcc.UserTccs.Where(ut => acceptedRoles.Contains(ut.Profile.Role)).ToList();
-                
-                var orderedUserTccs = validUserTccs
-                    .OrderBy(u => _signatureQueueByProfile.IndexOf(u.Profile.Role))
-                    .ThenBy(u => u.Id)
-                    .ToList();
+                var alreadySigned = document.Signatures.Any(s => s.UserId == currentUser.User.Id);
+                if (alreadySigned) continue;
 
-                foreach (var currentUser in orderedUserTccs)
+                var index = orderedUserTccs.IndexOf(currentUser);
+                var allPreviousSigned = orderedUserTccs.Take(index)
+                    .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
+
+                if (allPreviousSigned)
                 {
-                    var alreadySigned = document.Signatures.Any(s => s.UserId == currentUser.User.Id);
-                    if (alreadySigned) continue;
-
-                    var index = orderedUserTccs.IndexOf(currentUser);
-                    var allPreviousSigned = orderedUserTccs.Take(index)
-                        .All(prev => document.Signatures.Any(s => s.UserId == prev.User.Id));
-
-                    if (allPreviousSigned)
+                    if (currentUser.Profile.Role == gestaotcc.Domain.Enums.RoleType.BANKING.ToString())
                     {
-                        if (currentUser.Profile.Role == gestaotcc.Domain.Enums.RoleType.BANKING.ToString())
-                        {
-                            logger.LogInformation("Próxima pessoa da fila é da banca (BANKING). O e-mail não será enviado pois eles assinam na mesma tela de avaliação: {UserEmail}", currentUser.User.Email);
-                        }
-                        else
-                        {
-                            logger.LogInformation("Enviando e-mail de notificação para a próxima pessoa da fila: {UserEmail}", currentUser.User.Email);
-                            var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(docType.Name, null) };
-                            
-                            var bankingMember = tcc.BankingMembers.FirstOrDefault(m => m.Email == currentUser.User.Email);
-                            var token = bankingMember?.AccessToken;
-                            
-                            var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(currentUser.User.Email, currentUser.User.Name, details, tcc.Title, token));
-                            await emailGateway.Send(emailDto);
-                        }
-                        break;
+                        logger.LogInformation("Próxima pessoa da fila é da banca (BANKING). O e-mail não será enviado pois eles assinam na mesma tela de avaliação: {UserEmail}", currentUser.User.Email);
                     }
+                    else
+                    {
+                        logger.LogInformation("Enviando e-mail de notificação para a próxima pessoa da fila: {UserEmail}", currentUser.User.Email);
+                        var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(docType.Name, null) };
+                        
+                        var bankingMember = tcc.BankingMembers.FirstOrDefault(m => m.Email == currentUser.User.Email);
+                        var token = bankingMember?.AccessToken;
+                        
+                        var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(currentUser.User.Email, currentUser.User.Name, details, tcc.Title, token));
+                        await emailGateway.Send(emailDto);
+                    }
+                    break;
                 }
             }
         }

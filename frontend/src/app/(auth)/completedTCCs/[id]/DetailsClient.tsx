@@ -7,6 +7,7 @@ import { TccInfoSection } from '@/components/tcc-details/TccInfoSection';
 import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection';
 import { AdvisorInfoSection } from '@/components/tcc-details/AdvisorInfoSection';
 import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection';
+import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
 
 export default function CompletedTccDetailsClient() {
   const { tccDetails, isLoading } = useCompletedTccDetails();
@@ -42,7 +43,15 @@ export default function CompletedTccDetailsClient() {
           <AdvisorInfoSection advisor={tccDetails.infoAdvisor} />
         )}
 
-        <BankingInfoSection bankingData={tccDetails.infoBanking} />
+        <BankingInfoSection bankingData={tccDetails.infoBanking} isCompleted={true} />
+
+        <ScheduleSection
+          infoTcc={tccDetails.infoTcc}
+          isScheduleFormVisible={false}
+          onScheduleCancel={() => {}}
+          canSchedule={false}
+          isCompleted={true}
+        />
       </div>
     </div>
   );
