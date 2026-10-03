@@ -6,7 +6,7 @@ using gestaotcc.Domain.Entities.TccBankingMember;
 using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient, IMinioGateway minioGateway)
+public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient, IStorageGateway storageGateway)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
     {
@@ -124,7 +124,7 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
                     {
                         try 
                         {
-                            var tccBytes = await minioGateway.Download(tcc.TccFile, false);
+                            var tccBytes = await storageGateway.Download(tcc.TccFile, false);
                             if (tccBytes != null && tccBytes.Length > 0)
                             {
                                 emailDto.Attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>

@@ -16,7 +16,7 @@ namespace gestaotcc.Test.UseCases.Signature;
 public class FindDocumentUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
-    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
+    private readonly IStorageGateway _storageGateway = Substitute.For<IStorageGateway>();
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly IITextGateway _iTextGateway = Substitute.For<IITextGateway>();
     private readonly FindDocumentUseCase _useCase;
@@ -24,7 +24,7 @@ public class FindDocumentUseCaseTests
 
     public FindDocumentUseCaseTests()
     {
-        _useCase = new FindDocumentUseCase(_tccGateway, _minioGateway, _userGateway, _iTextGateway, _logger);
+        _useCase = new FindDocumentUseCase(_tccGateway, _storageGateway, _userGateway, _iTextGateway, _logger);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class FindDocumentUseCaseTests
 
         _tccGateway.FindTccById(1).Returns(tcc);
         _userGateway.FindAllByFilter(Arg.Any<UserFilterDTO>(), Arg.Any<long>()).Returns(new List<UserEntity>());
-        _minioGateway.Download("signed-doc.pdf", true).Returns(Task.FromResult(new byte[] { 1, 2, 3 }));
+        _storageGateway.Download("signed-doc.pdf", true).Returns(Task.FromResult(new byte[] { 1, 2, 3 }));
 
         var result = await _useCase.Execute(1, 1, 1, 1, true);
 
@@ -132,9 +132,9 @@ public class FindDocumentUseCaseTests
         _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(u => u.Profile == RoleType.SUPERVISOR.ToString()), Arg.Any<long>())
             .Returns(new List<UserEntity> { supervisorUser });
             
-        // Novos mocks para iText e Download do Minio
+        // Novos mocks para iText e Download do Storage
         _iTextGateway.ConvertHtmlToPdf(Arg.Any<string>()).Returns(Task.FromResult(new byte[] { 4, 5, 6 }));
-        _minioGateway.Download(Arg.Any<string>(), true).Returns(Task.FromResult(new byte[] { 4, 5, 6 }));
+        _storageGateway.Download(Arg.Any<string>(), true).Returns(Task.FromResult(new byte[] { 4, 5, 6 }));
 
         var result = await _useCase.Execute(1, 1, 1, 1);
 

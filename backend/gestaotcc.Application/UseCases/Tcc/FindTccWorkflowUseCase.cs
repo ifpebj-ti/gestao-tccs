@@ -65,7 +65,7 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         }
 
         var workflowSignatures = allDocumentsType
-            .Where(x => x.SignatureOrder == signatureOrder)
+            .Where(x => x.SignatureOrder == signatureOrder && !(x.Name != null && x.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA")))
             .Select(documentType => CreateSignatureDto(documentType, tcc.Documents, userTccs))
             .OrderBy(x => x.DocumentId)
             .ToList();

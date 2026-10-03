@@ -2,7 +2,7 @@ using gestaotcc.Domain.Dtos.Signature;
 
 namespace gestaotcc.Application.Gateways;
 
-public interface IMinioGateway
+public interface IStorageGateway
 {
     Task Send(string fileName, byte[] file, string contentType, bool isFilledPdfProcess = false);
     Task<byte[]> Download(string fileName, bool signedDocument);

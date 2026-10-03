@@ -17,13 +17,13 @@ public class LinkBankingUserUseCaseTests
     private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
     private readonly IProfileGateway _profileGateway = Substitute.For<IProfileGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
-    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
+    private readonly IStorageGateway _storageGateway = Substitute.For<IStorageGateway>();
     private readonly LinkBankingUserUseCase _useCase;
     private readonly IAppLoggerGateway<LinkBankingUserUseCase> _logger = Substitute.For<IAppLoggerGateway<LinkBankingUserUseCase>>();
 
     public LinkBankingUserUseCaseTests()
     {
-        _useCase = new LinkBankingUserUseCase(_tccGateway, _userGateway, _profileGateway, _emailGateway, _minioGateway, _logger);
+        _useCase = new LinkBankingUserUseCase(_tccGateway, _userGateway, _profileGateway, _emailGateway, _storageGateway, _logger);
     }
 
     [Fact]
