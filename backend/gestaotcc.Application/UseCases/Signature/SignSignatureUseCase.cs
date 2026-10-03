@@ -15,7 +15,7 @@ using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IEmailGateway emailGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
+public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IStorageGateway storageGateway, IEmailGateway emailGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -189,8 +189,8 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         logger.LogInformation("Atualizando TCC no banco de dados. TccId: {TccId}", tcc.Id);
         await tccGateway.Update(tcc);
         
-        logger.LogInformation("Enviando arquivo assinado para o Minio. FileName: {FileName}", document.FileName);
-        await minioGateway.Send(document.FileName, data.File, data.FileContentType);
+        logger.LogInformation("Enviando arquivo assinado para o Storage. FileName: {FileName}", document.FileName);
+        await storageGateway.Send(document.FileName, data.File, data.FileContentType);
         
         // Notificar o próximo usuário da fila se for ONLY_DOCS (fila única)
         var docType = document.DocumentType;

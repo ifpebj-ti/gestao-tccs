@@ -2,7 +2,7 @@ using gestaotcc.Application.Gateways;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class RemoveFilledPdfsUseCase(IMinioGateway minioGateway, IAppLoggerGateway<RemoveFilledPdfsUseCase> logger)
+public class RemoveFilledPdfsUseCase(IStorageGateway storageGateway, IAppLoggerGateway<RemoveFilledPdfsUseCase> logger)
 {
     public async Task Execute()
     {
@@ -11,7 +11,7 @@ public class RemoveFilledPdfsUseCase(IMinioGateway minioGateway, IAppLoggerGatew
         logger.LogInformation("Data de referência para exclusão (arquivos mais antigos que): {TodayDate}", today.ToString("dd-MM-yyyy"));
 
         logger.LogInformation("Listando arquivos do bucket 'filled/'...");
-        await foreach (var file in await minioGateway.ListBuckets("filled/"))
+        await foreach (var file in await storageGateway.ListBuckets("filled/"))
         {
             logger.LogDebug("Processando arquivo: {FileName}", file.Key);
 
@@ -26,7 +26,7 @@ public class RemoveFilledPdfsUseCase(IMinioGateway minioGateway, IAppLoggerGatew
                     if (fileDate < today)
                     {
                         logger.LogInformation("Removendo arquivo antigo: {FileName} (Data: {FileDate})", file.Key, fileDate.ToString("dd-MM-yyyy"));
-                        await minioGateway.Remove(file.Key);
+                        await storageGateway.Remove(file.Key);
                     }
                     else
                     {

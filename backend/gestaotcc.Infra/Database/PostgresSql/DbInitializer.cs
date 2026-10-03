@@ -196,6 +196,8 @@ public static class DbInitializer
             context.SaveChanges();
         }
 
+        SeedDocumentTypeProfile(context);
+
         if (!context.DocumentTypes.Any(dt => dt.Name == "ATA DE TRABALHO DE CONCLUSÃO DE CURSO"))
         {
             var ataType = new DocumentTypeEntity
@@ -209,38 +211,30 @@ public static class DbInitializer
 
             context.Database.ExecuteSqlRaw($@"
                 INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
-                VALUES ({ataType.Id}, 4), ({ataType.Id}, 5);
+                VALUES ({ataType.Id}, 4), ({ataType.Id}, 5)
+                ON CONFLICT DO NOTHING;
             ");
         }
-
-        SeedDocumentTypeProfile(context);
     }
 
     private static void SeedDocumentTypeProfile(AppDbContext context)
     {
-        var existing = context.Database.ExecuteSqlRaw(@"
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM ""documentType_profile""
-                ) THEN
-                    INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") VALUES
-                        (1, 4),
-                        (2, 4),
-                        (1, 6),
-                        (2, 6),
-                        (3, 6),
-                        (4, 4),
-                        (5, 4),
-                        (4, 6),
-                        (5, 6),
-                        (6, 4),
-                        (7, 4),
-                        (7, 5),
-                        (7, 6);
-                END IF;
-            END
-            $$;
+        context.Database.ExecuteSqlRaw(@"
+            INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") VALUES
+                (1, 4),
+                (2, 4),
+                (1, 6),
+                (2, 6),
+                (3, 6),
+                (4, 4),
+                (5, 4),
+                (4, 6),
+                (5, 6),
+                (6, 4),
+                (7, 4),
+                (7, 5),
+                (7, 6)
+            ON CONFLICT DO NOTHING;
         ");
     }
 }

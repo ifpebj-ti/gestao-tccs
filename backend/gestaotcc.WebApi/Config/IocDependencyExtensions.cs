@@ -32,7 +32,7 @@ public static class IocDependencyExtensions
         services.AddScoped<IBcryptGateway, BcryptGateway>();
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
-        services.AddScoped<IMinioGateway, MinioGateway>();
+        services.AddScoped<IStorageGateway, StorageGateway>();
         services.AddScoped<IITextGateway, ITextGateway>();
         services.AddScoped(typeof(IAppLoggerGateway<>), typeof(AppLoggerGateway<>));
 

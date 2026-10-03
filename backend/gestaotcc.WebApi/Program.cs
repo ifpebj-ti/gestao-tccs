@@ -33,7 +33,7 @@ builder.Services.AddAuthenticationExtension(builder.Configuration);
 builder.Host.AddSerilogExtension(builder.Configuration);
 builder.Services.AddHangfireExtension(builder.Configuration);
 builder.Services.AddOpenTelemetryExtension(builder.Environment, builder.Configuration);
-builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
+builder.Services.AddStorageExtension(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 

@@ -17,7 +17,7 @@ namespace gestaotcc.Application.UseCases.Signature;
 
 public class FindDocumentUseCase(
     ITccGateway tccGateway, 
-    IMinioGateway minioGateway, 
+    IStorageGateway storageGateway, 
     IUserGateway userGateway, 
     IITextGateway iTextGateway,
     IAppLoggerGateway<FindDocumentUseCase> logger)
@@ -43,18 +43,18 @@ public class FindDocumentUseCase(
 
         if (isSign && returnSignedPdfIfAvailable)
         {
-            logger.LogInformation("Documento já assinado. Baixando arquivo assinado do Minio.");
+            logger.LogInformation("Documento já assinado. Baixando arquivo assinado do Storage.");
             
             // Tenta baixar com .pdf primeiro (legado), se falhar tenta com .html
             byte[] signedBytes;
             try 
             {
-                signedBytes = await minioGateway.Download(documentFileName, true);
+                signedBytes = await storageGateway.Download(documentFileName, true);
             }
             catch 
             {
                 var htmlFileName = tcc.Documents.FirstOrDefault(doc => doc.Id == documentId)!.FileName + ".html";
-                signedBytes = await minioGateway.Download(htmlFileName, true);
+                signedBytes = await storageGateway.Download(htmlFileName, true);
             }
             
             var documentUrlBase64 = Convert.ToBase64String(signedBytes);

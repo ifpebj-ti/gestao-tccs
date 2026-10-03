@@ -9,13 +9,13 @@ namespace gestaotcc.Test.UseCases.Signature;
 public class AllDownloadDocumentsUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
-    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
+    private readonly IStorageGateway _storageGateway = Substitute.For<IStorageGateway>();
     private readonly AllDownloadDocumentsUseCase _useCase;
     private readonly IAppLoggerGateway<AllDownloadDocumentsUseCase> _logger = Substitute.For<IAppLoggerGateway<AllDownloadDocumentsUseCase>>();
 
     public AllDownloadDocumentsUseCaseTests()
     {
-        _useCase = new AllDownloadDocumentsUseCase(_tccGateway, _minioGateway, _logger);
+        _useCase = new AllDownloadDocumentsUseCase(_tccGateway, _storageGateway, _logger);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class AllDownloadDocumentsUseCaseTests
         var tcc = new TccEntity { Id = 1, Title = "Meu TCC" };
         _tccGateway.FindTccById(1).Returns(tcc);
 
-        _minioGateway.DownloadFolderAsZip(Arg.Any<string>())
+        _storageGateway.DownloadFolderAsZip(Arg.Any<string>())
             .Returns(Array.Empty<byte>());
 
         // Act
@@ -63,7 +63,7 @@ public class AllDownloadDocumentsUseCaseTests
         var zipBytes = Encoding.UTF8.GetBytes("arquivo.zip");
 
         _tccGateway.FindTccById(1).Returns(tcc);
-        _minioGateway.DownloadFolderAsZip(expectedFolder).Returns(zipBytes);
+        _storageGateway.DownloadFolderAsZip(expectedFolder).Returns(zipBytes);
 
         // Act
         var result = await _useCase.Execute(1);

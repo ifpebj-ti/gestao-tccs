@@ -19,14 +19,14 @@ public class SignSignatureUseCaseTests
 {
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
-    private readonly IMinioGateway _minioGateway = Substitute.For<IMinioGateway>();
+    private readonly IStorageGateway _storageGateway = Substitute.For<IStorageGateway>();
     private readonly SignSignatureUseCase _useCase;
     private readonly IAppLoggerGateway<SignSignatureUseCase> _logger = Substitute.For<IAppLoggerGateway<SignSignatureUseCase>>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
 
     public SignSignatureUseCaseTests()
     {
-        _useCase = new SignSignatureUseCase(_documentTypeGateway, _tccGateway, _minioGateway, _emailGateway, _logger);
+        _useCase = new SignSignatureUseCase(_documentTypeGateway, _tccGateway, _storageGateway, _emailGateway, _logger);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class SignSignatureUseCaseTests
 
         _tccGateway.FindTccById(1).Returns(tcc);
         _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
-        _minioGateway.Send(document.FileName, Arg.Any<byte[]>(), "application/pdf").Returns(Task.CompletedTask);
+        _storageGateway.Send(document.FileName, Arg.Any<byte[]>(), "application/pdf").Returns(Task.CompletedTask);
 
         var validPdf = CreateSignedPdfBytes();
         var dto = new SignSignatureDTO(1, 1, 1, validPdf, 1, "application/pdf", "Doc.pdf");
@@ -153,7 +153,7 @@ public class SignSignatureUseCaseTests
 
         Assert.True(result.IsSuccess);
 
-        await _minioGateway.Received(1).Send(document.FileName, dto.File, dto.FileContentType);
+        await _storageGateway.Received(1).Send(document.FileName, dto.File, dto.FileContentType);
     }
 
     private static byte[] CreateSignedPdfBytes()

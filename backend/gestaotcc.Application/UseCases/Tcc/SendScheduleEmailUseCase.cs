@@ -3,7 +3,7 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emailGateway, IMinioGateway minioGateway, IAppLoggerGateway<SendScheduleEmailUseCase> logger)
+public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emailGateway, IStorageGateway storageGateway, IAppLoggerGateway<SendScheduleEmailUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(long tccId)
     {
@@ -30,7 +30,7 @@ public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emai
             {
                 try
                 {
-                    var fileBytes = await minioGateway.Download(tcc.TccFile, false);
+                    var fileBytes = await storageGateway.Download(tcc.TccFile, false);
                     var contentType = "application/pdf"; 
                     attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
                     {
