@@ -34,7 +34,8 @@ import {
   faInbox,
   faTimes,
   faUserPlus,
-  faUsers
+  faUsers,
+  faBuilding
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
@@ -612,6 +613,14 @@ export default function HomePage() {
             onClick={() => push('/users')}
           />
         )}
+
+        {canView(['ADMIN']) && (
+          <CollapseCard
+            title="Instituições e Cursos"
+            icon={faBuilding}
+            onClick={() => push('/instituicoes')}
+          />
+        )}
       </div>
 
       {/* DESKTOP (Grid Cards) */}
@@ -717,6 +726,16 @@ export default function HomePage() {
               title="Usuários"
               icon={faUsers}
               onClick={() => push('/users')}
+            />
+          </Link>
+        )}
+
+        {canView(['ADMIN']) && (
+          <Link href="/instituicoes">
+            <CardHome
+              title="Instituições e Cursos"
+              icon={faBuilding}
+              onClick={() => push('/instituicoes')}
             />
           </Link>
         )}

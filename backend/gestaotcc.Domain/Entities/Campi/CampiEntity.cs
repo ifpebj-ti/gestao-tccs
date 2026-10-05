@@ -18,4 +18,10 @@ public class CampiEntity
         City = city;
         CampiCourses = campiCourses;
     }
+
+    public void Update(string name, string city)
+    {
+        Name = name;
+        City = city;
+    }
 }

@@ -166,7 +166,7 @@ export function useTccDetails() {
     } finally {
       setLoading(false);
     }
-  }, [tccId, API_URL, editTccForm]);
+  }, [tccId, API_URL, editTccForm, scheduleForm]);
 
   useEffect(() => {
     fetchTccDetails();
