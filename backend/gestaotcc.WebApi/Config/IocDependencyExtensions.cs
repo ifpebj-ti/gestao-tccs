@@ -110,5 +110,13 @@ public static class IocDependencyExtensions
         services.AddScoped<gestaotcc.Application.UseCases.Course.CreateCourseUseCase>();
         services.AddScoped<gestaotcc.Application.UseCases.Course.UpdateCourseUseCase>();
         services.AddScoped<gestaotcc.Application.UseCases.Course.DeleteCourseUseCase>();
+        
+        // Semester
+        services.AddScoped<ISemesterGateway, SemesterGateway>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.CreateSemesterUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.UpdateSemesterUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.DeleteSemesterUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.FindAllSemestersUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.FindActiveSemestersUseCase>();
     }
 }

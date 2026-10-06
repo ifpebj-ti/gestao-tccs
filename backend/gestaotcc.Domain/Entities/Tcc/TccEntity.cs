@@ -4,6 +4,7 @@ using gestaotcc.Domain.Entities.TccCancellation;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.TccSchedule;
 using gestaotcc.Domain.Entities.UserTcc;
+using gestaotcc.Domain.Entities.Semester;
 
 namespace gestaotcc.Domain.Entities.Tcc;
 
@@ -23,6 +24,10 @@ public class TccEntity
     public TccScheduleEntity? TccSchedule { get; set; } = null;
     public string? RejectionReason { get; set; } = null;
     public ICollection<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> BankingMembers { get; set; } = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>();
+    
+    public SemesterEntity? Semester { get; set; } = null;
+    public long? SemesterId { get; set; }
+
     public TccEntity() { }
 
     public TccEntity(

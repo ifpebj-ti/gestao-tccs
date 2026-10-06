@@ -32,7 +32,8 @@ const protectedRoutes: Record<string, string[]> = {
     'LIBRARY'
   ],
   '/pendingSignatures': [],
-  '/users': ['ADMIN', 'COORDINATOR', 'SUPERVISOR']
+  '/users': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
+  '/semestres': ['ADMIN', 'COORDINATOR', 'SUPERVISOR']
 };
 
 const tempProtectedRoutes: string[] = [];
@@ -131,6 +132,7 @@ export const config = {
     '/myTCC/:path*',
     '/completedTCCs/:path*',
     '/pendingSignatures/:path*',
-    '/users/:path*'
+    '/users/:path*',
+    '/semestres/:path*'
   ]
 };

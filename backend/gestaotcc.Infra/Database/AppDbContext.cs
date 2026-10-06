@@ -12,6 +12,7 @@ using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.TccSchedule;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
+using gestaotcc.Domain.Entities.Semester;
 using Microsoft.EntityFrameworkCore;
 
 namespace gestaotcc.Infra.Database;
@@ -34,6 +35,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CampiEntity> Campi { get; set; }
     public DbSet<CourseEntity> Courses { get; set; }
     public DbSet<CampiCourseEntity> CampiCourses { get; set; }
+    
+    public DbSet<SemesterEntity> Semesters { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

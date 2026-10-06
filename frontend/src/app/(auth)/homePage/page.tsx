@@ -35,7 +35,8 @@ import {
   faTimes,
   faUserPlus,
   faUsers,
-  faBuilding
+  faBuilding,
+  faCalendarDays
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
@@ -621,6 +622,14 @@ export default function HomePage() {
             onClick={() => push('/instituicoes')}
           />
         )}
+
+        {canView(['ADMIN']) && (
+          <CollapseCard
+            title="Semestres Letivos"
+            icon={faCalendarDays}
+            onClick={() => push('/semestres')}
+          />
+        )}
       </div>
 
       {/* DESKTOP (Grid Cards) */}
@@ -736,6 +745,16 @@ export default function HomePage() {
               title="Instituições e Cursos"
               icon={faBuilding}
               onClick={() => push('/instituicoes')}
+            />
+          </Link>
+        )}
+
+        {canView(['ADMIN']) && (
+          <Link href="/semestres">
+            <CardHome
+              title="Semestres Letivos"
+              icon={faCalendarDays}
+              onClick={() => push('/semestres')}
             />
           </Link>
         )}
