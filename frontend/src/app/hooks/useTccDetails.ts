@@ -38,6 +38,7 @@ interface TccDetailsResponse {
     presentationLocation: string;
     finalGrade?: number | null;
     finalOpinion?: string | null;
+    semesterName?: string | null;
   };
   infoStudent: {
     name: string;

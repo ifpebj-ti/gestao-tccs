@@ -8,4 +8,5 @@ public record InfoTccDTO(
     string? PresentationLocation, 
     string? RejectionReason = null,
     decimal? FinalGrade = null,
-    string? FinalOpinion = null);
+    string? FinalOpinion = null,
+    string? SemesterName = null);
