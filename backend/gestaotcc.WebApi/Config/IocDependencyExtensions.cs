@@ -104,5 +104,11 @@ public static class IocDependencyExtensions
         // Course
         services.AddScoped<FindAllCampiUseCase>();
         services.AddScoped<FindAllCourseByCampiCourseIdUseCase>();
+        services.AddScoped<CreateCampiUseCase>();
+        services.AddScoped<UpdateCampiUseCase>();
+        services.AddScoped<DeleteCampiUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Course.CreateCourseUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Course.UpdateCourseUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Course.DeleteCourseUseCase>();
     }
 }

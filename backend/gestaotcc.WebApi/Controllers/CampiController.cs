@@ -71,4 +71,38 @@ public class CampiController: ControllerBase
         var result = await findAllCampiUseCase.Execute(); 
         return Ok(result.Data);
     }
+
+    [Authorize(Roles = "ADMIN")]
+    [HttpPost]
+    public async Task<ActionResult> CreateCampi(
+        [FromServices] CreateCampiUseCase createCampiUseCase,
+        [FromBody] CreateCampiDTO dto)
+    {
+        var result = await createCampiUseCase.Execute(dto);
+        if (!result.IsSuccess) return BadRequest(result.Message);
+        return Ok();
+    }
+
+    [Authorize(Roles = "ADMIN")]
+    [HttpPut("{id}")]
+    public async Task<ActionResult> UpdateCampi(
+        [FromServices] UpdateCampiUseCase updateCampiUseCase,
+        [FromRoute] long id,
+        [FromBody] CreateCampiDTO dto)
+    {
+        var result = await updateCampiUseCase.Execute(new UpdateCampiDTO(id, dto.Name, dto.City));
+        if (!result.IsSuccess) return BadRequest(result.Message);
+        return Ok();
+    }
+
+    [Authorize(Roles = "ADMIN")]
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteCampi(
+        [FromServices] DeleteCampiUseCase deleteCampiUseCase,
+        [FromRoute] long id)
+    {
+        var result = await deleteCampiUseCase.Execute(id);
+        if (!result.IsSuccess) return BadRequest(result.Message);
+        return Ok();
+    }
 }

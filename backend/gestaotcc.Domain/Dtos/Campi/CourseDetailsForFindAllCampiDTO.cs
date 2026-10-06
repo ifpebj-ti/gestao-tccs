@@ -1,3 +1,3 @@
 namespace gestaotcc.Domain.Dtos.Campi;
 
-public record CourseDetailsForFindAllCampiDTO(long Id, string Name);
+public record CourseDetailsForFindAllCampiDTO(long Id, string Name, string Level);
