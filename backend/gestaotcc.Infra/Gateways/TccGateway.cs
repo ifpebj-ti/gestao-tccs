@@ -74,6 +74,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.Signatures)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.DocumentType)
+            .Include(x => x.Semester)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -95,6 +96,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.User)
                     .ThenInclude(x => x.CampiCourse)
                         .ThenInclude(x => x!.Campi)
+            .Include(x => x.Semester)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

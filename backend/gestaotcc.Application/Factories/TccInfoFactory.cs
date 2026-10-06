@@ -82,7 +82,8 @@ public class TccInfoFactory
                 PresentationLocation: tcc.TccSchedule?.Location ?? string.Empty,
                 RejectionReason: tcc.RejectionReason,
                 FinalGrade: finalGrade,
-                FinalOpinion: finalOpinion
+                FinalOpinion: finalOpinion,
+                SemesterName: tcc.Semester?.Name
             ),
             InfoStudent: students,
             InfoAdvisor: new InfoAdvisorDTO(

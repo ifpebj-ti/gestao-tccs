@@ -5,7 +5,7 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
-public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway, IAppLoggerGateway<CreateTccUseCase> logger)
+public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway, ISemesterGateway semesterGateway, IAppLoggerGateway<CreateTccUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(CreateTccDTO data)
     {
@@ -48,6 +48,17 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         
         logger.LogInformation("Criando entidade TCC via factory...");
         var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes, advisor.CampiCourse!.CampiId);
+
+        var activeSemesters = await semesterGateway.FindActive();
+        var activeSemester = activeSemesters.FirstOrDefault();
+        if (activeSemester is null)
+        {
+            logger.LogWarning("Nenhum semestre letivo ativo encontrado. O TCC não pode ser criado sem um semestre ativo.");
+            return ResultPattern<string>.FailureResult("Nenhum semestre letivo ativo encontrado. Cadastre um semestre ativo antes de criar um TCC.", 422);
+        }
+
+        tcc.SemesterId = activeSemester.Id;
+        logger.LogInformation("TCC vinculado ao semestre ativo: {SemesterName} (Id: {SemesterId})", activeSemester.Name, activeSemester.Id);
 
         logger.LogInformation("Salvando nova entidade TCC no banco de dados...");
         await tccGateway.Save(tcc);
