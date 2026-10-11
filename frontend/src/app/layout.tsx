@@ -8,7 +8,7 @@ import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 config.autoAddCss = false;
 
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import VersionDisplay from '@/components/VersionDisplay';
 
@@ -22,9 +22,26 @@ const geistMono = Geist_Mono({
   subsets: ['latin']
 });
 
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700']
+});
+
+const poppins = Poppins({
+  variable: '--font-poppins',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800']
+});
+
 export const metadata: Metadata = {
   title: 'Gradus Flow - Gestão de TCCs',
-  description: 'Feito por alunos do IFPE - Campus Belo Jardim 2025'
+  description: 'Feito por alunos do IFPE - Campus Belo Jardim 2025',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg'
+  }
 };
 
 export default function RootLayout({
@@ -38,7 +55,7 @@ export default function RootLayout({
         <PublicEnvScript />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${poppins.variable} antialiased`}
       >
         {children}
         <ToastContainer

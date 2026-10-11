@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'tailwindcss';
+
 
 @font-face {
   font-family: 'Rawline';
@@ -132,6 +132,7 @@ body {
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-inter: var(--font-inter);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -165,6 +166,24 @@ body {
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-brand-dark: #004D2C;
+  --color-brand-dark-hover: #003D22;
+  --color-brand-primary: #008C45;
+  --color-brand-primary-hover: #007338;
+  --color-brand-primary-dark: #006B3F;
+  --color-brand-secondary: #E8F3EC;
+  --color-brand-secondary-hover: #D5EBDC;
+  --color-brand-bg: #FAFAFA;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-text: #1F2937;
+  --color-brand-text-muted: #6B7280;
+  --color-brand-border: #E5E7EB;
+  --color-brand-border-subtle: #F3F4F6;
+  --color-brand-action: #008C45;
+  --color-brand-action-hover: #007338;
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  --shadow-modal: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
 }
 
 :root {
@@ -243,4 +262,76 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.bg-grid-pattern {
+  background-size: 24px 24px;
+  background-image:
+    linear-gradient(to right, rgba(15, 107, 69, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 107, 69, 0.03) 1px, transparent 1px);
+}
+
+.login-bg {
+  background-color: #012e1a;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0, 140, 69, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 110%, rgba(0, 77, 44, 0.4) 0%, transparent 60%);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 0.625rem;
+  background-color: #F9FAFB;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.input-field::placeholder {
+  color: #9CA3AF;
+}
+
+.input-field:focus {
+  border-color: #008C45;
+  box-shadow: 0 0 0 3px rgba(0, 140, 69, 0.1);
+  background-color: #ffffff;
+}
+
+.input-field.error {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background-color: #004D2C;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 0.625rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  font-family: var(--font-inter), sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #003D22;
+  box-shadow: 0 4px 12px rgba(0, 77, 44, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
