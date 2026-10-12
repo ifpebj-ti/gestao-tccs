@@ -23,6 +23,8 @@ interface Course {
 interface Advisor {
   id: number;
   name: string;
+  Id?: number;
+  Name?: string;
 }
 
 export function useNewTccForm() {
@@ -78,7 +80,23 @@ export function useNewTccForm() {
       }
     };
 
-    fetchData<Advisor[]>('User/filter?Profile=ADVISOR', setAdvisors);
+    fetch(`${API_URL}/User/filter?Profile=ADVISOR`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: (Advisor & { Id?: number; Name?: string })[]) => {
+        if (Array.isArray(data)) {
+          const normalized = data.map((adv) => ({
+            id: Number(adv.id ?? adv.Id),
+            name: adv.name ?? adv.Name ?? ''
+          }));
+          setAdvisors(normalized);
+        }
+      })
+      .catch(() => {
+        toast.error('Erro ao carregar orientadores do campus.');
+      });
+
     fetchData<Course[]>('Campi/all/courses', setCourses);
 
     // Se estiver reformulando, busca dados do TCC recusado
@@ -149,9 +167,10 @@ export function useNewTccForm() {
             toast.success('Proposta de TCC enviada ao orientador com sucesso!');
             push('/homePage');
           } else {
-            const err = await response.json();
+            const err = await response.json().catch(() => ({}));
             toast.error(
-              err.message ||
+              err.detail ||
+                err.message ||
                 'Erro ao enviar proposta de TCC. Verifique os dados e tente novamente.'
             );
           }
