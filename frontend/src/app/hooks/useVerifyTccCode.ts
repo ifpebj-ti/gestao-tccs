@@ -27,8 +27,8 @@ export function useVerifyTccCode() {
     }
 
     const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail.endsWith('.ifpe.edu.br')) {
-      toast.error('O e-mail deve pertencer ao domínio institucional (@discente.ifpe.edu.br).');
+    if (!trimmedEmail.endsWith('@ifpe.edu.br') && !trimmedEmail.endsWith('.ifpe.edu.br')) {
+      toast.error('O e-mail deve ser institucional do IFPE (docente ou discente).');
       return false;
     }
 
