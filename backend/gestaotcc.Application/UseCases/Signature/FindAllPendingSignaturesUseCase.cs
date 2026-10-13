@@ -1,4 +1,4 @@
-using gestaotcc.Application.Factories;
+﻿using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Dtos.Tcc;
@@ -35,7 +35,7 @@ public class FindAllPendingSignaturesUseCase(
     {
         logger.LogInformation("Iniciando busca por assinaturas pendentes. UserId: {UserId}", userId.HasValue ? userId.Value.ToString() : "GLOBAL");
         
-        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), campiCourseId);
+        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString(), null), campiCourseId);
         if (!tccs.Any())
         {
             logger.LogInformation("Nenhum TCC em andamento encontrado para o filtro aplicado. Retornando lista vazia.");
@@ -55,17 +55,17 @@ public class FindAllPendingSignaturesUseCase(
 
             if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep))
             {
-                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' é inválida.", tcc.Id, tcc.Step);
+                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' Ã© invÃ¡lida.", tcc.Id, tcc.Step);
                 continue;
             }
             if (!_stepSignatureOrderMap.TryGetValue(tccStep, out var currentOrder))
             {
-                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' não mapeada para ordem de assinatura.", tcc.Id, tcc.Step);
+                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' nÃ£o mapeada para ordem de assinatura.", tcc.Id, tcc.Step);
                 continue;
             }
             if (tccStep == StepTccType.PROPOSAL_REGISTRATION)
             {
-                logger.LogDebug("TccId {TccId} pulado: Etapa é PROPOSAL_REGISTRATION.", tcc.Id);
+                logger.LogDebug("TccId {TccId} pulado: Etapa Ã© PROPOSAL_REGISTRATION.", tcc.Id);
                 continue;
             }
 
@@ -168,12 +168,12 @@ public class FindAllPendingSignaturesUseCase(
                 pendingDetails = pendingDetails
                     .Where(pd => pd.UserDetails.Any(u => u.UserId == userId.Value))
                     .ToList();
-                logger.LogInformation("TccId {TccId}: Filtrando para UserId {UserId}. Contagem de pendências foi de {OriginalCount} para {FilteredCount}.", tcc.Id, userId.Value, originalCount, pendingDetails.Count);
+                logger.LogInformation("TccId {TccId}: Filtrando para UserId {UserId}. Contagem de pendÃªncias foi de {OriginalCount} para {FilteredCount}.", tcc.Id, userId.Value, originalCount, pendingDetails.Count);
             }
 
             if (pendingDetails.Any())
             {
-                logger.LogInformation("TccId {TccId} possui {PendingDetailsCount} assinaturas pendentes e será adicionado ao resultado.", tcc.Id, pendingDetails.Count);
+                logger.LogInformation("TccId {TccId} possui {PendingDetailsCount} assinaturas pendentes e serÃ¡ adicionado ao resultado.", tcc.Id, pendingDetails.Count);
                 results.Add(new FindAllPendingSignatureDTO(
                     tcc.Id,
                     studentNames,
@@ -181,7 +181,7 @@ public class FindAllPendingSignaturesUseCase(
             }
         }
 
-        logger.LogInformation("Busca por assinaturas pendentes concluída. Retornando {ResultCount} TCCs com pendências.", results.Count);
+        logger.LogInformation("Busca por assinaturas pendentes concluÃ­da. Retornando {ResultCount} TCCs com pendÃªncias.", results.Count);
         return ResultPattern<List<FindAllPendingSignatureDTO>>.SuccessResult(results);
     }
 
@@ -226,3 +226,7 @@ public class FindAllPendingSignaturesUseCase(
             });
     }
 }
+
+
+
+

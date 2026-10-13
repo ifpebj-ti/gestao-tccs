@@ -16,6 +16,7 @@ public class TccEntityBuilder
     private ICollection<TccInviteEntity> _tccInvites = new List<TccInviteEntity>();
     private ICollection<DocumentEntity> _documents = new List<DocumentEntity>();
     private string? _rejectionReason;
+    private long? _semesterId;
 
     public TccEntityBuilder WithId(long id)
     {
@@ -77,10 +78,17 @@ public class TccEntityBuilder
         return this;
     }
 
+    public TccEntityBuilder WithSemesterId(long? semesterId)
+    {
+        _semesterId = semesterId;
+        return this;
+    }
+
     public TccEntity Build()
     {
         var entity = new TccEntity(_id, _title, _summary, _status, _step, _creationDate, _userTccs, _tccInvites, _documents);
         entity.RejectionReason = _rejectionReason;
+        entity.SemesterId = _semesterId;
         return entity;
     }
 }

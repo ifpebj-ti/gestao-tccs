@@ -12,7 +12,7 @@ namespace gestaotcc.Application.Factories;
 
 public class TccFactory
 {
-    public static TccEntity CreateTcc(CreateTccDTO data, List<UserEntity> users, List<StudentsToCreateTccDTO> userInvites, List<DocumentTypeEntity> documentTypes, long campiId)
+    public static TccEntity CreateTcc(CreateTccDTO data, List<UserEntity> users, List<StudentsToCreateTccDTO> userInvites, List<DocumentTypeEntity> documentTypes, long campiId, long? semesterId)
     {
         var random = new Random();
 
@@ -78,6 +78,7 @@ public class TccFactory
             .WithTccInvites(invites)
             .WithDocuments(documents)
             .WithCreationDate(DateTime.UtcNow)
+            .WithSemesterId(semesterId)
             .Build();
 
         var studentUsers = users.Where(user => user.Profile.Any(p => p.Role == RoleType.STUDENT.ToString()));
