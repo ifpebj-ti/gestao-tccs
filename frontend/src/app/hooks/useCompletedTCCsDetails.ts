@@ -15,6 +15,7 @@ interface InfoTcc {
   presentationLocation: string;
   finalGrade?: number | null;
   finalOpinion?: string | null;
+  semesterName?: string | null;
 }
 interface InfoStudent { name: string; registration: string; cpf: string; course: string; email: string; }
 interface InfoAdvisor { name: string; email: string; }

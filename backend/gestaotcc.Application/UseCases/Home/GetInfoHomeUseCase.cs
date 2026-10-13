@@ -1,4 +1,4 @@
-using gestaotcc.Application.Gateways;
+﻿using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Domain.Dtos.Home;
 using gestaotcc.Domain.Dtos.Tcc;
@@ -43,8 +43,8 @@ public class GetInfoHomeUseCase(
                 logger.LogWarning("A busca por assinaturas pendentes (global) falhou. UserId: {UserId}. Motivo: {ErrorMessage}", userId, pendingSignaturesResult.Message);
             }
 
-            var allInProgressTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, StatusTccType.IN_PROGRESS.ToString()), user.CampiCourse!.Id);
-            inProgressTccsCount = allInProgressTccs.Count;
+            var allInProgressTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, StatusTccType.IN_PROGRESS.ToString(), null), user.CampiCourse!.Id);
+            inProgressTccsCount = allInProgressTccs.Count();
         }
         else if (profiles.Contains(RoleType.ADVISOR.ToString()) || profiles.Contains(RoleType.BANKING.ToString()))
         {
@@ -59,8 +59,8 @@ public class GetInfoHomeUseCase(
                 logger.LogWarning("A busca por assinaturas pendentes falhou para UserId {UserId}. Motivo: {ErrorMessage}", userId, pendingSignaturesResult.Message);
             }
             
-            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), user.CampiCourse!.Id);
-            inProgressTccsCount = userTccs.Count;
+            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString(), null), user.CampiCourse!.Id);
+            inProgressTccsCount = userTccs.Count();
         }
         else if (profiles.Contains(RoleType.STUDENT.ToString()))
         {
@@ -75,7 +75,7 @@ public class GetInfoHomeUseCase(
                 logger.LogWarning("A busca por assinaturas pendentes falhou para UserId {UserId}. Motivo: {ErrorMessage}", userId, pendingSignaturesResult.Message);
             }
             
-            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), user.CampiCourse!.Id);
+            var userTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString(), null), user.CampiCourse!.Id);
             inProgressTccsCount = userTccs.Any() ? 1 : 0;
         }
 
@@ -85,3 +85,4 @@ public class GetInfoHomeUseCase(
         return ResultPattern<GetInfoHomeDTO>.SuccessResult(resultDto);
     }
 }
+

@@ -1,11 +1,12 @@
-'use client';
+﻿'use client';
 
 import { CollapseCard } from '@/components/CollapseCard';
 import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import {
   faGraduationCap,
   faPen,
-  faFile
+  faFile,
+  faFilter
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +15,7 @@ import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { env } from 'next-runtime-env';
+import { useSemestres, Semester } from '@/app/hooks/useSemestres';
 
 interface DecodedToken {
   role: string | string[];
@@ -28,8 +30,14 @@ interface TCCFromApi {
 export default function OngoingTCCsPage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
+  const { semesters, fetchSemesters } = useSemestres();
   const [tccs, setTccs] = useState<TCCFromApi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSemesterId, setSelectedSemesterId] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchSemesters();
+  }, [fetchSemesters]);
 
   useEffect(() => {
     const fetchTccs = async () => {
@@ -60,6 +68,11 @@ export default function OngoingTCCsPage() {
           endpoint += `?UserId=${userId}&StatusTcc=IN_PROGRESS`;
         }
 
+        // Adicionar filtro de semestre se selecionado
+        if (selectedSemesterId) {
+          endpoint += `&SemesterId=${selectedSemesterId}`;
+        }
+
         const res = await fetch(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -80,14 +93,31 @@ export default function OngoingTCCsPage() {
     };
 
     fetchTccs();
-  }, [API_URL]);
+  }, [API_URL, selectedSemesterId]);
 
   return (
     <div className="flex flex-col">
       <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
-        TCCs em andamento
-      </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800">
+          TCCs em andamento
+        </h1>
+        <div className="flex items-center gap-2">
+          <FontAwesomeIcon icon={faFilter} className="text-gray-500" />
+          <select
+            value={selectedSemesterId || ''}
+            onChange={(e) => setSelectedSemesterId(e.target.value ? Number(e.target.value) : null)}
+            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1351B4]"
+          >
+            <option value="">Todos os semestres</option>
+            {semesters.map((semester: Semester) => (
+              <option key={semester.id} value={semester.id}>
+                {semester.name} {semester.isActive && '(Ativo)'}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {isLoading ? (
         <p className="text-center text-gray-500 mt-4">Carregando...</p>

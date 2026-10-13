@@ -47,8 +47,6 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         usersNotInvite.Add(advisor);
         
         logger.LogInformation("Criando entidade TCC via factory...");
-        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes, advisor.CampiCourse!.CampiId);
-
         var activeSemesters = await semesterGateway.FindActive();
         var activeSemester = activeSemesters.FirstOrDefault();
         if (activeSemester is null)
@@ -57,12 +55,21 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
             return ResultPattern<string>.FailureResult("Nenhum semestre letivo ativo encontrado. Cadastre um semestre ativo antes de criar um TCC.", 422);
         }
 
-        tcc.SemesterId = activeSemester.Id;
+        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes, advisor.CampiCourse!.CampiId, activeSemester.Id);
+
+        // Vincula a navegação de forma explícita para que o EF Core persista a FK com segurança
+        tcc.Semester = activeSemester;
         logger.LogInformation("TCC vinculado ao semestre ativo: {SemesterName} (Id: {SemesterId})", activeSemester.Name, activeSemester.Id);
 
         logger.LogInformation("Salvando nova entidade TCC no banco de dados...");
         await tccGateway.Save(tcc);
-        logger.LogInformation("Entidade TCC salva com sucesso.");
+        logger.LogInformation("Entidade TCC salva com sucesso. TCC Id: {TccId}", tcc.Id);
+
+        // Garantia adicional: atualiza a FK diretamente no banco caso o rastreamento
+        // do EF Core não tenha persistido a relação com o semestre.
+        await tccGateway.UpdateSemesterId(tcc.Id, activeSemester.Id);
+        logger.LogInformation("SemesterId {SemesterId} confirmado para TCC Id {TccId}.", activeSemester.Id, tcc.Id);
+
         
         logger.LogInformation("Enviando e-mails de notificação para {UserCount} usuários existentes...", tcc.UserTccs.Count);
         foreach (var item in tcc.UserTccs)

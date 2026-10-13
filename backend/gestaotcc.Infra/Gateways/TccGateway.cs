@@ -23,6 +23,13 @@ public class TccGateway(AppDbContext context) : ITccGateway
         await context.SaveChangesAsync();
     }
 
+    public async Task UpdateSemesterId(long tccId, long semesterId)
+    {
+        await context.Tccs
+            .Where(t => t.Id == tccId)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.SemesterId, semesterId));
+    }
+
     public async Task<List<TccInviteEntity>> FindAllInviteTcc()
     {
         return await context.TccInvites
@@ -78,7 +85,46 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    // verificar
+    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId)
+    {
+        var query = context.Tccs.AsQueryable();
+        
+        if(campiCourseId != 0)
+            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
+        
+        if(tccFilter.UserId.HasValue)
+            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
+        
+        if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
+            query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
+        
+        if (tccFilter.SemesterId.HasValue)
+            query = query.Where(x => x.SemesterId == tccFilter.SemesterId.Value);
+        
+        return await query
+            .Include(x => x.Semester)
+            .Include(x => x.BankingMembers)
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.DocumentType)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.Signatures)
+            .ToListAsync();
+    }
+
+    public async Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token)
+    {
+        return await context.TccBankingMembers.FirstOrDefaultAsync(x => x.AccessToken == token);
+    }
+
+    public async Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member)
+    {
+        context.TccBankingMembers.Update(member);
+        await context.SaveChangesAsync();
+    
+    }
     public async Task<TccEntity?> FindTccInformations(long id)
     {
         return await context.Tccs
@@ -117,8 +163,8 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await context.Tccs
             .Include(x => x.TccCancellation)
             .Include(x => x.UserTccs)
-            .ThenInclude(x => x.User)
-            .ThenInclude(x => x.Profile)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -150,41 +196,5 @@ public class TccGateway(AppDbContext context) : ITccGateway
         }
 
         return await query.FirstOrDefaultAsync();
-    }
-
-    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId)
-    {
-        var query = context.Tccs.AsQueryable();
-        
-        if(campiCourseId != 0)
-            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
-        
-        if(!string.IsNullOrEmpty(tccFilter.UserId.ToString()))
-            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
-        
-        if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
-            query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
-        
-        return await query
-            .Include(x => x.BankingMembers)
-            .Include(x => x.UserTccs)
-                .ThenInclude(x => x.User)
-                    .ThenInclude(x => x.Profile)
-            .Include(x => x.Documents)
-                .ThenInclude(x => x.DocumentType)
-            .Include(x => x.Documents)
-                .ThenInclude(x => x.Signatures)
-            .ToListAsync();
-    }
-
-    public async Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token)
-    {
-        return await context.TccBankingMembers.FirstOrDefaultAsync(x => x.AccessToken == token);
-    }
-
-    public async Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member)
-    {
-        context.TccBankingMembers.Update(member);
-        await context.SaveChangesAsync();
     }
 }

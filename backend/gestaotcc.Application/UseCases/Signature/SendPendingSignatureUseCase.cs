@@ -1,4 +1,4 @@
-using gestaotcc.Application.Factories;
+﻿using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Dtos.Tcc;
@@ -35,13 +35,13 @@ public class SendPendingSignatureUseCase(
     public async Task<ResultPattern<string>> Execute(long campiId)
     {
         logger.LogInformation("Iniciando tarefa de envio de e-mails para assinaturas pendentes.");
-        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, "IN_PROGRESS"), campiId);
+        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(null, "IN_PROGRESS", null), campiId);
         if (!tccs.Any())
         {
-            logger.LogInformation("Nenhum TCC em andamento encontrado. Tarefa concluída sem notificações.");
+            logger.LogInformation("Nenhum TCC em andamento encontrado. Tarefa concluÃ­da sem notificaÃ§Ãµes.");
             return ResultPattern<string>.SuccessResult();
         }
-        logger.LogInformation("{TccCount} TCCs em andamento encontrados para verificação.", tccs.Count);
+        logger.LogInformation("{TccCount} TCCs em andamento encontrados para verificaÃ§Ã£o.", tccs.Count);
 
         var documentTypes = await documentTypeGateway.FindAll();
         var usersToNotify = new Dictionary<string, SendPendingSignatureDTO>();
@@ -137,7 +137,7 @@ public class SendPendingSignatureUseCase(
         }
 
         await NotifyAllUsers(usersToNotify);
-        logger.LogInformation("Tarefa de envio de e-mails concluída.");
+        logger.LogInformation("Tarefa de envio de e-mails concluÃ­da.");
         return ResultPattern<string>.SuccessResult();
     }
 
@@ -163,7 +163,7 @@ public class SendPendingSignatureUseCase(
 
         if (usersToNotify.TryGetValue(user.Email, out var existing))
         {
-            logger.LogDebug("Atualizando notificação para o usuário {UserEmail}. Novo documento pendente: {DocumentName}", user.Email, documentName);
+            logger.LogDebug("Atualizando notificaÃ§Ã£o para o usuÃ¡rio {UserEmail}. Novo documento pendente: {DocumentName}", user.Email, documentName);
             var updatedDetails = existing.Details.Concat(new[] { detail })
                 .GroupBy(d => d.DocumentName)
                 .Select(g => g.First())
@@ -173,7 +173,7 @@ public class SendPendingSignatureUseCase(
         }
         else
         {
-            logger.LogInformation("Usuário {UserEmail} adicionado à fila de notificação para o documento: {DocumentName}", user.Email, documentName);
+            logger.LogInformation("UsuÃ¡rio {UserEmail} adicionado Ã  fila de notificaÃ§Ã£o para o documento: {DocumentName}", user.Email, documentName);
             usersToNotify[user.Email] = new SendPendingSignatureDTO(user.Email, user.Name, new List<SendPendingSignatureDetailsDTO> { detail }, tccTitle);
         }
     }
@@ -186,13 +186,15 @@ public class SendPendingSignatureUseCase(
             return;
         }
 
-        logger.LogInformation("Iniciando o envio de e-mails para {UserCount} usuários com assinaturas pendentes.", usersToNotify.Count);
+        logger.LogInformation("Iniciando o envio de e-mails para {UserCount} usuÃ¡rios com assinaturas pendentes.", usersToNotify.Count);
         foreach (var dto in usersToNotify.Values)
         {
-            logger.LogInformation("Enviando e-mail de notificação para: {UserEmail}", dto.UserEmail);
+            logger.LogInformation("Enviando e-mail de notificaÃ§Ã£o para: {UserEmail}", dto.UserEmail);
             var emailDto = EmailFactory.CreateSendEmailDTO(dto);
             await emailGateway.Send(emailDto);
         }
-        logger.LogInformation("Todos os e-mails de notificação foram despachados.");
+        logger.LogInformation("Todos os e-mails de notificaÃ§Ã£o foram despachados.");
     }
 }
+
+

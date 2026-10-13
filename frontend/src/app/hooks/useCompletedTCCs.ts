@@ -17,7 +17,7 @@ export interface CompletedTccDetails {
   infoBanking: { nameInternal: string; emailInternal: string; nameExternal: string; emailExternal: string; };
 }
 
-export function useCompletedTCCs(tccId?: string | null) {
+export function useCompletedTCCs(tccId?: string | null, semesterId?: number | null) {
   const [list, setList] = useState<CompletedTccItem[]>([]);
   const [details, setDetails] = useState<CompletedTccDetails | null>(null);
   
@@ -34,7 +34,11 @@ export function useCompletedTCCs(tccId?: string | null) {
 
     const fetchList = async () => {
       try {
-        const res = await fetch(`${API_URL}/Tcc/filter?StatusTcc=COMPLETED`, {
+        let url = `${API_URL}/Tcc/filter?StatusTcc=COMPLETED`;
+        if (semesterId) {
+          url += `&SemesterId=${semesterId}`;
+        }
+        const res = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Falha ao buscar TCCs concluídos.');
@@ -69,7 +73,7 @@ export function useCompletedTCCs(tccId?: string | null) {
     };
 
     runFetch();
-  }, [tccId, API_URL]);
+  }, [tccId, semesterId, API_URL]);
 
   return { completedTCCs: list, tccDetails: details, isLoading };
 }
