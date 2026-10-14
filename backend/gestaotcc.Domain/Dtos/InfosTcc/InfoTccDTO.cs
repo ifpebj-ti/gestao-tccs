@@ -9,4 +9,5 @@ public record InfoTccDTO(
     string? RejectionReason = null,
     decimal? FinalGrade = null,
     string? FinalOpinion = null,
-    string? SemesterName = null);
+    string? SemesterName = null,
+    int PendingParticipantCount = 0);

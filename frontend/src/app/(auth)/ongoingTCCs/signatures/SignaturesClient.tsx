@@ -1,7 +1,11 @@
 'use client';
 
+import { PageState } from '@/components/layout/PageState';
+
+import { SectionTitle } from '@/components/layout/SectionTitle';
+
 import { CollapseCard } from '@/components/CollapseCard';
-import Step from '@/components/Steps';
+import { TccOverview } from '@/components/tcc-details/TccOverview';
 import {
   faCheckCircle,
   faFileAlt,
@@ -10,13 +14,12 @@ import {
   faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
-import TccTabs from '@/components/TccTabs';
+
 import { useSearchParams } from 'next/navigation';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import { Badge } from '@/components/ui/badge';
+
 import { env } from 'next-runtime-env';
 
 export default function SignaturesClient() {
@@ -30,16 +33,8 @@ export default function SignaturesClient() {
     LIBRARY: 'Bibliotecária'
   };
 
-  interface Student {
-    name: string;
-    registration: string;
-    cpf: string;
-    course: string;
-    email: string;
-  }
-
   interface TccDetailsResponse {
-    infoStudent: Student[];
+    infoTcc: { title: string };
     cancellationRequest: boolean;
   }
 
@@ -64,12 +59,7 @@ export default function SignaturesClient() {
     signatures: Signature[];
   }
 
-  const formatStudentName = (fullName: string) => {
-    const [first, second] = fullName.trim().split(' ');
-    return `${first ?? ''} ${second ?? ''}`;
-  };
-
-  const [students, setStudents] = useState<string[]>([]);
+  const [title, setTitle] = useState('');
   const [data, setData] = useState<WorkflowResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancellationRequested, setCancellationRequested] = useState(false);
@@ -106,8 +96,7 @@ export default function SignaturesClient() {
         });
         if (!res.ok) throw new Error('Erro ao buscar detalhes do TCC.');
         const result: TccDetailsResponse = await res.json();
-        const names = result.infoStudent.map((s) => s.name);
-        setStudents(names);
+        setTitle(result.infoTcc.title);
         setCancellationRequested(result.cancellationRequest);
       } catch {
         toast.error('Erro ao carregar dados dos alunos.');
@@ -122,45 +111,23 @@ export default function SignaturesClient() {
 
   return (
     <div>
-      <BreadcrumbAuto />
-      <Suspense fallback={null}>
-        <TccTabs />
-      </Suspense>
+      <TccOverview
+        title={title}
+        cancellationRequested={cancellationRequested}
+        step={data?.step ?? null}
+      />
 
-      <div className="flex flex-col md:flex-row md:items-center md:gap-4">
-        <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 pb-2 truncate max-w-full">
-          {data?.step === 1 ? (
-            <>Aguardando cadastro do estudante</>
-          ) : (
-            <>
-              TCC -{' '}
-              <span title={students.join(', ')}>
-                {students.length > 0
-                  ? students.map(formatStudentName).join(', ')
-                  : 'Carregando...'}
-              </span>
-            </>
-          )}
-        </h1>
-        {cancellationRequested && (
-          <Badge variant="destructive" className="text-sm w-fit mt-2 md:mt-0">
-            Cancelamento solicitado
-          </Badge>
-        )}
-      </div>
-
-      {data && <Step currentStep={data.step} />}
-
-      <h2 className="text-lg font-extrabold uppercase md:mt-6 mb-4">
+      <SectionTitle className="md:mt-6 mb-4">
         Documentos e Assinaturas
-      </h2>
+      </SectionTitle>
 
       {loading ? (
-        <p className="text-gray-500">Carregando documentos...</p>
+        <PageState loading>Carregando documentos...</PageState>
       ) : (
         <div className="flex flex-col">
           {data?.signatures.map((doc, index) => (
             <CollapseCard
+              variant="flat"
               key={index}
               title={doc.attachmentName}
               icon={faFileAlt}
@@ -245,12 +212,12 @@ export default function SignaturesClient() {
                     {(assinante.otherSignatures ?? []).map((sub, subIdx) => (
                       <li
                         key={`sub-${idx}-${subIdx}`}
-                        className="flex items-center justify-between pl-8 border-l-2 border-[#1351B4]/30 ml-2"
+                        className="flex items-center justify-between pl-8 border-l-2 border-[#006633]/30 ml-2"
                       >
                         <span className="flex items-center gap-1">
                           <FontAwesomeIcon
                             icon={faArrowRight}
-                            className="text-xs text-[#1351B4]"
+                            className="text-xs text-[#006633]"
                           />
                           {sub.userName}{' '}
                           <span className="text-gray-500">

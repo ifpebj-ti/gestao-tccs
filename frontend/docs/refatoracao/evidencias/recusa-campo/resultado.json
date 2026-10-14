@@ -1,0 +1,27 @@
+{
+  "fixture": "API interceptada com dados fictícios; nenhuma proposta real alterada",
+  "checks": [
+    "Página dedicada e menu do professor sem cadastro",
+    "Erro da API exibido sem remover proposta",
+    "Aceite usa PATCH na rota correta e remove item",
+    "Justificativa começa compacta, cresce com o texto e encolhe ao apagar",
+    "Recusa exige justificativa, envia PATCH e funciona no celular",
+    "Estado vazio após avaliar todas as propostas",
+    "Falha de carregamento permite tentar novamente"
+  ],
+  "calls": [
+    {
+      "method": "PATCH",
+      "path": "/api/Tcc/41/approve-proposal"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/Tcc/41/approve-proposal"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/Tcc/42/reject-proposal",
+      "body": "{\"reason\":\"Rever a metodologia proposta.\"}"
+    }
+  ]
+}

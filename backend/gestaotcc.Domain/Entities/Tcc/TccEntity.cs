@@ -18,6 +18,7 @@ public class TccEntity
     public string? TccFile { get; set; }
     public DateTime CreationDate { get; set; }
     public ICollection<UserTccEntity> UserTccs { get; set; } = new List<UserTccEntity>();
+    public ICollection<ProposalParticipantEntity> ParticipantInvitations { get; set; } = new List<ProposalParticipantEntity>();
     public ICollection<TccInviteEntity> TccInvites { get; set; } = new List<TccInviteEntity>();
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public TccCancellationEntity? TccCancellation { get; set; } = null;

@@ -1,5 +1,9 @@
 'use client';
 
+import { PageState } from '@/components/layout/PageState';
+
+import { SectionTitle } from '@/components/layout/SectionTitle';
+
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,21 +39,15 @@ export function StudentInfoSection({
   if (students.length === 0) {
     return (
       <section>
-        <h2 className="text-lg font-extrabold uppercase">
-          Informações do(s) estudante(s)
-        </h2>
-        <p className="text-gray-600 italic mt-4">
-          Nenhum estudante associado a esta proposta.
-        </p>
+        <SectionTitle>Informações do(s) estudante(s)</SectionTitle>
+        <PageState>Nenhum estudante associado a esta proposta.</PageState>
       </section>
     );
   }
 
   return (
     <section>
-      <h2 className="text-lg font-extrabold uppercase">
-        Informações do(s) estudante(s)
-      </h2>
+      <SectionTitle>Informações do(s) estudante(s)</SectionTitle>
       {students.map((student, i) => {
         const isThisStudentLoading = resendingInviteTo === student.email;
 

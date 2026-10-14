@@ -1,7 +1,8 @@
+import { PageTitle } from '@/components/layout/PageTitle';
+import { SectionTitle } from '@/components/layout/SectionTitle';
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { GradeField } from '@/components/evaluation/GradeField';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
 import { CheckCircle2, FileText, Mic, BookOpen } from 'lucide-react';
@@ -215,9 +216,9 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
 
   if (!token) {
     return (
-      <div className={hideLogoAndMinHeight ? "w-full p-4" : "min-h-screen flex items-center justify-center bg-gray-50 p-4"}>
-        <div className="w-full bg-white p-8 rounded-xl shadow-md text-center max-w-md mx-auto">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h1>
+      <div className={hideLogoAndMinHeight ? 'w-full p-4' : 'min-h-screen flex items-center justify-center bg-[#FAF9F5] p-4'}>
+        <div className="w-full py-8 text-center max-w-md mx-auto">
+          <PageTitle className="mb-4">Acesso Negado</PageTitle>
           <p className="text-gray-600">O link de avaliação é inválido ou está ausente.</p>
         </div>
       </div>
@@ -226,12 +227,12 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
 
   if (success && !onSuccessCallback) {
     return (
-      <div className={hideLogoAndMinHeight ? "w-full p-4" : "min-h-screen flex flex-col items-center py-12 bg-gray-50 p-4"}>
-        <div className="w-full bg-white p-10 rounded-2xl shadow-md text-center flex flex-col items-center max-w-2xl mx-auto border border-gray-100">
+      <div className={hideLogoAndMinHeight ? 'w-full p-4' : 'min-h-screen flex flex-col items-center py-12 bg-[#FAF9F5] p-4'}>
+        <div className="w-full py-10 text-center flex flex-col items-center max-w-2xl mx-auto">
           <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
             <CheckCircle2 className="w-12 h-12" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Avaliação Registrada com Sucesso!</h1>
+          <PageTitle className="mb-3">Avaliação Registrada com Sucesso!</PageTitle>
           <p className="text-gray-600 text-base max-w-md">As notas foram computadas com êxito na ata de defesa do TCC.</p>
           
           {pendingSignaturesCount > 0 ? (
@@ -243,16 +244,16 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
               />
             </div>
           ) : (
-            <div className="mt-8 p-8 bg-gradient-to-b from-blue-50/60 to-slate-50 border border-blue-100 rounded-2xl w-full text-center flex flex-col items-center shadow-sm">
-              <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
+            <div className="mt-8 py-8 border-t border-[#ECEAE2] w-full text-center flex flex-col items-center">
+              <div className="w-14 h-14 rounded-full bg-[#E8F3EC] text-[#006633] flex items-center justify-center mb-4">
                 <BookOpen className="w-7 h-7" />
               </div>
-              <h2 className="text-xl font-bold text-slate-800 mb-2">Muito Obrigado por sua Contribuição!</h2>
+              <SectionTitle className="mb-2">Muito Obrigado por sua Contribuição!</SectionTitle>
               <p className="text-slate-600 text-sm md:text-base max-w-lg leading-relaxed">
                 Sua avaliação técnica foi registrada com sucesso no sistema institucional. Agradecemos imensamente sua dedicação e contribuição para a formação acadêmica do discente e a excelência do nosso corpo de avaliadores.
               </p>
-              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200">
-                <CheckCircle2 className="w-4 h-4 text-blue-600" /> Avaliação Oficial Homologada
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#002B18] bg-[#E8F3EC] px-3.5 py-1.5 rounded-full border border-[#DDD9CD]">
+                <CheckCircle2 className="w-4 h-4 text-[#006633]" /> Avaliação Oficial Homologada
               </div>
             </div>
           )}
@@ -263,15 +264,15 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
     // Quando onSuccessCallback existe, depois de renderizar, já chamou o callback no handle.
     // Pode retornar null para sumir ou a mesma tela verde resumida.
     return (
-      <div className="w-full bg-white p-10 rounded-xl text-center flex flex-col items-center max-w-md mx-auto">
+      <div className="w-full py-10 text-center flex flex-col items-center max-w-md mx-auto">
         <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
-        <h1 className="text-xl font-bold text-gray-800 mb-2">Avaliação Concluída!</h1>
+        <PageTitle className="mb-2">Avaliação Concluída!</PageTitle>
       </div>
     );
   }
 
   return (
-    <div className={hideLogoAndMinHeight ? "w-full" : "min-h-screen flex flex-col items-center py-10 bg-gray-100 px-4"}>
+    <div className={hideLogoAndMinHeight ? 'w-full' : 'min-h-screen flex flex-col items-center py-10 bg-[#FAF9F5] px-4'}>
       {!hideLogoAndMinHeight && (
         <div className="mb-8">
           <Image
@@ -283,22 +284,22 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
           />
         </div>
       )}
-      <div className={`w-full bg-white p-6 md:p-10 rounded-2xl ${hideLogoAndMinHeight ? '' : 'max-w-4xl shadow-xl'}`}>
+      <div className={`w-full py-6 md:py-10 ${hideLogoAndMinHeight ? '' : 'max-w-4xl'}`}>
         <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">Ficha Avaliativa de TCC</h1>
+          <PageTitle className="mb-3">Ficha Avaliativa de TCC</PageTitle>
           <p className="text-gray-500 text-sm md:text-base max-w-2xl mx-auto">Preencha as notas parciais abaixo baseadas no Anexo IV. A nota final será calculada automaticamente.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-10">
           
           {/* Seção 1: Apresentação Oral */}
-          <div className="rounded-xl border border-blue-100 bg-blue-50/30 overflow-hidden shadow-sm">
-            <div className="bg-blue-600 px-6 py-4 flex items-center">
-              <Mic className="w-6 h-6 mr-3 text-blue-50" />
-              <h2 className="text-xl font-bold text-white">Critérios: Apresentação Oral</h2>
+          <div>
+            <div className="flex items-center gap-3 text-[#006633]">
+              <Mic className="w-5 h-5" aria-hidden="true" />
+              <SectionTitle >Critérios: Apresentação Oral</SectionTitle>
             </div>
             
-            <div className={`p-6 grid grid-cols-1 ${hideLogoAndMinHeight ? '' : 'md:grid-cols-2'} gap-4`}>
+            <div className={`py-4 grid grid-cols-1 ${hideLogoAndMinHeight ? '' : 'md:grid-cols-2'} gap-x-8`}>
               {[
                 { key: 'postura', label: 'I. Postura do/a estudante', max: 1 },
                 { key: 'usoTempo', label: 'II. Uso adequado do tempo', max: 0.5 },
@@ -309,34 +310,30 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
               ].map(item => {
                 const k = item.key as keyof typeof oralGrades;
                 return (
-                <div key={k} className="flex flex-row justify-between items-center gap-3 bg-white p-4 rounded-lg border shadow-sm hover:border-blue-300 transition-colors">
-                  <Label className="text-sm font-semibold text-slate-700 flex-1">{item.label} <span className="block text-xs text-slate-400 mt-1 font-normal">(0 a {item.max.toString().replace('.', ',')})</span></Label>
-                  <Input type="number" step="0.1" required className="w-20 shrink-0 text-center font-bold text-lg bg-slate-50 focus:bg-white" placeholder="0.0" value={oralGrades[k]} onChange={e => handleOralChange(k, e.target.value, item.max)} />
-                </div>
+                <GradeField key={k} label={item.label} max={item.max} value={oralGrades[k]} onChange={(value) => handleOralChange(k, value, item.max)} />
               )})}
-              <div className={`flex flex-row justify-between items-center gap-3 bg-white p-4 rounded-lg border shadow-sm hover:border-blue-300 transition-colors ${hideLogoAndMinHeight ? '' : 'md:col-span-2'}`}>
-                <Label className="text-sm font-semibold text-slate-700 flex-1">VII. Articulação (oral e escrita) <span className="block text-xs text-slate-400 mt-1 font-normal">(0 a 1,5)</span></Label>
-                <Input type="number" step="0.1" required className="w-24 shrink-0 text-center font-bold text-lg bg-slate-50 focus:bg-white" placeholder="0.0" value={oralGrades.articulacao} onChange={e => handleOralChange('articulacao', e.target.value, 1.5)} />
+              <div className={hideLogoAndMinHeight ? '' : 'md:col-span-2'}>
+                <GradeField label="VII. Articulação (oral e escrita)" max={1.5} value={oralGrades.articulacao} onChange={(value) => handleOralChange('articulacao', value, 1.5)} />
               </div>
             </div>
             
-            <div className="bg-blue-100/50 px-6 py-4 flex justify-between items-center border-t border-blue-100">
-              <span className="font-bold text-blue-900 uppercase tracking-wide text-sm">Total Parcial (Oral)</span>
-              <div className="flex items-baseline gap-1 text-blue-700">
+            <div className="py-4 flex justify-between items-center border-b border-[#DDD9CD]">
+              <span className="font-bold text-[#002B18] uppercase tracking-wide text-xs">Total Parcial (Oral)</span>
+              <div className="flex items-baseline gap-1 text-[#002B18]">
                 <span className="text-2xl font-black">{totalOral.toFixed(2)}</span>
-                <span className="text-sm font-bold text-blue-500">/ 10</span>
+                <span className="text-sm font-bold text-gray-500">/ 10</span>
               </div>
             </div>
           </div>
 
           {/* Seção 2: Produção Textual */}
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/30 overflow-hidden shadow-sm">
-            <div className="bg-emerald-600 px-6 py-4 flex items-center">
-              <FileText className="w-6 h-6 mr-3 text-emerald-50" />
-              <h2 className="text-xl font-bold text-white">Critérios: Produção Textual</h2>
+          <div>
+            <div className="flex items-center gap-3 text-[#006633]">
+              <FileText className="w-5 h-5" aria-hidden="true" />
+              <SectionTitle >Critérios: Produção Textual</SectionTitle>
             </div>
             
-            <div className={`p-6 grid grid-cols-1 ${hideLogoAndMinHeight ? '' : 'md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
+            <div className={`py-4 grid grid-cols-1 ${hideLogoAndMinHeight ? '' : 'md:grid-cols-2'} gap-x-8`}>
               {[
                 { key: 'relevanciaTema', label: 'I. Relevância do tema', max: 1 },
                 { key: 'clarezaObjetividade', label: 'II. Clareza e objetividade', max: 1 },
@@ -350,15 +347,12 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
               ].map(item => {
                 const k = item.key as keyof typeof textualGrades;
                 return (
-                <div key={k} className="flex flex-row justify-between items-center gap-3 bg-white p-4 rounded-lg border shadow-sm hover:border-emerald-300 transition-colors">
-                  <Label className="text-sm font-semibold text-slate-700 flex-1">{item.label} <span className="block text-xs text-slate-400 mt-1 font-normal">(0 a {item.max.toString().replace('.', ',')})</span></Label>
-                  <Input type="number" step="0.1" required className="w-20 shrink-0 text-center font-bold text-lg bg-slate-50 focus:bg-white" placeholder="0.0" value={textualGrades[k]} onChange={e => handleTextualChange(k, e.target.value, item.max)} />
-                </div>
+                <GradeField key={k} label={item.label} max={item.max} value={textualGrades[k]} onChange={(value) => handleTextualChange(k, value, item.max)} />
               )})}
             </div>
 
-            <div className="bg-emerald-100/50 px-6 py-4 flex justify-between items-center border-t border-emerald-100">
-              <span className="font-bold text-emerald-900 uppercase tracking-wide text-sm">Total Parcial (Textual)</span>
+            <div className="py-4 flex justify-between items-center border-b border-[#DDD9CD]">
+              <span className="font-bold text-[#002B18] uppercase tracking-wide text-xs">Total Parcial (Textual)</span>
               <div className="flex items-baseline gap-1 text-emerald-700">
                 <span className="text-2xl font-black">{totalTextual.toFixed(2)}</span>
                 <span className="text-sm font-bold text-emerald-500">/ 10</span>
@@ -367,12 +361,12 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
           </div>
 
           {/* Resultado Final */}
-          <div className="bg-slate-900 text-white rounded-2xl p-8 flex flex-col items-center justify-center shadow-lg relative overflow-hidden">
+          <div className="bg-[#002B18] text-white rounded-lg p-8 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute -right-6 -top-6 opacity-10">
               <BookOpen className="w-48 h-48" />
             </div>
             <span className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2 z-10">Nota Final do TCC</span>
-            <span className="text-6xl font-black text-amber-400 drop-shadow-md z-10">{finalGrade.toFixed(2)}</span>
+            <span className="font-[family-name:var(--font-poppins)] text-6xl font-extrabold text-[#C8FF47] z-10">{finalGrade.toFixed(2)}</span>
             <span className="text-slate-400 text-sm mt-3 font-medium z-10">Média aritmética entre Oral e Textual</span>
             <div className="mt-4 z-10">
               <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold ${
@@ -383,7 +377,7 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
             </div>
           </div>
 
-          <Button type="submit" size="lg" disabled={isSubmitting} className="w-full text-lg mt-4 py-7 font-bold rounded-xl shadow-md hover:shadow-lg transition-all">
+          <Button type="submit" size="lg" disabled={isSubmitting} className="w-full mt-4 py-7 font-bold">
             <BookOpen className="w-6 h-6 mr-3" />
             {isSubmitting ? 'Registrando Avaliação...' : 'Registrar Avaliação Oficial'}
           </Button>

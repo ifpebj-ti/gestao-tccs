@@ -1,6 +1,11 @@
 'use client';
 
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
+import { FormSelect } from '@/components/ui/form-select';
+
+import { PageState } from '@/components/layout/PageState';
+
+import { PageTitle } from '@/components/layout/PageTitle';
+
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -176,28 +181,23 @@ function EditUserForm() {
   const watchedProfile = watch('profile');
 
   if (isLoading) {
-    return (
-      <p className="text-center text-gray-500 mt-4">
-        Carregando dados do usuário...
-      </p>
-    );
+    return <PageState loading>Carregando dados do usuário...</PageState>;
   }
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
+      <PageTitle className="mb-10">
         Editar Usuário: {watch('name') || '...'}
-      </h1>
+      </PageTitle>
 
       <form onSubmit={handleSubmit(submitForm)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-6 border rounded-lg bg-white shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-6 border-t border-[#ECEAE2] bg-transparent">
           {/* Coluna 1 */}
           <div className="space-y-4">
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-semibold text-gray-700 mb-1"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
               >
                 Nome Completo
               </label>
@@ -212,7 +212,7 @@ function EditUserForm() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-semibold text-gray-700 mb-1"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
               >
                 Email
               </label>
@@ -226,15 +226,17 @@ function EditUserForm() {
 
             <div className="grid items-center gap-1.5">
               <label
-                className="font-semibold text-sm gray-700"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
                 htmlFor="profile"
               >
                 Perfil
               </label>
-              <select
+              <FormSelect
                 id="profile"
-                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
-                {...register('profile', { setValueAs: (v: string) => [v] })}
+                className="w-full min-w-0 border-0 border-b-2 border-[#002B18] bg-transparent py-2.5 text-sm text-gray-800 outline-none focus-visible:border-[#006633] disabled:opacity-50"
+                control={form.control}
+                name={'profile'}
+                parseValue={(value) => [value]}
               >
                 <option value="STUDENT">Estudante</option>
                 <option value="BANKING">Banca</option>
@@ -243,7 +245,7 @@ function EditUserForm() {
                 <option value="SUPERVISOR">Supervisor</option>
                 <option value="COORDINATOR">Coordenação</option>
                 <option value="ADMIN">Administrador</option>
-              </select>
+              </FormSelect>
               {errors.profile && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.profile.message}
@@ -254,7 +256,7 @@ function EditUserForm() {
             <div>
               <label
                 htmlFor="cpf"
-                className="block text-sm font-semibold text-gray-700 mb-1"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
               >
                 CPF
               </label>
@@ -269,7 +271,7 @@ function EditUserForm() {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-semibold text-gray-700 mb-1"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
               >
                 Telefone
               </label>
@@ -282,23 +284,25 @@ function EditUserForm() {
             </div>
 
             <div className="grid items-center gap-1.5">
-              <label className="font-semibold text-sm gray-700" htmlFor="shift">
+              <label
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
+                htmlFor="shift"
+              >
                 Turno
               </label>
-              <select
+              <FormSelect
                 id="shift"
-                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
-                {...register('shift', {
-                  setValueAs: (v: string | null) =>
-                    v === '' || v === null ? null : Number(v)
-                })}
+                className="w-full min-w-0 border-0 border-b-2 border-[#002B18] bg-transparent py-2.5 text-sm text-gray-800 outline-none focus-visible:border-[#006633] disabled:opacity-50"
+                control={form.control}
+                name={'shift'}
+                parseValue={(value) => (value === '' ? null : Number(value))}
               >
                 <option value="">Selecione um turno</option>
                 <option value="1">Matutino</option>
                 <option value="2">Vespertino</option>
                 <option value="3">Noturno</option>
                 <option value="4">Diurno</option>
-              </select>
+              </FormSelect>
               {errors.shift && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.shift.message}
@@ -311,19 +315,20 @@ function EditUserForm() {
           <div className="space-y-4">
             <div className="grid items-center gap-1.5">
               <label
-                className="font-semibold text-sm gray-700"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
                 htmlFor="status"
               >
                 Status
               </label>
-              <select
+              <FormSelect
                 id="status"
-                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
-                {...register('status')}
+                className="w-full min-w-0 border-0 border-b-2 border-[#002B18] bg-transparent py-2.5 text-sm text-gray-800 outline-none focus-visible:border-[#006633] disabled:opacity-50"
+                control={form.control}
+                name={'status'}
               >
                 <option value="ACTIVE">Ativo</option>
                 <option value="INACTIVE">Inativo</option>
-              </select>
+              </FormSelect>
               {errors.status && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.status.message}
@@ -335,7 +340,7 @@ function EditUserForm() {
               <div>
                 <label
                   htmlFor="registration"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
+                  className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
                 >
                   Matrícula
                 </label>
@@ -352,7 +357,7 @@ function EditUserForm() {
               <div>
                 <label
                   htmlFor="userClass"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
+                  className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
                 >
                   Turma
                 </label>
@@ -370,7 +375,7 @@ function EditUserForm() {
               <div>
                 <label
                   htmlFor="siape"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
+                  className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
                 >
                   SIAPE
                 </label>
@@ -387,7 +392,7 @@ function EditUserForm() {
               <div>
                 <label
                   htmlFor="titration"
-                  className="block text-sm font-semibold text-gray-700 mb-1"
+                  className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
                 >
                   Titulação
                 </label>
@@ -404,7 +409,7 @@ function EditUserForm() {
             <div>
               <label
                 htmlFor="campus"
-                className="block text-sm font-semibold text-gray-700 mb-1"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
               >
                 Campus (Somente Leitura)
               </label>
@@ -419,7 +424,7 @@ function EditUserForm() {
             <div>
               <label
                 htmlFor="course"
-                className="block text-sm font-semibold text-gray-700 mb-1"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700"
               >
                 Curso (Somente Leitura)
               </label>
@@ -438,7 +443,7 @@ function EditUserForm() {
         <div className="flex justify-end gap-4">
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             onClick={() => push('/users')}
           >
             Cancelar
@@ -455,9 +460,7 @@ function EditUserForm() {
 // --- Componente da Página (Default) ---
 export default function EditUserPage() {
   return (
-    <Suspense
-      fallback={<p className="text-center text-gray-500 mt-4">Carregando...</p>}
-    >
+    <Suspense fallback={<PageState loading>Carregando...</PageState>}>
       <EditUserForm />
     </Suspense>
   );

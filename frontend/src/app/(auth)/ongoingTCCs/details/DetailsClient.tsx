@@ -1,14 +1,10 @@
 'use client';
 
-import { Suspense } from 'react';
 import { useTccDetails } from '@/app/hooks/useTccDetails';
 import { FormProvider } from 'react-hook-form';
 import React from 'react';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import TccTabs from '@/components/TccTabs';
-import { Button } from '@/components/ui/button';
-import { faFileArchive } from '@fortawesome/free-solid-svg-icons';
-import { TccHeader } from '@/components/tcc-details/TccHeader';
+
+import { TccOverview } from '@/components/tcc-details/TccOverview';
 import { TccInfoSection } from '@/components/tcc-details/TccInfoSection';
 import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection';
 import { AdvisorInfoSection } from '@/components/tcc-details/AdvisorInfoSection';
@@ -42,7 +38,6 @@ export default function DetailsClient() {
     handleScheduleSubmit,
     handleSendScheduleEmail,
     handleResendInvite,
-    handleDownloadAllDocuments,
     handleEditTccInfo,
     handleConcludePresentation,
     handleUploadTccFile,
@@ -69,37 +64,18 @@ export default function DetailsClient() {
   return (
     <FormProvider {...cancellationForm}>
       <div className="flex flex-col">
-        <BreadcrumbAuto />
-        <Suspense fallback={null}>
-          <TccTabs />
-        </Suspense>
-
-        <div className="mt-6 flex flex-col md:flex-row justify-between gap-4">
-          <TccHeader
-            infoStudent={tccData.infoStudent}
-            cancellationRequested={tccData.cancellationRequest}
-          />
-          <div className="flex flex-col gap-2 w-full md:w-fit">
-            <Button
-              variant="outline"
-              onClick={handleDownloadAllDocuments}
-              className="w-full"
-              icon={faFileArchive}
-            >
-              Baixar Todos os Documentos
-            </Button>
-            
-            <input 
-              id="tccUploadInput" 
-              type="file" 
-              accept=".pdf" 
-              className="hidden" 
-              onChange={handleUploadTccFile} 
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-8 mt-10">
+        <TccOverview
+          title={tccData.infoTcc.title}
+          cancellationRequested={tccData.cancellationRequest}
+        />
+        <input
+          id="tccUploadInput"
+          type="file"
+          accept=".pdf"
+          className="hidden"
+          onChange={handleUploadTccFile}
+        />
+        <div className="flex flex-col gap-8 mt-6">
           <TccInfoSection
             infoTcc={tccData.infoTcc}
             isEditingInfo={isEditingTccInfo}
@@ -116,13 +92,13 @@ export default function DetailsClient() {
           {tccData.infoAdvisor.name && (
             <AdvisorInfoSection advisor={tccData.infoAdvisor} />
           )}
-          <BankingInfoSection 
-            bankingData={tccData.infoBanking} 
-            isCompleted={tccData.infoTcc.status === 'COMPLETED'} 
+          <BankingInfoSection
+            bankingData={tccData.infoBanking}
+            isCompleted={tccData.infoTcc.status === 'COMPLETED'}
           />
         </div>
 
-        <ScheduleSection 
+        <ScheduleSection
           infoTcc={tccData.infoTcc}
           isScheduleFormVisible={isScheduleFormVisible}
           onOpenSchedule={() => setIsScheduleFormVisible((prev) => !prev)}
@@ -152,10 +128,15 @@ export default function DetailsClient() {
         onSubmit={handleRequestCancellation}
       />
 
-      <Dialog open={!!orientadorToken} onOpenChange={(open) => { if (!open) setOrientadorToken(null); }}>
+      <Dialog
+        open={!!orientadorToken}
+        onOpenChange={(open) => {
+          if (!open) setOrientadorToken(null);
+        }}
+      >
         <DialogContent className="max-w-[95vw] sm:max-w-4xl md:max-w-5xl max-h-[90vh] overflow-y-auto">
-          <AvaliacaoForm 
-            token={orientadorToken} 
+          <AvaliacaoForm
+            token={orientadorToken}
             onSuccessCallback={() => setOrientadorToken(null)}
             hideLogoAndMinHeight={true}
           />

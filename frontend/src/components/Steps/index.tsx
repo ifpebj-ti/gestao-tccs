@@ -1,98 +1,50 @@
-'use client';
-
-import React from 'react';
 import { Check } from 'lucide-react';
-
-interface StepProps {
-  currentStep: number;
-}
-
-const predefinedSteps = [
-  { id: 1, label: 'Cadastro de Proposta', mobileLabel: 'Proposta' },
-  { id: 2, label: 'Início e Organização', mobileLabel: 'Início' },
-  { id: 3, label: 'Desenvolvimento e Acompanhamento', mobileLabel: 'Desenv.' },
-  { id: 4, label: 'Preparação para Apresentação', mobileLabel: 'Preparação' },
-  { id: 5, label: 'Apresentação e Avaliação', mobileLabel: 'Apresentação' },
-  { id: 6, label: 'Finalização e Publicação', mobileLabel: 'Finalização' }
+const steps = [
+  'Cadastro de proposta',
+  'Início e organização',
+  'Desenvolvimento e acompanhamento',
+  'Preparação para apresentação',
+  'Apresentação e avaliação',
+  'Finalização e publicação'
 ];
-
-export default function Step({ currentStep }: StepProps) {
+export default function Step({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex items-center justify-between w-full overflow-x-auto py-5 md:pr-0 pb-12 md:pb-20 lg:pb-20 select-none">
-      {predefinedSteps.map((step, index) => {
-        const isCompleted = step.id < currentStep;
-        const isCurrent = step.id === currentStep;
-
-        return (
-          <div
-            key={step.id}
-            className="flex-1 flex flex-col items-center relative"
-          >
-            {/* Linha conectando steps */}
-            {index > 0 && (
+    <section aria-label="Etapas do TCC" className="my-6">
+      <p className="mb-4 text-sm text-[#002B18]">
+        Etapa {currentStep} de 6{' '}
+        <span className="font-semibold">· {steps[currentStep - 1]}</span>
+      </p>
+      <ol className="grid grid-cols-6 gap-2">
+        {steps.map((label, index) => {
+          const done = index + 1 < currentStep;
+          const active = index + 1 === currentStep;
+          return (
+            <li
+              key={label}
+              aria-current={active ? 'step' : undefined}
+              className="min-w-0"
+            >
               <div
-                className={`absolute top-4 lg:top-5 left-0 w-full h-0.5 z-0 -translate-x-1/2 ${
-                  isCompleted ? 'bg-[#1351B4]' : 'bg-gray-300'
-                }`}
+                className={`mb-3 h-1.5 rounded-full ${done ? 'bg-[#006633]' : active ? 'bg-[#C8FF47]' : 'bg-[#DDD9CD]'}`}
               />
-            )}
-
-            {/* Círculo do step */}
-            <div
-              className={`z-10 flex items-center justify-center lg:w-12 lg:h-12 w-10 h-10 lg:text-2xl text-regular rounded-full border-2 relative transition-all
-                ${
-                  isCompleted
-                    ? 'bg-blue-100 border-[#1351B4] text-[#1351B4]'
-                    : isCurrent
-                      ? 'bg-[#1351B4] border-[#1351B4] text-white'
-                      : 'border-gray-400 text-gray-600 bg-white'
-                }
-              `}
-            >
-              {step.id}
-
-              {isCompleted && (
-                <span className="absolute -top-1.5 -right-1.5 bg-green-600 text-white rounded-full p-0.5">
-                  <Check className="w-4 h-4" strokeWidth={3} />
-                </span>
-              )}
-            </div>
-
-            {/* Label para telas grandes */}
-            <span
-              className={`absolute md:top-[38px] lg:top-[60px] text-center hidden lg:block text-sm lg:text-base ${
-                isCurrent
-                  ? 'text-[#1351B4] font-semibold'
-                  : isCompleted
-                    ? 'text-gray-500'
-                    : 'text-black'
-              }`}
-            >
-              {step.label}
-            </span>
-
-            {/* Label para tablet */}
-            <span
-              className={`absolute top-[38px] hidden md:block lg:hidden text-center ${
-                isCurrent
-                  ? 'text-[#1351B4] font-semibold'
-                  : isCompleted
-                    ? 'text-gray-500'
-                    : 'text-black'
-              }`}
-            >
-              {step.mobileLabel}
-            </span>
-
-            {/* Mobile label flutuante */}
-            {isCurrent && (
-              <span className="absolute top-[44px] text-regular md:hidden text-center text-[#1351B4] font-semibold">
-                {step.mobileLabel}
+              <span
+                className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-bold ${active ? 'bg-[#002B18] text-[#C8FF47]' : done ? 'text-[#006633]' : 'text-gray-500'}`}
+                aria-hidden="true"
+              >
+                {done ? <Check size={16} /> : index + 1}
               </span>
-            )}
-          </div>
-        );
-      })}
-    </div>
+              <span
+                className={`mt-2 hidden text-xs leading-relaxed md:block ${active ? 'font-semibold text-[#002B18]' : 'text-gray-500'}`}
+              >
+                {label}
+              </span>
+              <span className="sr-only">
+                {label}: {done ? 'concluída' : active ? 'atual' : 'próxima'}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }

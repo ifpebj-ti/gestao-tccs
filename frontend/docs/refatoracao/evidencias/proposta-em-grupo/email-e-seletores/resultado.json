@@ -1,0 +1,22 @@
+{
+  "fixture": "Dados fictícios; todas as chamadas de API interceptadas",
+  "checks": [
+    "Cabeçalho sem margem extra e integrantes opcionais recolhidos inicialmente",
+    "E-mail inválido apresenta erro associado ao campo e não envia proposta",
+    "Três convidados no máximo, duplicação bloqueada e remoção preserva os outros e-mails",
+    "Seletor usa a cor exata do card na opção marcada e Escape devolve o foco",
+    "Proposta válida envia título, resumo, orientador e convite normalizado",
+    "Home apresenta projeto, resumo, solicitante e consentimento",
+    "Resposta bloqueia ambos os botões; conflito mantém convite e permite nova tentativa",
+    "Falha na listagem mostra erro e nova tentativa recupera os convites",
+    "Convite mobile sem rolagem horizontal",
+    "Aceite envia consentimento explícito e atualiza a navegação",
+    "Recusa envia false e remove convite após atualização",
+    "Solicitante vê a recusa, pode submeter novamente e marcar a notificação como lida",
+    "Seletor da conta carrega o valor atual e envia turno numérico após edição",
+    "Seletores do autocadastro preservam dependência entre campus e curso",
+    "Cadastro pela gestão mantém perfil, campus, curso e seleção dependente",
+    "Edição da gestão exibe dados carregados por reset e atualiza o estado selecionado",
+    "Seletor de curso da proposta da gestão também usa o componente compartilhado"
+  ]
+}

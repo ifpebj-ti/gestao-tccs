@@ -10,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 interface InputProps extends React.ComponentProps<'input'> {
-  icon?: IconDefinition;
+  icon?: IconDefinition | React.ReactNode;
   isPassword?: boolean;
   helperText?: string;
   errorText?: string;
@@ -30,53 +30,65 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const [showPassword, setShowPassword] = React.useState(false);
+    const messageId = React.useId();
+    const description =
+      [
+        props['aria-describedby'],
+        helperText ? `${messageId}-helper` : null,
+        errorText ? `${messageId}-error` : null
+      ]
+        .filter(Boolean)
+        .join(' ') || undefined;
 
     const handleTogglePassword = () => {
       setShowPassword(!showPassword);
     };
 
+    const isFontAwesome = (icon as IconDefinition)?.iconName !== undefined;
+
     return (
-      <div className="flex flex-col gap-2 w-full">
-        {/*
-          O 'div' principal agora usa cn() para aplicar estilos 'disabled'
-          quando props.disabled = true
-        */}
+      <div className="flex flex-col gap-1.5 w-full">
         <div
           className={cn(
-            'flex items-center border rounded-xs px-3 py-2 transition-all',
-            props.disabled
-              ? 'bg-gray-100 border-gray-300' // Estilo desabilitado
-              : 'bg-white border-gray-400 focus-within:ring-2 focus-within:ring-blue-500' // Estilo habilitado
+            'flex min-w-0 items-center border-0 border-b-2 border-[#002B18] py-2.5 bg-transparent transition-colors duration-150 focus-within:border-[#006633]',
+            props.disabled &&
+              'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60',
+            errorText &&
+              'border-red-500 focus-within:border-red-500 focus-within:ring-red-500'
           )}
         >
           {icon && (
-            <FontAwesomeIcon
-              icon={icon}
-              // Cor do ícone também muda se estiver desabilitado
+            <div
               className={cn(
-                'mr-2',
-                props.disabled ? 'text-gray-400' : 'text-gray-500'
+                'mr-2 flex items-center text-gray-500',
+                props.disabled && 'text-gray-400'
               )}
-            />
+            >
+              {isFontAwesome ? (
+                <FontAwesomeIcon icon={icon as IconDefinition} />
+              ) : (
+                (icon as React.ReactNode)
+              )}
+            </div>
           )}
           <input
             type={isPassword ? (showPassword ? 'text' : 'password') : type}
             className={cn(
-              'flex-1 bg-transparent text-sm placeholder-gray-400 focus:outline-none',
-              // Adiciona classes 'disabled:' para o input
-              'disabled:cursor-not-allowed disabled:text-gray-500',
+              'min-w-0 w-full flex-1 bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-500',
               className
             )}
             ref={ref}
-            {...props} // 'disabled' é passado por aqui
+            {...props}
+            aria-invalid={errorText ? true : props['aria-invalid']}
+            aria-describedby={description}
           />
           {isPassword && (
             <button
               type="button"
-              className="ml-2 text-gray-500 cursor-pointer focus:outline-none"
+              className="ml-2 text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none"
               onClick={handleTogglePassword}
-              // Desabilita o botão de ver senha se o input estiver desabilitado
               disabled={props.disabled}
+              aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
             >
               <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
             </button>
@@ -84,17 +96,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {helperText && (
-          <div className="flex items-center bg-[#155BCB] text-white w-min text-nowrap text-sm p-1 gap-1">
-            <FontAwesomeIcon icon={faCircleInfo} />
+          <p
+            id={`${messageId}-helper`}
+            className="flex items-center text-xs text-gray-500 gap-1 mt-0.5"
+          >
+            <FontAwesomeIcon icon={faCircleInfo} className="text-gray-400" />
             {helperText}
-          </div>
+          </p>
         )}
 
         {errorText && (
-          <div className="flex items-center bg-red-500 text-white w-min text-nowrap text-sm p-1 gap-1">
-            <FontAwesomeIcon icon={faCircleXmark} />
+          <p
+            id={`${messageId}-error`}
+            role="alert"
+            className="flex items-center text-xs text-red-600 gap-1 mt-0.5 font-medium"
+          >
+            <FontAwesomeIcon icon={faCircleXmark} className="text-red-500" />
             {errorText}
-          </div>
+          </p>
         )}
       </div>
     );

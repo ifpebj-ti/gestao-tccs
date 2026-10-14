@@ -33,9 +33,9 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<List<TccInviteEntity>> FindAllInviteTcc()
     {
         return await context.TccInvites
-            .Where(x => 
-                x.IsValidCode && 
-                (x.Tcc == null || (x.Tcc.Status != StatusTccType.CANCELED.ToString() 
+            .Where(x =>
+                x.IsValidCode &&
+                (x.Tcc == null || (x.Tcc.Status != StatusTccType.CANCELED.ToString()
                 && x.Tcc.Status != StatusTccType.COMPLETED.ToString())))
             .ToListAsync();
     }
@@ -60,6 +60,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<TccEntity?> FindTccById(long id)
     {
         return await context.Tccs
+            .Include(x => x.ParticipantInvitations)
             .Include(x => x.TccInvites)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
@@ -88,19 +89,19 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId)
     {
         var query = context.Tccs.AsQueryable();
-        
+
         if(campiCourseId != 0)
             query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
-        
+
         if(tccFilter.UserId.HasValue)
             query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
-        
+
         if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
             query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
-        
+
         if (tccFilter.SemesterId.HasValue)
             query = query.Where(x => x.SemesterId == tccFilter.SemesterId.Value);
-        
+
         return await query
             .Include(x => x.Semester)
             .Include(x => x.BankingMembers)
@@ -123,11 +124,12 @@ public class TccGateway(AppDbContext context) : ITccGateway
     {
         context.TccBankingMembers.Update(member);
         await context.SaveChangesAsync();
-    
+
     }
     public async Task<TccEntity?> FindTccInformations(long id)
     {
         return await context.Tccs
+            .Include(x => x.ParticipantInvitations)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
             .Include(x => x.TccInvites)

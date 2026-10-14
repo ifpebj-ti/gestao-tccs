@@ -16,11 +16,31 @@ public class SubmitTccProposalUseCase(
     IProfileGateway profileGateway,
     IEmailGateway emailGateway,
     ISemesterGateway semesterGateway,
-    IAppLoggerGateway<SubmitTccProposalUseCase> logger)
+    IAppLoggerGateway<SubmitTccProposalUseCase> logger,
+    IProposalGateway? proposals = null)
 {
     public async Task<ResultPattern<long>> Execute(SubmitTccProposalDTO data, long studentUserId)
     {
-        logger.LogInformation("Iniciando submissÃ£o de proposta de TCC pelo estudante UserId: {StudentId}, OrientadorId: {AdvisorId}", studentUserId, data.AdvisorId);
+        var notifications = new List<gestaotcc.Domain.Dtos.Email.SendEmailDTO>();
+        var result = proposals == null ? await Submit(data, studentUserId, notifications)
+            : await proposals.Atomic(() => Submit(data, studentUserId, notifications));
+        // Delivery happens after the commit, so SMTP does not hold the proposal transaction lock.
+        if (result.IsSuccess)
+            foreach (var notification in notifications)
+            {
+                try
+                {
+                    var delivery = await emailGateway.Send(notification);
+                    if (delivery?.IsFailure == true) logger.LogWarning("Falha ao entregar notificação da proposta {TccId}.", result.Data);
+                }
+                catch (Exception) { logger.LogWarning("Falha ao entregar notificação da proposta {TccId}.", result.Data); }
+            }
+        return result;
+    }
+
+    private async Task<ResultPattern<long>> Submit(SubmitTccProposalDTO data, long studentUserId, List<gestaotcc.Domain.Dtos.Email.SendEmailDTO> notifications)
+    {
+        logger.LogInformation("Iniciando submissão de proposta de TCC pelo estudante UserId: {StudentId}, OrientadorId: {AdvisorId}", studentUserId, data.AdvisorId);
 
         var student = await userGateway.FindById(studentUserId);
         if (student is null)
@@ -50,10 +70,8 @@ public class SubmitTccProposalUseCase(
             return ResultPattern<long>.FailureResult("O usuÃ¡rio selecionado nÃ£o Ã© um orientador vÃ¡lido", 400);
         }
 
-        var existingTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(studentUserId, null, null), 0);
-        var hasActiveProposalOrTcc = existingTccs.Any(t => 
-            t.Status == StatusTccType.IN_PROGRESS.ToString() || 
-            t.Status == StatusTccType.PENDING_APPROVAL.ToString());
+        var existingTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(studentUserId, null), 0);
+        var hasActiveProposalOrTcc = existingTccs.Any(ProposalParticipantsUseCase.Active);
 
         if (hasActiveProposalOrTcc)
         {
@@ -62,12 +80,34 @@ public class SubmitTccProposalUseCase(
         }
 
         var studentProfile = student.Profile.First(p => p.Role == RoleType.STUDENT.ToString());
+        var participantEmails = data.ParticipantEmails ?? [];
+        if (participantEmails.Count > 3 || participantEmails.Any(string.IsNullOrWhiteSpace) ||
+            participantEmails.Select(x => x.Trim().ToLowerInvariant()).Distinct().Count() != participantEmails.Count)
+            return ResultPattern<long>.FailureResult("Informe até três participantes distintos.", 400);
+        var participants = new List<(string Email, UserEntity? User)>();
+        foreach (var email in participantEmails)
+        {
+            var participant = await userGateway.FindProposalParticipantByEmail(email.Trim().ToLowerInvariant());
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            if (!ProposalParticipantsUseCase.Eligible(student) || student.CampiCourseId == null ||
+                normalizedEmail == student.Email.Trim().ToLowerInvariant() || participant?.Id == studentUserId)
+                return ResultPattern<long>.FailureResult("Informe outro integrante e confira seu cadastro de curso.", 400);
+            if (participant != null)
+            {
+                if (!ProposalParticipantsUseCase.Eligible(participant) || participant.CampiCourseId != student.CampiCourseId)
+                    return ResultPattern<long>.FailureResult("Os integrantes devem ser estudantes ativos do mesmo campus e curso.", 400);
+                var participantTccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(participant.Id, null), 0);
+                if (participantTccs.Any(ProposalParticipantsUseCase.Active))
+                    return ResultPattern<long>.FailureResult("Um participante já possui TCC em andamento ou proposta pendente.", 409);
+            }
+            participants.Add((normalizedEmail, participant));
+        }
         var advisorProfile = advisor.Profile.First(p => p.Role == RoleType.ADVISOR.ToString() || p.Role == RoleType.COORDINATOR.ToString() || p.Role == RoleType.SUPERVISOR.ToString());
 
         var tcc = new TccEntityBuilder()
             .WithTitle(data.Title)
             .WithSummary(data.Summary)
-            .WithStatus(StatusTccType.PENDING_APPROVAL.ToString())
+            .WithStatus(participants.Count == 0 ? "PENDING_APPROVAL" : "AWAITING_PARTICIPANTS")
             .WithStep(StepTccType.PROPOSAL_REGISTRATION.ToString())
             .WithCreationDate(DateTime.UtcNow)
             .Build();
@@ -98,24 +138,16 @@ public class SubmitTccProposalUseCase(
                 .Build()
         };
 
+        tcc.ParticipantInvitations = participants.Select(x => new ProposalParticipantEntity { Tcc = tcc, Email = x.Email, User = x.User, UserId = x.User?.Id }).ToList();
         await tccGateway.Save(tcc);
         await tccGateway.UpdateSemesterId(tcc.Id, activeSemester.Id);
         logger.LogInformation("Proposta de TCC {TccId} criada com sucesso vinculada ao semestre {SemesterId} e aguardando aprovaÃ§Ã£o do orientador {AdvisorId}.", tcc.Id, activeSemester.Id, advisor.Id);
 
-        try
-        {
-            var emailDto = EmailFactory.CreateSendEmailDTO(advisor, "ADD-USER-TCC");
-            await emailGateway.Send(emailDto);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning("Erro ao enviar notificaÃ§Ã£o de proposta para o orientador {AdvisorEmail}: {ErrorMessage}", advisor.Email, ex.Message);
-        }
+        if (participants.Count == 0)
+            notifications.Add(EmailFactory.CreateSendEmailDTO(advisor, "ADD-USER-TCC"));
+        foreach (var participant in participants)
+            notifications.Add(new("", "Convite para proposta de TCC", participant.Email, "PROPOSAL-PARTICIPANT", new()));
 
         return ResultPattern<long>.SuccessResult(tcc.Id);
     }
 }
-
-
-
-

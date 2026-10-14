@@ -6,26 +6,28 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 import { cn } from '@/lib/utils';
 
+const negativeButtonStyles =
+  'border border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 hover:text-white active:border-red-800 active:bg-red-800 focus-visible:ring-red-500';
+
 const buttonVariants = cva(
-  'inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#002B18] disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]',
+  'inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-bold transition-[color,background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#006633] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transform-none',
   {
     variants: {
       variant: {
-        // Padrão Verde Escuro: quando escuro, hover/active clareia para verde mais claro (#00A355 / #008C45) com destaque
+        // Ações principais seguem a inversão de cores do fluxo de autenticação.
         default:
-          'bg-[#002B18] text-[#C8FF47] shadow-sm hover:bg-[#00A355] hover:text-white hover:shadow-md hover:scale-[1.01] active:scale-[0.98]',
+          'bg-[#C8FF47] text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47] hover:-translate-y-0.5',
         brand:
-          'bg-[#002B18] text-[#C8FF47] shadow-sm hover:bg-[#00A355] hover:text-white hover:shadow-md hover:scale-[1.01] active:scale-[0.98]',
+          'bg-[#002B18] text-[#C8FF47] hover:bg-[#006633] hover:-translate-y-0.5',
         // Padrão Verde Claro / Accent: quando claro, hover/active escurece para verde escuro (#002B18)
         accent:
-          'bg-[#C8FF47] text-[#002B18] shadow-sm hover:bg-[#002B18] hover:text-[#C8FF47] hover:shadow-md hover:scale-[1.01] active:scale-[0.98]',
+          'bg-[#C8FF47] text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47] hover:-translate-y-0.5',
         outline:
-          'border border-slate-300 bg-white text-gray-700 hover:bg-slate-50 hover:text-[#002B18] hover:border-slate-400',
-        ghost: 'bg-transparent text-gray-700 hover:bg-slate-100 hover:text-[#002B18]',
-        destructive:
-          'bg-transparent border border-red-600 text-red-600 hover:bg-red-700 hover:text-white hover:border-red-700 focus-visible:ring-red-500',
-        cancel:
-          'bg-white border border-gray-300 text-gray-700 hover:bg-red-700 hover:text-white hover:border-red-700 transition-colors',
+          'border border-[#006633] bg-transparent text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47] hover:border-[#002B18]',
+        ghost:
+          'bg-transparent text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47]',
+        destructive: negativeButtonStyles,
+        cancel: negativeButtonStyles,
         link: 'text-[#002B18] underline-offset-4 hover:underline'
       },
       size: {
@@ -40,7 +42,6 @@ const buttonVariants = cva(
     }
   }
 );
-
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,

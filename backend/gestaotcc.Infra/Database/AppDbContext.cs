@@ -23,6 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ProfileEntity> Profiles { get; set; }
     public DbSet<AccessCodeEntity> AccessCodes { get; set; }
     public DbSet<TccEntity> Tccs { get; set; }
+    public DbSet<ProposalParticipantEntity> ProposalParticipants { get; set; }
     public DbSet<UserTccEntity> UserTccs { get; set; }
     public DbSet<TccInviteEntity> TccInvites { get; set; }
     public DbSet<TccCancellationEntity> TccCancellations { get; set; }

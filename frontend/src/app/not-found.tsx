@@ -4,8 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import notFoundImage from '../../public/404-art.svg';
-import Image from 'next/image';
+import { AccessPage } from '@/components/layout/AccessPage';
 
 export default function NotFound() {
   const { push } = useRouter();
@@ -18,10 +17,8 @@ export default function NotFound() {
     }
   };
   return (
-    <div className="flex flex-col items-center justify-center h-screen text-center p-4 gap-4">
-      <Image alt="Not Found" src={notFoundImage} className="h-1/2 mb-6" />
-      <p className="text-xl mt-4 text-gray-700">Página não encontrada</p>
+    <AccessPage code="404" title="Página não encontrada" description="Não encontramos a página que você procura. Volte ao início para continuar sua jornada.">
       <Button onClick={handleRedirect}>Voltar</Button>
-    </div>
+    </AccessPage>
   );
 }

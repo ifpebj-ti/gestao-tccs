@@ -1,18 +1,16 @@
 'use client';
 
-import { CardHome } from '@/components/CardHome';
-import { CollapseCard } from '@/components/CollapseCard';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+  HomeShortcuts,
+  type HomeShortcut
+} from '@/components/home/HomeShortcuts';
+import { PageTitle } from '@/components/layout/PageTitle';
+import { NoticeCard } from '@/components/layout/NoticeCard';
+import {
+  ProposalInvitations,
+  ProposalConsentStatus
+} from '@/components/home/ProposalInvitations';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,21 +22,20 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  faCheck,
-  faClock,
-  faExclamationTriangle,
-  faFileCircleCheck,
-  faFileCirclePlus,
-  faFileSignature,
-  faGraduationCap,
-  faInbox,
-  faTimes,
-  faUserPlus,
-  faUsers,
-  faBuilding,
-  faCalendarDays
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+  FileSignature,
+  GraduationCap,
+  CheckCircle2,
+  Inbox,
+  FilePlus2,
+  UserPlus,
+  Users,
+  Building2,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  FileText
+} from 'lucide-react';
 import Link from 'next/link';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
@@ -69,6 +66,7 @@ interface ProposalInfo {
   summary: string;
   advisorName?: string;
   rejectionReason?: string | null;
+  status?: string;
 }
 
 interface AdvisorProposalItem {
@@ -77,6 +75,7 @@ interface AdvisorProposalItem {
   title: string;
   status: string;
   summary: string;
+  pendingParticipantCount: number;
 }
 
 export default function HomePage() {
@@ -84,24 +83,29 @@ export default function HomePage() {
   const { push } = useRouter();
   const [profile, setProfile] = useState<string | string[] | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
   const [tccs, setTccs] = useState<TCCsInformation | null>(null);
   const [userTCCs, setUserTCCs] = useState<UserTCCs[]>([]);
   const [completedUserTCC, setCompletedUserTCC] = useState<UserTCCs[]>([]);
 
   // Discente: propostas pendentes ou recusadas
-  const [pendingProposal, setPendingProposal] = useState<ProposalInfo | null>(null);
-  const [rejectedProposal, setRejectedProposal] = useState<ProposalInfo | null>(null);
+  const [pendingProposal, setPendingProposal] = useState<ProposalInfo | null>(
+    null
+  );
+  const [rejectedProposal, setRejectedProposal] = useState<ProposalInfo | null>(
+    null
+  );
 
   // Docente/Orientador: propostas recebidas para aprovação
-  const [advisorPendingProposals, setAdvisorPendingProposals] = useState<AdvisorProposalItem[]>([]);
-  const [isAdvisorModalOpen, setIsAdvisorModalOpen] = useState(false);
-  const [selectedProposalForReject, setSelectedProposalForReject] = useState<AdvisorProposalItem | null>(null);
-  const [rejectReason, setRejectReason] = useState('');
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-
+  const [advisorPendingProposals, setAdvisorPendingProposals] = useState<
+    AdvisorProposalItem[]
+  >([]);
   // Modal de cancelamento de proposta (discente)
-  const [isCancelProposalDialogOpen, setIsCancelProposalDialogOpen] = useState(false);
-  const [proposalToCancelId, setProposalToCancelId] = useState<number | null>(null);
+  const [isCancelProposalDialogOpen, setIsCancelProposalDialogOpen] =
+    useState(false);
+  const [proposalToCancelId, setProposalToCancelId] = useState<number | null>(
+    null
+  );
   const [actionLoading, setActionLoading] = useState(false);
 
   const checkUserTccStatus = useCallback(
@@ -141,12 +145,20 @@ export default function HomePage() {
         }
 
         // 3. Proposta pendente de aprovação
-        const pendingRes = await fetch(
-          `${API_URL}/Tcc/filter?userId=${userId}&StatusTcc=PENDING_APPROVAL`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const pendingResponses = await Promise.all(
+          ['AWAITING_PARTICIPANTS', 'PENDING_APPROVAL'].map((status) =>
+            fetch(
+              `${API_URL}/Tcc/filter?userId=${userId}&StatusTcc=${status}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            )
+          )
         );
-        if (pendingRes.ok) {
-          const pendingData = await pendingRes.json();
+        if (pendingResponses.every((response) => response.ok)) {
+          const pendingData = (
+            await Promise.all(
+              pendingResponses.map((response) => response.json())
+            )
+          ).flat();
           if (pendingData && pendingData.length > 0) {
             const tccId = pendingData[0].tccId;
             const detailRes = await fetch(`${API_URL}/Tcc?tccId=${tccId}`, {
@@ -156,9 +168,13 @@ export default function HomePage() {
               const detailData = await detailRes.json();
               setPendingProposal({
                 tccId,
-                title: detailData.infoTcc?.title || pendingData[0].title || 'Proposta de TCC',
+                title:
+                  detailData.infoTcc?.title ||
+                  pendingData[0].title ||
+                  'Proposta de TCC',
                 summary: detailData.infoTcc?.summary || '',
-                advisorName: detailData.infoAdvisor?.name || ''
+                advisorName: detailData.infoAdvisor?.name || '',
+                status: detailData.infoTcc?.status
               });
               setRejectedProposal(null);
               return;
@@ -182,7 +198,10 @@ export default function HomePage() {
               const detailData = await detailRes.json();
               setRejectedProposal({
                 tccId,
-                title: detailData.infoTcc?.title || rejectedData[0].title || 'Proposta de TCC',
+                title:
+                  detailData.infoTcc?.title ||
+                  rejectedData[0].title ||
+                  'Proposta de TCC',
                 summary: detailData.infoTcc?.summary || '',
                 advisorName: detailData.infoAdvisor?.name || '',
                 rejectionReason: detailData.infoTcc?.rejectionReason || ''
@@ -220,32 +239,47 @@ export default function HomePage() {
         const data = await res.json();
         if (Array.isArray(data)) {
           const detailedList = await Promise.all(
-            data.map(async (item: { tccId: number; studanteNames?: string[]; title?: string }) => {
-              try {
-                const detailRes = await fetch(`${API_URL}/Tcc?tccId=${item.tccId}`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-                if (detailRes.ok) {
-                  const detailData = await detailRes.json();
-                  return {
-                    tccId: item.tccId,
-                    studanteNames: item.studanteNames || [],
-                    title: detailData.infoTcc?.title || item.title || 'Proposta de TCC',
-                    status: 'PENDING_APPROVAL',
-                    summary: detailData.infoTcc?.summary || ''
-                  };
+            data.map(
+              async (item: {
+                tccId: number;
+                studanteNames?: string[];
+                title?: string;
+              }) => {
+                try {
+                  const detailRes = await fetch(
+                    `${API_URL}/Tcc?tccId=${item.tccId}`,
+                    {
+                      headers: { Authorization: `Bearer ${token}` }
+                    }
+                  );
+                  if (detailRes.ok) {
+                    const detailData = await detailRes.json();
+                    return {
+                      tccId: item.tccId,
+                      studanteNames: item.studanteNames || [],
+                      title:
+                        detailData.infoTcc?.title ||
+                        item.title ||
+                        'Proposta de TCC',
+                      status: 'PENDING_APPROVAL',
+                      summary: detailData.infoTcc?.summary || '',
+                      pendingParticipantCount:
+                        detailData.infoTcc?.pendingParticipantCount ?? 0
+                    };
+                  }
+                } catch {
+                  // fallback
                 }
-              } catch {
-                // fallback
+                return {
+                  tccId: item.tccId,
+                  studanteNames: item.studanteNames || [],
+                  title: item.title || 'Proposta de TCC',
+                  status: 'PENDING_APPROVAL',
+                  summary: '',
+                  pendingParticipantCount: 1
+                };
               }
-              return {
-                tccId: item.tccId,
-                studanteNames: item.studanteNames || [],
-                title: item.title || 'Proposta de TCC',
-                status: 'PENDING_APPROVAL',
-                summary: ''
-              };
-            })
+            )
           );
           setAdvisorPendingProposals(detailedList);
         }
@@ -287,6 +321,7 @@ export default function HomePage() {
       const decodedToken = jwtDecode<DecodedToken>(token);
       setProfile(decodedToken.role);
       setCurrentUserId(decodedToken.userId);
+      setUserName(decodedToken.unique_name || '');
 
       const userHasStudentRole = Array.isArray(decodedToken.role)
         ? decodedToken.role.includes('STUDENT')
@@ -297,7 +332,9 @@ export default function HomePage() {
       }
 
       const userHasAdvisorRole = Array.isArray(decodedToken.role)
-        ? decodedToken.role.some((r) => ['ADVISOR', 'COORDINATOR', 'SUPERVISOR'].includes(r))
+        ? decodedToken.role.some((r) =>
+            ['ADVISOR', 'COORDINATOR', 'SUPERVISOR'].includes(r)
+          )
         : ['ADVISOR', 'COORDINATOR', 'SUPERVISOR'].includes(decodedToken.role);
 
       if (userHasAdvisorRole) {
@@ -318,14 +355,6 @@ export default function HomePage() {
     return false;
   };
 
-  const isLimitedView = () => {
-    if (!profile) return false;
-    if (typeof profile === 'string')
-      return profile === 'STUDENT' || profile === 'BANKING';
-    if (Array.isArray(profile)) return false;
-    return false;
-  };
-
   const isStudent = () => {
     if (!profile) return false;
     if (typeof profile === 'string') return profile === 'STUDENT';
@@ -337,7 +366,13 @@ export default function HomePage() {
     if (isStudent()) {
       return userTCCs.length > 0 || completedUserTCC.length > 0;
     }
-    return canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY', 'BANKING']);
+    return canView([
+      'COORDINATOR',
+      'SUPERVISOR',
+      'ADVISOR',
+      'LIBRARY',
+      'BANKING'
+    ]);
   };
 
   const handleMyTccClick = () => {
@@ -348,162 +383,267 @@ export default function HomePage() {
     }
   };
 
-  // Cancelar proposta pelo discente
-  const handleCancelProposal = async () => {
+  // Cancelar proposta (discente)
+  const handleCancelProposalSubmit = async () => {
     if (!proposalToCancelId) return;
     const token = Cookies.get('token');
     if (!token) return;
 
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_URL}/Tcc/${proposalToCancelId}/cancel-proposal`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const res = await fetch(
+        `${API_URL}/Tcc/${proposalToCancelId}/cancel-proposal`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` }
         }
-      });
+      );
 
       if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || 'Falha ao cancelar proposta.');
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao cancelar a proposta.'
+        );
       }
 
-      toast.success('Proposta de TCC cancelada com sucesso.');
+      toast.success('Proposta cancelada com sucesso.');
       setIsCancelProposalDialogOpen(false);
       setProposalToCancelId(null);
       if (currentUserId) {
         await checkUserTccStatus(currentUserId);
       }
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao cancelar proposta.');
+      toast.error(
+        error instanceof Error ? error.message : 'Erro ao cancelar proposta.'
+      );
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Aceitar proposta pelo docente
-  const handleApproveProposal = async (tccId: number) => {
-    const token = Cookies.get('token');
-    if (!token) return;
+  const isStudentWithoutProposal =
+    isStudent() &&
+    userTCCs.length === 0 &&
+    completedUserTCC.length === 0 &&
+    !pendingProposal &&
+    !rejectedProposal;
 
-    setActionLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/Tcc/${tccId}/approve-proposal`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+  const supportText = isStudent()
+    ? 'Confira o que precisa da sua atenção.'
+    : canView(['ADMIN'])
+      ? 'Gerencie usuários, instituições, cursos e períodos letivos em um só lugar.'
+      : canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
+        ? 'Avalie propostas, acompanhe suas orientações e assine os documentos de cada etapa acadêmica.'
+        : canView(['LIBRARY', 'BANKING'])
+          ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
+          : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || 'Falha ao aprovar proposta.');
-      }
-
-      toast.success('Proposta de orientação aceita com sucesso! O TCC foi iniciado.');
-      if (currentUserId) {
-        await fetchAdvisorPendingProposals(currentUserId);
-        await fetchTccs();
-      }
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao aprovar proposta.');
-    } finally {
-      setActionLoading(false);
+  const shortcuts: HomeShortcut[] = [
+    {
+      title: 'Assinaturas pendentes',
+      icon: FileSignature,
+      group: 'attention',
+      visible: canShowPendingSignatures(),
+      description:
+        tccs === null
+          ? 'Documentos que aguardam sua validação digital'
+          : tccs.pendingSignature > 0
+            ? `${tccs.pendingSignature} aguardando sua assinatura`
+            : 'Nenhuma pendência',
+      indicatorNumber: tccs?.pendingSignature || 0,
+      indicatorColor: 'bg-red-600 text-white',
+      onClick: () => push('/pendingSignatures')
+    },
+    {
+      title: 'Propostas de TCC pendentes',
+      icon: Inbox,
+      group: 'attention',
+      visible: canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']),
+      description:
+        advisorPendingProposals.length > 0
+          ? `${advisorPendingProposals.length} aguardando seu aceite`
+          : 'Propostas submetidas por estudantes aguardando aceite',
+      indicatorNumber: advisorPendingProposals.length,
+      indicatorColor: 'bg-amber-600 text-white',
+      onClick: () => push('/receivedProposals')
+    },
+    {
+      title: 'TCCs em andamento',
+      icon: GraduationCap,
+      group: 'tracking',
+      visible: canView([
+        'COORDINATOR',
+        'SUPERVISOR',
+        'ADVISOR',
+        'LIBRARY',
+        'BANKING'
+      ]),
+      description: 'Trabalhos acadêmicos ativos no período',
+      indicatorNumber: tccs?.tccInprogress || 0,
+      indicatorColor: 'bg-[#002B18] text-[#C8FF47]',
+      onClick: () => push('/ongoingTCCs')
+    },
+    {
+      title: 'TCCs concluídos',
+      icon: CheckCircle2,
+      group: 'tracking',
+      visible: canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY']),
+      description: 'Histórico de trabalhos finalizados e defendidos',
+      onClick: () => push('/completedTCCs')
+    },
+    {
+      title: 'Meu TCC',
+      icon: GraduationCap,
+      group: 'tracking',
+      visible:
+        canView(['STUDENT']) &&
+        (userTCCs.length > 0 || completedUserTCC.length > 0),
+      description: 'Acesse o fluxo do seu projeto, assinaturas e etapas',
+      onClick: handleMyTccClick
+    },
+    {
+      title: 'Cadastrar nova proposta',
+      icon: FilePlus2,
+      group: 'management',
+      visible: canView(['COORDINATOR', 'SUPERVISOR']),
+      description: 'Inclusão direta de propostas e vínculos',
+      onClick: () => push('/newTCC')
+    },
+    {
+      title: 'Cadastrar novo usuário',
+      icon: UserPlus,
+      group: 'management',
+      visible: canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']),
+      description: 'Adicione docentes, coordenadores ou estudantes',
+      onClick: () => push('/newUser')
+    },
+    {
+      title: 'Usuários',
+      icon: Users,
+      group: 'management',
+      visible: canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']),
+      description: 'Gerenciamento de acessos e permissões',
+      onClick: () => push('/users')
+    },
+    {
+      title: 'Instituições e Cursos',
+      icon: Building2,
+      group: 'management',
+      visible: canView(['ADMIN']),
+      description: 'Configuração de campi e matrizes curriculares',
+      onClick: () => push('/instituicoes')
+    },
+    {
+      title: 'Semestres Letivos',
+      icon: Calendar,
+      group: 'management',
+      visible: canView(['ADMIN']),
+      description: 'Períodos e prazos institucionais',
+      onClick: () => push('/semestres')
     }
-  };
-
-  // Recusar proposta pelo docente
-  const handleRejectProposal = async () => {
-    if (!selectedProposalForReject) return;
-    if (!rejectReason.trim()) {
-      toast.error('Informe o motivo da recusa da proposta.');
-      return;
-    }
-
-    const token = Cookies.get('token');
-    if (!token) return;
-
-    setActionLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/Tcc/${selectedProposalForReject.tccId}/reject-proposal`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ reason: rejectReason.trim() })
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || 'Falha ao recusar proposta.');
-      }
-
-      toast.success('Proposta recusada com sucesso. O discente foi notificado.');
-      setIsRejectDialogOpen(false);
-      setSelectedProposalForReject(null);
-      setRejectReason('');
-      if (currentUserId) {
-        await fetchAdvisorPendingProposals(currentUserId);
-        await fetchTccs();
-      }
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao recusar proposta.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  ];
 
   return (
-    <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-8">
-        Página Inicial
-      </h1>
+    <div className="flex flex-col w-full">
+      {/* CABEÇALHO EDITORIAL MINIMALISTA (SEM BREADCRUMB E SEM TAG) */}
+      <div className="mb-8">
+        <PageTitle>
+          {userName ? (
+            <>
+              Olá, <span className="text-[#00A355]">{userName}</span>!
+            </>
+          ) : (
+            'Página Inicial'
+          )}
+        </PageTitle>
+        <p className="mt-2 text-sm md:text-base text-gray-600 max-w-2xl leading-relaxed">
+          {supportText}
+        </p>
+      </div>
 
-      {/* BANNER DISCENTE: PROPOSTA PENDENTE DE APROVAÇÃO */}
+      {/* BANNER DISCENTE: PROPOSTA PENDENTE DE APROVAÇÃO (SEAMLESS FLAT) */}
+      {isStudent() && <ProposalInvitations />}
       {isStudent() && pendingProposal && (
-        <div className="mb-8 flex items-center justify-between border-b pb-4">
-          <p className="text-gray-700">
-            <FontAwesomeIcon icon={faClock} className="text-amber-500 mr-2" />
-            Sua proposta <strong>{pendingProposal.title}</strong> está em análise por <strong>{pendingProposal.advisorName || 'seu orientador'}</strong>.
-          </p>
-          <Button
-            variant="link"
-            className="text-red-600 p-0 h-auto font-normal"
-            onClick={() => {
-              setProposalToCancelId(pendingProposal.tccId);
-              setIsCancelProposalDialogOpen(true);
-            }}
-            disabled={actionLoading}
-          >
-            Cancelar proposta
-          </Button>
-        </div>
+        <NoticeCard title="Acompanhamento da proposta" className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Clock
+                className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
+                strokeWidth={1.75}
+              />
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#C8FF47]">
+                  {pendingProposal.status === 'AWAITING_PARTICIPANTS'
+                    ? 'Aguardando participantes'
+                    : 'Proposta em análise'}
+                </span>
+                <h3 className="text-base font-bold mt-0.5">
+                  {pendingProposal.title}
+                </h3>
+                <p className="text-sm mt-0.5">
+                  {pendingProposal.status === 'AWAITING_PARTICIPANTS' ? (
+                    'A proposta será enviada ao professor somente quando todos os integrantes aceitarem.'
+                  ) : (
+                    <>
+                      Aguardando avaliação de{' '}
+                      <strong>
+                        {pendingProposal.advisorName || 'seu orientador'}
+                      </strong>
+                      .
+                    </>
+                  )}
+                </p>
+                <ProposalConsentStatus tccId={pendingProposal.tccId} />
+              </div>
+            </div>
+
+            <Button
+              variant="destructive"
+              size="sm"
+              className="self-start md:self-center font-medium"
+              onClick={() => {
+                setProposalToCancelId(pendingProposal.tccId);
+                setIsCancelProposalDialogOpen(true);
+              }}
+              disabled={actionLoading}
+            >
+              Cancelar proposta
+            </Button>
+          </div>
+        </NoticeCard>
       )}
 
-      {/* BANNER DISCENTE: PROPOSTA RECUSADA / REFORMULAR */}
+      {/* BANNER DISCENTE: PROPOSTA RECUSADA / REFORMULAR (SEAMLESS FLAT) */}
       {isStudent() && rejectedProposal && (
-        <div className="mb-8 border-b pb-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-gray-700">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 mr-2" />
-              Sua proposta <strong>{rejectedProposal.title}</strong> foi devolvida por <strong>{rejectedProposal.advisorName}</strong>.
-            </p>
-            <div className="flex gap-4">
+        <NoticeCard title="Proposta devolvida para ajustes" className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle
+                className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
+                strokeWidth={1.75}
+              />
+              <div>
+                <h3 className="text-base font-bold mt-0.5">
+                  {rejectedProposal.title}
+                </h3>
+                <p className="text-sm mt-0.5">
+                  Devolvida por <strong>{rejectedProposal.advisorName}</strong>.
+                </p>
+                {rejectedProposal.rejectionReason && (
+                  <p className="mt-2 text-sm italic">
+                    Motivo: &ldquo;{rejectedProposal.rejectionReason}&rdquo;
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start md:self-center">
               <Button
-                variant="link"
-                className="text-[#1351B4] p-0 h-auto font-normal"
-                onClick={() => push(`/newTCC?reformulate=${rejectedProposal.tccId}`)}
-                disabled={actionLoading}
-              >
-                Reformular
-              </Button>
-              <Button
-                variant="link"
-                className="text-red-600 p-0 h-auto font-normal"
+                variant="destructive"
+                size="sm"
+                className=""
                 onClick={() => {
                   setProposalToCancelId(rejectedProposal.tccId);
                   setIsCancelProposalDialogOpen(true);
@@ -512,406 +652,103 @@ export default function HomePage() {
               >
                 Cancelar
               </Button>
+              <Button
+                size="sm"
+                className="bg-[#002B18] text-[#C8FF47] hover:bg-[#003820] font-semibold"
+                onClick={() =>
+                  push(`/newTCC?reformulate=${rejectedProposal.tccId}`)
+                }
+                disabled={actionLoading}
+              >
+                Reformular Proposta
+              </Button>
             </div>
           </div>
-          <p className="text-sm text-gray-500 italic">
-            Motivo: &ldquo;{rejectedProposal.rejectionReason || 'Sem justificativa informada.'}&rdquo;
-          </p>
+        </NoticeCard>
+      )}
+
+      {/* ESTADO DO ESTUDANTE: SEM PROPOSTA ATIVA (TOTALMENTE FLAT, SEM CARD) */}
+      {isStudentWithoutProposal && (
+        <div className="pt-2 pb-10">
+          <div className="max-w-2xl">
+            <h2 className="text-xl md:text-2xl font-bold text-[#002B18] tracking-tight mb-2">
+              Cadastrar Nova Proposta de TCC
+            </h2>
+            <p className="text-sm md:text-base text-gray-600 mb-6 leading-relaxed">
+              Você ainda não possui um trabalho de conclusão em andamento.
+              Defina seu tema, redija o resumo da proposta e selecione um
+              professor orientador para submeter à avaliação.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 mb-8 text-xs text-gray-600 font-medium">
+              <div className="flex items-center gap-2">
+                <GraduationCap
+                  className="w-4 h-4 text-[#002B18]"
+                  strokeWidth={1.75}
+                />
+                <span>Escolha seu orientador</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText
+                  className="w-4 h-4 text-[#002B18]"
+                  strokeWidth={1.75}
+                />
+                <span>Defina tema e resumo</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2
+                  className="w-4 h-4 text-[#002B18]"
+                  strokeWidth={1.75}
+                />
+                <span>Submissão 100% digital</span>
+              </div>
+            </div>
+
+            <Link
+              href="/newTCC"
+              className="inline-flex items-center gap-2.5 px-7 py-3.5 bg-[#002B18] text-[#C8FF47] hover:bg-[#00A355] hover:text-white font-bold text-sm rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.98]"
+            >
+              <FilePlus2 className="w-4 h-4" strokeWidth={1.75} />
+              Cadastrar Proposta de TCC
+              <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+            </Link>
+          </div>
         </div>
       )}
 
-      {/* MOBILE (Collapse) */}
-      <div className="md:hidden">
-        {canShowPendingSignatures() && (
-          <CollapseCard
-            title="Assinaturas pendentes"
-            icon={faFileSignature}
-            indicatorNumber={tccs?.pendingSignature || 0}
-            indicatorColor="bg-red-600"
-            onClick={() => push('/pendingSignatures')}
-          />
-        )}
+      <HomeShortcuts
+        cards={shortcuts}
+        attentionOnly={
+          isStudent() || canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
+        }
+        loading={tccs === null}
+      />
 
-        {canView([
-          'COORDINATOR',
-          'SUPERVISOR',
-          'ADVISOR',
-          'LIBRARY',
-          'BANKING'
-        ]) && (
-          <CollapseCard
-            title="TCCs em andamento"
-            icon={faGraduationCap}
-            indicatorNumber={tccs?.tccInprogress || 0}
-            indicatorColor="bg-blue-600"
-            onClick={() => push('/ongoingTCCs')}
-          />
-        )}
-
-        {canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY']) && (
-          <CollapseCard
-            title="TCCs concluídos"
-            icon={faFileCircleCheck}
-            onClick={() => push('/completedTCCs')}
-          />
-        )}
-
-        {/* DOCENTE / COORDENADOR: PROPOSTAS PENDENTES DE ORIENTAÇÃO */}
-        {canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']) && (
-          <CollapseCard
-            title="Propostas de TCC pendentes"
-            icon={faInbox}
-            indicatorNumber={advisorPendingProposals.length}
-            indicatorColor="bg-amber-600"
-            onClick={() => setIsAdvisorModalOpen(true)}
-          />
-        )}
-
-        {/* DISCENTE: MEU TCC (quando em andamento ou concluído) */}
-        {canView(['STUDENT']) &&
-          (userTCCs.length > 0 || completedUserTCC.length > 0) && (
-            <CollapseCard
-              title="Meu TCC"
-              icon={faGraduationCap}
-              onClick={handleMyTccClick}
-            />
-          )}
-
-        {/* DISCENTE: CADASTRAR NOVA PROPOSTA (quando não possui TCC nem proposta ativa) */}
-        {isStudent() &&
-          userTCCs.length === 0 &&
-          completedUserTCC.length === 0 &&
-          !pendingProposal &&
-          !rejectedProposal && (
-            <CollapseCard
-              title="Cadastrar nova proposta de TCC"
-              icon={faFileCirclePlus}
-              onClick={() => push('/newTCC')}
-            />
-          )}
-
-        {/* COORDENADOR/SUPERVISOR: CADASTRO MANUAL SE NECESSÁRIO */}
-        {canView(['COORDINATOR', 'SUPERVISOR']) && (
-          <CollapseCard
-            title="Cadastrar nova proposta"
-            icon={faFileCirclePlus}
-            onClick={() => push('/newTCC')}
-          />
-        )}
-
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
-          <CollapseCard
-            title="Cadastrar novo usuário"
-            icon={faUserPlus}
-            onClick={() => push('/newUser')}
-          />
-        )}
-
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
-          <CollapseCard
-            title="Usuários"
-            icon={faUsers}
-            onClick={() => push('/users')}
-          />
-        )}
-
-        {canView(['ADMIN']) && (
-          <CollapseCard
-            title="Instituições e Cursos"
-            icon={faBuilding}
-            onClick={() => push('/instituicoes')}
-          />
-        )}
-
-        {canView(['ADMIN']) && (
-          <CollapseCard
-            title="Semestres Letivos"
-            icon={faCalendarDays}
-            onClick={() => push('/semestres')}
-          />
-        )}
-      </div>
-
-      {/* DESKTOP (Grid Cards) */}
-      <div
-        className={`hidden md:grid gap-6 ${
-          isLimitedView() ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'
-        }`}
-      >
-        {canShowPendingSignatures() && (
-          <CardHome
-            title="Assinaturas pendentes"
-            icon={faFileSignature}
-            indicatorNumber={tccs?.pendingSignature || 0}
-            indicatorColor="bg-red-600"
-            onClick={() => push('/pendingSignatures')}
-          />
-        )}
-
-        {canView([
-          'COORDINATOR',
-          'SUPERVISOR',
-          'ADVISOR',
-          'LIBRARY',
-          'BANKING'
-        ]) && (
-          <CardHome
-            title="TCCs em andamento"
-            icon={faGraduationCap}
-            indicatorNumber={tccs?.tccInprogress || 0}
-            indicatorColor="bg-blue-600"
-            onClick={() => push('/ongoingTCCs')}
-          />
-        )}
-
-        {canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY']) && (
-          <CardHome
-            title="TCCs concluídos"
-            icon={faFileCircleCheck}
-            onClick={() => push('/completedTCCs')}
-          />
-        )}
-
-        {/* DOCENTE / COORDENADOR: PROPOSTAS PENDENTES DE ORIENTAÇÃO */}
-        {canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']) && (
-          <CardHome
-            title="Propostas de TCC pendentes"
-            icon={faInbox}
-            indicatorNumber={advisorPendingProposals.length}
-            indicatorColor="bg-amber-600"
-            onClick={() => setIsAdvisorModalOpen(true)}
-          />
-        )}
-
-        {/* DISCENTE: MEU TCC (quando em andamento ou concluído) */}
-        {canView(['STUDENT']) &&
-          (userTCCs.length > 0 || completedUserTCC.length > 0) && (
-            <CardHome
-              title="Meu TCC"
-              icon={faGraduationCap}
-              onClick={handleMyTccClick}
-            />
-          )}
-
-        {/* DISCENTE: CADASTRAR NOVA PROPOSTA (quando não possui TCC nem proposta ativa) */}
-        {isStudent() &&
-          userTCCs.length === 0 &&
-          completedUserTCC.length === 0 &&
-          !pendingProposal &&
-          !rejectedProposal && (
-            <Link href="/newTCC">
-              <CardHome
-                title="Cadastrar nova proposta de TCC"
-                icon={faFileCirclePlus}
-                onClick={() => push('/newTCC')}
-              />
-            </Link>
-          )}
-
-        {/* COORDENADOR/SUPERVISOR: CADASTRO MANUAL ADMINISTRATIVO */}
-        {canView(['COORDINATOR', 'SUPERVISOR']) && (
-          <Link href="/newTCC">
-            <CardHome
-              title="Cadastrar nova proposta"
-              icon={faFileCirclePlus}
-              onClick={() => push('/newTCC')}
-            />
-          </Link>
-        )}
-
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
-          <Link href="/newUser">
-            <CardHome
-              title="Cadastrar novo usuário"
-              icon={faUserPlus}
-              onClick={() => push('/newUser')}
-            />
-          </Link>
-        )}
-
-        {canView(['ADMIN', 'COORDINATOR', 'SUPERVISOR']) && (
-          <Link href="/users">
-            <CardHome
-              title="Usuários"
-              icon={faUsers}
-              onClick={() => push('/users')}
-            />
-          </Link>
-        )}
-
-        {canView(['ADMIN']) && (
-          <Link href="/instituicoes">
-            <CardHome
-              title="Instituições e Cursos"
-              icon={faBuilding}
-              onClick={() => push('/instituicoes')}
-            />
-          </Link>
-        )}
-
-        {canView(['ADMIN']) && (
-          <Link href="/semestres">
-            <CardHome
-              title="Semestres Letivos"
-              icon={faCalendarDays}
-              onClick={() => push('/semestres')}
-            />
-          </Link>
-        )}
-      </div>
-
-      {/* MODAL DO ORIENTADOR: LISTA DE PROPOSTAS PENDENTES */}
-      <Dialog open={isAdvisorModalOpen} onOpenChange={setIsAdvisorModalOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1351B4]">
-              Propostas de TCC Pendentes de Orientação
-            </DialogTitle>
-            <DialogDescription>
-              Avalie as propostas de TCC enviadas pelos discentes para sua orientação.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {advisorPendingProposals.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <FontAwesomeIcon icon={faInbox} className="text-4xl text-gray-300 mb-2" />
-                <p className="text-base font-medium">Nenhuma proposta pendente no momento.</p>
-              </div>
-            ) : (
-              advisorPendingProposals.map((prop) => (
-                <div
-                  key={prop.tccId}
-                  className="p-5 border border-gray-200 rounded-xl bg-gray-50/60 shadow-xs flex flex-col gap-3"
-                >
-                  <div className="flex justify-between items-start flex-wrap gap-2">
-                    <h3 className="font-semibold text-lg text-gray-900">{prop.title}</h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                      Pendente de Aprovação
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-gray-600">
-                    <strong>Discente(s):</strong>{' '}
-                    {prop.studanteNames && prop.studanteNames.length > 0
-                      ? prop.studanteNames.join(', ')
-                      : 'Não informado'}
-                  </p>
-
-                  {prop.summary && (
-                    <div className="bg-white p-3 rounded-md border border-gray-200 text-sm text-gray-700 whitespace-pre-line">
-                      <p className="font-semibold text-xs text-gray-500 uppercase mb-1">
-                        Resumo:
-                      </p>
-                      {prop.summary}
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setSelectedProposalForReject(prop);
-                        setRejectReason('');
-                        setIsRejectDialogOpen(true);
-                      }}
-                      disabled={actionLoading}
-                    >
-                      <FontAwesomeIcon icon={faTimes} className="mr-1.5" />
-                      Recusar
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
-                      onClick={() => handleApproveProposal(prop.tccId)}
-                      disabled={actionLoading}
-                    >
-                      <FontAwesomeIcon icon={faCheck} className="mr-1.5" />
-                      Aceitar Proposta
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* MODAL DE RECUSA COM JUSTIFICATIVA (DOCENTE) */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
-              <FontAwesomeIcon icon={faExclamationTriangle} />
-              Recusar Proposta de TCC
-            </DialogTitle>
-            <DialogDescription>
-              Informe ao estudante o motivo ou os pontos de melhoria para a proposta:
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-2">
-            <p className="text-sm font-semibold text-gray-800 mb-2">
-              Título: {selectedProposalForReject?.title}
-            </p>
-            <Textarea
-              placeholder="Descreva detalhadamente o motivo da recusa ou instruções para reformulação da proposta..."
-              rows={4}
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full text-sm"
-              disabled={actionLoading}
-            />
-          </div>
-
-          <DialogFooter className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsRejectDialogOpen(false);
-                setSelectedProposalForReject(null);
-              }}
-              disabled={actionLoading}
-            >
-              Voltar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleRejectProposal}
-              disabled={actionLoading || !rejectReason.trim()}
-            >
-              Confirmar Recusa
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* CONFIRMAÇÃO DE CANCELAMENTO DE PROPOSTA (DISCENTE) */}
+      {/* CONFIRMAÇÃO DE CANCELAMENTO (DISCENTE) */}
       <AlertDialog
         open={isCancelProposalDialogOpen}
         onOpenChange={setIsCancelProposalDialogOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-bold text-red-600">
-              Deseja cancelar esta proposta?
+            <AlertDialogTitle className="text-[#002B18]">
+              Deseja realmente cancelar esta proposta?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Ao cancelar, a proposta será descartada definitivamente e você poderá cadastrar uma nova proposta com outro tema ou orientador.
+              Esta ação cancelará permanentemente a submissão. Você poderá
+              cadastrar uma nova proposta quando desejar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={actionLoading}>
-              Não, manter
+              Voltar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleCancelProposal}
-              disabled={actionLoading}
               className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleCancelProposalSubmit}
+              disabled={actionLoading}
             >
-              Sim, cancelar proposta
+              {actionLoading ? 'Cancelando...' : 'Sim, cancelar proposta'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

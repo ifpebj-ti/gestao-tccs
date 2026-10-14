@@ -1,0 +1,20 @@
+{
+  "fixture": "Dados fictícios; API interceptada; sem autenticação real",
+  "checks": [
+    "Proposta desktop sem overflow",
+    "Proposta vazia mostra erros e não envia à API",
+    "Navegação e voltar mantêm um único item ativo",
+    "Conta desktop sem overflow",
+    "Telefone inválido mostra erro e não envia mesmo via requestSubmit",
+    "Falha ao salvar preserva edição e libera nova tentativa",
+    "Formulário envia somente os seis campos autorizados",
+    "Nome corrigido aparece na navegação sem alterar permissões",
+    "Troca interna valida campos, envia só duas senhas e trata senha incorreta e limite de tentativas",
+    "Falha de consulta oferece recuperação sem editar identidade",
+    "Erro na consulta de TCC não libera formulário de proposta",
+    "Aprovação troca proposta por Meu TCC",
+    "Proposta mobile sem overflow",
+    "Conta mobile sem overflow",
+    "Sucesso na alteração de senha encerra a sessão local e volta ao login"
+  ]
+}

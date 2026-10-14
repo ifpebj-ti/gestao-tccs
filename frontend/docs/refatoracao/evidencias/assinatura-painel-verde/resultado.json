@@ -1,0 +1,48 @@
+{
+  "fixture": "APIs interceptadas com dados e arquivos fictícios; nenhum dado real alterado",
+  "checks": [
+    "Home do professor tem duas notificações positivas e não repete acompanhamento",
+    "Professor sem pendências não recebe cards verdes vazios",
+    "Estudante sem pendências também não recebe notificações vazias",
+    "Botão de recusa vermelho com texto branco e hover mais escuro",
+    "Propostas sem espaço extra no topo e cards compactos responsivos",
+    "Assinatura com título menor, aviso verde e visualizador único",
+    "Download que falha mantém envio bloqueado",
+    "Falha de envio preserva arquivo e permite nova tentativa",
+    "Envio bem-sucedido retorna à lista de assinaturas",
+    "Anexo VIII preserva foco do agendamento e exige documento assinado e TCC",
+    "Assinatura se adapta ao celular sem rolagem horizontal"
+  ],
+  "calls": [
+    {
+      "path": "/api/Signature/document/download/html",
+      "method": "POST",
+      "kind": "download",
+      "status": 500
+    },
+    {
+      "path": "/api/Signature/document/download/html",
+      "method": "POST",
+      "kind": "download",
+      "status": 200
+    },
+    {
+      "path": "/api/Signature",
+      "method": "POST",
+      "kind": "signature",
+      "status": 500
+    },
+    {
+      "path": "/api/Signature",
+      "method": "POST",
+      "kind": "signature",
+      "status": 200
+    },
+    {
+      "path": "/api/Signature/document/download/html",
+      "method": "POST",
+      "kind": "download",
+      "status": 200
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 'use client';
 
+import { SectionTitle } from '@/components/layout/SectionTitle';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -40,8 +42,6 @@ export function TccInfoSection({
   const isSubmittingEdit = formStateEdit?.isSubmitting;
   const errorsEdit = formStateEdit?.errors;
 
-
-
   const handleCancelEdit = () => {
     if (resetEdit && onToggleEditInfo) {
       resetEdit({ title: infoTcc.title ?? '', summary: infoTcc.summary ?? '' });
@@ -52,12 +52,12 @@ export function TccInfoSection({
   return (
     <section>
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-extrabold uppercase">Informações do TCC</h2>
+        <SectionTitle>Informações do TCC</SectionTitle>
 
         {canEdit &&
           (!isEditingInfo ? (
             <Button
-              variant="ghost"
+              variant="brand"
               size="sm"
               onClick={() => onToggleEditInfo && onToggleEditInfo(true)}
             >
@@ -66,10 +66,10 @@ export function TccInfoSection({
             </Button>
           ) : (
             <Button
-              variant="ghost"
+              variant="destructive"
               size="sm"
               onClick={handleCancelEdit}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              className=""
             >
               <X className="w-4 h-4 mr-2" />
               Cancelar Edição
@@ -162,7 +162,6 @@ export function TccInfoSection({
           </div>
         )}
       </form>
-
     </section>
   );
 }

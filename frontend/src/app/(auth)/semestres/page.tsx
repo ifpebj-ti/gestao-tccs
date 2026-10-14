@@ -1,7 +1,13 @@
 'use client';
+import { semesterSchema } from '@/app/schemas/managementSchema';
+import { toast } from 'react-toastify';
+
+import { PageState } from '@/components/layout/PageState';
+
+import { PageTitle } from '@/components/layout/PageTitle';
+import { SectionTitle } from '@/components/layout/SectionTitle';
 
 import { useEffect, useState } from 'react';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -71,15 +77,20 @@ export default function SemestresPage() {
   };
 
   const handleSaveSemester = async () => {
+    const parsed = semesterSchema.safeParse({ name, startDate, endDate });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return;
+    }
     let success = false;
-    // convert strings to proper ISO string for C# DateTime
+    // A API recebe as datas em ISO.
     const startIso = new Date(startDate).toISOString();
     const endIso = new Date(endDate).toISOString();
 
     if (editingSemester) {
-      success = await updateSemester(editingSemester.id, name, startIso, endIso, isActive);
+      success = await updateSemester(editingSemester.id, parsed.data.name, startIso, endIso, isActive);
     } else {
-      success = await createSemester(name, startIso, endIso, isActive);
+      success = await createSemester(parsed.data.name, startIso, endIso, isActive);
     }
     if (success) setSemesterModalOpen(false);
   };
@@ -97,26 +108,25 @@ export default function SemestresPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800">
+      <PageTitle >
         Gerenciar Semestres Letivos
-      </h1>
+      </PageTitle>
 
       {loading ? (
-        <p>Carregando...</p>
+        <PageState loading>Carregando...</PageState>
       ) : (
         <div className="flex flex-col gap-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="py-6 border-b border-[#ECEAE2]">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Semestres</h2>
-              <Button onClick={() => handleOpenSemesterModal()} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <SectionTitle >Semestres</SectionTitle>
+              <Button onClick={() => handleOpenSemesterModal()} className="bg-[#C8FF47] hover:bg-[#002B18] text-[#002B18] hover:text-[#C8FF47]">
                 <FontAwesomeIcon icon={faPlus} className="mr-2" /> Novo Semestre
               </Button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {semesters.map((semester) => (
-                <div key={semester.id} className="border rounded-lg bg-gray-50 p-4 flex flex-col gap-2">
+                <div key={semester.id} className="border-b border-[#ECEAE2] py-5 flex flex-col gap-2">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-bold text-lg text-gray-800">{semester.name}</h3>
@@ -125,11 +135,11 @@ export default function SemestresPage() {
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenSemesterModal(semester)}>
-                        <FontAwesomeIcon icon={faEdit} className="text-blue-600" />
+                      <Button variant="ghost" size="sm" aria-label={`Editar semestre ${semester.name}`} onClick={() => handleOpenSemesterModal(semester)}>
+                        <FontAwesomeIcon icon={faEdit} className="text-[#006633]" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openDeleteConfirm(semester.id)}>
-                        <FontAwesomeIcon icon={faTrash} className="text-red-600" />
+                      <Button variant="destructive" size="sm" aria-label={`Excluir semestre ${semester.name}`} onClick={() => openDeleteConfirm(semester.id)}>
+                        <FontAwesomeIcon icon={faTrash} className="" />
                       </Button>
                     </div>
                   </div>
@@ -140,7 +150,7 @@ export default function SemestresPage() {
                 </div>
               ))}
               {semesters.length === 0 && (
-                <p className="text-gray-500 italic">Nenhum semestre cadastrado.</p>
+                <PageState>Nenhum semestre cadastrado.</PageState>
               )}
             </div>
           </div>
@@ -155,16 +165,16 @@ export default function SemestresPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium">Nome do Semestre</label>
+              <label className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700">Nome do Semestre</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: 2024.1" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Data de Início</label>
+                <label className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700">Data de Início</label>
                 <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </div>
               <div>
-                <label className="text-sm font-medium">Data de Fim</label>
+                <label className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700">Data de Fim</label>
                 <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
             </div>
@@ -174,16 +184,16 @@ export default function SemestresPage() {
                 id="isActive" 
                 checked={isActive} 
                 onChange={(e) => setIsActive(e.target.checked)} 
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-[#006633] bg-gray-100 border-gray-300 rounded focus:ring-[#006633]"
               />
-              <label htmlFor="isActive" className="text-sm font-medium text-gray-900">
+              <label htmlFor="isActive" className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-gray-700">
                 Semestre Ativo
               </label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSemesterModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveSemester} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button variant="destructive" onClick={() => setSemesterModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveSemester} className="bg-[#C8FF47] hover:bg-[#002B18] text-[#002B18] hover:text-[#C8FF47]">
               Salvar
             </Button>
           </DialogFooter>
@@ -201,7 +211,7 @@ export default function SemestresPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogAction variant="destructive" onClick={handleDelete} className="text-white">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

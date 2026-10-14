@@ -1,18 +1,21 @@
 'use client';
 
+import { PageState } from '@/components/layout/PageState';
+
+import { PageTitle } from '@/components/layout/PageTitle';
+import { NoticeCard } from '@/components/layout/NoticeCard';
+
 import { useState } from 'react';
 import {
   usePendingSignatures,
   PendingTcc,
   GroupedByUserAndTcc
 } from '@/app/hooks/usePendingSignatures';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
 import { CollapseCard } from '@/components/CollapseCard';
 import {
   faUser,
   faGraduationCap,
-  faFileSignature,
-  faInfoCircle
+  faFileSignature
 } from '@fortawesome/free-solid-svg-icons';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -84,6 +87,7 @@ export default function PendingSignaturesPage() {
 
     return (
       <CollapseCard
+        variant="flat"
         key={cardId}
         title={
           'TCC - ' + (tcc.studentNames.join(', ') || 'TCC sem aluno definido')
@@ -132,6 +136,7 @@ export default function PendingSignaturesPage() {
     );
     return (
       <CollapseCard
+        variant="flat"
         key={userGroup.userId}
         title={`${userGroup.userName} (${
           profileLabels[userGroup.userProfile] || userGroup.userProfile
@@ -147,6 +152,7 @@ export default function PendingSignaturesPage() {
             const tccGroupId = `${userGroup.userId}-${tccGroup.tccId}`;
             return (
               <CollapseCard
+                variant="flat"
                 key={tccGroupId}
                 title={`TCC de: ${tccGroup.studentNames.join(', ')}`}
                 icon={faGraduationCap}
@@ -203,11 +209,15 @@ export default function PendingSignaturesPage() {
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
-        <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800">
-          Assinaturas Pendentes
-        </h1>
+        <div className="space-y-3">
+          <PageTitle className="text-2xl md:text-3xl">
+            Assinaturas pendentes
+          </PageTitle>
+          <p className="text-sm text-slate-600">
+            Selecione um documento para conferir e concluir sua assinatura.
+          </p>
+        </div>
         {canToggleView && (
           <Tabs
             value={showAll ? 'all' : 'mine'}
@@ -224,35 +234,23 @@ export default function PendingSignaturesPage() {
 
       {!isLoading &&
         (showAll ? groupedByUser.length > 0 : pendingData.length > 0) && (
-          <div className="flex items-center gap-3 p-3 text-sm text-blue-800 rounded-lg bg-blue-50 mb-6">
-            <FontAwesomeIcon icon={faInfoCircle} className="h-5 w-5" />
-            <div>
-              <span className="font-medium">Nota:</span> As assinaturas são
-              liberadas em uma ordem específica. Uma pendência pode não ser
-              exibida aqui se uma etapa anterior ainda não foi concluída.
-            </div>
-          </div>
+          <NoticeCard title="Sobre as pendências" className="mb-6">
+            As assinaturas são liberadas em uma ordem específica. Uma pendência
+            pode não ser exibida aqui se uma etapa anterior ainda não foi
+            concluída.
+          </NoticeCard>
         )}
 
       {isLoading ? (
-        <p className="text-center text-gray-500 mt-4">Carregando...</p>
+        <PageState loading>Carregando...</PageState>
       ) : (showAll ? groupedByUser.length === 0 : pendingData.length === 0) ? (
-        <p className="text-center text-gray-500 mt-4">
-          Nenhuma assinatura pendente encontrada.
-        </p>
+        <PageState>Nenhuma assinatura pendente encontrada.</PageState>
       ) : (
-        <>
-          <div className="md:hidden flex flex-col gap-2">
-            {showAll
-              ? groupedByUser.map((userGroup) => renderUserCard(userGroup))
-              : pendingData.map((tcc) => renderTccCard(tcc))}
-          </div>
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {showAll
-              ? groupedByUser.map((userGroup) => renderUserCard(userGroup))
-              : pendingData.map((tcc) => renderTccCard(tcc))}
-          </div>
-        </>
+        <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 lg:grid-cols-3">
+          {showAll
+            ? groupedByUser.map((userGroup) => renderUserCard(userGroup))
+            : pendingData.map((tcc) => renderTccCard(tcc))}
+        </div>
       )}
     </div>
   );
