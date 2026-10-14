@@ -63,7 +63,7 @@ const Alert: React.FC<AlertProps> = ({
           {showCloseButton && (
             <AlertDialogCancel asChild>
               <Button
-                variant="ghost"
+                variant="cancel"
                 className="px-4 py-2"
                 onClick={handleClose}
               >

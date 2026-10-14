@@ -1,5 +1,7 @@
 'use client';
 
+import { FormSelect } from '@/components/ui/form-select';
+
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
@@ -112,11 +114,21 @@ export default function AutoRegister() {
         >
           Cadastro de Estudante
         </h2>
-        <p style={{ fontSize: '0.875rem', color: '#6B7280', marginBottom: '1.75rem' }}>
+        <p
+          style={{
+            fontSize: '0.875rem',
+            color: '#6B7280',
+            marginBottom: '1.75rem'
+          }}
+        >
           Preencha seus dados cadastrais para acessar o sistema.
         </p>
 
-        <form onSubmit={handleSubmit(submitForm)} noValidate className="space-y-4">
+        <form
+          onSubmit={handleSubmit(submitForm)}
+          noValidate
+          className="space-y-4"
+        >
           {/* Nome Completo */}
           <div>
             <label
@@ -153,7 +165,13 @@ export default function AutoRegister() {
               }}
             />
             {errors.name && (
-              <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+              <p
+                style={{
+                  marginTop: '0.25rem',
+                  fontSize: '0.75rem',
+                  color: '#EF4444'
+                }}
+              >
                 {errors.name.message?.toString()}
               </p>
             )}
@@ -197,7 +215,13 @@ export default function AutoRegister() {
                 }}
               />
               {errors.email && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.email.message?.toString()}
                 </p>
               )}
@@ -237,7 +261,13 @@ export default function AutoRegister() {
                 }}
               />
               {errors.registration && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.registration.message?.toString()}
                 </p>
               )}
@@ -285,7 +315,13 @@ export default function AutoRegister() {
                 }}
               />
               {errors.cpf && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.cpf.message?.toString()}
                 </p>
               )}
@@ -330,7 +366,13 @@ export default function AutoRegister() {
                 }}
               />
               {errors.phone && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.phone.message?.toString()}
                 </p>
               )}
@@ -373,7 +415,13 @@ export default function AutoRegister() {
                 }}
               />
               {errors.userClass && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.userClass.message?.toString()}
                 </p>
               )}
@@ -394,9 +442,10 @@ export default function AutoRegister() {
               >
                 Turno *
               </label>
-              <select
+              <FormSelect
                 id="auto-shift"
-                {...register('shift')}
+                control={form.control}
+                name={'shift'}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -416,9 +465,15 @@ export default function AutoRegister() {
                 <option value="2">Vespertino (Tarde)</option>
                 <option value="3">Noturno (Noite)</option>
                 <option value="4">Diurno (Integral)</option>
-              </select>
+              </FormSelect>
               {errors.shift && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.shift.message?.toString()}
                 </p>
               )}
@@ -442,9 +497,10 @@ export default function AutoRegister() {
               >
                 Campus *
               </label>
-              <select
+              <FormSelect
                 id="auto-campus"
-                {...register('campusId')}
+                control={form.control}
+                name={'campusId'}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -465,9 +521,15 @@ export default function AutoRegister() {
                     {camp.name}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
               {errors.campusId && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.campusId.message?.toString()}
                 </p>
               )}
@@ -488,9 +550,10 @@ export default function AutoRegister() {
               >
                 Curso *
               </label>
-              <select
+              <FormSelect
                 id="auto-course"
-                {...register('courseId')}
+                control={form.control}
+                name={'courseId'}
                 disabled={!courses || courses.length === 0}
                 style={{
                   display: 'block',
@@ -512,9 +575,15 @@ export default function AutoRegister() {
                     {course.name}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
               {errors.courseId && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.courseId.message?.toString()}
                 </p>
               )}
@@ -576,7 +645,13 @@ export default function AutoRegister() {
                 </button>
               </div>
               {errors.password && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.password.message?.toString()}
                 </p>
               )}
@@ -629,13 +704,25 @@ export default function AutoRegister() {
                     cursor: 'pointer',
                     color: '#6B7280'
                   }}
-                  aria-label={showConfirmPassword ? 'Ocultar senha' : 'Exibir senha'}
+                  aria-label={
+                    showConfirmPassword ? 'Ocultar senha' : 'Exibir senha'
+                  }
                 >
-                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                <p
+                  style={{
+                    marginTop: '0.25rem',
+                    fontSize: '0.75rem',
+                    color: '#EF4444'
+                  }}
+                >
                   {errors.confirmPassword.message?.toString()}
                 </p>
               )}
@@ -666,7 +753,11 @@ export default function AutoRegister() {
                 transition: 'all 0.15s ease'
               }}
             >
-              <span>{isSubmitting ? 'Concluindo cadastro...' : 'Concluir cadastro e acessar'}</span>
+              <span>
+                {isSubmitting
+                  ? 'Concluindo cadastro...'
+                  : 'Concluir cadastro e acessar'}
+              </span>
               <ArrowRight size={16} />
             </button>
           </div>

@@ -1,29 +1,30 @@
 'use client';
 
+import { PageTitle } from '@/components/layout/PageTitle';
+import { NoticeCard } from '@/components/layout/NoticeCard';
+
 import { useState } from 'react';
 import { useSignaturePage } from '@/app/hooks/useSignaturePage';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   faDownload,
   faSignature,
   faSpinner,
   faInfoCircle,
-  faFilePdf,
-  faExternalLinkAlt,
-  faExclamationTriangle
+  faExternalLinkAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { CollapseCard } from '@/components/CollapseCard';
 import { CustomFileInput } from '@/components/CustomFileInput/page';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Award, ArrowRight } from 'lucide-react';
+import { Award, ArrowRight, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
+  DialogDescription
 } from '@/components/ui/dialog';
 
 export default function SignatureClient() {
@@ -50,16 +51,22 @@ export default function SignatureClient() {
   const searchParams = useSearchParams();
   const docNameFromParams = searchParams.get('docName');
   const [downloadClicked, setDownloadClicked] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   const [scheduleLocation, setScheduleLocation] = useState('');
 
-  const ActionPanel = () => (
-    <div className="p-6 border rounded-lg shadow-sm bg-white space-y-6">
+  const renderActionPanel = () => (
+    <section
+      aria-label="Etapas de assinatura"
+      className="space-y-5 rounded-2xl bg-[#183E2D] p-5 text-[#FAF9F5] md:p-6"
+    >
       <div>
-        <h2 className="font-bold text-lg">Ações para Assinatura</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="mb-2 text-lg font-bold text-[#C8FF47]">
+          Concluir assinatura
+        </h2>
+        <p className="text-sm text-[#FAF9F5]/85">
           Siga os passos abaixo para concluir sua assinatura.
         </p>
       </div>
@@ -67,39 +74,58 @@ export default function SignatureClient() {
       {/* Passo 1: Agendamento (Obrigatório para Orientador no Anexo VIII) */}
       {isAnexoVIII && isAdvisor && (
         <div className="space-y-2">
-          <h3 className="font-bold text-base text-amber-700">
+          <h3 className="font-bold text-sm">
             Passo 1: Agendamento da Apresentação
           </h3>
-          <p className="text-sm text-gray-600 mb-2">
-            Preencha a data, horário e local antes de baixar o documento. Ele será gerado com esses dados.
+          <p className="text-sm text-[#FAF9F5]/85 mb-2">
+            Preencha a data, horário e local antes de baixar o documento. Ele
+            será gerado com esses dados.
           </p>
           <div className="flex flex-col gap-3 mt-2">
             <div>
-              <label className="text-sm font-semibold mb-1 block">Data da apresentação</label>
-              <input 
-                type="date" 
+              <label
+                htmlFor="signature-date"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#FAF9F5]/85"
+              >
+                Data da apresentação
+              </label>
+              <Input
+                id="signature-date"
+                className="border-[#C8FF47]/60 text-[#FAF9F5] placeholder:text-[#FAF9F5]/50 focus-visible:border-[#C8FF47] [color-scheme:dark]"
+                type="date"
                 value={scheduleDate}
                 onChange={(e) => setScheduleDate(e.target.value)}
-                className="w-full p-2 border rounded text-sm disabled:opacity-50"
               />
             </div>
             <div>
-              <label className="text-sm font-semibold mb-1 block">Hora da apresentação</label>
-              <input 
-                type="time" 
+              <label
+                htmlFor="signature-time"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#FAF9F5]/85"
+              >
+                Hora da apresentação
+              </label>
+              <Input
+                id="signature-time"
+                className="border-[#C8FF47]/60 text-[#FAF9F5] placeholder:text-[#FAF9F5]/50 focus-visible:border-[#C8FF47] [color-scheme:dark]"
+                type="time"
                 value={scheduleTime}
                 onChange={(e) => setScheduleTime(e.target.value)}
-                className="w-full p-2 border rounded text-sm disabled:opacity-50"
               />
             </div>
             <div>
-              <label className="text-sm font-semibold mb-1 block">Local/Link</label>
-              <input 
-                type="text" 
+              <label
+                htmlFor="signature-location"
+                className="block mb-2 font-[family-name:var(--font-poppins)] text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#FAF9F5]/85"
+              >
+                Local/Link
+              </label>
+              <Input
+                id="signature-location"
+                className="border-[#C8FF47]/60 text-[#FAF9F5] placeholder:text-[#FAF9F5]/50 focus-visible:border-[#C8FF47] [color-scheme:dark]"
+                type="text"
                 value={scheduleLocation}
                 onChange={(e) => setScheduleLocation(e.target.value)}
                 placeholder="Ex: Sala 20 ou Link do Meet"
-                className="w-full p-2 border rounded text-sm disabled:opacity-50"
               />
             </div>
           </div>
@@ -107,56 +133,70 @@ export default function SignatureClient() {
       )}
 
       {/* Passo 2: Baixar Documento */}
-      <div className={`${isAnexoVIII && isAdvisor ? 'border-t pt-4 ' : ''}space-y-2`}>
-        <h3 className="font-bold text-base">{isAnexoVIII && isAdvisor ? 'Passo 2' : 'Passo 1'}: Baixar Documento</h3>
+      <div
+        className={`${isAnexoVIII && isAdvisor ? 'border-t border-[#FAF9F5]/20 pt-4 ' : ''}space-y-2`}
+      >
+        <h3 className="font-bold text-base">
+          {isAnexoVIII && isAdvisor ? 'Passo 2' : 'Passo 1'}: Baixar Documento
+        </h3>
         <Button
-          variant="outline"
+          variant="accent"
           className="w-full"
-          disabled={isAnexoVIII && isAdvisor && (!scheduleDate || !scheduleTime || !scheduleLocation)}
-          onClick={() => {
-            handleDownloadDocument({ date: scheduleDate, time: scheduleTime, location: scheduleLocation });
-            setDownloadClicked(true);
+          disabled={
+            isLoading ||
+            downloading ||
+            (isAnexoVIII &&
+              isAdvisor &&
+              (!scheduleDate || !scheduleTime || !scheduleLocation))
+          }
+          onClick={async () => {
+            setDownloading(true);
+            try {
+              const succeeded = await handleDownloadDocument({
+                date: scheduleDate,
+                time: scheduleTime,
+                location: scheduleLocation
+              });
+              if (succeeded) setDownloadClicked(true);
+            } finally {
+              setDownloading(false);
+            }
           }}
         >
           <FontAwesomeIcon icon={faDownload} className="mr-2" />
-          Baixar Documento
+          {downloading ? 'Baixando…' : 'Baixar documento'}
         </Button>
       </div>
 
       {/* Passo 3: Assinar (Link Externo) */}
-      <div
-        className={`border-t pt-4 space-y-2 transition-opacity ${
-          !downloadClicked ? 'opacity-50' : ''
-        }`}
-      >
-        <h3 className="font-bold text-base">{isAnexoVIII && isAdvisor ? 'Passo 3' : 'Passo 2'}: Assinar o Documento</h3>
-        <p className="text-sm text-gray-600">
+      <div className="border-t border-[#FAF9F5]/20 pt-4 space-y-3">
+        <h3 className="font-bold text-base">
+          {isAnexoVIII && isAdvisor ? 'Passo 3' : 'Passo 2'}: Assinar o
+          Documento
+        </h3>
+        <p className="text-sm text-[#FAF9F5]/85">
           Não tem um assinador? Utilize o serviço gratuito do Governo Federal.
         </p>
         <a
           href="https://www.gov.br/pt-br/servicos/assinatura-eletronica"
           target="_blank"
           rel="noopener noreferrer"
-          className={!downloadClicked ? 'pointer-events-none' : ''}
+          className={buttonVariants({
+            variant: 'outline',
+            className:
+              'w-full border-[#C8FF47]/60 text-[#C8FF47] hover:bg-[#C8FF47] hover:text-[#002B18]'
+          })}
         >
-          <Button variant="link" className="p-0 h-auto text-blue-600">
-            Assinar com gov.br
-            <FontAwesomeIcon
-              icon={faExternalLinkAlt}
-              className="ml-2 h-3 w-3"
-            />
-          </Button>
+          Assinar com gov.br
+          <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-2 h-3 w-3" />
         </a>
       </div>
 
       {/* Passo 4: Enviar Documento */}
-      <div
-        className={`border-t pt-4 space-y-2 transition-opacity ${
-          !downloadClicked ? 'opacity-50' : ''
-        }`}
-      >
+      <div className="border-t border-[#FAF9F5]/20 pt-4 space-y-3">
         <h3 className="font-bold text-base">
-          {isAnexoVIII && isAdvisor ? 'Passo 4' : 'Passo 3'}: Enviar Documento Assinado
+          {isAnexoVIII && isAdvisor ? 'Passo 4' : 'Passo 3'}: Enviar Documento
+          Assinado
         </h3>
         <div>
           <CustomFileInput
@@ -164,9 +204,10 @@ export default function SignatureClient() {
             onFileSelect={setSelectedFile}
             disabled={!downloadClicked}
             accept=".pdf,.html"
+            buttonVariant="accent"
           />
           {!downloadClicked && (
-            <p className="text-xs text-gray-500 italic mt-1 flex items-center gap-1">
+            <p className="text-xs text-[#FAF9F5]/75 italic mt-1 flex items-center gap-1">
               <FontAwesomeIcon icon={faInfoCircle} />
               Clique em &apos;Baixar Documento&apos; para habilitar o envio.
             </p>
@@ -176,16 +217,13 @@ export default function SignatureClient() {
 
       {/* Passo Especial: Enviar TCC (Obrigatório para Orientador no Anexo VIII) */}
       {isAnexoVIII && isAdvisor && (
-        <div
-          className={`border-t pt-4 space-y-2 transition-opacity ${
-            !downloadClicked ? 'opacity-50' : ''
-          }`}
-        >
+        <div className="border-t border-[#FAF9F5]/20 pt-4 space-y-3">
           <h3 className="font-bold text-base">
             Passo 5: Enviar Arquivo do TCC
           </h3>
-          <p className="text-sm text-gray-600 mb-2">
-            Como orientador(a), você deve enviar o arquivo final do TCC (Monografia) junto com este termo.
+          <p className="text-sm text-[#FAF9F5]/85 mb-2">
+            Como orientador(a), você deve enviar o arquivo final do TCC
+            (Monografia) junto com este termo.
           </p>
           <div>
             <CustomFileInput
@@ -193,40 +231,43 @@ export default function SignatureClient() {
               onFileSelect={setTccFile}
               disabled={!downloadClicked}
               accept=".pdf"
+              buttonVariant="accent"
             />
           </div>
         </div>
       )}
 
       {/* Passo Final: Confirmar Assinatura */}
-      <div
-        className={`border-t pt-4 space-y-4 transition-opacity ${
-          !downloadClicked ? 'opacity-50' : ''
-        }`}
-      >
-        <h3 className="font-bold text-base">{isAnexoVIII && isAdvisor ? 'Passo 6' : 'Passo 4'}: Confirmar Assinatura</h3>
+      <div className="border-t border-[#FAF9F5]/20 pt-4 space-y-4">
+        <h3 className="font-bold text-base">
+          {isAnexoVIII && isAdvisor ? 'Passo 6' : 'Passo 4'}: Confirmar
+          Assinatura
+        </h3>
 
-        <div className="p-3 text-sm text-amber-700 rounded-lg bg-amber-50 border border-amber-200">
-          <div className="flex items-start gap-2">
-            <FontAwesomeIcon
-              icon={faExclamationTriangle}
-              className="mt-0.5 h-4 w-4"
-            />
-            <div>
-              <span className="font-bold">Atenção:</span> Verifique se o arquivo
-              anexado é o documento correto e devidamente assinado. Esta ação
-              não poderá ser desfeita.
-            </div>
-          </div>
-        </div>
+        <NoticeCard
+          title="Confira antes de confirmar"
+          className="rounded-xl border border-[#C8FF47]/25 bg-[#002B18] p-4"
+        >
+          Verifique se o arquivo anexado é o documento correto e devidamente
+          assinado. Esta ação não poderá ser desfeita.
+        </NoticeCard>
 
         <Button
-          onClick={() => handleSignDocument({ date: scheduleDate, time: scheduleTime, location: scheduleLocation })}
+          variant="accent"
+          onClick={() =>
+            handleSignDocument({
+              date: scheduleDate,
+              time: scheduleTime,
+              location: scheduleLocation
+            })
+          }
           disabled={
-            !downloadClicked || 
-            !selectedFile || 
-            (isAnexoVIII && isAdvisor && !tccFile) || 
-            (isAnexoVIII && isAdvisor && (!scheduleDate || !scheduleTime || !scheduleLocation)) ||
+            !downloadClicked ||
+            !selectedFile ||
+            (isAnexoVIII && isAdvisor && !tccFile) ||
+            (isAnexoVIII &&
+              isAdvisor &&
+              (!scheduleDate || !scheduleTime || !scheduleLocation)) ||
             isSubmitting
           }
           className="w-full"
@@ -239,7 +280,7 @@ export default function SignatureClient() {
           {isSubmitting ? 'Enviando...' : 'Confirmar Assinatura'}
         </Button>
       </div>
-    </div>
+    </section>
   );
 
   const DocumentViewer = ({ className = '' }: { className?: string }) => (
@@ -285,33 +326,32 @@ export default function SignatureClient() {
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10 truncate">
-        {pageTitle}
-      </h1>
-
-      {/* Layout para Telas Grandes (lg em diante) */}
-      <div className="hidden lg:grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 h-[80vh]">
-          <DocumentViewer />
+      <header className="mb-4 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <PageTitle className="text-2xl md:text-3xl">
+            Assinar documento
+          </PageTitle>
+          <Link
+            href="/pendingSignatures"
+            className={buttonVariants({
+              variant: 'ghost',
+              size: 'sm',
+              className: '-mr-3.5'
+            })}
+          >
+            <ArrowLeft className="size-4" />
+            Voltar às assinaturas
+          </Link>
         </div>
-        <div className="lg:col-span-1">
-          <ActionPanel />
+        <p className="max-w-3xl break-words text-sm leading-relaxed text-slate-600">
+          {pageTitle}
+        </p>
+      </header>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+        <div className="h-[60vh] min-w-0 overflow-hidden rounded-xl border border-[#E2E5DC] bg-white xl:sticky xl:top-6 xl:h-[78vh]">
+          {DocumentViewer({})}
         </div>
-      </div>
-
-      {/* Layout para Mobile e Tablets (até lg) */}
-      <div className="lg:hidden flex flex-col gap-4 ">
-        <div>
-          <CollapseCard title="Visualizar Documento" icon={faFilePdf}>
-            <div className="w-full h-[70vh]">
-              <DocumentViewer />
-            </div>
-          </CollapseCard>
-        </div>
-        <div>
-          <ActionPanel />
-        </div>
+        {renderActionPanel()}
       </div>
 
       <Dialog open={!!signatureSuccess?.isOpen} onOpenChange={() => {}}>
@@ -320,31 +360,37 @@ export default function SignatureClient() {
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 shadow-inner">
               <Award className="w-8 h-8" />
             </div>
-            
+
             <DialogHeader className="items-center text-center">
               <DialogTitle className="text-xl font-black text-gray-900">
                 Assinatura Registrada com Sucesso!
               </DialogTitle>
               <DialogDescription className="text-sm text-gray-600 mt-2">
-                Parabéns! Sua assinatura no documento da banca avaliadora foi homologada no sistema.
+                Parabéns! Sua assinatura no documento da banca avaliadora foi
+                homologada no sistema.
               </DialogDescription>
             </DialogHeader>
 
             <div className="w-full mt-4 p-4 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800">
-              O documento assinado agora compõe o histórico oficial do TCC e as avaliações da comissão examinadora estão disponíveis para consulta.
+              O documento assinado agora compõe o histórico oficial do TCC e as
+              avaliações da comissão examinadora estão disponíveis para
+              consulta.
             </div>
 
             <div className="flex flex-col w-full gap-2 mt-6">
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                variant="brand"
+                className="w-full"
                 onClick={() => {
-                  router.push(`/myTCC/details?id=${signatureSuccess?.tccId || tccId || ''}`);
+                  router.push(
+                    `/myTCC/details?id=${signatureSuccess?.tccId || tccId || ''}`
+                  );
                 }}
               >
                 Acessar Informações do Meu TCC
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-              
+
               <Button
                 variant="outline"
                 className="w-full"

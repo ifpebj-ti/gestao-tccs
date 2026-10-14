@@ -5,9 +5,12 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
-public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway, ISemesterGateway semesterGateway, IAppLoggerGateway<CreateTccUseCase> logger)
+public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway, ISemesterGateway semesterGateway, IAppLoggerGateway<CreateTccUseCase> logger, IProposalGateway? proposals = null)
 {
-    public async Task<ResultPattern<string>> Execute(CreateTccDTO data)
+    public Task<ResultPattern<string>> Execute(CreateTccDTO data) =>
+        proposals == null ? Create(data) : proposals.Atomic(() => Create(data));
+
+    private async Task<ResultPattern<string>> Create(CreateTccDTO data)
     {
         logger.LogInformation("Iniciando criação de TCC. Título: {TccTitle}, OrientadorId: {AdvisorId}, Alunos: {StudentCount}", data.Title, data.AdvisorId, data.Students.Count);
         var studentEmails = data.Students.Select(s => s.StudentEmail).ToList();
@@ -20,6 +23,12 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
             return ResultPattern<string>.FailureResult("Erro ao criar tcc", 404);
         }
         
+        foreach (var student in users)
+        {
+            var existing = await tccGateway.FindAllTccByFilter(new TccFilterDTO(student.Id, null), 0);
+            if (existing != null && existing.Any(ProposalParticipantsUseCase.Active))
+                return ResultPattern<string>.FailureResult("Um estudante já possui proposta ou TCC ativo.", 409);
+        }
         if (users.Count > 0 && users.Any(u => u.CampiCourse!.Id != advisor!.CampiCourse!.Id))
         {
             logger.LogWarning("Falha na criação do TCC: Orientador com Id {AdvisorId} e orientandos de campus diferentes.", data.AdvisorId);

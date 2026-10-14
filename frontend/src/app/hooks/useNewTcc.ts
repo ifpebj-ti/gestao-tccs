@@ -2,7 +2,11 @@
 
 import { useForm, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { newTccSchema, NewTccSchemaType } from '@/app/schemas/newTccSchema';
+import {
+  newTccSchema,
+  newTccManagementSchema,
+  NewTccSchemaType
+} from '@/app/schemas/newTccSchema';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
@@ -38,12 +42,13 @@ export function useNewTccForm() {
   const [isStudent, setIsStudent] = useState(false);
 
   const form = useForm<NewTccSchemaType>({
-    resolver: zodResolver(newTccSchema),
+    resolver: zodResolver(isStudent ? newTccSchema : newTccManagementSchema),
     defaultValues: {
       students: [{ studentEmail: '', courseId: 0 }],
       advisorId: 0,
       title: '',
-      summary: ''
+      summary: '',
+      participants: []
     }
   });
 
@@ -52,6 +57,10 @@ export function useNewTccForm() {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'students'
+  });
+  const participants = useFieldArray({
+    control: form.control,
+    name: 'participants'
   });
 
   useEffect(() => {
@@ -159,12 +168,19 @@ export function useNewTccForm() {
             body: JSON.stringify({
               title: data.title,
               summary: data.summary,
-              advisorId: data.advisorId
+              advisorId: data.advisorId,
+              participantEmails: (data.participants ?? []).map((participant) =>
+                participant.email.trim().toLowerCase()
+              )
             })
           });
 
           if (response.ok) {
-            toast.success('Proposta de TCC enviada ao orientador com sucesso!');
+            toast.success(
+              data.participants?.length
+                ? 'Proposta enviada. Aguardando aceite do participante.'
+                : 'Proposta de TCC enviada ao orientador com sucesso!'
+            );
             push('/homePage');
           } else {
             const err = await response.json().catch(() => ({}));
@@ -219,6 +235,9 @@ export function useNewTccForm() {
     fields,
     append,
     remove,
+    participantFields: participants.fields,
+    addParticipant: () => participants.append({ email: '' }),
+    removeParticipant: participants.remove,
     isStudent,
     isReformulating: !!reformulateId,
     isSubmitting: form.formState.isSubmitting

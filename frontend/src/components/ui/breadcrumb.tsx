@@ -116,10 +116,14 @@ export function BreadcrumbAuto({ map = {} }: { map?: Record<string, string> }) {
     signature: 'Assinatura',
     myTCC: 'Meu TCC',
     completedTCCs: 'TCCs Concluídos',
-    users: 'Usuários'
+    users: 'Usuários',
+    profile: 'Minha conta'
   };
 
-  const segments = pathname.split('/').filter(Boolean);
+  const segments = pathname
+    .split('/')
+    .filter(Boolean)
+    .filter((segment) => segment !== 'homePage');
 
   return (
     <Breadcrumb className="mb-4">

@@ -32,6 +32,8 @@ public static class IocDependencyExtensions
         services.AddScoped<IBcryptGateway, BcryptGateway>();
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
+        services.AddScoped<IProposalGateway, ProposalGateway>();
+        services.AddScoped<ProposalParticipantsUseCase>();
         services.AddScoped<IStorageGateway, StorageGateway>();
         services.AddScoped<IITextGateway, ITextGateway>();
         services.AddScoped(typeof(IAppLoggerGateway<>), typeof(AppLoggerGateway<>));
@@ -55,6 +57,9 @@ public static class IocDependencyExtensions
         services.AddScoped<AutoRegisterUseCase>();
         services.AddScoped<UpdateUserUseCase>();
         services.AddScoped<FindAllUserUseCase>();
+        services.AddScoped<MyProfileUseCase>();
+        services.AddScoped<TccFilesUseCase>();
+        services.AddScoped<ChangeOwnPasswordUseCase>();
         
         // Tcc
         services.AddScoped<CreateTccUseCase>();

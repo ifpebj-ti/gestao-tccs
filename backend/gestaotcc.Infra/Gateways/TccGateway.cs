@@ -53,6 +53,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<TccEntity?> FindTccById(long id)
     {
         return await context.Tccs
+            .Include(x => x.ParticipantInvitations)
             .Include(x => x.TccInvites)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
@@ -82,6 +83,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<TccEntity?> FindTccInformations(long id)
     {
         return await context.Tccs
+            .Include(x => x.ParticipantInvitations)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
             .Include(x => x.TccInvites)

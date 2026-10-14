@@ -1,0 +1,17 @@
+﻿{
+    "frontend":  {
+                     "url":  "http://localhost:3000",
+                     "status":  200
+                 },
+    "apiInvitationAnonymous":  {
+                                   "url":  "http://localhost:8080/api/Tcc/participant-invitations",
+                                   "status":  401
+                               },
+    "swagger":  {
+                    "status":  200,
+                    "invitationRoutes":  3,
+                    "participantEmails":  true
+                },
+    "realAccountsUsed":  false,
+    "temporaryTestContainersStopped":  true
+}

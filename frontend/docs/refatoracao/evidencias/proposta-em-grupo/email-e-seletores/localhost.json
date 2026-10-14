@@ -1,0 +1,14 @@
+﻿{
+    "frontend":  {
+                     "url":  "http://localhost:3000",
+                     "status":  200
+                 },
+    "invitationsAnonymous":  401,
+    "notificationsAnonymous":  401,
+    "swagger":  {
+                    "invitationRoutes":  5,
+                    "status":  200
+                },
+    "frontendBackendRebuilt":  true,
+    "testContainersStopped":  true
+}

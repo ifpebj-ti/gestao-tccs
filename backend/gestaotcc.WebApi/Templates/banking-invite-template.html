@@ -1,95 +1,78 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convite para Banca de TCC</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .content {
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-            .content h2 {
-                color: #333;
-            }
-
-            .content p {
-                color: #666;
-            }
-
-        .info-box {
-            background-color: #eef6ff;
-            border-left: 4px solid #0056b3;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 6px;
-        }
-
-            .info-box strong {
-                display: block;
-                margin-bottom: 5px;
-                color: #0056b3;
-            }
-
-        .footer {
-            text-align: center;
-            color: #888;
-            padding: 20px 0;
-        }
-
-            .footer p {
-                margin: 0;
-                font-size: 14px;
-            }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convite para Banca — Gradus Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', Arial, sans-serif; background-color: #F0F4F0; padding: 32px 16px; }
+    .wrapper { max-width: 600px; margin: 0 auto; }
+    .header {
+      background-color: #002B18;
+      border-radius: 12px 12px 0 0;
+      padding: 32px 40px 24px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .logo-mark { width: 44px; height: 44px; background-color: #C8FF47; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .brand { color: #FAF9F5; font-size: 18px; font-weight: 700; }
+    .brand span { color: #C8FF47; }
+    .body { background-color: #ffffff; padding: 40px; }
+    .tag { display: inline-block; background-color: #C8FF47; color: #002B18; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 100px; margin-bottom: 20px; }
+    h1 { font-size: 22px; font-weight: 700; color: #002B18; margin-bottom: 12px; line-height: 1.3; }
+    p { font-size: 15px; color: #4A5A4A; line-height: 1.7; margin-bottom: 14px; }
+    .info-box { background-color: #F5FFF0; border: 1px solid #C8FF47; border-left: 3px solid #C8FF47; border-radius: 0 8px 8px 0; padding: 20px; margin: 24px 0; }
+    .info-box .info-row { margin-bottom: 14px; }
+    .info-box .info-row:last-child { margin-bottom: 0; }
+    .info-label { font-size: 11px; font-weight: 700; color: #002B18; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+    .info-value { font-size: 14px; color: #4A5A4A; }
+    .alert { background-color: #002B18; border-radius: 8px; padding: 16px 20px; margin-top: 20px; }
+    .alert p { color: #C8FF47; font-size: 13px; font-weight: 500; margin: 0; }
+    .footer { background-color: #002B18; border-radius: 0 0 12px 12px; padding: 24px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #7A9A7A; line-height: 1.6; margin: 0; }
+    .footer a { color: #C8FF47; text-decoration: none; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="content">
-            <h2>Olá, {{username}}</h2>
-            <p>Você foi convidado(a) para participar da banca avaliadora do seguinte Trabalho de Conclusão de Curso (TCC). Confira os detalhes abaixo:</p>
-
-            <div class="info-box">
-                <strong>Título do TCC:</strong>
-                <p>{{titulo_tcc}}</p>
-
-                <strong>Resumo:</strong>
-                <p>{{resumo_tcc}}</p>
-
-                <strong>Data e Horário:</strong>
-                <p>{{data_horario}}</p>
-
-                <strong>Local:</strong>
-                <p>{{local}}</p>
-            </div>
-            
-            <p><strong>Atenção:</strong> O documento do TCC para análise prévia <strong>encontra-se em anexo</strong> a este e-mail.</p>
-            
-            <p>Em breve, após a conclusão da apresentação, você receberá um novo e-mail contendo o link exclusivo para lançar a sua nota e o parecer da avaliação.</p>
-        </div>
-
-        <div class="footer">
-            <p>Se você não reconhece essa ação, entre em contato com a coordenação.</p>
-            <p>Obrigado por sua colaboração!</p>
-        </div>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo-mark">🎓</div>
+      <div class="brand">Gradus<span>Flow</span></div>
     </div>
+    <div class="body">
+      <span class="tag">Convite de Banca</span>
+      <h1>Olá, {{username}} — você foi convidado(a) para uma banca!</h1>
+      <p>Você foi convidado(a) para participar da banca avaliadora do seguinte Trabalho de Conclusão de Curso. Confira os detalhes:</p>
+
+      <div class="info-box">
+        <div class="info-row">
+          <div class="info-label">Título do TCC</div>
+          <div class="info-value">{{titulo_tcc}}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Resumo</div>
+          <div class="info-value">{{resumo_tcc}}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Data e Horário</div>
+          <div class="info-value">{{data_horario}}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Local</div>
+          <div class="info-value">{{local}}</div>
+        </div>
+      </div>
+
+      <div class="alert">
+        <p>📎 O documento do TCC para análise prévia <strong>encontra-se em anexo</strong> a este e-mail. Após a apresentação, você receberá um link exclusivo para lançar sua nota.</p>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Não reconhece essa ação? Entre em contato com a coordenação.<br>
+      <a href="http://localhost:3000">Gradus Flow</a> &nbsp;·&nbsp; Instituto Federal de Pernambuco</p>
+    </div>
+  </div>
 </body>
 </html>

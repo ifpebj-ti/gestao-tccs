@@ -104,7 +104,7 @@ export function BankingSignatures({ signatures, jwt, onSuccess }: BankingSignatu
       </div>
 
       {signatures.map((sigGroup) => (
-        <div key={sigGroup.tccId} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+        <div key={sigGroup.tccId} className="border-b border-[#ECEAE2] py-5">
           <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">
             TCC: {sigGroup.studentNames.join(', ')}
           </h3>
@@ -116,7 +116,7 @@ export function BankingSignatures({ signatures, jwt, onSuccess }: BankingSignatu
               return (
                 <div key={doc.documentId} className="p-4 bg-gray-50 rounded-md border border-gray-100 flex flex-col gap-4">
                   <div className="flex items-center gap-2 text-gray-700 font-semibold">
-                    <FontAwesomeIcon icon={faFileSignature} className="text-blue-600" />
+                    <FontAwesomeIcon icon={faFileSignature} className="text-[#006633]" />
                     <span>{doc.documentName}</span>
                   </div>
                   
@@ -136,7 +136,7 @@ export function BankingSignatures({ signatures, jwt, onSuccess }: BankingSignatu
                       <div className={`pt-2 transition-opacity ${!isDownloaded ? 'opacity-50 pointer-events-none' : ''}`}>
                         <p className="text-sm font-medium text-gray-600 mb-1">2. Assinar (Gov.br)</p>
                         <a href="https://www.gov.br/pt-br/servicos/assinatura-eletronica" target="_blank" rel="noopener noreferrer">
-                          <Button variant="link" className="p-0 h-auto text-blue-600 text-sm">
+                          <Button variant="link" className="p-0 h-auto text-[#006633] text-sm">
                             Assinar com Gov.br <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-2 h-3 w-3" />
                           </Button>
                         </a>

@@ -6,5 +6,6 @@ public enum StatusTccType
     COMPLETED = 2,
     CANCELED = 3,
     PENDING_APPROVAL = 4,
-    REJECTED = 5
+    REJECTED = 5,
+    AWAITING_PARTICIPANTS = 6
 }

@@ -1,7 +1,10 @@
 'use client';
 
-import { CollapseCard } from '@/components/CollapseCard';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
+import { PageState } from '@/components/layout/PageState';
+
+import { PageTitle } from '@/components/layout/PageTitle';
+
+import { ResponsiveRecordCard } from '@/components/ResponsiveRecordCard';
 import {
   faGraduationCap,
   faPen,
@@ -84,81 +87,46 @@ export default function OngoingTCCsPage() {
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-10">
-        TCCs em andamento
-      </h1>
+      <PageTitle className="mb-10">TCCs em andamento</PageTitle>
 
       {isLoading ? (
-        <p className="text-center text-gray-500 mt-4">Carregando...</p>
+        <PageState loading>Carregando...</PageState>
       ) : tccs.length === 0 ? (
-        <p className="text-center text-gray-500 mt-4">
-          Nenhum TCC em andamento encontrado.
-        </p>
+        <PageState>Nenhum TCC em andamento encontrado.</PageState>
       ) : (
-        <>
-          {/* Mobile */}
-          <div className="md:hidden flex flex-col gap-2">
-            {tccs.map((tcc) => (
-              <div key={tcc.tccId}>
-                <CollapseCard
-                  title={
-                    tcc.studanteNames.join(', ') ||
-                    'Aguardando cadastro do(s) estudante(s)'
-                  }
-                  icon={faGraduationCap}
-                  indicatorColor="bg-red-600"
-                >
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() =>
-                        push(`/ongoingTCCs/signatures?id=${tcc.tccId}`)
-                      }
-                      className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
-                    >
-                      <FontAwesomeIcon
-                        icon={faPen}
-                        className="text-[#1351B4]"
-                      />
-                      <span>Assinaturas</span>
-                    </button>
-                    <button
-                      onClick={() =>
-                        push(`/ongoingTCCs/details?id=${tcc.tccId}`)
-                      }
-                      className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
-                    >
-                      <FontAwesomeIcon
-                        icon={faFile}
-                        className="text-[#1351B4]"
-                      />
-                      <span>TCC</span>
-                    </button>
-                  </div>
-                </CollapseCard>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop */}
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
-            {tccs.map((tcc) => (
-              <div key={tcc.tccId}>
-                <CollapseCard
-                  title={
-                    tcc.studanteNames.join(', ') ||
-                    'Aguardando cadastro do(s) estudante(s)'
-                  }
-                  icon={faGraduationCap}
-                  indicatorColor="bg-red-600"
+        <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 lg:grid-cols-3">
+          {tccs.map((tcc) => (
+            <ResponsiveRecordCard
+              key={tcc.tccId}
+              onClick={() => push(`/ongoingTCCs/signatures?id=${tcc.tccId}`)}
+              title={
+                tcc.studanteNames.join(', ') ||
+                'Aguardando cadastro do(s) estudante(s)'
+              }
+              icon={faGraduationCap}
+              indicatorColor="bg-red-600"
+            >
+              <div className="flex flex-col gap-2">
+                <button
                   onClick={() =>
                     push(`/ongoingTCCs/signatures?id=${tcc.tccId}`)
                   }
-                />
+                  className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
+                >
+                  <FontAwesomeIcon icon={faPen} className="text-[#006633]" />
+                  <span>Assinaturas</span>
+                </button>
+                <button
+                  onClick={() => push(`/ongoingTCCs/details?id=${tcc.tccId}`)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
+                >
+                  <FontAwesomeIcon icon={faFile} className="text-[#006633]" />
+                  <span>TCC</span>
+                </button>
               </div>
-            ))}
-          </div>
-        </>
+            </ResponsiveRecordCard>
+          ))}
+        </div>
       )}
     </div>
   );

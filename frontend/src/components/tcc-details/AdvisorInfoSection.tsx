@@ -1,5 +1,7 @@
 'use client';
 
+import { SectionTitle } from '@/components/layout/SectionTitle';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -15,9 +17,7 @@ interface AdvisorInfoSectionProps {
 export function AdvisorInfoSection({ advisor }: AdvisorInfoSectionProps) {
   return (
     <section>
-      <h2 className="text-lg font-extrabold uppercase">
-        Informações do orientador
-      </h2>
+      <SectionTitle>Informações do orientador</SectionTitle>
       <div className="grid md:grid-cols-2 gap-4 mt-4">
         <div className="grid items-center gap-1.5">
           <Label className="font-semibold">Nome do orientador</Label>

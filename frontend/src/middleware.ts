@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
-import { toast } from 'react-toastify';
 
 interface DecodedToken {
   unique_name: string;
   userId: string;
   role: string | string[];
+  exp?: number;
   isTestUser?: boolean;
   isDefaultPassword?: boolean;
 }
 
 const protectedRoutes: Record<string, string[]> = {
   '/homePage': [],
-  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'STUDENT'],
+  '/profile': [],
+  '/instituicoes': ['ADMIN'],
+  '/newTCC': ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'STUDENT'],
+  '/receivedProposals': ['ADVISOR', 'COORDINATOR', 'SUPERVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/ongoingTCCs': [
     'ADMIN',
@@ -71,6 +74,27 @@ export function middleware(request: NextRequest) {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
       const userRoles = decoded.role;
+      const roles = Array.isArray(userRoles) ? userRoles : [userRoles];
+      const knownRoles = [
+        'ADMIN',
+        'COORDINATOR',
+        'SUPERVISOR',
+        'ADVISOR',
+        'STUDENT',
+        'BANKING',
+        'LIBRARY'
+      ];
+      // Esta checagem melhora a navegação; a API continua validando assinatura e acesso.
+      if (
+        !Number.isSafeInteger(Number(decoded.userId)) ||
+        Number(decoded.userId) <= 0 ||
+        typeof decoded.exp !== 'number' ||
+        !Number.isFinite(decoded.exp) ||
+        decoded.exp <= Date.now() / 1000 ||
+        !roles.some((role) => knownRoles.includes(role))
+      ) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
 
       const allowedProfiles = protectedRoutes[protectedRoute];
       const hasGeneralPermission = hasPermission(userRoles, allowedProfiles);
@@ -90,7 +114,6 @@ export function middleware(request: NextRequest) {
         }
       }
     } catch {
-      toast.error('Erro ao decodificar token');
       return NextResponse.redirect(new URL('/', request.url));
     }
   }
@@ -125,7 +148,10 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/homePage',
+    '/profile',
+    '/instituicoes/:path*',
     '/newTCC',
+    '/receivedProposals',
     '/newUser',
     '/newPassword',
     '/ongoingTCCs/:path*',
