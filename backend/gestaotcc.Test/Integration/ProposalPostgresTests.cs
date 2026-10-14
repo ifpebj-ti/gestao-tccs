@@ -51,6 +51,7 @@ public class ProposalPostgresTests : IAsyncLifetime
         UserEntity User(string name, ProfileEntity profile) => new() { Name = name, Email = name + "@example.com", Status = "ACTIVE", CampiCourse = course, Profile = [profile] };
         var owner = User("owner", student); var other = User("other", student); var guest = User("guest", student); var teacher = User("teacher", advisor);
         guest.Email = "Guest@Example.com";
+        context.Semesters.Add(new() { Name = "2026.2", IsActive = true, StartDate = DateTime.UtcNow.AddMonths(-1), EndDate = DateTime.UtcNow.AddMonths(3) });
         context.Users.AddRange(owner, other, guest, teacher); await context.SaveChangesAsync();
         ownerId = owner.Id; otherOwnerId = other.Id; guestId = guest.Id; advisorId = teacher.Id;
     }
@@ -64,7 +65,31 @@ public class ProposalPostgresTests : IAsyncLifetime
     }
 
     private SubmitTccProposalUseCase Submit(AppDbContext context) => new(new UserGateway(context), new TccGateway(context),
-        Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>(), new ProposalGateway(context));
+        Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), new SemesterGateway(context), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>(), new ProposalGateway(context));
+
+    [ProposalPostgresFact]
+    public async Task GroupProposalKeepsActiveSemesterAndSemesterFilterAfterIntegration()
+    {
+        await using var context = Context();
+        var semester = await context.Semesters.SingleAsync();
+        var result = await Submit(context).Execute(new("Grupo integrado", "Resumo", advisorId, ["future@example.com"]), ownerId);
+        Assert.True(result.IsSuccess);
+        var proposal = await context.Tccs.SingleAsync();
+        Assert.Equal(semester.Id, proposal.SemesterId);
+        Assert.Equal("AWAITING_PARTICIPANTS", proposal.Status);
+        var gateway = new TccGateway(context);
+        Assert.Single(await gateway.FindAllTccByFilter(new(advisorId, "AWAITING_PARTICIPANTS", semester.Id), 0));
+        Assert.Empty(await gateway.FindAllTccByFilter(new(advisorId, null, semester.Id + 1000), 0));
+        Assert.Single(await gateway.FindAllTccByFilter(new(advisorId, null), 0));
+        Assert.False((await Submit(context).Execute(new("Duplicada", "Resumo", advisorId), ownerId)).IsSuccess);
+
+        semester = await context.Semesters.SingleAsync();
+        semester.IsActive = false; await context.SaveChangesAsync();
+        var withoutSemester = await Submit(context).Execute(new("Sem semestre", "Resumo", advisorId), otherOwnerId);
+        Assert.False(withoutSemester.IsSuccess);
+        Assert.Equal(422, withoutSemester.ErrorDetails!.Status);
+        Assert.Equal(1, await context.Tccs.CountAsync());
+    }
 
     private ProposalParticipantsUseCase Participants(AppDbContext context) => new(new ProposalGateway(context), new TccGateway(context), new UserGateway(context));
 

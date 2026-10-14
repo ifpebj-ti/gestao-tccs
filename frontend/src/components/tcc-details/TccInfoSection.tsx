@@ -111,14 +111,16 @@ export function TccInfoSection({
           )}
         </div>
 
-        {infoTcc.semesterName && (
-          <div className="grid items-center gap-1.5">
-            <Label className="font-semibold" htmlFor="tcc-semester">
-              Semestre Letivo
-            </Label>
-            <Input id="tcc-semester" readOnly value={infoTcc.semesterName} />
-          </div>
-        )}
+        <div className="grid items-center gap-1.5">
+          <Label className="font-semibold" htmlFor="tcc-semester">
+            Semestre Letivo
+          </Label>
+          <Input
+            id="tcc-semester"
+            readOnly
+            value={infoTcc.semesterName || '—'}
+          />
+        </div>
 
         <div className="grid items-center gap-1.5 md:col-span-2">
           <Label className="font-semibold" htmlFor="tcc-summary">

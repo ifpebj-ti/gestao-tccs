@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import { PageState } from '@/components/layout/PageState';
 
 import { PageTitle } from '@/components/layout/PageTitle';
+import { SemesterFilter } from '@/components/SemesterFilter';
 
 import { ResponsiveRecordCard } from '@/components/ResponsiveRecordCard';
 import {
@@ -17,6 +18,7 @@ import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { env } from 'next-runtime-env';
+import { useSemestres } from '@/app/hooks/useSemestres';
 
 interface DecodedToken {
   role: string | string[];
@@ -31,8 +33,16 @@ interface TCCFromApi {
 export default function OngoingTCCsPage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
+  const { semesters, fetchSemesters } = useSemestres();
   const [tccs, setTccs] = useState<TCCFromApi[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSemesterId, setSelectedSemesterId] = useState<number | null>(
+    null
+  );
+
+  useEffect(() => {
+    fetchSemesters();
+  }, [fetchSemesters]);
 
   useEffect(() => {
     const fetchTccs = async () => {
@@ -63,6 +73,11 @@ export default function OngoingTCCsPage() {
           endpoint += `?UserId=${userId}&StatusTcc=IN_PROGRESS`;
         }
 
+        // Adicionar filtro de semestre se selecionado
+        if (selectedSemesterId) {
+          endpoint += `&SemesterId=${selectedSemesterId}`;
+        }
+
         const res = await fetch(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -83,11 +98,18 @@ export default function OngoingTCCsPage() {
     };
 
     fetchTccs();
-  }, [API_URL]);
+  }, [API_URL, selectedSemesterId]);
 
   return (
     <div className="flex flex-col">
-      <PageTitle className="mb-10">TCCs em andamento</PageTitle>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <PageTitle>TCCs em andamento</PageTitle>
+        <SemesterFilter
+          semesters={semesters}
+          value={selectedSemesterId}
+          onChange={setSelectedSemesterId}
+        />
+      </div>
 
       {isLoading ? (
         <PageState loading>Carregando...</PageState>

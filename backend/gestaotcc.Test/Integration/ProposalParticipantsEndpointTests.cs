@@ -46,6 +46,10 @@ public class ProposalParticipantsEndpointTests : IAsyncLifetime
         builder.WebHost.UseKestrel().UseUrls("http://127.0.0.1:0");
         builder.Services.AddSingleton(proposals); builder.Services.AddSingleton(tccs); builder.Services.AddSingleton(users);
         builder.Services.AddScoped<ProposalParticipantsUseCase>();
+        var semesters = Substitute.For<ISemesterGateway>();
+        semesters.FindAll().Returns(new List<gestaotcc.Domain.Entities.Semester.SemesterEntity> { new() { Id = 7, Name = "2026.2", IsActive = true } });
+        builder.Services.AddSingleton(semesters);
+        builder.Services.AddScoped<gestaotcc.Application.UseCases.Semester.FindAllSemestersUseCase>();
         builder.Services.AddSingleton(Substitute.For<IDocumentTypeGateway>());
         builder.Services.AddSingleton(Substitute.For<IEmailGateway>());
         builder.Services.AddSingleton(Substitute.For<IAppLoggerGateway<ApproveTccProposalUseCase>>());
@@ -59,6 +63,23 @@ public class ProposalParticipantsEndpointTests : IAsyncLifetime
     }
 
     public async Task DisposeAsync() { client.Dispose(); await app.DisposeAsync(); }
+
+    [Theory]
+    [InlineData("ADVISOR")]
+    [InlineData("BANKING")]
+    [InlineData("LIBRARY")]
+    public async Task TccViewersCanReadSemesterFilterButCannotManageSemesters(string role)
+    {
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/Semester/all")).StatusCode);
+        client.DefaultRequestHeaders.Add("X-User", "3");
+        client.DefaultRequestHeaders.Add("X-Role", role);
+        var response = await client.GetAsync("/api/Semester/all");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("2026.2", await response.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync("/api/Semester", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.PutAsJsonAsync("/api/Semester/7", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await client.DeleteAsync("/api/Semester/7")).StatusCode);
+    }
 
     [Theory]
     [InlineData("approve", "IN_PROGRESS")]

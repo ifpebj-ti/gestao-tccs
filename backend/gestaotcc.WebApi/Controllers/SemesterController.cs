@@ -9,7 +9,7 @@ namespace gestaotcc.WebApi.Controllers;
 [ApiController]
 public class SemesterController : ControllerBase
 {
-    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, LIBRARY, BANKING")]
     [HttpGet("all")]
     public async Task<ActionResult<List<SemesterDTO>>> FindAll([FromServices] FindAllSemestersUseCase findAllUseCase)
     {

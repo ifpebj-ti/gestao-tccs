@@ -35,6 +35,13 @@ public class ProposalParticipantsUseCaseTests
         useCase = new(proposals, tccs, users);
     }
 
+    private static ISemesterGateway ActiveSemester()
+    {
+        var semesters = Substitute.For<ISemesterGateway>();
+        semesters.FindActive().Returns(new List<gestaotcc.Domain.Entities.Semester.SemesterEntity> { new() { Id = 1, Name = "2026.2", IsActive = true } });
+        return semesters;
+    }
+
     [Fact]
     public async Task AcceptBindsExactlyOnceAndRepeatIsConflict()
     {
@@ -127,7 +134,7 @@ public class ProposalParticipantsUseCaseTests
         users.FindById(3).Returns(advisor);
         var email = Substitute.For<IEmailGateway>();
         var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), email,
-            Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
+            ActiveSemester(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
         var result = await submit.Execute(new("Projeto", "Resumo", 3, [" ALUNO2@example.com "]), 1);
         Assert.True(result.IsSuccess);
         await tccs.Received().Save(Arg.Is<TccEntity>(x => x.UserTccs.Count == 2 && x.ParticipantInvitations.Count == 1 && x.ParticipantInvitations.First().UserId == 2));
@@ -141,7 +148,7 @@ public class ProposalParticipantsUseCaseTests
     {
         users.FindProposalParticipantByEmail(owner.Email).Returns(owner);
         users.FindById(3).Returns(new UserEntity { Profile = [new() { Role = "ADVISOR" }] });
-        var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
+        var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), ActiveSemester(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
         Assert.Equal(400, (await submit.Execute(new("Projeto", "Resumo", 3, [address]), 1)).ErrorDetails?.Status);
         await tccs.DidNotReceiveWithAnyArgs().Save(default!);
     }
@@ -202,7 +209,7 @@ public class ProposalParticipantsUseCaseTests
     public async Task DuplicateEmailsAreRejectedBeforeSaving()
     {
         users.FindById(3).Returns(new UserEntity { Profile = [new() { Role = "ADVISOR" }] });
-        var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
+        var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), ActiveSemester(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
         Assert.Equal(400, (await submit.Execute(new("Projeto", "Resumo", 3, ["guest@example.com", " GUEST@example.com "]), 1)).ErrorDetails?.Status);
         await tccs.DidNotReceiveWithAnyArgs().Save(default!);
     }
@@ -246,7 +253,7 @@ public class ProposalParticipantsUseCaseTests
     {
         users.FindById(3).Returns(new UserEntity { Profile = [new() { Role = "ADVISOR" }] });
         var mail = Substitute.For<IEmailGateway>();
-        var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), mail, Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
+        var submit = new SubmitTccProposalUseCase(users, tccs, Substitute.For<IProfileGateway>(), mail, ActiveSemester(), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>());
         Assert.True((await submit.Execute(new("Projeto", "Resumo", 3, [" NEW@example.com "]), 1)).IsSuccess);
         await tccs.Received().Save(Arg.Is<TccEntity>(x => x.Status == "AWAITING_PARTICIPANTS" && x.UserTccs.Count == 2 &&
             x.ParticipantInvitations.Single().UserId == null && x.ParticipantInvitations.Single().Email == "new@example.com"));

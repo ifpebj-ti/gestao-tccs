@@ -9,6 +9,7 @@ public interface ITccGateway
 {
     Task Save(TccEntity tcc);
     Task Update(TccEntity tcc);
+    Task UpdateSemesterId(long tccId, long semesterId);
     Task<List<TccInviteEntity>> FindAllInviteTcc();
     Task<TccInviteEntity?> FindInviteTccByEmail(string email);
     Task SaveTccInvite(TccInviteEntity tccInvite);
