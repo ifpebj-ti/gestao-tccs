@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const origin = 'http://localhost:3000';
 const output = path.resolve(
   __dirname,
-  '../docs/refatoracao/evidencias/merge-develop-semestres'
+  '../docs/refatoracao/evidencias/filtro-semestre-posicao'
 );
 async function run() {
   fs.mkdirSync(output, { recursive: true });
@@ -149,6 +149,10 @@ async function run() {
       await wait(
         `document.getElementById('semester-filter') && document.body.textContent.includes('Trabalho anterior')`
       );
+      const position = await evaluate(`(()=>{const title=document.querySelector('h1').getBoundingClientRect();const filter=document.getElementById('semester-filter').parentElement.getBoundingClientRect();return {left:Math.abs(title.left-filter.left),gap:filter.top-title.bottom};})()`);
+      assert.ok(position.left < 2, 'Filtro deve alinhar à esquerda com o título');
+      assert.ok(position.gap >= 12 && position.gap <= 28, 'Filtro deve ficar próximo e abaixo do título');
+      checks.push(route + ': filtro alinhado abaixo do título');
       assert.equal(
         await evaluate(`document.querySelectorAll('select').length`),
         0

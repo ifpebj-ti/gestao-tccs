@@ -102,7 +102,7 @@ export default function OngoingTCCsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col items-start gap-5">
         <PageTitle>TCCs em andamento</PageTitle>
         <SemesterFilter
           semesters={semesters}
