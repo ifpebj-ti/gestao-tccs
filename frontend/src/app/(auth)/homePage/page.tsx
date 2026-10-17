@@ -94,6 +94,11 @@ interface CoordinationPendingCounts {
   total: number;
 }
 
+interface LibraryPendingCounts {
+  pendingCount: number;
+  catalogedCount: number;
+}
+
 export default function HomePage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
@@ -127,6 +132,8 @@ export default function HomePage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [coordinationPending, setCoordinationPending] =
     useState<CoordinationPendingCounts | null>(null);
+  const [libraryPending, setLibraryPending] =
+    useState<LibraryPendingCounts | null>(null);
 
   const checkUserTccStatus = useCallback(
     async (userId: string) => {
@@ -369,6 +376,25 @@ export default function HomePage() {
     }
   }, [API_URL]);
 
+  const fetchLibraryPending = useCallback(async () => {
+    const token = Cookies.get('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/Tcc/library-pending`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLibraryPending({
+          pendingCount: data.pendingCount || 0,
+          catalogedCount: data.catalogedCount || 0
+        });
+      }
+    } catch {
+      // silencioso
+    }
+  }, [API_URL]);
+
   const fetchTccs = useCallback(async () => {
     try {
       const token = Cookies.get('token');
@@ -429,8 +455,16 @@ export default function HomePage() {
       if (userHasCoordinatorRole) {
         fetchCoordinationPending();
       }
+
+      const userHasLibraryRole = Array.isArray(decodedToken.role)
+        ? decodedToken.role.includes('LIBRARY')
+        : decodedToken.role === 'LIBRARY';
+
+      if (userHasLibraryRole) {
+        fetchLibraryPending();
+      }
     }
-  }, [checkUserTccStatus, fetchAdvisorPendingProposals, fetchCoordinationPending]);
+  }, [checkUserTccStatus, fetchAdvisorPendingProposals, fetchCoordinationPending, fetchLibraryPending]);
 
   useEffect(() => {
     fetchTccs();
@@ -459,7 +493,6 @@ export default function HomePage() {
       'COORDINATOR',
       'SUPERVISOR',
       'ADVISOR',
-      'LIBRARY',
       'BANKING'
     ]);
   };
@@ -525,9 +558,11 @@ export default function HomePage() {
       ? 'Gerencie usuários, instituições, cursos e períodos letivos em um só lugar.'
       : canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
         ? 'Avalie propostas, acompanhe suas orientações e assine os documentos de cada etapa acadêmica.'
-        : canView(['LIBRARY', 'BANKING'])
-          ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
-          : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
+        : canView(['LIBRARY'])
+          ? 'Homologue e catalogue os Trabalhos de Conclusão de Curso encaminhados pela Coordenação para inclusão no acervo.'
+          : canView(['BANKING'])
+            ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
+            : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
 
   const shortcuts: HomeShortcut[] = [
     {
@@ -572,6 +607,19 @@ export default function HomePage() {
       onClick: () => push('/coordinationPending')
     },
     {
+      title: 'TCCs para Catalogar',
+      icon: Library,
+      group: 'attention',
+      visible: canView(['LIBRARY']),
+      description:
+        libraryPending && libraryPending.pendingCount > 0
+          ? `${libraryPending.pendingCount} trabalho(s) aguardando catalogação`
+          : 'Homologação e inclusão no acervo da biblioteca',
+      indicatorNumber: libraryPending?.pendingCount || 0,
+      indicatorColor: 'bg-amber-600 text-white',
+      onClick: () => push('/libraryPending')
+    },
+    {
       title: 'TCCs em andamento',
       icon: GraduationCap,
       group: 'tracking',
@@ -579,7 +627,6 @@ export default function HomePage() {
         'COORDINATOR',
         'SUPERVISOR',
         'ADVISOR',
-        'LIBRARY',
         'BANKING'
       ]),
       description: 'Trabalhos acadêmicos ativos no período',
@@ -591,7 +638,7 @@ export default function HomePage() {
       title: 'TCCs concluídos',
       icon: CheckCircle2,
       group: 'tracking',
-      visible: canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY']),
+      visible: canView(['COORDINATOR', 'SUPERVISOR', 'ADVISOR']),
       description: 'Histórico de trabalhos finalizados e defendidos',
       onClick: () => push('/completedTCCs')
     },
@@ -712,6 +759,42 @@ export default function HomePage() {
                 onClick={() => push('/coordinationPending')}
               >
                 Ver Todas as Pendências
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </div>
+          </NoticeCard>
+        )}
+
+      {/* BANNER BIBLIOTECA: TCCS AGUARDANDO CATALOGAÇÃO */}
+      {canView(['LIBRARY']) &&
+        libraryPending &&
+        libraryPending.pendingCount > 0 && (
+          <NoticeCard title="Fila de Catalogação" className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <Library
+                  className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
+                  strokeWidth={1.75}
+                />
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#C8FF47]">
+                    Atenção da Biblioteca
+                  </span>
+                  <h3 className="text-base font-bold mt-0.5 text-white">
+                    {libraryPending.pendingCount} trabalho(s) aguardando catalogação no acervo
+                  </h3>
+                  <p className="text-sm text-gray-200 mt-1">
+                    Trabalhos encaminhados pela coordenação prontos para conferência do PDF final e registro do código de catalogação.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                className="self-start md:self-center font-semibold bg-[#C8FF47] text-[#002B18] hover:bg-white hover:text-[#002B18] transition-colors whitespace-nowrap shrink-0"
+                onClick={() => push('/libraryPending')}
+              >
+                Acessar Fila de Catalogação
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </div>

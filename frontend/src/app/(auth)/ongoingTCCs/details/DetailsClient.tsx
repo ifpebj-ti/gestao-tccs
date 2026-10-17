@@ -45,9 +45,13 @@ export default function DetailsClient() {
     handleUploadFinalTccFile,
     handleConfirmHardCover,
     handleDownloadFinalTccFile,
+    handleForwardToLibrary,
+    handleConfirmLibrary,
     isUploadingFinalFile,
     isConfirmingHardCover,
     isDownloadingFinalFile,
+    isForwardingToLibrary,
+    isConfirmingLibrary,
     isConcluding,
     orientadorToken,
     setOrientadorToken
@@ -83,14 +87,19 @@ export default function DetailsClient() {
             hardCoverReceivedAt={tccData.infoTcc.hardCoverReceivedAt}
             forwardedToLibraryAt={tccData.infoTcc.forwardedToLibraryAt}
             libraryReceivedAt={tccData.infoTcc.libraryReceivedAt}
+            libraryCatalogCode={tccData.infoTcc.libraryCatalogCode}
             isCompleted={tccData.infoTcc.status === 'COMPLETED'}
             profile={profile}
             onUploadFinalFile={handleUploadFinalTccFile}
             onConfirmHardCover={handleConfirmHardCover}
             onDownloadFinalFile={handleDownloadFinalTccFile}
+            onForwardToLibrary={handleForwardToLibrary}
+            onConfirmLibrary={handleConfirmLibrary}
             isUploadingFinalFile={isUploadingFinalFile}
             isConfirmingHardCover={isConfirmingHardCover}
             isDownloadingFinalFile={isDownloadingFinalFile}
+            isForwardingToLibrary={isForwardingToLibrary}
+            isConfirmingLibrary={isConfirmingLibrary}
           />
         </div>
         <input

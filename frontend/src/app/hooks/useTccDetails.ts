@@ -590,6 +590,89 @@ export function useTccDetails() {
     }
   };
 
+  const [isForwardingToLibrary, setIsForwardingToLibrary] = useState(false);
+  const [isConfirmingLibrary, setIsConfirmingLibrary] = useState(false);
+
+  const handleForwardToLibrary = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsForwardingToLibrary(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/forward-library`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao encaminhar TCC para a Biblioteca.'
+        );
+      }
+
+      toast.success('TCC encaminhado com sucesso para a Biblioteca do Campus!');
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao encaminhar TCC para a Biblioteca.'
+      );
+    } finally {
+      setIsForwardingToLibrary(false);
+    }
+  };
+
+  const handleConfirmLibrary = async (catalogCode?: string) => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsConfirmingLibrary(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/confirm-library`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ catalogCode: catalogCode?.trim() || null })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao homologar TCC na Biblioteca.'
+        );
+      }
+
+      toast.success(
+        'TCC homologado no acervo da Biblioteca e concluído com sucesso!'
+      );
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao homologar TCC na Biblioteca.'
+      );
+    } finally {
+      setIsConfirmingLibrary(false);
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -621,9 +704,13 @@ export function useTccDetails() {
     handleUploadFinalTccFile,
     handleConfirmHardCover,
     handleDownloadFinalTccFile,
+    handleForwardToLibrary,
+    handleConfirmLibrary,
     isUploadingFinalFile,
     isConfirmingHardCover,
     isDownloadingFinalFile,
+    isForwardingToLibrary,
+    isConfirmingLibrary,
     isConcluding,
     orientadorToken,
     setOrientadorToken

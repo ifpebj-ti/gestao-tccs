@@ -9,6 +9,7 @@ import {
   CircleUserRound,
   CheckCircle2,
   ClipboardList,
+  Library,
   type LucideIcon
 } from 'lucide-react';
 
@@ -96,7 +97,7 @@ export function getSidebarItems(
   if (
     (has('STUDENT') && myTcc) ||
     (!has('STUDENT') &&
-      has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY', 'BANKING'))
+      has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING'))
   ) {
     items.push({
       label: 'Assinaturas',
@@ -111,8 +112,15 @@ export function getSidebarItems(
       icon: ClipboardList
     });
   }
+  if (has('LIBRARY')) {
+    items.push({
+      label: 'Acervo e Catalogação',
+      href: '/libraryPending',
+      icon: Library
+    });
+  }
   if (
-    has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY', 'BANKING', 'ADMIN')
+    has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'ADMIN')
   ) {
     items.push({
       label: 'Em andamento',
@@ -120,7 +128,7 @@ export function getSidebarItems(
       icon: GraduationCap
     });
   }
-  if (has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'LIBRARY', 'ADMIN')) {
+  if (has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'ADMIN')) {
     items.push({
       label: 'Concluídos',
       href: '/completedTCCs',

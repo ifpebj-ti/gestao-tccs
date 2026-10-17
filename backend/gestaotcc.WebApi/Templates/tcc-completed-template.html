@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCC Concluído com Sucesso — Homologado no Acervo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', Arial, sans-serif; background-color: #F0F4F0; padding: 32px 16px; }
+    .wrapper { max-width: 600px; margin: 0 auto; }
+    .header { background-color: #002B18; border-radius: 12px 12px 0 0; padding: 32px 40px 24px; display: flex; align-items: center; gap: 14px; }
+    .logo-mark { width: 44px; height: 44px; background-color: #C8FF47; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .brand { color: #FAF9F5; font-size: 18px; font-weight: 700; }
+    .brand span { color: #C8FF47; }
+    .body { background-color: #ffffff; padding: 40px; }
+    .tag { display: inline-block; background-color: #C8FF47; color: #002B18; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 100px; margin-bottom: 20px; }
+    h1 { font-size: 22px; font-weight: 700; color: #002B18; margin-bottom: 12px; line-height: 1.3; }
+    p { font-size: 15px; color: #4A5A4A; line-height: 1.7; margin-bottom: 14px; }
+    .success-box { background-color: #F0F9EB; border-left: 4px solid #00A355; padding: 18px; border-radius: 6px; margin: 20px 0; }
+    .success-box strong { color: #002B18; }
+    .info-item { font-size: 14px; color: #374151; margin-bottom: 6px; }
+    .info-item strong { color: #002B18; }
+    .cta-block { text-align: center; margin: 28px 0; }
+    .cta-btn { display: inline-block; background-color: #002B18; color: #C8FF47 !important; text-decoration: none; padding: 14px 36px; border-radius: 6px; font-size: 15px; font-weight: 600; }
+    .divider { height: 1px; background-color: #E8F0E8; margin: 28px 0; }
+    .footer { background-color: #002B18; border-radius: 0 0 12px 12px; padding: 24px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #7A9A7A; line-height: 1.6; margin: 0; }
+    .footer a { color: #C8FF47; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo-mark">🎉</div>
+      <div class="brand">Gradus<span>Flow</span></div>
+    </div>
+    <div class="body">
+      <span class="tag">Processo Finalizado</span>
+      <h1>Parabéns! TCC Oficialmente Concluído</h1>
+      <p>Olá, <strong>{{recipientName}}</strong>!</p>
+      <p>É com grande satisfação que informamos que o Trabalho de Conclusão de Curso <strong>"{{tccTitle}}"</strong> teve sua etapa final homologada pela Biblioteca do Campus e foi <strong>concluído com êxito</strong> no sistema acadêmico.</p>
+      
+      <div class="success-box">
+        <div class="info-item"><strong>Estudante(s):</strong> {{studentNames}}</div>
+        <div class="info-item"><strong>Orientador(a):</strong> {{advisorName}}</div>
+        {{if catalogCode}}
+        <div class="info-item"><strong>Código no Acervo:</strong> {{catalogCode}}</div>
+        {{end}}
+        <div class="info-item"><strong>Status:</strong> Concluído (COMPLETED)</div>
+      </div>
+
+      <p>Todas as etapas protocolares, assinaturas digitais, defesa e entrega da versão em capa dura foram integralmente cumpridas.</p>
+
+      <div class="cta-block">
+        <a href="{{urlfront}}/completedTCCs" class="cta-btn">Visualizar TCC Concluído →</a>
+      </div>
+
+      <div class="divider"></div>
+      <p style="font-size: 13px; color: #7A9A7A;">Parabéns a todos os envolvidos pela conclusão desta importante jornada acadêmica!</p>
+    </div>
+    <div class="footer">
+      <p><a href="{{urlfront}}">Gradus Flow</a> &nbsp;·&nbsp; Instituto Federal de Pernambuco</p>
+    </div>
+  </div>
+</body>
+</html>

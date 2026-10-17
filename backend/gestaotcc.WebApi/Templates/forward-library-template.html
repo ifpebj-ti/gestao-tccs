@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo TCC Encaminhado para a Biblioteca</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', Arial, sans-serif; background-color: #F0F4F0; padding: 32px 16px; }
+    .wrapper { max-width: 600px; margin: 0 auto; }
+    .header { background-color: #002B18; border-radius: 12px 12px 0 0; padding: 32px 40px 24px; display: flex; align-items: center; gap: 14px; }
+    .logo-mark { width: 44px; height: 44px; background-color: #C8FF47; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .brand { color: #FAF9F5; font-size: 18px; font-weight: 700; }
+    .brand span { color: #C8FF47; }
+    .body { background-color: #ffffff; padding: 40px; }
+    .tag { display: inline-block; background-color: #C8FF47; color: #002B18; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 100px; margin-bottom: 20px; }
+    h1 { font-size: 22px; font-weight: 700; color: #002B18; margin-bottom: 12px; line-height: 1.3; }
+    p { font-size: 15px; color: #4A5A4A; line-height: 1.7; margin-bottom: 14px; }
+    .info-card { background-color: #F9FAFB; border: 1px solid #E5E7EB; border-left: 4px solid #002B18; padding: 18px; border-radius: 6px; margin: 20px 0; }
+    .info-item { font-size: 14px; color: #374151; margin-bottom: 6px; }
+    .info-item strong { color: #002B18; }
+    .cta-block { text-align: center; margin: 28px 0; }
+    .cta-btn { display: inline-block; background-color: #002B18; color: #C8FF47 !important; text-decoration: none; padding: 14px 36px; border-radius: 6px; font-size: 15px; font-weight: 600; }
+    .divider { height: 1px; background-color: #E8F0E8; margin: 28px 0; }
+    .footer { background-color: #002B18; border-radius: 0 0 12px 12px; padding: 24px 40px; text-align: center; }
+    .footer p { font-size: 12px; color: #7A9A7A; line-height: 1.6; margin: 0; }
+    .footer a { color: #C8FF47; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo-mark">📚</div>
+      <div class="brand">Gradus<span>Flow</span></div>
+    </div>
+    <div class="body">
+      <span class="tag">Acervo da Biblioteca</span>
+      <h1>Novo TCC Encaminhado</h1>
+      <p>A Coordenação do Curso concluiu a verificação da versão física em capa dura e encaminhou o trabalho abaixo para homologação e inclusão no acervo da <strong>Biblioteca do Campus</strong>:</p>
+      
+      <div class="info-card">
+        <div class="info-item"><strong>Título:</strong> "{{tccTitle}}"</div>
+        <div class="info-item"><strong>Estudante(s):</strong> {{studentNames}}</div>
+        <div class="info-item"><strong>Orientador(a):</strong> {{advisorName}}</div>
+        <div class="info-item"><strong>Curso:</strong> {{courseName}}</div>
+      </div>
+
+      <p>Acesse o sistema para validar os arquivos, informar o código de catalogação e concluir o registro no acervo.</p>
+
+      <div class="cta-block">
+        <a href="{{urlfront}}/ongoingTCCs" class="cta-btn">Acessar e Catalogar TCC →</a>
+      </div>
+
+      <div class="divider"></div>
+      <p style="font-size: 13px; color: #7A9A7A;">Este é um comunicado automático gerado pelo sistema Gradus Flow.</p>
+    </div>
+    <div class="footer">
+      <p><a href="{{urlfront}}">Gradus Flow</a> &nbsp;·&nbsp; Instituto Federal de Pernambuco</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -57,6 +57,7 @@ function model(state = {}) {
     tccs: null,
     advisorPendingProposals: [],
     coordinationPending: null,
+    libraryPending: null,
     push: () => {},
     setIsAdvisorModalOpen: () => {},
     handleMyTccClick: () => {},
@@ -72,7 +73,8 @@ function model(state = {}) {
     'Users',
     'Building2',
     'Calendar',
-    'ClipboardList'
+    'ClipboardList',
+    'Library'
   ])
     context[icon] = () => null;
   vm.runInNewContext(modelCode, context);
@@ -113,7 +115,7 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
       'Cadastrar novo usuário',
       'Usuários'
     ],
-    LIBRARY: ['Assinaturas pendentes', 'TCCs em andamento', 'TCCs concluídos'],
+    LIBRARY: ['TCCs para Catalogar'],
     BANKING: ['Assinaturas pendentes', 'TCCs em andamento'],
     STUDENT: []
   };
@@ -161,7 +163,7 @@ test('múltiplos perfis preservam a união das permissões e a regra de assinatu
   const combined = model({ profile: ['ADMIN', 'LIBRARY'] }).shortcuts.filter(
     (card) => card.visible
   );
-  assert.equal(combined.length, 7);
+  assert.equal(combined.length, 5);
 });
 
 test('a descrição distingue carregamento de ausência real de pendências', () => {

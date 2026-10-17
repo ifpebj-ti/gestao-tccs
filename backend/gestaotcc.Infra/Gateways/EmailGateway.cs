@@ -138,6 +138,8 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "UPDATE-PASSWORD" ? Path.Combine(directory, "Templates", "update-password-template.html")
             : typeTemplate == "SCHEDULE-ALLOWED" ? Path.Combine(directory, "Templates", "schedule-allowed-template.html")
             : typeTemplate == "FINAL-SUBMISSION-NOTICE" ? Path.Combine(directory, "Templates", "final-submission-notice-template.html")
+            : typeTemplate == "FORWARD-LIBRARY" ? Path.Combine(directory, "Templates", "forward-library-template.html")
+            : typeTemplate == "TCC-COMPLETED" ? Path.Combine(directory, "Templates", "tcc-completed-template.html")
             : throw new ArgumentException($"Template type {typeTemplate} not found.");
         return File.ReadAllText(filePath);
     }
