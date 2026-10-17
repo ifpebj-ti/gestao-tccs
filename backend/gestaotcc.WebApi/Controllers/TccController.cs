@@ -488,7 +488,90 @@ public class TccController : ControllerBase
         }
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
+
+    /// <summary>
+    /// Fazer upload do arquivo PDF da versão final do TCC pós-banca
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
+    [HttpPost("{tccId}/upload-final-file")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> UploadFinalTccFile(
+        [FromRoute] long tccId, 
+        [FromForm] IFormFile file,
+        [FromServices] UploadFinalTccFileUseCase uploadFinalTccFileUseCase)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "Nenhum arquivo enviado" });
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        var fileBytes = memoryStream.ToArray();
+
+        var result = await uploadFinalTccFileUseCase.Execute(tccId, userId, fileBytes, file.FileName, file.ContentType);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
+
+    /// <summary>
+    /// Confirmar o recebimento da versão final em capa dura pela coordenação
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
+    [HttpPatch("{tccId}/confirm-hardcover")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ConfirmHardCover(
+        [FromRoute] long tccId,
+        [FromServices] ConfirmHardCoverUseCase confirmHardCoverUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var coordinatorUserId))
+            return Unauthorized();
+
+        var result = await confirmHardCoverUseCase.Execute(tccId, coordinatorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
+
+    /// <summary>
+    /// Baixar o arquivo PDF da versão final do TCC
+    /// </summary>
+    [Authorize]
+    [HttpGet("{tccId}/final-file/download")]
+    public async Task<IActionResult> DownloadFinalTccFile(
+        [FromRoute] long tccId,
+        [FromServices] DownloadFinalTccFileUseCase downloadFinalTccFileUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await downloadFinalTccFileUseCase.Execute(tccId, userId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["Access-Control-Expose-Headers"] = "Content-Disposition";
+        return File(result.Data.File, "application/pdf", result.Data.FileName);
+    }
         
+    /// <summary>
     /// Submeter proposta de TCC pelo estudante
     /// </summary>
     [Authorize(Roles = "STUDENT")]
@@ -661,6 +744,30 @@ public class TccController : ControllerBase
         }
 
         return Ok(new MessageSuccessResponseModel(result.Data));
+    }
+
+    /// <summary>
+    /// Retorna todas as pendências de coordenação: TCCs aguardando capa dura,
+    /// encaminhamento à biblioteca e solicitações de cancelamento.
+    /// </summary>
+    [Authorize(Roles = "COORDINATOR, SUPERVISOR")]
+    [HttpGet("coordination-pending")]
+    public async Task<ActionResult<CoordinationPendingDTO>> GetCoordinationPending(
+        [FromServices] FindCoordinationPendingUseCase findCoordinationPendingUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var coordinatorUserId))
+            return Unauthorized();
+
+        var result = await findCoordinationPendingUseCase.Execute(coordinatorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(result.Data);
     }
 }
 

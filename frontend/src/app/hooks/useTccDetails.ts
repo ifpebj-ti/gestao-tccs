@@ -91,6 +91,9 @@ export function useTccDetails() {
   const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
   const [isEditingTccInfo, setIsEditingTccInfo] = useState(false);
   const [isConcluding, setIsConcluding] = useState(false);
+  const [isUploadingFinalFile, setIsUploadingFinalFile] = useState(false);
+  const [isConfirmingHardCover, setIsConfirmingHardCover] = useState(false);
+  const [isDownloadingFinalFile, setIsDownloadingFinalFile] = useState(false);
 
   const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
 
@@ -452,6 +455,141 @@ export function useTccDetails() {
     }
   };
 
+  const handleUploadFinalTccFile = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Apenas arquivos em formato PDF são permitidos.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsUploadingFinalFile(true);
+    try {
+      toast.info('Enviando versão final do TCC...', { autoClose: 2000 });
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/upload-final-file`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha no envio da versão final.'
+        );
+      }
+
+      toast.success('Versão final pós-banca enviada com sucesso!');
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao enviar a versão final do TCC.'
+      );
+    } finally {
+      setIsUploadingFinalFile(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleConfirmHardCover = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsConfirmingHardCover(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/confirm-hardcover`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao confirmar recebimento da capa dura.'
+        );
+      }
+
+      toast.success(
+        'Recebimento da versão em capa dura confirmado com sucesso!'
+      );
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao confirmar entrega da capa dura.'
+      );
+    } finally {
+      setIsConfirmingHardCover(false);
+    }
+  };
+
+  const handleDownloadFinalTccFile = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsDownloadingFinalFile(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/final-file/download`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao baixar versão final.'
+        );
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `TCC_${tccId}_Versao_Final.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Erro ao baixar o arquivo final.'
+      );
+    } finally {
+      setIsDownloadingFinalFile(false);
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -480,6 +618,12 @@ export function useTccDetails() {
     handleEditTccInfo,
     handleConcludePresentation,
     handleUploadTccFile,
+    handleUploadFinalTccFile,
+    handleConfirmHardCover,
+    handleDownloadFinalTccFile,
+    isUploadingFinalFile,
+    isConfirmingHardCover,
+    isDownloadingFinalFile,
     isConcluding,
     orientadorToken,
     setOrientadorToken

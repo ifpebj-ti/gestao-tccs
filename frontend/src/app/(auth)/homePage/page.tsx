@@ -35,7 +35,9 @@ import {
   AlertTriangle,
   ArrowRight,
   FileText,
-  BookOpen
+  BookOpen,
+  ClipboardList,
+  Library
 } from 'lucide-react';
 import Link from 'next/link';
 import { jwtDecode } from 'jwt-decode';
@@ -85,6 +87,13 @@ interface FinalSubmissionNotice {
   deadline: string | null;
 }
 
+interface CoordinationPendingCounts {
+  awaitingHardCoverCount: number;
+  awaitingLibraryForwardCount: number;
+  awaitingCancellationCount: number;
+  total: number;
+}
+
 export default function HomePage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
@@ -116,6 +125,8 @@ export default function HomePage() {
     null
   );
   const [actionLoading, setActionLoading] = useState(false);
+  const [coordinationPending, setCoordinationPending] =
+    useState<CoordinationPendingCounts | null>(null);
 
   const checkUserTccStatus = useCallback(
     async (userId: string) => {
@@ -334,6 +345,30 @@ export default function HomePage() {
     [API_URL]
   );
 
+  const fetchCoordinationPending = useCallback(async () => {
+    const token = Cookies.get('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/Tcc/coordination-pending`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const hardCover = data.awaitingHardCoverCount || 0;
+        const library = data.awaitingLibraryForwardCount || 0;
+        const cancel = data.awaitingCancellationCount || 0;
+        setCoordinationPending({
+          awaitingHardCoverCount: hardCover,
+          awaitingLibraryForwardCount: library,
+          awaitingCancellationCount: cancel,
+          total: hardCover + library + cancel
+        });
+      }
+    } catch {
+      // silencioso
+    }
+  }, [API_URL]);
+
   const fetchTccs = useCallback(async () => {
     try {
       const token = Cookies.get('token');
@@ -384,8 +419,18 @@ export default function HomePage() {
       if (userHasAdvisorRole) {
         fetchAdvisorPendingProposals(decodedToken.userId);
       }
+
+      const userHasCoordinatorRole = Array.isArray(decodedToken.role)
+        ? decodedToken.role.some((r) =>
+            ['COORDINATOR', 'SUPERVISOR'].includes(r)
+          )
+        : ['COORDINATOR', 'SUPERVISOR'].includes(decodedToken.role);
+
+      if (userHasCoordinatorRole) {
+        fetchCoordinationPending();
+      }
     }
-  }, [checkUserTccStatus, fetchAdvisorPendingProposals]);
+  }, [checkUserTccStatus, fetchAdvisorPendingProposals, fetchCoordinationPending]);
 
   useEffect(() => {
     fetchTccs();
@@ -514,6 +559,19 @@ export default function HomePage() {
       onClick: () => push('/receivedProposals')
     },
     {
+      title: 'Pendências de Coordenação',
+      icon: ClipboardList,
+      group: 'attention',
+      visible: canView(['COORDINATOR', 'SUPERVISOR']),
+      description:
+        coordinationPending && coordinationPending.total > 0
+          ? `${coordinationPending.total} pendência(s) aguardando sua ação`
+          : 'Ações de capa dura, biblioteca e cancelamentos',
+      indicatorNumber: coordinationPending?.total || 0,
+      indicatorColor: 'bg-amber-600 text-white',
+      onClick: () => push('/coordinationPending')
+    },
+    {
       title: 'TCCs em andamento',
       icon: GraduationCap,
       group: 'tracking',
@@ -606,6 +664,59 @@ export default function HomePage() {
           {supportText}
         </p>
       </div>
+
+      {/* BANNER COORDENADOR/SUPERVISOR: PENDÊNCIAS DE COORDENAÇÃO */}
+      {canView(['COORDINATOR', 'SUPERVISOR']) &&
+        coordinationPending &&
+        coordinationPending.total > 0 && (
+          <NoticeCard title="Pendências da Coordenação" className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <ClipboardList
+                  className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
+                  strokeWidth={1.75}
+                />
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#C8FF47]">
+                    Atenção da Coordenação
+                  </span>
+                  <h3 className="text-base font-bold mt-0.5 text-white">
+                    {coordinationPending.total} trabalho(s) aguardando ação da coordenação
+                  </h3>
+                  <div className="flex flex-wrap gap-2.5 mt-2 text-xs text-gray-200">
+                    {coordinationPending.awaitingHardCoverCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
+                        <BookOpen className="w-3.5 h-3.5 text-[#C8FF47]" />
+                        <strong>{coordinationPending.awaitingHardCoverCount}</strong> aguardando capa dura
+                      </span>
+                    )}
+                    {coordinationPending.awaitingLibraryForwardCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
+                        <Library className="w-3.5 h-3.5 text-[#C8FF47]" />
+                        <strong>{coordinationPending.awaitingLibraryForwardCount}</strong> para encaminhar à biblioteca
+                      </span>
+                    )}
+                    {coordinationPending.awaitingCancellationCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
+                        <AlertTriangle className="w-3.5 h-3.5 text-[#C8FF47]" />
+                        <strong>{coordinationPending.awaitingCancellationCount}</strong> solicitação(ões) de cancelamento
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                className="self-start md:self-center font-semibold bg-[#C8FF47] text-[#002B18] hover:bg-white hover:text-[#002B18] transition-colors whitespace-nowrap shrink-0"
+                onClick={() => push('/coordinationPending')}
+              >
+                Ver Todas as Pendências
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </div>
+          </NoticeCard>
+        )}
 
       {/* BANNER DISCENTE: PROPOSTA PENDENTE DE APROVAÇÃO (SEAMLESS FLAT) */}
       {isStudent() && <ProposalInvitations />}

@@ -42,6 +42,12 @@ export default function DetailsClient() {
     handleEditTccInfo,
     handleConcludePresentation,
     handleUploadTccFile,
+    handleUploadFinalTccFile,
+    handleConfirmHardCover,
+    handleDownloadFinalTccFile,
+    isUploadingFinalFile,
+    isConfirmingHardCover,
+    isDownloadingFinalFile,
     isConcluding,
     orientadorToken,
     setOrientadorToken
@@ -73,10 +79,18 @@ export default function DetailsClient() {
           <FinalSubmissionBanner
             step={tccData.infoTcc.step}
             finalSubmissionDeadline={tccData.infoTcc.finalSubmissionDeadline}
+            finalTccFile={tccData.infoTcc.finalTccFile}
             hardCoverReceivedAt={tccData.infoTcc.hardCoverReceivedAt}
             forwardedToLibraryAt={tccData.infoTcc.forwardedToLibraryAt}
             libraryReceivedAt={tccData.infoTcc.libraryReceivedAt}
             isCompleted={tccData.infoTcc.status === 'COMPLETED'}
+            profile={profile}
+            onUploadFinalFile={handleUploadFinalTccFile}
+            onConfirmHardCover={handleConfirmHardCover}
+            onDownloadFinalFile={handleDownloadFinalTccFile}
+            isUploadingFinalFile={isUploadingFinalFile}
+            isConfirmingHardCover={isConfirmingHardCover}
+            isDownloadingFinalFile={isDownloadingFinalFile}
           />
         </div>
         <input
