@@ -34,7 +34,8 @@ import {
   Clock,
   AlertTriangle,
   ArrowRight,
-  FileText
+  FileText,
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 import { jwtDecode } from 'jwt-decode';
@@ -78,6 +79,12 @@ interface AdvisorProposalItem {
   pendingParticipantCount: number;
 }
 
+interface FinalSubmissionNotice {
+  tccId: number;
+  title: string;
+  deadline: string | null;
+}
+
 export default function HomePage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
@@ -95,6 +102,8 @@ export default function HomePage() {
   const [rejectedProposal, setRejectedProposal] = useState<ProposalInfo | null>(
     null
   );
+  const [finalSubmissionNotice, setFinalSubmissionNotice] =
+    useState<FinalSubmissionNotice | null>(null);
 
   // Docente/Orientador: propostas recebidas para aprovação
   const [advisorPendingProposals, setAdvisorPendingProposals] = useState<
@@ -125,6 +134,7 @@ export default function HomePage() {
             setCompletedUserTCC(completedData);
             setPendingProposal(null);
             setRejectedProposal(null);
+            setFinalSubmissionNotice(null);
             return;
           }
         }
@@ -140,6 +150,39 @@ export default function HomePage() {
             setUserTCCs(inProgressData);
             setPendingProposal(null);
             setRejectedProposal(null);
+
+            // Verificar se o TCC está na etapa final aguardando entrega da versão em capa dura
+            try {
+              const activeTccId = inProgressData[0].tccId;
+              const detailRes = await fetch(
+                `${API_URL}/Tcc?tccId=${activeTccId}`,
+                {
+                  headers: { Authorization: `Bearer ${token}` }
+                }
+              );
+              if (detailRes.ok) {
+                const detailData = await detailRes.json();
+                const info = detailData.infoTcc;
+                const isFinalStage =
+                  info?.step === 'FINALIZATION_AND_PUBLICATION' ||
+                  info?.step === '6' ||
+                  Boolean(info?.finalSubmissionDeadline);
+
+                if (isFinalStage && !info?.hardCoverReceivedAt) {
+                  setFinalSubmissionNotice({
+                    tccId: activeTccId,
+                    title:
+                      info?.title || inProgressData[0].title || 'TCC em Andamento',
+                    deadline: info?.finalSubmissionDeadline || null
+                  });
+                } else {
+                  setFinalSubmissionNotice(null);
+                }
+              }
+            } catch {
+              setFinalSubmissionNotice(null);
+            }
+
             return;
           }
         }
@@ -217,6 +260,7 @@ export default function HomePage() {
         setRejectedProposal(null);
         setUserTCCs([]);
         setCompletedUserTCC([]);
+        setFinalSubmissionNotice(null);
       } catch {
         toast.error('Erro ao verificar o status do seu TCC.');
       }
@@ -666,6 +710,88 @@ export default function HomePage() {
           </div>
         </NoticeCard>
       )}
+
+      {/* BANNER DISCENTE: PRAZO DA ENTREGA DA CAPA DURA (ETAPA FINAL) */}
+      {isStudent() &&
+        finalSubmissionNotice &&
+        (() => {
+          let deadlineFormatted: string | null = null;
+          let remainingDays: number | null = null;
+          let isExpired = false;
+
+          if (finalSubmissionNotice.deadline) {
+            const deadline = new Date(finalSubmissionNotice.deadline);
+            if (!isNaN(deadline.getTime())) {
+              deadlineFormatted = deadline.toLocaleDateString('pt-BR');
+              const now = new Date();
+              deadline.setHours(23, 59, 59, 999);
+              const diffTime = deadline.getTime() - now.getTime();
+              remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              isExpired = remainingDays < 0;
+            }
+          }
+
+          return (
+            <NoticeCard
+              title="Prazo para Entrega da Versão Final (Capa Dura)"
+              className="mb-8 border border-[#C8FF47]/20"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <BookOpen
+                    className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
+                    strokeWidth={1.75}
+                  />
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#C8FF47]">
+                        TCC Aprovado na Defesa
+                      </span>
+                      {deadlineFormatted && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            isExpired
+                              ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                              : remainingDays !== null && remainingDays <= 5
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                : 'bg-[#C8FF47]/20 text-[#C8FF47] border border-[#C8FF47]/30'
+                          }`}
+                        >
+                          <Clock className="w-3 h-3" />
+                          {isExpired
+                            ? `Prazo de 30 dias expirou em ${deadlineFormatted}`
+                            : remainingDays === 0
+                              ? `Hoje é o prazo final (${deadlineFormatted})`
+                              : `Restam ${remainingDays} dias (${deadlineFormatted})`}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-bold mt-1 text-white">
+                      {finalSubmissionNotice.title}
+                    </h3>
+                    <p className="text-sm mt-1 text-gray-200 leading-relaxed max-w-2xl">
+                      Incorpore as correções e sugestões da banca examinadora e
+                      entregue a versão final em <strong>capa dura</strong> à
+                      Coordenação do Curso para que seja encaminhada à
+                      Biblioteca do Campus.
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  size="sm"
+                  className="self-start md:self-center font-semibold bg-[#C8FF47] text-[#002B18] hover:bg-white hover:text-[#002B18] transition-colors whitespace-nowrap shrink-0"
+                  onClick={() =>
+                    push(`/myTCC/details?id=${finalSubmissionNotice.tccId}`)
+                  }
+                >
+                  Ver Detalhes e Orientações
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Button>
+              </div>
+            </NoticeCard>
+          );
+        })()}
 
       {/* ESTADO DO ESTUDANTE: SEM PROPOSTA ATIVA (TOTALMENTE FLAT, SEM CARD) */}
       {isStudentWithoutProposal && (

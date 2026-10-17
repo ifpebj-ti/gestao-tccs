@@ -137,6 +137,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "BANKING-EVALUATION" ? Path.Combine(directory, "Templates", "banking-evaluation-template.html")
             : typeTemplate == "UPDATE-PASSWORD" ? Path.Combine(directory, "Templates", "update-password-template.html")
             : typeTemplate == "SCHEDULE-ALLOWED" ? Path.Combine(directory, "Templates", "schedule-allowed-template.html")
+            : typeTemplate == "FINAL-SUBMISSION-NOTICE" ? Path.Combine(directory, "Templates", "final-submission-notice-template.html")
             : throw new ArgumentException($"Template type {typeTemplate} not found.");
         return File.ReadAllText(filePath);
     }

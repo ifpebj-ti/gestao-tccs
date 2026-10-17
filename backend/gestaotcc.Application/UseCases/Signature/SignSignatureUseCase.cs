@@ -24,6 +24,7 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+        { StepTccType.FINALIZATION_AND_PUBLICATION, 6 },
     };
 
     private readonly List<string> _signatureQueueByProfile = new()
@@ -153,8 +154,49 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             var oldStep = tcc.Step;
             if (tccStep == StepTccType.PRESENTATION_AND_EVALUATION)
             {
-                tcc.Status = StatusTccType.COMPLETED.ToString();
-                logger.LogInformation("Todas as assinaturas da etapa final foram concluídas. TCC marcado como COMPLETED.");
+                var avgGrade = tcc.BankingMembers.Any(m => m.Grade.HasValue)
+                    ? tcc.BankingMembers.Where(m => m.Grade.HasValue).Average(m => m.Grade!.Value)
+                    : 0;
+
+                var isApproved = avgGrade >= 7.00m;
+
+                if (isApproved)
+                {
+                    tcc.Step = StepTccType.FINALIZATION_AND_PUBLICATION.ToString();
+                    tcc.FinalSubmissionDeadline = DateTime.UtcNow.AddDays(30);
+                    logger.LogInformation("Todas as assinaturas da apresentação foram concluídas com aprovação (Média: {Grade}). Avançando para FINALIZATION_AND_PUBLICATION com prazo de 30 dias: {Deadline}.", avgGrade, tcc.FinalSubmissionDeadline);
+
+                    var studentUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == RoleType.STUDENT.ToString())?.User;
+                    if (studentUser != null)
+                    {
+                        var templateVars = new Dictionary<string, object>
+                        {
+                            { "studentName", studentUser.Name },
+                            { "tccTitle", tcc.Title ?? string.Empty },
+                            { "deadline", tcc.FinalSubmissionDeadline.Value.ToString("dd/MM/yyyy") }
+                        };
+                        var emailDto = new SendEmailDTO(
+                            "",
+                            "TCC Aprovado - Prazo para Entrega da Versão Final",
+                            studentUser.Email,
+                            "FINAL-SUBMISSION-NOTICE",
+                            templateVars);
+
+                        try
+                        {
+                            await emailGateway.Send(emailDto);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Erro ao enviar e-mail de aviso da etapa final para {Email}", studentUser.Email);
+                        }
+                    }
+                }
+                else
+                {
+                    tcc.Status = StatusTccType.REJECTED.ToString();
+                    logger.LogInformation("Todas as assinaturas da apresentação foram concluídas com reprovação (Média: {Grade}). TCC marcado como REJECTED.", avgGrade);
+                }
             }
             else
             {

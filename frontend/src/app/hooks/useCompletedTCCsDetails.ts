@@ -16,6 +16,13 @@ interface InfoTcc {
   finalGrade?: number | null;
   finalOpinion?: string | null;
   semesterName?: string | null;
+  step?: string | null;
+  finalSubmissionDeadline?: string | null;
+  finalTccFile?: string | null;
+  hardCoverReceivedAt?: string | null;
+  forwardedToLibraryAt?: string | null;
+  libraryReceivedAt?: string | null;
+  libraryCatalogCode?: string | null;
 }
 interface InfoStudent { name: string; registration: string; cpf: string; course: string; email: string; }
 interface InfoAdvisor { name: string; email: string; }

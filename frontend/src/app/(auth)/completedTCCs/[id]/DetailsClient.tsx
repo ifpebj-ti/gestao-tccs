@@ -8,6 +8,7 @@ import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection'
 import { AdvisorInfoSection } from '@/components/tcc-details/AdvisorInfoSection';
 import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection';
 import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
+import { FinalSubmissionBanner } from '@/components/tcc-details/FinalSubmissionBanner';
 
 export default function CompletedTccDetailsClient() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,17 @@ export default function CompletedTccDetailsClient() {
     <div className="flex flex-col">
       <div className="mt-6">
         <TccOverview title={tccDetails.infoTcc.title} tccId={id} step={6} />
+      </div>
+
+      <div className="mt-4">
+        <FinalSubmissionBanner
+          step={tccDetails.infoTcc.step}
+          finalSubmissionDeadline={tccDetails.infoTcc.finalSubmissionDeadline}
+          hardCoverReceivedAt={tccDetails.infoTcc.hardCoverReceivedAt}
+          forwardedToLibraryAt={tccDetails.infoTcc.forwardedToLibraryAt}
+          libraryReceivedAt={tccDetails.infoTcc.libraryReceivedAt}
+          isCompleted={true}
+        />
       </div>
 
       <div className="flex flex-col gap-8 mt-10">

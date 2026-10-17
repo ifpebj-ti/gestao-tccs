@@ -39,6 +39,13 @@ interface TccDetailsResponse {
     finalGrade?: number | null;
     finalOpinion?: string | null;
     semesterName?: string | null;
+    step?: string | null;
+    finalSubmissionDeadline?: string | null;
+    finalTccFile?: string | null;
+    hardCoverReceivedAt?: string | null;
+    forwardedToLibraryAt?: string | null;
+    libraryReceivedAt?: string | null;
+    libraryCatalogCode?: string | null;
   };
   infoStudent: {
     name: string;

@@ -29,6 +29,15 @@ public class TccEntity
     public SemesterEntity? Semester { get; set; } = null;
     public long? SemesterId { get; set; }
 
+    public DateTime? FinalSubmissionDeadline { get; set; }
+    public string? FinalTccFile { get; set; }
+    public DateTime? HardCoverReceivedAt { get; set; }
+    public long? HardCoverReceivedByUserId { get; set; }
+    public DateTime? ForwardedToLibraryAt { get; set; }
+    public DateTime? LibraryReceivedAt { get; set; }
+    public long? LibraryReceivedByUserId { get; set; }
+    public string? LibraryCatalogCode { get; set; }
+
     public TccEntity() { }
 
     public TccEntity(

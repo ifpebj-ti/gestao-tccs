@@ -84,7 +84,14 @@ public class TccInfoFactory
                 FinalGrade: finalGrade,
                 FinalOpinion: finalOpinion,
                 SemesterName: tcc.Semester?.Name,
-                PendingParticipantCount: tcc.ParticipantInvitations.Count(x => x.Status == "PENDING")
+                PendingParticipantCount: tcc.ParticipantInvitations.Count(x => x.Status == "PENDING"),
+                Step: tcc.Step,
+                FinalSubmissionDeadline: tcc.FinalSubmissionDeadline,
+                FinalTccFile: tcc.FinalTccFile,
+                HardCoverReceivedAt: tcc.HardCoverReceivedAt,
+                ForwardedToLibraryAt: tcc.ForwardedToLibraryAt,
+                LibraryReceivedAt: tcc.LibraryReceivedAt,
+                LibraryCatalogCode: tcc.LibraryCatalogCode
             ),
             InfoStudent: students,
             InfoAdvisor: new InfoAdvisorDTO(
