@@ -40,6 +40,7 @@ export default function CompletedTccDetailsClient() {
           hardCoverReceivedAt={tccDetails.infoTcc.hardCoverReceivedAt}
           forwardedToLibraryAt={tccDetails.infoTcc.forwardedToLibraryAt}
           libraryReceivedAt={tccDetails.infoTcc.libraryReceivedAt}
+          libraryCatalogCode={tccDetails.infoTcc.libraryCatalogCode}
           isCompleted={true}
         />
       </div>

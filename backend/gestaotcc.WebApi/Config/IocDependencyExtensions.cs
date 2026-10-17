@@ -91,6 +91,9 @@ public static class IocDependencyExtensions
         services.AddScoped<ConfirmHardCoverUseCase>();
         services.AddScoped<DownloadFinalTccFileUseCase>();
         services.AddScoped<FindCoordinationPendingUseCase>();
+        services.AddScoped<ForwardToLibraryUseCase>();
+        services.AddScoped<ConfirmLibraryReceiptUseCase>();
+        services.AddScoped<FindLibraryPendingUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();

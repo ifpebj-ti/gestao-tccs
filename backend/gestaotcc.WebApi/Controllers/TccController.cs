@@ -769,5 +769,95 @@ public class TccController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    /// <summary>
+    /// Encaminha o TCC com cópia física em capa dura confirmada para a Biblioteca do Campus.
+    /// Apenas a Coordenação do Curso pode executar esta ação.
+    /// </summary>
+    [Authorize(Roles = "COORDINATOR, SUPERVISOR")]
+    [HttpPatch("{tccId}/forward-library")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ForwardToLibrary(
+        [FromRoute] long tccId,
+        [FromServices] ForwardToLibraryUseCase forwardToLibraryUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var coordinatorUserId))
+            return Unauthorized();
+
+        var result = await forwardToLibraryUseCase.Execute(tccId, coordinatorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel("TCC encaminhado com sucesso para a Biblioteca do Campus."));
+    }
+
+    /// <summary>
+    /// Homologa o recebimento do TCC no acervo da Biblioteca, informando código de catalogação opcional,
+    /// e marca o TCC como concluído (COMPLETED). Apenas o setor da Biblioteca ou Admin pode executar esta ação.
+    /// </summary>
+    [Authorize(Roles = "LIBRARY, ADMIN")]
+    [HttpPatch("{tccId}/confirm-library")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ConfirmLibrary(
+        [FromRoute] long tccId,
+        [FromBody] ConfirmLibraryReceiptDTO? dto,
+        [FromServices] ConfirmLibraryReceiptUseCase confirmLibraryReceiptUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var librarianUserId))
+            return Unauthorized();
+
+        var result = await confirmLibraryReceiptUseCase.Execute(tccId, librarianUserId, dto ?? new ConfirmLibraryReceiptDTO());
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel("TCC homologado com sucesso no acervo da Biblioteca e marcado como concluído."));
+    }
+
+    /// <summary>
+    /// Retorna todos os TCCs que aguardam homologação no acervo da Biblioteca
+    /// e o histórico recente de TCCs catalogados. Acesso restrito a LIBRARY e ADMIN.
+    /// </summary>
+    [Authorize(Roles = "LIBRARY, ADMIN")]
+    [HttpGet("library-pending")]
+    public async Task<ActionResult<LibraryPendingDTO>> GetLibraryPending(
+        [FromServices] FindLibraryPendingUseCase findLibraryPendingUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var librarianUserId))
+            return Unauthorized();
+
+        var result = await findLibraryPendingUseCase.Execute(librarianUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(result.Data);
+    }
 }
+
 

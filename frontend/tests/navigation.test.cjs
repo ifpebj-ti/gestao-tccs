@@ -153,3 +153,20 @@ test('máscara não transforma letras nem número longo em telefone válido', ()
     assert.equal(isValidProfilePhone(formatPhone(value)), false);
   }
 });
+
+test('perfil biblioteca visualiza acervo e catalogação e não vê fluxos acadêmicos gerais', () => {
+  const items = getSidebarItems(['LIBRARY'], { status: 'none' });
+  assert.ok(items.some((item) => item.href === '/libraryPending'));
+  assert.equal(
+    items.some((item) => item.href === '/pendingSignatures'),
+    false
+  );
+  assert.equal(
+    items.some((item) => item.href === '/ongoingTCCs'),
+    false
+  );
+  assert.equal(
+    items.some((item) => item.href === '/completedTCCs'),
+    false
+  );
+});

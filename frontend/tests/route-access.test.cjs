@@ -43,12 +43,14 @@ test('todas as rotas protegidas rejeitam visitante sem cookie', () => {
     '/myTCC/signatures',
     '/completedTCCs',
     '/pendingSignatures',
+    '/libraryPending',
     '/users',
     '/semestres',
     '/instituicoes'
   ])
     redirected(path, null, '/');
   assert.ok(config.matcher.includes('/instituicoes/:path*'));
+  assert.ok(config.matcher.includes('/libraryPending/:path*'));
 });
 test('cookie inválido, expirado ou com identidade inválida retorna ao login', () => {
   redirected('/profile', 'invalido', '/');
@@ -71,23 +73,27 @@ const matrix = {
   '/receivedProposals': ['ADVISOR', 'COORDINATOR', 'SUPERVISOR'],
   '/users': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/newUser': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
-  '/ongoingTCCs': roles.filter((role) => role !== 'STUDENT'),
+  '/ongoingTCCs': roles.filter(
+    (role) => role !== 'STUDENT' && role !== 'LIBRARY'
+  ),
   '/completedTCCs': [
     'ADMIN',
     'COORDINATOR',
     'SUPERVISOR',
-    'ADVISOR',
-    'LIBRARY'
+    'ADVISOR'
   ],
+  '/libraryPending': ['LIBRARY', 'ADMIN'],
+  '/pendingSignatures': roles.filter((role) => role !== 'LIBRARY'),
   '/myTCC/signatures': ['STUDENT'],
   '/myTCC/files': ['STUDENT'],
-  '/ongoingTCCs/files': roles.filter((role) => role !== 'STUDENT'),
+  '/ongoingTCCs/files': roles.filter(
+    (role) => role !== 'STUDENT' && role !== 'LIBRARY'
+  ),
   '/completedTCCs/files': [
     'ADMIN',
     'COORDINATOR',
     'SUPERVISOR',
     'ADVISOR',
-    'LIBRARY',
     'STUDENT'
   ],
   '/semestres': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],

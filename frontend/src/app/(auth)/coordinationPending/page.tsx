@@ -13,10 +13,21 @@ import {
   ArrowRight,
   LoaderCircle,
   CheckCircle2,
-  ClipboardList
+  ClipboardList,
+  Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageTitle } from '@/components/layout/PageTitle';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 interface DecodedToken {
   role: string | string[];
@@ -75,6 +86,10 @@ interface PendingSectionProps {
   emptyMessage: string;
   actionLabel: string;
   onAction: (tccId: number) => void;
+  primaryActionLabel?: string;
+  onPrimaryAction?: (tccId: number) => void;
+  primaryActionIcon?: React.ReactNode;
+  primaryLoadingId?: number | null;
   badgeColor: string;
   showDeadline?: boolean;
 }
@@ -89,6 +104,10 @@ function PendingSection({
   emptyMessage,
   actionLabel,
   onAction,
+  primaryActionLabel,
+  onPrimaryAction,
+  primaryActionIcon,
+  primaryLoadingId,
   badgeColor,
   showDeadline = false
 }: PendingSectionProps) {
@@ -119,6 +138,8 @@ function PendingSection({
         ) : (
           items.map((item) => {
             const deadline = showDeadline ? formatDeadline(item.finalSubmissionDeadline) : null;
+            const isItemLoading = primaryLoadingId === item.tccId;
+
             return (
               <div
                 key={item.tccId}
@@ -143,15 +164,34 @@ function PendingSection({
                     </span>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0 self-start sm:self-center text-xs font-semibold border-[#002B18]/20 text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47] cursor-pointer"
-                  onClick={() => onAction(item.tccId)}
-                >
-                  {actionLabel}
-                  <ArrowRight className="ml-1 size-3" />
-                </Button>
+
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                  {primaryActionLabel && onPrimaryAction && (
+                    <Button
+                      size="sm"
+                      disabled={isItemLoading}
+                      className="bg-[#002B18] text-[#C8FF47] hover:bg-[#003820] text-xs font-semibold shadow-xs cursor-pointer"
+                      onClick={() => onPrimaryAction(item.tccId)}
+                    >
+                      {isItemLoading ? (
+                        <LoaderCircle className="size-3.5 animate-spin motion-reduce:animate-none" />
+                      ) : (
+                        primaryActionIcon
+                      )}
+                      {primaryActionLabel}
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs font-semibold border-[#002B18]/20 text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47] cursor-pointer"
+                    onClick={() => onAction(item.tccId)}
+                  >
+                    {actionLabel}
+                    <ArrowRight className="ml-1 size-3" />
+                  </Button>
+                </div>
               </div>
             );
           })
@@ -168,6 +208,12 @@ export default function CoordinationPendingPage() {
   const [data, setData] = useState<CoordinationPending | null>(null);
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(true);
+
+  // Estados dos modais de ação rápida
+  const [selectedTccId, setSelectedTccId] = useState<number | null>(null);
+  const [isHardCoverModalOpen, setIsHardCoverModalOpen] = useState(false);
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
   const fetchPending = useCallback(async () => {
     const token = Cookies.get('token');
@@ -208,6 +254,64 @@ export default function CoordinationPendingPage() {
   useEffect(() => {
     fetchPending();
   }, [fetchPending]);
+
+  // Ação rápida: Confirmar Capa Dura
+  const handleConfirmHardCoverSubmit = async () => {
+    if (!selectedTccId) return;
+    const token = Cookies.get('token');
+    if (!token) return;
+
+    setActionLoadingId(selectedTccId);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${selectedTccId}/confirm-hardcover`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.detail || err?.message || 'Falha ao confirmar capa dura.');
+      }
+
+      toast.success('Recebimento da versão em capa dura confirmado com sucesso!');
+      await fetchPending();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao confirmar capa dura.');
+    } finally {
+      setActionLoadingId(null);
+      setIsHardCoverModalOpen(false);
+      setSelectedTccId(null);
+    }
+  };
+
+  // Ação rápida: Encaminhar à Biblioteca
+  const handleForwardToLibrarySubmit = async () => {
+    if (!selectedTccId) return;
+    const token = Cookies.get('token');
+    if (!token) return;
+
+    setActionLoadingId(selectedTccId);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${selectedTccId}/forward-library`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.detail || err?.message || 'Falha ao encaminhar para a biblioteca.');
+      }
+
+      toast.success('TCC encaminhado com sucesso para a Biblioteca do Campus!');
+      await fetchPending();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao encaminhar para a biblioteca.');
+    } finally {
+      setActionLoadingId(null);
+      setIsForwardModalOpen(false);
+      setSelectedTccId(null);
+    }
+  };
 
   const totalPending =
     (data?.awaitingHardCoverCount ?? 0) +
@@ -274,7 +378,14 @@ export default function CoordinationPendingPage() {
             items={data.awaitingHardCover}
             emptyMessage="Nenhum TCC aguardando entrega da capa dura."
             actionLabel="Ver TCC"
+            primaryActionLabel="Confirmar Entrega"
+            primaryActionIcon={<CheckCircle2 className="size-3.5 mr-1" />}
+            primaryLoadingId={actionLoadingId}
             showDeadline
+            onPrimaryAction={(tccId) => {
+              setSelectedTccId(tccId);
+              setIsHardCoverModalOpen(true);
+            }}
             onAction={(tccId) => push(`/ongoingTCCs/details?id=${tccId}`)}
           />
 
@@ -289,6 +400,13 @@ export default function CoordinationPendingPage() {
             items={data.awaitingLibraryForward}
             emptyMessage="Nenhum TCC aguardando encaminhamento à biblioteca."
             actionLabel="Ver TCC"
+            primaryActionLabel="Encaminhar à Biblioteca"
+            primaryActionIcon={<Send className="size-3.5 mr-1" />}
+            primaryLoadingId={actionLoadingId}
+            onPrimaryAction={(tccId) => {
+              setSelectedTccId(tccId);
+              setIsForwardModalOpen(true);
+            }}
             onAction={(tccId) => push(`/ongoingTCCs/details?id=${tccId}`)}
           />
 
@@ -307,6 +425,58 @@ export default function CoordinationPendingPage() {
           />
         </div>
       )}
+
+      {/* Modal de Confirmação Rápida de Capa Dura */}
+      <AlertDialog
+        open={isHardCoverModalOpen}
+        onOpenChange={setIsHardCoverModalOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Recebimento da Capa Dura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você confirma que o estudante entregou a versão física encadernada
+              em capa dura à Coordenação do Curso?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoadingId !== null}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#002B18] text-[#C8FF47] hover:bg-[#003820] font-semibold cursor-pointer"
+              disabled={actionLoadingId !== null}
+              onClick={handleConfirmHardCoverSubmit}
+            >
+              {actionLoadingId !== null ? 'Confirmando...' : 'Confirmar Recebimento'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Modal de Encaminhamento Rápido à Biblioteca */}
+      <AlertDialog
+        open={isForwardModalOpen}
+        onOpenChange={setIsForwardModalOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encaminhar TCC à Biblioteca</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja encaminhar a versão física deste TCC para a Biblioteca do Campus?
+              A equipe da Biblioteca será notificada automaticamente para incluir a obra no acervo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoadingId !== null}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#002B18] text-[#C8FF47] hover:bg-[#003820] font-semibold cursor-pointer"
+              disabled={actionLoadingId !== null}
+              onClick={handleForwardToLibrarySubmit}
+            >
+              {actionLoadingId !== null ? 'Encaminhando...' : 'Sim, Encaminhar à Biblioteca'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
