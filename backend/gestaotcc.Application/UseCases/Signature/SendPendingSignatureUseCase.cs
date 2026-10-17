@@ -1,4 +1,4 @@
-﻿using gestaotcc.Application.Factories;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Signature;
 using gestaotcc.Domain.Dtos.Tcc;
@@ -23,6 +23,7 @@ public class SendPendingSignatureUseCase(
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+        { StepTccType.FINALIZATION_AND_PUBLICATION, 6 },
     };
 
     private readonly List<string> _signatureQueueByProfile = new()

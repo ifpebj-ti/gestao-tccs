@@ -340,6 +340,31 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("FinalSubmissionDeadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FinalTccFile")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ForwardedToLibraryAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("HardCoverReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("HardCoverReceivedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LibraryCatalogCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("LibraryReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("LibraryReceivedByUserId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("RejectionReason")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");

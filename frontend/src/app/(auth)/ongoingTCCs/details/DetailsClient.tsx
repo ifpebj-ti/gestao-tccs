@@ -14,6 +14,7 @@ import { ActionPanel } from '@/components/tcc-details/ActionPanel';
 import { CancellationModal } from '@/components/tcc-details/CancellationModal';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AvaliacaoForm } from '@/components/AvaliacaoForm';
+import { FinalSubmissionBanner } from '@/components/tcc-details/FinalSubmissionBanner';
 export default function DetailsClient() {
   const {
     tccData,
@@ -68,6 +69,16 @@ export default function DetailsClient() {
           title={tccData.infoTcc.title}
           cancellationRequested={tccData.cancellationRequest}
         />
+        <div className="mt-4">
+          <FinalSubmissionBanner
+            step={tccData.infoTcc.step}
+            finalSubmissionDeadline={tccData.infoTcc.finalSubmissionDeadline}
+            hardCoverReceivedAt={tccData.infoTcc.hardCoverReceivedAt}
+            forwardedToLibraryAt={tccData.infoTcc.forwardedToLibraryAt}
+            libraryReceivedAt={tccData.infoTcc.libraryReceivedAt}
+            isCompleted={tccData.infoTcc.status === 'COMPLETED'}
+          />
+        </div>
         <input
           id="tccUploadInput"
           type="file"

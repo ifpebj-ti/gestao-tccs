@@ -33,6 +33,31 @@ public class TccConfiguration : IEntityTypeConfiguration<TccEntity>
         builder.Property(x => x.CreationDate)
             .IsRequired();
 
+        builder.Property(x => x.FinalSubmissionDeadline)
+            .IsRequired(false);
+
+        builder.Property(x => x.FinalTccFile)
+            .IsRequired(false);
+
+        builder.Property(x => x.HardCoverReceivedAt)
+            .IsRequired(false);
+
+        builder.Property(x => x.HardCoverReceivedByUserId)
+            .IsRequired(false);
+
+        builder.Property(x => x.ForwardedToLibraryAt)
+            .IsRequired(false);
+
+        builder.Property(x => x.LibraryReceivedAt)
+            .IsRequired(false);
+
+        builder.Property(x => x.LibraryReceivedByUserId)
+            .IsRequired(false);
+
+        builder.Property(x => x.LibraryCatalogCode)
+            .IsRequired(false)
+            .HasMaxLength(100);
+
         builder.HasMany(x => x.TccInvites)
             .WithOne(x => x.Tcc)
             .HasForeignKey(x => x.TccId);
