@@ -8,6 +8,7 @@ import {
   Calendar,
   CircleUserRound,
   CheckCircle2,
+  ClipboardList,
   type LucideIcon
 } from 'lucide-react';
 
@@ -101,6 +102,13 @@ export function getSidebarItems(
       label: 'Assinaturas',
       href: '/pendingSignatures',
       icon: FileSignature
+    });
+  }
+  if (has('COORDINATOR', 'SUPERVISOR')) {
+    items.push({
+      label: 'Pendências',
+      href: '/coordinationPending',
+      icon: ClipboardList
     });
   }
   if (

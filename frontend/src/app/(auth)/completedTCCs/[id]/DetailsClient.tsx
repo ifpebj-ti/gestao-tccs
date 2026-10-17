@@ -36,6 +36,7 @@ export default function CompletedTccDetailsClient() {
         <FinalSubmissionBanner
           step={tccDetails.infoTcc.step}
           finalSubmissionDeadline={tccDetails.infoTcc.finalSubmissionDeadline}
+          finalTccFile={tccDetails.infoTcc.finalTccFile}
           hardCoverReceivedAt={tccDetails.infoTcc.hardCoverReceivedAt}
           forwardedToLibraryAt={tccDetails.infoTcc.forwardedToLibraryAt}
           libraryReceivedAt={tccDetails.infoTcc.libraryReceivedAt}

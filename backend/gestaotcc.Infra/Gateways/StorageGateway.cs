@@ -48,7 +48,7 @@ public class StorageGateway : IStorageGateway
     {
         string objectName;
 
-        if (fileName.StartsWith("filled/"))
+        if (fileName.StartsWith("filled/") || fileName.StartsWith("final/"))
         {
             objectName = fileName;
         }

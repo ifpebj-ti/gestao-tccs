@@ -56,6 +56,7 @@ function model(state = {}) {
     completedUserTCC: [],
     tccs: null,
     advisorPendingProposals: [],
+    coordinationPending: null,
     push: () => {},
     setIsAdvisorModalOpen: () => {},
     handleMyTccClick: () => {},
@@ -70,7 +71,8 @@ function model(state = {}) {
     'UserPlus',
     'Users',
     'Building2',
-    'Calendar'
+    'Calendar',
+    'ClipboardList'
   ])
     context[icon] = () => null;
   vm.runInNewContext(modelCode, context);
@@ -94,6 +96,7 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
     COORDINATOR: [
       'Assinaturas pendentes',
       'Propostas de TCC pendentes',
+      'Pendências de Coordenação',
       'TCCs em andamento',
       'TCCs concluídos',
       'Cadastrar nova proposta',
@@ -103,6 +106,7 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
     SUPERVISOR: [
       'Assinaturas pendentes',
       'Propostas de TCC pendentes',
+      'Pendências de Coordenação',
       'TCCs em andamento',
       'TCCs concluídos',
       'Cadastrar nova proposta',

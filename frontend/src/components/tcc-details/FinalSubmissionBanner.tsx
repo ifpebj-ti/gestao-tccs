@@ -1,23 +1,63 @@
-import React from 'react';
-import { Clock, AlertTriangle, CheckCircle2, BookOpen } from 'lucide-react';
+'use client';
+
+import React, { useState } from 'react';
+import {
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  BookOpen,
+  Download,
+  Upload,
+  LoaderCircle
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 interface FinalSubmissionBannerProps {
   step?: string | null;
   finalSubmissionDeadline?: string | null;
+  finalTccFile?: string | null;
   hardCoverReceivedAt?: string | null;
   forwardedToLibraryAt?: string | null;
   libraryReceivedAt?: string | null;
   isCompleted?: boolean;
+  // Perfil e Ações
+  profile?: string | string[] | null;
+  onUploadFinalFile?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onConfirmHardCover?: () => void;
+  onDownloadFinalFile?: () => void;
+  isUploadingFinalFile?: boolean;
+  isConfirmingHardCover?: boolean;
+  isDownloadingFinalFile?: boolean;
 }
 
 export function FinalSubmissionBanner({
   step,
   finalSubmissionDeadline,
+  finalTccFile,
   hardCoverReceivedAt,
   forwardedToLibraryAt,
   libraryReceivedAt,
-  isCompleted
+  isCompleted,
+  profile,
+  onUploadFinalFile,
+  onConfirmHardCover,
+  onDownloadFinalFile,
+  isUploadingFinalFile = false,
+  isConfirmingHardCover = false,
+  isDownloadingFinalFile = false
 }: FinalSubmissionBannerProps) {
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
   // Exibe se estiver na etapa 6 ou se houver prazo/dados de finalização
   const isFinalStage =
     step === 'FINALIZATION_AND_PUBLICATION' ||
@@ -44,7 +84,6 @@ export function FinalSubmissionBanner({
   if (finalSubmissionDeadline) {
     const deadline = new Date(finalSubmissionDeadline);
     const now = new Date();
-    // Zerar horas para comparar apenas os dias
     deadline.setHours(23, 59, 59, 999);
     const diffTime = deadline.getTime() - now.getTime();
     remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -56,6 +95,19 @@ export function FinalSubmissionBanner({
   const isHardCoverDelivered = Boolean(hardCoverReceivedAt);
   const isForwardedToLibrary = Boolean(forwardedToLibraryAt);
   const isLibraryConfirmed = Boolean(libraryReceivedAt) || isCompleted;
+
+  const userRoles = Array.isArray(profile)
+    ? profile
+    : profile
+      ? [profile]
+      : [];
+
+  const canUpload = userRoles.some((r) =>
+    ['STUDENT', 'ADVISOR', 'COORDINATOR', 'SUPERVISOR', 'ADMIN'].includes(r)
+  );
+  const canConfirmHardCover = userRoles.some((r) =>
+    ['COORDINATOR', 'SUPERVISOR', 'ADMIN'].includes(r)
+  );
 
   return (
     <div className="w-full rounded-xl border border-[#006633]/30 bg-gradient-to-br from-[#F4FAF4] to-[#E8F5E9] p-6 shadow-sm">
@@ -86,8 +138,8 @@ export function FinalSubmissionBanner({
               isExpired
                 ? 'bg-red-50 border border-red-200 text-red-700'
                 : remainingDays !== null && remainingDays <= 5
-                ? 'bg-amber-50 border border-amber-200 text-amber-800'
-                : 'bg-white border border-[#006633]/30 text-[#002B18]'
+                  ? 'bg-amber-50 border border-amber-200 text-amber-800'
+                  : 'bg-white border border-[#006633]/30 text-[#002B18]'
             }`}
           >
             {isExpired ? (
@@ -103,8 +155,8 @@ export function FinalSubmissionBanner({
                 {isExpired
                   ? `Expirou em ${deadlineFormatted}`
                   : remainingDays === 0
-                  ? `Hoje é o prazo final (${deadlineFormatted})`
-                  : `Faltam ${remainingDays} dias (${deadlineFormatted})`}
+                    ? `Hoje é o prazo final (${deadlineFormatted})`
+                    : `Faltam ${remainingDays} dias (${deadlineFormatted})`}
               </div>
             </div>
           </div>
@@ -124,7 +176,11 @@ export function FinalSubmissionBanner({
       </div>
 
       <p className="mt-3 text-sm leading-relaxed text-[#4A5A4A]">
-        O estudante tem o prazo máximo de <strong>30 dias</strong> após a aprovação para incorporar as correções da banca e entregar a versão final em capa dura à <strong>Coordenação do Curso</strong>. A coordenação encaminha a cópia aprovada para a <strong>Biblioteca do Campus</strong> para concluir o fluxo.
+        O estudante tem o prazo máximo de <strong>30 dias</strong> após a
+        aprovação para incorporar as correções da banca e entregar a versão
+        final em capa dura à <strong>Coordenação do Curso</strong>. A coordenação
+        encaminha a cópia aprovada para a <strong>Biblioteca do Campus</strong> para
+        concluir o fluxo.
       </p>
 
       {/* Checklist das 3 fases finais */}
@@ -137,7 +193,9 @@ export function FinalSubmissionBanner({
             <Clock className="mt-0.5 size-5 shrink-0 text-amber-600" />
           )}
           <div className="text-xs">
-            <p className="font-semibold text-[#002B18]">1. Capa Dura (Coordenação)</p>
+            <p className="font-semibold text-[#002B18]">
+              1. Capa Dura (Coordenação)
+            </p>
             <p className="text-gray-500">
               {isHardCoverDelivered
                 ? `Recebida em ${formatDate(hardCoverReceivedAt)}`
@@ -154,7 +212,9 @@ export function FinalSubmissionBanner({
             <Clock className="mt-0.5 size-5 shrink-0 text-gray-400" />
           )}
           <div className="text-xs">
-            <p className="font-semibold text-[#002B18]">2. Envio à Biblioteca</p>
+            <p className="font-semibold text-[#002B18]">
+              2. Envio à Biblioteca
+            </p>
             <p className="text-gray-500">
               {isForwardedToLibrary
                 ? `Encaminhado em ${formatDate(forwardedToLibraryAt)}`
@@ -171,7 +231,9 @@ export function FinalSubmissionBanner({
             <Clock className="mt-0.5 size-5 shrink-0 text-gray-400" />
           )}
           <div className="text-xs">
-            <p className="font-semibold text-[#002B18]">3. Homologação no Acervo</p>
+            <p className="font-semibold text-[#002B18]">
+              3. Homologação no Acervo
+            </p>
             <p className="text-gray-500">
               {isLibraryConfirmed
                 ? `Homologado em ${formatDate(libraryReceivedAt)}`
@@ -180,6 +242,115 @@ export function FinalSubmissionBanner({
           </div>
         </div>
       </div>
+
+      {/* Barra de Ações Operacionais (Upload da versão final, confirmação da capa dura, download) */}
+      {(onUploadFinalFile || onConfirmHardCover || onDownloadFinalFile) && (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#006633]/15 pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Download da versão final se já foi enviada */}
+            {finalTccFile && onDownloadFinalFile && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isDownloadingFinalFile}
+                onClick={onDownloadFinalFile}
+                className="border-[#006633] text-[#002B18] hover:bg-[#002B18] hover:text-[#C8FF47] font-semibold cursor-pointer"
+              >
+                {isDownloadingFinalFile ? (
+                  <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
+                ) : (
+                  <Download className="size-4" />
+                )}
+                Baixar Versão Final (PDF)
+              </Button>
+            )}
+
+            {/* Upload da versão final pelo estudante ou gestão */}
+            {canUpload && onUploadFinalFile && !isCompleted && (
+              <>
+                <input
+                  id="finalSubmissionFileInput"
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={onUploadFinalFile}
+                  disabled={isUploadingFinalFile}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isUploadingFinalFile}
+                  onClick={() =>
+                    document.getElementById('finalSubmissionFileInput')?.click()
+                  }
+                  className="border-[#006633] text-[#002B18] hover:bg-[#006633] hover:text-white font-semibold cursor-pointer"
+                >
+                  {isUploadingFinalFile ? (
+                    <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
+                  ) : (
+                    <Upload className="size-4" />
+                  )}
+                  {finalTccFile
+                    ? 'Substituir Versão Final (PDF)'
+                    : 'Submeter Versão Final (PDF Corrigido)'}
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Confirmação do recebimento da capa dura pela Coordenação */}
+          {canConfirmHardCover &&
+            onConfirmHardCover &&
+            !isHardCoverDelivered &&
+            !isCompleted && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={isConfirmingHardCover}
+                onClick={() => setIsConfirmModalOpen(true)}
+                className="bg-[#002B18] text-[#C8FF47] hover:bg-[#003820] font-semibold shadow-xs cursor-pointer"
+              >
+                {isConfirmingHardCover ? (
+                  <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" />
+                ) : (
+                  <CheckCircle2 className="size-4" />
+                )}
+                Confirmar Recebimento da Capa Dura
+              </Button>
+            )}
+        </div>
+      )}
+
+      {/* Modal de Confirmação da Capa Dura (Coordenação) */}
+      <AlertDialog
+        open={isConfirmModalOpen}
+        onOpenChange={setIsConfirmModalOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Recebimento da Capa Dura</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você confirma que o estudante entregou a versão física encadernada
+              em capa dura incorporando as correções e sugestões da banca examinadora
+              à Coordenação do Curso?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-[#002B18] text-[#C8FF47] hover:bg-[#003820] font-semibold cursor-pointer"
+              onClick={() => {
+                setIsConfirmModalOpen(false);
+                onConfirmHardCover?.();
+              }}
+            >
+              Confirmar Recebimento
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

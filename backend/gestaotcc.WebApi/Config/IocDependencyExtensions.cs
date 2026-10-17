@@ -87,6 +87,10 @@ public static class IocDependencyExtensions
         services.AddScoped<RejectTccProposalUseCase>();
         services.AddScoped<ReformulateTccProposalUseCase>();
         services.AddScoped<CancelTccProposalUseCase>();
+        services.AddScoped<UploadFinalTccFileUseCase>();
+        services.AddScoped<ConfirmHardCoverUseCase>();
+        services.AddScoped<DownloadFinalTccFileUseCase>();
+        services.AddScoped<FindCoordinationPendingUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
