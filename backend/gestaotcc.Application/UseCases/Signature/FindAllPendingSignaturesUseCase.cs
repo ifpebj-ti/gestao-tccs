@@ -72,8 +72,11 @@ public class FindAllPendingSignaturesUseCase(
 
             var userTccs = tcc.UserTccs.ToList();
             var studentNames = GetStudentNames(tcc, userTccs);
+            var pendingAdvisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.Status == "PENDING_SIGNATURES");
             var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userTccs, currentOrder);
-            var documentsInStep = tcc.Documents.Where(d => d.DocumentType.SignatureOrder == currentOrder).ToList();
+            var documentsInStep = tcc.Documents
+                .Where(d => d.DocumentType.SignatureOrder == currentOrder && d.Id != pendingAdvisorChange?.DocumentId)
+                .ToList();
 
             var pendingDetails = new List<FindAllPendingSignatureDetailsDTO>();
 
@@ -162,55 +165,87 @@ public class FindAllPendingSignaturesUseCase(
             }
 
             // Assinaturas pendentes para alteração/afastamento de orientador (Anexos V e IX)
-            var pendingAdvisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.Status == "PENDING_SIGNATURES");
             if (pendingAdvisorChange != null && pendingAdvisorChange.DocumentId.HasValue)
             {
                 var changeDoc = tcc.Documents.FirstOrDefault(d => d.Id == pendingAdvisorChange.DocumentId.Value);
                 if (changeDoc != null)
                 {
-                    var requiredUserIds = new HashSet<long> { pendingAdvisorChange.CurrentAdvisorId };
-                    foreach (var st in userTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
-                    {
-                        requiredUserIds.Add(st.UserId);
-                    }
-                    if (pendingAdvisorChange.SuggestedAdvisorId.HasValue)
-                    {
-                        requiredUserIds.Add(pendingAdvisorChange.SuggestedAdvisorId.Value);
-                    }
-
+                    var isAnexoV = changeDoc.DocumentType.Name.Contains("ANEXO V -") || pendingAdvisorChange.RequesterRole == "ADVISOR";
                     var signedUserIds = changeDoc.Signatures.Select(s => s.UserId).ToHashSet();
-                    foreach (var reqUserId in requiredUserIds)
-                    {
-                        if (!signedUserIds.Contains(reqUserId))
-                        {
-                            var userTcc = userTccs.FirstOrDefault(ut => ut.UserId == reqUserId);
-                            string userName;
-                            string userRole;
-                            if (userTcc != null)
-                            {
-                                userName = userTcc.User.Name;
-                                userRole = userTcc.Profile.Role;
-                            }
-                            else if (reqUserId == pendingAdvisorChange.SuggestedAdvisorId)
-                            {
-                                userName = pendingAdvisorChange.SuggestedAdvisor?.Name ?? "Orientador Substituto";
-                                userRole = RoleType.ADVISOR.ToString();
-                            }
-                            else
-                            {
-                                userName = pendingAdvisorChange.CurrentAdvisor?.Name ?? "Orientador";
-                                userRole = RoleType.ADVISOR.ToString();
-                            }
 
-                            pendingDetails.Add(new FindAllPendingSignatureDetailsDTO(
-                                changeDoc.Id,
-                                changeDoc.DocumentType.Name,
-                                new List<FindAllPendignSignatureUserDetailsDTO>
-                                {
-                                    new(reqUserId, userName, userRole, null, null)
-                                }
-                            ));
+                    var usersToPending = new List<long>();
+                    if (isAnexoV)
+                    {
+                        // Para o Anexo V (afastamento): primeiro chega para o professor, depois para o aluno
+                        if (!signedUserIds.Contains(pendingAdvisorChange.CurrentAdvisorId))
+                        {
+                            usersToPending.Add(pendingAdvisorChange.CurrentAdvisorId);
                         }
+                        else
+                        {
+                            foreach (var st in userTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+                            {
+                                if (!signedUserIds.Contains(st.UserId))
+                                {
+                                    usersToPending.Add(st.UserId);
+                                }
+                            }
+                            if (pendingAdvisorChange.SuggestedAdvisorId.HasValue && !signedUserIds.Contains(pendingAdvisorChange.SuggestedAdvisorId.Value))
+                            {
+                                usersToPending.Add(pendingAdvisorChange.SuggestedAdvisorId.Value);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var requiredUserIds = new HashSet<long> { pendingAdvisorChange.CurrentAdvisorId };
+                        foreach (var st in userTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+                        {
+                            requiredUserIds.Add(st.UserId);
+                        }
+                        if (pendingAdvisorChange.SuggestedAdvisorId.HasValue)
+                        {
+                            requiredUserIds.Add(pendingAdvisorChange.SuggestedAdvisorId.Value);
+                        }
+
+                        foreach (var reqUserId in requiredUserIds)
+                        {
+                            if (!signedUserIds.Contains(reqUserId))
+                            {
+                                usersToPending.Add(reqUserId);
+                            }
+                        }
+                    }
+
+                    foreach (var reqUserId in usersToPending)
+                    {
+                        var userTcc = userTccs.FirstOrDefault(ut => ut.UserId == reqUserId);
+                        string userName;
+                        string userRole;
+                        if (userTcc != null)
+                        {
+                            userName = userTcc.User.Name;
+                            userRole = userTcc.Profile.Role;
+                        }
+                        else if (reqUserId == pendingAdvisorChange.SuggestedAdvisorId)
+                        {
+                            userName = pendingAdvisorChange.SuggestedAdvisor?.Name ?? "Orientador Substituto";
+                            userRole = RoleType.ADVISOR.ToString();
+                        }
+                        else
+                        {
+                            userName = pendingAdvisorChange.CurrentAdvisor?.Name ?? "Orientador";
+                            userRole = RoleType.ADVISOR.ToString();
+                        }
+
+                        pendingDetails.Add(new FindAllPendingSignatureDetailsDTO(
+                            changeDoc.Id,
+                            changeDoc.DocumentType.Name,
+                            new List<FindAllPendignSignatureUserDetailsDTO>
+                            {
+                                new(reqUserId, userName, userRole, null, null)
+                            }
+                        ));
                     }
                 }
             }
@@ -257,6 +292,8 @@ public class FindAllPendingSignaturesUseCase(
     {
         return allDocTypes
             .Where(dt => dt.SignatureOrder == stepOrder &&
+                         !dt.Name.Contains("ANEXO V -") &&
+                         !dt.Name.Contains("ANEXO IX") &&
                          dt.Profiles.Any(p => userTccs.Any(u => u.Profile.Id == p.Id)))
             .ToList();
     }

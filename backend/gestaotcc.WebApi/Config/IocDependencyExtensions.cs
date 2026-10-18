@@ -60,6 +60,7 @@ public static class IocDependencyExtensions
         services.AddScoped<MyProfileUseCase>();
         services.AddScoped<TccFilesUseCase>();
         services.AddScoped<ChangeOwnPasswordUseCase>();
+        services.AddScoped<FindAvailableAdvisorsUseCase>();
         
         // Tcc
         services.AddScoped<CreateTccUseCase>();
@@ -71,6 +72,7 @@ public static class IocDependencyExtensions
         services.AddScoped<RequestCancellationTccUseCase>();
         services.AddScoped<ApproveCancellationTccUseCase>();
         services.AddScoped<RequestAdvisorChangeUseCase>();
+        services.AddScoped<RequestAdvisorDepartureUseCase>();
         services.AddScoped<FindPendingAdvisorChangeUseCase>();
         services.AddScoped<LinkBankingUserUseCase>();
         services.AddScoped<FindTccCancellationUseCase>();

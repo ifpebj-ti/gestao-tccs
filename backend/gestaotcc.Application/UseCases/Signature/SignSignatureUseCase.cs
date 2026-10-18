@@ -133,6 +133,31 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         var advisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.DocumentId == document.Id);
         if (advisorChange != null)
         {
+            var isAnexoV = document.DocumentType.Name.Contains("ANEXO V -") || advisorChange.RequesterRole == "ADVISOR";
+
+            if (isAnexoV && user.Id == advisorChange.CurrentAdvisorId)
+            {
+                var students = tcc.UserTccs
+                    .Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString())
+                    .Select(ut => ut.User)
+                    .ToList();
+
+                foreach (var studentUser in students)
+                {
+                    try
+                    {
+                        var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(document.DocumentType.Name, null) };
+                        var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(studentUser.Email, studentUser.Name, details, tcc.Title ?? string.Empty));
+                        await emailGateway.Send(emailDto);
+                        logger.LogInformation("Notificação de assinatura pendente do Anexo V enviada para o estudante {Email}", studentUser.Email);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Erro ao enviar e-mail de notificação de assinatura de afastamento para o estudante {Email}", studentUser.Email);
+                    }
+                }
+            }
+
             var requiredUserIds = new HashSet<long> { advisorChange.CurrentAdvisorId };
             foreach (var st in tcc.UserTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
             {
@@ -457,6 +482,15 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             bool isStudent = tcc.UserTccs.Any(ut => ut.UserId == user.Id && ut.Profile.Role == RoleType.STUDENT.ToString());
             bool isCurrentAdvisor = advisorChange.CurrentAdvisorId == user.Id;
             bool isSuggestedAdvisor = advisorChange.SuggestedAdvisorId == user.Id;
+
+            var isAnexoV = document.DocumentType.Name.Contains("ANEXO V -") || advisorChange.RequesterRole == "ADVISOR";
+            if (isAnexoV && isStudent)
+            {
+                var advisorSigned = document.Signatures.Any(s => s.UserId == advisorChange.CurrentAdvisorId);
+                if (!advisorSigned)
+                    return false;
+            }
+
             return isStudent || isCurrentAdvisor || isSuggestedAdvisor;
         }
 
