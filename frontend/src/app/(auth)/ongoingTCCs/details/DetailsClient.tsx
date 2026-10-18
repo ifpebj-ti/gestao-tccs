@@ -12,6 +12,7 @@ import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection'
 import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
 import { ActionPanel } from '@/components/tcc-details/ActionPanel';
 import { CancellationModal } from '@/components/tcc-details/CancellationModal';
+import { AdvisorChangeModal } from '@/components/tcc-details/AdvisorChangeModal';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AvaliacaoForm } from '@/components/AvaliacaoForm';
 import { FinalSubmissionBanner } from '@/components/tcc-details/FinalSubmissionBanner';
@@ -33,7 +34,6 @@ export default function DetailsClient() {
     scheduleForm,
     editTccForm,
     // Handlers
-    // Handlers
     handleRequestCancellation,
     handleApproveCancellation,
     handleScheduleSubmit,
@@ -54,7 +54,16 @@ export default function DetailsClient() {
     isConfirmingLibrary,
     isConcluding,
     orientadorToken,
-    setOrientadorToken
+    setOrientadorToken,
+    // Alteração / Afastamento de Orientador
+    pendingAdvisorChange,
+    isAdvisorChangeModalOpen,
+    setIsAdvisorChangeModalOpen,
+    advisorChangeType,
+    availableAdvisors,
+    advisorChangeForm,
+    handleRequestAdvisorChange,
+    openAdvisorChangeModal
   } = useTccDetails();
 
   if (loading) {
@@ -124,7 +133,17 @@ export default function DetailsClient() {
             resendingInviteTo={null}
           />
           {tccData.infoAdvisor.name && (
-            <AdvisorInfoSection advisor={tccData.infoAdvisor} />
+            <AdvisorInfoSection
+              advisor={tccData.infoAdvisor}
+              profile={profile}
+              pendingAdvisorChange={pendingAdvisorChange}
+              onRequestAdvisorChange={openAdvisorChangeModal}
+              isTccActive={
+                tccData.infoTcc.status !== 'COMPLETED' &&
+                tccData.infoTcc.status !== 'CANCELLED' &&
+                !tccData.cancellationRequest
+              }
+            />
           )}
           <BankingInfoSection
             bankingData={tccData.infoBanking}
@@ -160,6 +179,16 @@ export default function DetailsClient() {
         onOpenChange={setIsCancellationModalOpen}
         form={cancellationForm}
         onSubmit={handleRequestCancellation}
+      />
+
+      <AdvisorChangeModal
+        isOpen={isAdvisorChangeModalOpen}
+        onOpenChange={setIsAdvisorChangeModalOpen}
+        form={advisorChangeForm}
+        onSubmit={handleRequestAdvisorChange}
+        type={advisorChangeType}
+        availableAdvisors={availableAdvisors}
+        currentAdvisorName={tccData.infoAdvisor.name}
       />
 
       <Dialog

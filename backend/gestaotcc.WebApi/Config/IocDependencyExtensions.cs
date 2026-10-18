@@ -70,6 +70,8 @@ public static class IocDependencyExtensions
         services.AddScoped<FindTccWorkflowUseCase>();
         services.AddScoped<RequestCancellationTccUseCase>();
         services.AddScoped<ApproveCancellationTccUseCase>();
+        services.AddScoped<RequestAdvisorChangeUseCase>();
+        services.AddScoped<FindPendingAdvisorChangeUseCase>();
         services.AddScoped<LinkBankingUserUseCase>();
         services.AddScoped<FindTccCancellationUseCase>();
         services.AddScoped<CreateScheduleTccUseCase>();

@@ -251,6 +251,64 @@ public class TccController : ControllerBase
     }
 
     /// <summary>
+    /// Solicitar substituição (estudante) ou afastamento (orientador) de orientação de TCC
+    /// </summary>
+    [Authorize(Roles = "STUDENT, ADVISOR")]
+    [HttpPost("advisor-change/request")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> RequestAdvisorChange(
+        [FromBody] RequestAdvisorChangeDTO data,
+        [FromServices] RequestAdvisorChangeUseCase requestAdvisorChangeUseCase)
+    {
+        var validator = new RequestAdvisorChangeValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null || !long.TryParse(userIdClaim, out var userId)) 
+            return Unauthorized();
+
+        var result = await requestAdvisorChangeUseCase.Execute(data, userId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            if (result.ErrorDetails != null)
+                result.ErrorDetails.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                _ => StatusCode(500, result.ErrorDetails)
+            };
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data ?? "Solicitação enviada com sucesso"));
+    }
+
+    /// <summary>
+    /// Consultar solicitação pendente de substituição/afastamento de orientador de um TCC
+    /// </summary>
+    [Authorize]
+    [HttpGet("advisor-change")]
+    public async Task<ActionResult<FindTccAdvisorChangeDTO?>> GetPendingAdvisorChange(
+        [FromQuery] long tccId,
+        [FromServices] FindPendingAdvisorChangeUseCase findPendingAdvisorChangeUseCase)
+    {
+        var result = await findPendingAdvisorChangeUseCase.Execute(tccId);
+        if (result.IsFailure)
+        {
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
     /// Visualizar solicitação de cancelamento do TCC
     /// </summary>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]

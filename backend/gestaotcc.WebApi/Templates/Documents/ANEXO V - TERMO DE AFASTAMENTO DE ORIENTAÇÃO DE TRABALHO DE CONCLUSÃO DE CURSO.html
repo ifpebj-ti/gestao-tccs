@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TCC</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        @page {
+            size: A4 portrait;
+            margin-top: 3cm;
+            margin-bottom: 2cm;
+            margin-left: 3cm;
+            margin-right: 2cm;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .header-text {
+            font-size: 11pt;
+            line-height: 1.2;
+        }
+        .anexo-title {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+            font-size: 11pt;
+            font-weight: normal;
+        }
+        .declaracao {
+            text-align: justify;
+            text-indent: 1.5cm;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+        table.form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 11pt;
+        }
+        table.form-table td {
+            vertical-align: bottom;
+            padding: 4px 0;
+        }
+        .field-label {
+            white-space: nowrap;
+            padding-right: 5px;
+            width: 1%;
+        }
+        .field-value {
+            border-bottom: 1px solid black;
+            width: auto;
+            text-align: center;
+            padding-bottom: 0px;
+        }
+        .footer-text {
+            color: #999;
+            font-size: 8pt;
+            text-align: left;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .signatures {
+            margin-top: 80px;
+        }
+        .signature-line {
+            width: 300px;
+            border-bottom: 1px solid black;
+            margin: 0 auto 5px auto;
+        }
+        .signature-block {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .date-section {
+            text-align: right;
+            margin-top: 80px;
+            margin-bottom: 40px;
+        }
+        .inline-field {
+            border-bottom: 1px solid black;
+            display: inline-block;
+            text-align: center;
+            vertical-align: bottom;
+            line-height: 1.1;
+        }
+        .reason-box {
+            border: 1px solid black;
+            min-height: 100px;
+            padding: 8px;
+            margin: 10px 0 20px 0;
+            text-align: justify;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img style="width: 80px; height: auto; margin-top: -20px; margin-bottom: 0px;" src="{{BRASAO_SRC}}" alt="Brasao IFPE">
+        <div class="header-text">
+            <strong>MINISTERIO DA EDUCACAO</strong><br>
+            <strong>INSTITUTO FEDERAL DE EDUCACAO, CIENCIA E TECNOLOGIA DE PERNAMBUCO</strong><br>
+            <strong>PRO-REITORIA DE ENSINO</strong><br>
+            <strong>CAMPUS {{CAMPUS_NOME}}</strong>
+        </div>
+    </div>
+
+    <div class="anexo-title">
+        <strong>ANEXO V</strong><br>
+        <strong>TERMO DE AFASTAMENTO DE ORIENTACAO DE TRABALHO DE CONCLUSAO DE CURSO</strong>
+    </div>
+
+    <p class="declaracao">
+        Eu, <span class="inline-field" style="min-width: 250px;">{{ORIENTADOR_NOME}}</span>,
+        SIAPE n. <span class="inline-field" style="min-width: 120px;">{{ORIENTADOR_SIAPE}}</span>,
+        docente do Instituto Federal de Educacao, Ciencia e Tecnologia de Pernambuco - IFPE, Campus
+        <span class="inline-field" style="min-width: 120px;">{{CAMPUS_NOME}}</span>,
+        solicito meu <strong>afastamento da orientacao</strong> do Trabalho de Conclusao de Curso do(a) estudante
+        <span class="inline-field" style="min-width: 250px;">{{ESTUDANTE_NOME}}</span>,
+        matricula n. <span class="inline-field" style="min-width: 120px;">{{ESTUDANTE_MATRICULA}}</span>,
+        do Curso de <span class="inline-field" style="min-width: 200px;">{{CURSO_NOME}}</span>,
+        intitulado: <span class="inline-field" style="min-width: 300px;">{{TCC_TITULO}}</span>,
+        pelas razoes expostas a seguir, em conformidade com o Art. 18, inciso XVI da Resolucao n. 195/2023 do IFPE.
+    </p>
+
+    <div class="section-title">Justificativa para o afastamento:</div>
+    <div class="reason-box">{{MOTIVO_AFASTAMENTO}}</div>
+
+    <p class="declaracao">
+        Declaro estar ciente de que o afastamento somente produzira efeito apos a assinatura e ciencia de todas as partes envolvidas
+        (orientador e estudante), bem como apos a aprovacao pela Coordenacao/Supervisao do curso, conforme previsto na regulamentacao vigente.
+    </p>
+
+    <p class="declaracao">
+        Docente substituto(a) sugerido(a) para assumir a orientacao:
+        <span class="inline-field" style="min-width: 280px;">{{ORIENTADOR_SUBSTITUTO_NOME}}</span>,
+        SIAPE n. <span class="inline-field" style="min-width: 120px;">{{ORIENTADOR_SUBSTITUTO_SIAPE}}</span>.
+    </p>
+
+    <div class="date-section">
+        <span class="inline-field" style="min-width: 150px;">{{CAMPUS_CIDADE}}</span>,
+        <span class="inline-field" style="min-width: 30px;">{{DIA}}</span> de
+        <span class="inline-field" style="min-width: 100px;">{{MES}}</span> de
+        <span class="inline-field" style="min-width: 50px;">{{ANO}}</span>.
+    </div>
+
+    <div class="signatures">
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div><strong>{{ORIENTADOR_NOME}}</strong></div>
+            <div>Docente Orientador(a)</div>
+            <div>SIAPE: {{ORIENTADOR_SIAPE}}</div>
+        </div>
+
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div><strong>{{ESTUDANTE_NOME}}</strong></div>
+            <div>Estudante</div>
+            <div>Matricula: {{ESTUDANTE_MATRICULA}}</div>
+        </div>
+
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div><strong>{{ORIENTADOR_SUBSTITUTO_NOME}}</strong></div>
+            <div>Docente Substituto(a) Sugerido(a)</div>
+            <div>SIAPE: {{ORIENTADOR_SUBSTITUTO_SIAPE}}</div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="header">
+        <div class="header-text">
+            <strong>INSTITUTO FEDERAL DE EDUCACAO, CIENCIA E TECNOLOGIA DE PERNAMBUCO</strong><br>
+            <strong>CAMPUS {{CAMPUS_NOME}}</strong>
+        </div>
+    </div>
+
+    <div class="anexo-title">
+        <strong>ANEXO V - PARTE 2</strong><br>
+        <strong>PARECER DA COORDENACAO / SUPERVISAO DO CURSO</strong>
+    </div>
+
+    <p class="declaracao">
+        Apos analise do presente requerimento de afastamento de orientacao, a Coordenacao / Supervisao do Curso de
+        <span class="inline-field" style="min-width: 200px;">{{CURSO_NOME}}</span>
+        emite o seguinte parecer:
+    </p>
+
+    <table class="form-table">
+        <tr><td class="field-label">( &nbsp;) &nbsp; APROVADO</td></tr>
+        <tr><td class="field-label">( &nbsp;) &nbsp; INDEFERIDO</td></tr>
+    </table>
+
+    <div class="section-title">Observacoes / Justificativa do indeferimento:</div>
+    <div class="reason-box"></div>
+
+    <div class="date-section">
+        <span class="inline-field" style="min-width: 150px;">{{CAMPUS_CIDADE}}</span>,
+        ____ de __________________ de _______.
+    </div>
+
+    <div class="signatures">
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Coordenador(a) / Supervisor(a) do Curso</div>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        Documento gerado eletronicamente pelo Sistema de Gestao de TCCs do IFPE em {{DATA_GERACAO}}.
+    </div>
+
+</body>
+</html>
