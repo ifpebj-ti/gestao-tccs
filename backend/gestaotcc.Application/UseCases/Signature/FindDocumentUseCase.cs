@@ -77,13 +77,23 @@ public class FindDocumentUseCase(
 
             if (!File.Exists(templatePath))
             {
-                logger.LogWarning("Template HTML não encontrado no caminho: {TemplatePath}. Tentando arquivo padrão.", templatePath);
-                templatePath = Path.Combine(directory, "Templates", "Documents", "default-template.html");
+                var files = Directory.GetFiles(Path.Combine(directory, "Templates", "Documents"), "*.html");
+                var prefix = templateDocument.Name.Split('-')[0].Trim();
+                var matchingFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Contains(prefix, StringComparison.OrdinalIgnoreCase));
+                if (matchingFile != null)
+                {
+                    templatePath = matchingFile;
+                }
+                else
+                {
+                    logger.LogWarning("Template HTML não encontrado no caminho: {TemplatePath}. Tentando arquivo padrão.", templatePath);
+                    templatePath = Path.Combine(directory, "Templates", "Documents", "default-template.html");
+                }
             }
 
             var htmlContent = await File.ReadAllTextAsync(templatePath);
 
-            var templateData = BuildTemplateVariables(studentId, tcc, templateDocument, tcc.UserTccs, onlySupervisorUser!);
+            var templateData = BuildTemplateVariables(studentId, tcc, templateDocument, tcc.UserTccs, onlySupervisorUser!, documentId);
 
             var template = Template.Parse(htmlContent);
             var renderedHtml = template.Render(templateData);
@@ -97,7 +107,8 @@ public class FindDocumentUseCase(
         TccEntity tcc,
         DocumentTypeEntity documentTypeEntity,
         ICollection<UserTccEntity> usersTccEntity,
-        UserEntity supervisorUser)
+        UserEntity supervisorUser,
+        long documentId)
     {
         var advisor = usersTccEntity.FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString())?.User;
         var student = usersTccEntity.FirstOrDefault(ut => ut.UserId == studentUserId)?.User 
@@ -179,6 +190,63 @@ public class FindDocumentUseCase(
                 phone = encoder.Encode(s.Phone ?? "")
             }).ToList() }
         };
+
+        var brasaoPath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "Documents", "brasao.png");
+        var brasaoSrc = "";
+        if (File.Exists(brasaoPath))
+        {
+            var brasaoBytes = File.ReadAllBytes(brasaoPath);
+            brasaoSrc = $"data:image/png;base64,{Convert.ToBase64String(brasaoBytes)}";
+        }
+        dict["BRASAO_SRC"] = brasaoSrc;
+        dict["brasao_src"] = brasaoSrc;
+
+        var advisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.DocumentId == documentId)
+            ?? tcc.AdvisorChanges?.OrderByDescending(ac => ac.CreatedAt).FirstOrDefault();
+
+        var currentAdvisorUser = advisorChange?.CurrentAdvisor ?? advisor;
+        var suggestedAdvisorUser = advisorChange?.SuggestedAdvisor;
+        var changeReason = advisorChange?.Reason ?? "";
+
+        var campusName = encoder.Encode(student?.CampiCourse?.Campi.Name ?? advisor?.CampiCourse?.Campi.Name ?? "Belo Jardim");
+        var campusCity = encoder.Encode(student?.CampiCourse?.Campi.City ?? advisor?.CampiCourse?.Campi.City ?? "Belo Jardim");
+        var currAdvisorName = encoder.Encode(currentAdvisorUser?.Name ?? "");
+        var currAdvisorSiape = encoder.Encode(currentAdvisorUser?.SIAPE ?? currentAdvisorUser?.Registration ?? "");
+        var studentName = encoder.Encode(student?.Name ?? "");
+        var studentMatricula = encoder.Encode(student?.Registration ?? "");
+        var courseName = encoder.Encode(student?.CampiCourse?.Course.Name ?? advisor?.CampiCourse?.Course.Name ?? "");
+        var suggAdvisorName = encoder.Encode(suggestedAdvisorUser?.Name ?? "A definir");
+        var suggAdvisorSiape = encoder.Encode(suggestedAdvisorUser?.SIAPE ?? suggestedAdvisorUser?.Registration ?? "A definir");
+
+        dict["CAMPUS_NOME"] = campusName;
+        dict["campus_nome"] = campusName;
+        dict["CAMPUS_CIDADE"] = campusCity;
+        dict["campus_cidade"] = campusCity;
+        dict["ORIENTADOR_NOME"] = currAdvisorName;
+        dict["orientador_nome"] = currAdvisorName;
+        dict["ORIENTADOR_SIAPE"] = currAdvisorSiape;
+        dict["orientador_siape"] = currAdvisorSiape;
+        dict["ESTUDANTE_NOME"] = studentName;
+        dict["estudante_nome"] = studentName;
+        dict["ESTUDANTE_MATRICULA"] = studentMatricula;
+        dict["estudante_matricula"] = studentMatricula;
+        dict["CURSO_NOME"] = courseName;
+        dict["curso_nome"] = courseName;
+        dict["TCC_TITULO"] = encoder.Encode(tccTitle);
+        dict["tcc_titulo"] = encoder.Encode(tccTitle);
+        dict["MOTIVO_AFASTAMENTO"] = encoder.Encode(changeReason);
+        dict["motivo_afastamento"] = encoder.Encode(changeReason);
+        dict["MOTIVO_SUBSTITUICAO"] = encoder.Encode(changeReason);
+        dict["motivo_substituicao"] = encoder.Encode(changeReason);
+        dict["ORIENTADOR_SUBSTITUTO_NOME"] = suggAdvisorName;
+        dict["orientador_substituto_nome"] = suggAdvisorName;
+        dict["ORIENTADOR_SUBSTITUTO_SIAPE"] = suggAdvisorSiape;
+        dict["orientador_substituto_siape"] = suggAdvisorSiape;
+        dict["DATA_GERACAO"] = encoder.Encode(nowDate.ToString("dd/MM/yyyy HH:mm"));
+        dict["data_geracao"] = dict["DATA_GERACAO"];
+        dict["DIA"] = encoder.Encode(nowDate.Day.ToString("00"));
+        dict["MES"] = encoder.Encode(mesesPtBr[nowDate.Month - 1]);
+        dict["ANO"] = encoder.Encode(nowDate.Year.ToString());
 
         for (int i = 1; i <= 3; i++)
         {

@@ -95,7 +95,8 @@ public class TccGateway(AppDbContext context) : ITccGateway
             query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
 
         if(tccFilter.UserId.HasValue)
-            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
+            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId)
+                || x.AdvisorChanges.Any(ac => ac.SuggestedAdvisorId == tccFilter.UserId && (ac.Status == "PENDING_SIGNATURES" || ac.Status == "PENDING_COORDINATION")));
 
         if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
             query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
@@ -113,6 +114,10 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.DocumentType)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.Signatures)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.SuggestedAdvisor)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.CurrentAdvisor)
             .ToListAsync();
     }
 

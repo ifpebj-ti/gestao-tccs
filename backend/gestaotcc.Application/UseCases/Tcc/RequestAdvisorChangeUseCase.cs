@@ -1,3 +1,4 @@
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.TccAdvisorChange;
@@ -9,6 +10,7 @@ namespace gestaotcc.Application.UseCases.Tcc;
 public class RequestAdvisorChangeUseCase(
     ITccGateway tccGateway,
     IUserGateway userGateway,
+    IDocumentTypeGateway documentTypeGateway,
     IAppLoggerGateway<RequestAdvisorChangeUseCase> logger
 )
 {
@@ -84,6 +86,21 @@ public class RequestAdvisorChangeUseCase(
 
         try
         {
+            var docTypes = await documentTypeGateway.FindAll();
+            var targetDocType = roleUpper == "STUDENT"
+                ? docTypes.FirstOrDefault(dt => dt.Name.Contains("ANEXO IX") || dt.Name.Contains("SUBSTITUIÇÃO") || dt.Name.Contains("SUBSTITUICAO"))
+                : docTypes.FirstOrDefault(dt => dt.Name.Contains("ANEXO V") || dt.Name.Contains("AFASTAMENTO"));
+
+            Domain.Entities.Document.DocumentEntity? generatedDocument = null;
+            if (targetDocType != null)
+            {
+                generatedDocument = DocumentFactory.CreateDocument(targetDocType, tcc.Title ?? string.Empty, null);
+                generatedDocument.Tcc = tcc;
+                generatedDocument.TccId = tcc.Id;
+                tcc.Documents.Add(generatedDocument);
+                await tccGateway.Update(tcc);
+            }
+
             var advisorChange = new TccAdvisorChangeEntity
             {
                 TccId = tcc.Id,
@@ -93,12 +110,13 @@ public class RequestAdvisorChangeUseCase(
                 SuggestedAdvisorId = request.SuggestedAdvisorId,
                 Reason = request.Reason.Trim(),
                 Status = "PENDING_SIGNATURES",
+                DocumentId = generatedDocument?.Id,
                 CreatedAt = DateTime.UtcNow
             };
 
             await tccGateway.SaveAdvisorChange(advisorChange);
 
-            logger.LogInformation("Solicitação de alteração de orientador criada com sucesso para TCC {TccId}. Id da alteração: {ChangeId}", tcc.Id, advisorChange.Id);
+            logger.LogInformation("Solicitação de alteração de orientador criada com sucesso para TCC {TccId}. Id da alteração: {ChangeId}, DocumentId: {DocId}", tcc.Id, advisorChange.Id, generatedDocument?.Id);
             return ResultPattern<string>.SuccessResult("Solicitação enviada com sucesso.");
         }
         catch (Exception ex)

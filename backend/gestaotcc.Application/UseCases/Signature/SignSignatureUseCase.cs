@@ -130,6 +130,33 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         logger.LogInformation("Validações bem-sucedidas. Adicionando assinatura do UserId {UserId} ao DocumentId {DocumentId}.", user.Id, document.Id);
         document.Signatures.Add(SignatureFactory.CreateSignature(user));
 
+        var advisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.DocumentId == document.Id);
+        if (advisorChange != null)
+        {
+            var requiredUserIds = new HashSet<long> { advisorChange.CurrentAdvisorId };
+            foreach (var st in tcc.UserTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+            {
+                requiredUserIds.Add(st.UserId);
+            }
+            if (advisorChange.SuggestedAdvisorId.HasValue)
+            {
+                requiredUserIds.Add(advisorChange.SuggestedAdvisorId.Value);
+            }
+
+            var signedUserIds = document.Signatures.Select(s => s.UserId).ToHashSet();
+            if (requiredUserIds.IsSubsetOf(signedUserIds))
+            {
+                advisorChange.Status = "PENDING_COORDINATION";
+                logger.LogInformation("Todas as partes assinaram o termo de alteração de orientador. Status atualizado para PENDING_COORDINATION para TccId {TccId}.", tcc.Id);
+                await tccGateway.UpdateAdvisorChange(advisorChange);
+            }
+
+            await tccGateway.Update(tcc);
+            await storageGateway.Send(document.FileName, data.File, data.FileContentType);
+            logger.LogInformation("Assinatura do documento de alteração de orientador concluída com sucesso para UserId {UserId}, DocumentId {DocumentId}.", user.Id, document.Id);
+            return ResultPattern<string>.SuccessResult();
+        }
+
         if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep))
         {
             logger.LogError("Falha na assinatura para TccId {TccId}: A etapa atual '{TccStep}' é inválida.", tcc.Id, tcc.Step);
@@ -330,7 +357,18 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
     private static UserEntity GetUserInTcc(TccEntity tcc, long userId)
     {
-        return tcc.UserTccs.First(ut => ut.UserId == userId).User;
+        var utUser = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == userId)?.User;
+        if (utUser != null) return utUser;
+
+        var suggestedAdvisor = tcc.AdvisorChanges
+            .FirstOrDefault(ac => ac.SuggestedAdvisorId == userId)?.SuggestedAdvisor;
+        if (suggestedAdvisor != null) return suggestedAdvisor;
+
+        var currentAdvisor = tcc.AdvisorChanges
+            .FirstOrDefault(ac => ac.CurrentAdvisorId == userId)?.CurrentAdvisor;
+        if (currentAdvisor != null) return currentAdvisor;
+
+        return tcc.UserTccs.First().User;
     }
 
     private static bool UserAlreadySigned(TccEntity tcc, long documentId, long userId)
@@ -413,6 +451,15 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
     
     private bool UserCanSignDocument(UserEntity user, TccEntity tcc, DocumentEntity document)
     {
+        var advisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.DocumentId == document.Id);
+        if (advisorChange != null)
+        {
+            bool isStudent = tcc.UserTccs.Any(ut => ut.UserId == user.Id && ut.Profile.Role == RoleType.STUDENT.ToString());
+            bool isCurrentAdvisor = advisorChange.CurrentAdvisorId == user.Id;
+            bool isSuggestedAdvisor = advisorChange.SuggestedAdvisorId == user.Id;
+            return isStudent || isCurrentAdvisor || isSuggestedAdvisor;
+        }
+
         var userTcc = tcc.UserTccs.FirstOrDefault(ut => ut.User.Id == user.Id);
         if (userTcc == null) return false;
 
