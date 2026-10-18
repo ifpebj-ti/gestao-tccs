@@ -91,6 +91,7 @@ interface CancellationDetailsResponse {
 interface DecodedToken {
   role: string | string[];
   userId: string;
+  campiCourseId?: string;
 }
 
 export function useTccDetails() {
@@ -260,7 +261,12 @@ export function useTccDetails() {
       const token = Cookies.get('token');
       if (!token) return;
       try {
-        const res = await fetch(`${API_URL}/User/filter?Profile=ADVISOR`, {
+        const decoded = jwtDecode<DecodedToken>(token);
+        const campiCourseId = decoded.campiCourseId;
+        const url = campiCourseId
+          ? `${API_URL}/User/available-advisors/${campiCourseId}`
+          : `${API_URL}/User/filter?Profile=ADVISOR`;
+        const res = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -328,36 +334,60 @@ export function useTccDetails() {
   > = async (data) => {
     try {
       const token = Cookies.get('token');
-      const requesterRole =
-        advisorChangeType === 'STUDENT_REQUEST' ? 'STUDENT' : 'ADVISOR';
-      const res = await fetch(`${API_URL}/Tcc/advisor-change/request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          tccId,
-          reason: data.reason,
-          suggestedAdvisorId: data.suggestedAdvisorId || null,
-          requesterRole
-        })
-      });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(
-          errData?.detail ||
-            errData?.message ||
-            'Falha ao enviar solicitação.'
+      if (advisorChangeType === 'ADVISOR_DEPARTURE') {
+        // Endpoint dedicado para afastamento pelo orientador (Issue #669)
+        const res = await fetch(
+          `${API_URL}/Tcc/${tccId}/request-advisor-departure`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              reason: data.reason,
+              suggestedAdvisorId: data.suggestedAdvisorId || 0
+            })
+          }
+        );
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(
+            errData?.detail ||
+              errData?.message ||
+              'Falha ao enviar solicitação de afastamento.'
+          );
+        }
+        toast.success('Solicitação de afastamento enviada com sucesso!');
+      } else {
+        // Endpoint genérico para substituição pelo estudante
+        const res = await fetch(`${API_URL}/Tcc/advisor-change/request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            tccId,
+            reason: data.reason,
+            suggestedAdvisorId: data.suggestedAdvisorId || null,
+            requesterRole: 'STUDENT'
+          })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(
+            errData?.detail ||
+              errData?.message ||
+              'Falha ao enviar solicitação de substituição.'
+          );
+        }
+        toast.success(
+          'Solicitação de substituição de orientador enviada com sucesso!'
         );
       }
 
-      toast.success(
-        advisorChangeType === 'STUDENT_REQUEST'
-          ? 'Solicitação de substituição de orientador enviada com sucesso!'
-          : 'Solicitação de afastamento enviada com sucesso!'
-      );
       setIsAdvisorChangeModalOpen(false);
       advisorChangeForm.reset();
       await fetchTccDetails();

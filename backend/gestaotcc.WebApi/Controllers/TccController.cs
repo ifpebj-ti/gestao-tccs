@@ -1,6 +1,7 @@
 using FluentValidation;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Tcc;
+using gestaotcc.WebApi.InputModel;
 using gestaotcc.WebApi.ResponseModels;
 using gestaotcc.WebApi.Validators.Tcc;
 using Microsoft.AspNetCore.Authorization;
@@ -306,6 +307,49 @@ public class TccController : ControllerBase
         }
 
         return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Solicitar afastamento da orientação de TCC pelo próprio docente orientador (Anexo V)
+    /// </summary>
+    /// <param name="id">Id do TCC</param>
+    [Authorize(Roles = "ADVISOR")]
+    [HttpPost("{id}/request-advisor-departure")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> RequestAdvisorDeparture(
+        [FromRoute] long id,
+        [FromBody] RequestAdvisorDepartureInputModel data,
+        [FromServices] RequestAdvisorDepartureUseCase requestAdvisorDepartureUseCase)
+    {
+        if (string.IsNullOrWhiteSpace(data.Reason) || data.Reason.Trim().Length < 10)
+            return BadRequest(new { detail = "Justificativa obrigatória e deve ter ao menos 10 caracteres." });
+
+        if (data.SuggestedAdvisorId <= 0)
+            return BadRequest(new { detail = "É obrigatório indicar um docente substituto disponível." });
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var dto = new RequestAdvisorDepartureDTO(id, data.Reason.Trim(), data.SuggestedAdvisorId);
+        var result = await requestAdvisorDepartureUseCase.Execute(dto, userId);
+
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            if (result.ErrorDetails != null)
+                result.ErrorDetails.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                _ => StatusCode(500, result.ErrorDetails)
+            };
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data ?? "Solicitação de afastamento enviada com sucesso"));
     }
 
     /// <summary>

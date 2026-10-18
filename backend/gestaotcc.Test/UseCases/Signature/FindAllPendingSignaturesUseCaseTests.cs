@@ -212,4 +212,156 @@ public async Task Execute_ShouldReturnPendingSignatures_WhenThereAreDocumentsToS
             }
         }
     }
+
+    [Fact]
+    public async Task Execute_AnexoV_ShouldReturnOnlyAdvisor_WhenAdvisorHasNotSigned()
+    {
+        var advisorUser = new UserEntity { Id = 10, Name = "Prof Orientador" };
+        var studentUser = new UserEntity { Id = 20, Name = "Aluno Orientando" };
+        var advisorProfile = new Domain.Entities.Profile.ProfileEntity { Id = 1, Role = RoleType.ADVISOR.ToString() };
+        var studentProfile = new Domain.Entities.Profile.ProfileEntity { Id = 2, Role = RoleType.STUDENT.ToString() };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Title = "TCC Teste",
+            Step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString(),
+            Status = StatusTccType.IN_PROGRESS.ToString(),
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = advisorUser, UserId = advisorUser.Id, Profile = advisorProfile },
+                new() { User = studentUser, UserId = studentUser.Id, Profile = studentProfile }
+            },
+            Documents = new List<DocumentEntity>(),
+            TccInvites = new List<TccInviteEntity>()
+        };
+
+        var anexoVDocType = new DocumentTypeEntity
+        {
+            Id = 50,
+            Name = "ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<Domain.Entities.Profile.ProfileEntity> { advisorProfile, studentProfile }
+        };
+
+        var anexoVDoc = new DocumentEntity
+        {
+            Id = 100,
+            DocumentType = anexoVDocType,
+            DocumentTypeId = anexoVDocType.Id,
+            FileName = "ANEXO V - AFASTAMENTO",
+            Signatures = new List<SignatureEntity>() // Ninguém assinou ainda
+        };
+        tcc.Documents.Add(anexoVDoc);
+
+        var advisorChange = new gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity
+        {
+            Id = 1,
+            TccId = tcc.Id,
+            DocumentId = anexoVDoc.Id,
+            CurrentAdvisorId = advisorUser.Id,
+            SuggestedAdvisorId = 30,
+            RequesterUserId = advisorUser.Id,
+            RequesterRole = "ADVISOR",
+            Status = "PENDING_SIGNATURES"
+        };
+        tcc.AdvisorChanges = new List<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity> { advisorChange };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll()
+            .Returns(new List<DocumentTypeEntity> { anexoVDocType });
+
+        // Quando buscamos para o professor (deve retornar a pendência do Anexo V)
+        var resultAdvisor = await _useCase.Execute(advisorUser.Id, 1);
+        Assert.True(resultAdvisor.IsSuccess);
+        Assert.NotEmpty(resultAdvisor.Data);
+        var advisorDetails = resultAdvisor.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id).ToList();
+        Assert.Single(advisorDetails);
+        Assert.Equal(advisorUser.Id, advisorDetails[0].UserDetails[0].UserId);
+
+        // Quando buscamos para o aluno (NÃO deve ter pendência do Anexo V ainda, pois professor não assinou)
+        var resultStudent = await _useCase.Execute(studentUser.Id, 1);
+        Assert.True(resultStudent.IsSuccess);
+        var studentAnexoVDetails = resultStudent.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id).ToList();
+        Assert.Empty(studentAnexoVDetails);
+    }
+
+    [Fact]
+    public async Task Execute_AnexoV_ShouldReturnStudent_WhenAdvisorHasAlreadySigned()
+    {
+        var advisorUser = new UserEntity { Id = 10, Name = "Prof Orientador" };
+        var studentUser = new UserEntity { Id = 20, Name = "Aluno Orientando" };
+        var advisorProfile = new Domain.Entities.Profile.ProfileEntity { Id = 1, Role = RoleType.ADVISOR.ToString() };
+        var studentProfile = new Domain.Entities.Profile.ProfileEntity { Id = 2, Role = RoleType.STUDENT.ToString() };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Title = "TCC Teste",
+            Step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString(),
+            Status = StatusTccType.IN_PROGRESS.ToString(),
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = advisorUser, UserId = advisorUser.Id, Profile = advisorProfile },
+                new() { User = studentUser, UserId = studentUser.Id, Profile = studentProfile }
+            },
+            Documents = new List<DocumentEntity>(),
+            TccInvites = new List<TccInviteEntity>()
+        };
+
+        var anexoVDocType = new DocumentTypeEntity
+        {
+            Id = 50,
+            Name = "ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<Domain.Entities.Profile.ProfileEntity> { advisorProfile, studentProfile }
+        };
+
+        var anexoVDoc = new DocumentEntity
+        {
+            Id = 100,
+            DocumentType = anexoVDocType,
+            DocumentTypeId = anexoVDocType.Id,
+            FileName = "ANEXO V - AFASTAMENTO",
+            Signatures = new List<SignatureEntity>
+            {
+                new() { UserId = advisorUser.Id, DocumentId = 100, User = advisorUser } // Professor já assinou!
+            }
+        };
+        tcc.Documents.Add(anexoVDoc);
+
+        var advisorChange = new gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity
+        {
+            Id = 1,
+            TccId = tcc.Id,
+            DocumentId = anexoVDoc.Id,
+            CurrentAdvisorId = advisorUser.Id,
+            SuggestedAdvisorId = 30,
+            RequesterUserId = advisorUser.Id,
+            RequesterRole = "ADVISOR",
+            Status = "PENDING_SIGNATURES"
+        };
+        tcc.AdvisorChanges = new List<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity> { advisorChange };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll()
+            .Returns(new List<DocumentTypeEntity> { anexoVDocType });
+
+        // Quando o professor já assinou, para o professor não deve mais haver pendência
+        var resultAdvisor = await _useCase.Execute(advisorUser.Id, 1);
+        Assert.True(resultAdvisor.IsSuccess);
+        var advisorDetails = resultAdvisor.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id).ToList();
+        Assert.Empty(advisorDetails);
+
+        // Para o aluno, agora SIM deve aparecer a pendência
+        var resultStudent = await _useCase.Execute(studentUser.Id, 1);
+        Assert.True(resultStudent.IsSuccess);
+        var studentDetails = resultStudent.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id).ToList();
+        Assert.Single(studentDetails);
+        Assert.Equal(studentUser.Id, studentDetails[0].UserDetails[0].UserId);
+    }
 }

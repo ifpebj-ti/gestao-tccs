@@ -83,6 +83,9 @@ public class TccGateway(AppDbContext context) : ITccGateway
             .Include(x => x.Documents)
                 .ThenInclude(x => x.DocumentType)
             .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.CurrentAdvisor)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.SuggestedAdvisor)
             .Include(x => x.Semester)
             .FirstOrDefaultAsync(x => x.Id == id);
     }

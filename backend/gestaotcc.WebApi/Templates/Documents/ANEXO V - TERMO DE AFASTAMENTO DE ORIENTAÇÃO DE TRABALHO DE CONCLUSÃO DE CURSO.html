@@ -4,66 +4,71 @@
     <meta charset="UTF-8">
     <title>ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm 2.2cm;
+        }
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
+            font-size: 10.5pt;
             line-height: 1.4;
             color: #000;
             margin: 0;
             padding: 0;
         }
-        @page {
-            size: A4 portrait;
-            margin-top: 2cm;
-            margin-bottom: 1.5cm;
-            margin-left: 2.5cm;
-            margin-right: 2.5cm;
-        }
         .header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 16px;
         }
-        .header img {
-            width: 75px;
+        .brasao {
+            width: 72px;
             height: auto;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
         .header-text {
-            font-size: 10pt;
+            font-size: 9.5pt;
             line-height: 1.25;
             color: #000;
         }
         .anexo-title {
             text-align: center;
-            margin-top: 20px;
-            margin-bottom: 25px;
-            font-size: 11pt;
-            line-height: 1.3;
+            margin-top: 16px;
+            margin-bottom: 22px;
+            font-size: 10.5pt;
+            letter-spacing: 0.5px;
+        }
+        .main-title {
+            text-align: center;
+            margin-bottom: 26px;
+            font-size: 10.5pt;
+            line-height: 1.4;
         }
         .declaracao {
             text-align: justify;
-            text-indent: 1.5cm;
-            margin-bottom: 16px;
-            line-height: 1.5;
+            margin-bottom: 14px;
+            line-height: 2.1;
+            font-size: 10.5pt;
         }
         .justificativa-header {
             text-align: center;
             font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 10px;
-            font-size: 11pt;
-            letter-spacing: 1px;
+            margin-top: 14px;
+            margin-bottom: 8px;
+            font-size: 10.5pt;
         }
         .justificativa-box {
-            min-height: 90px;
+            min-height: 120px;
+            background-image: repeating-linear-gradient(transparent, transparent 23px, #000 23px, #000 24px);
+            line-height: 24px;
+            font-size: 10.5pt;
             text-align: justify;
-            line-height: 1.5;
-            margin-bottom: 25px;
-            padding: 4px 0;
+            margin-bottom: 22px;
+            padding: 0 4px;
+            word-break: break-word;
         }
         .signature-section {
-            margin-top: 25px;
-            margin-bottom: 25px;
+            margin-top: 22px;
+            margin-bottom: 22px;
             text-align: center;
         }
         .signature-line {
@@ -72,30 +77,49 @@
             margin: 0 auto 5px auto;
         }
         .signature-label {
-            font-size: 10.5pt;
+            font-size: 10pt;
         }
         .date-section {
             text-align: right;
-            margin-top: 30px;
-            margin-bottom: 25px;
-            font-size: 11pt;
+            margin-top: 18px;
+            margin-bottom: 18px;
+            font-size: 10.5pt;
+            line-height: 1.8;
         }
         .inline-val {
-            font-weight: normal;
+            display: inline-block;
             border-bottom: 1px solid #000;
+            text-align: center;
             padding: 0 4px;
+            line-height: 1.1;
+            vertical-align: baseline;
         }
+        .min-w-40 { min-width: 40px; }
+        .min-w-60 { min-width: 60px; }
+        .min-w-120 { min-width: 120px; }
+        .min-w-150 { min-width: 150px; }
+        .min-w-250 { min-width: 250px; }
+        .min-w-300 { min-width: 300px; }
+        .min-w-350 { min-width: 350px; }
         .obs-footer {
             font-size: 8.5pt;
-            margin-top: 25px;
+            margin-top: 16px;
             line-height: 1.3;
+        }
+        .sei-footer {
+            margin-top: 30px;
+            font-size: 8pt;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <img src="{{BRASAO_SRC}}" alt="Brasão da República">
+        <img class="brasao" src="{{BRASAO_SRC}}" alt="Brasão da República">
         <div class="header-text">
             Ministério da Educação<br>
             Secretaria de Educação Profissional e Tecnológica<br>
@@ -105,13 +129,16 @@
     </div>
 
     <div class="anexo-title">
-        <strong>ANEXO V</strong><br><br>
-        <strong>TERMO DE AFASTAMENTO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO</strong><br>
-        <strong>ORIENTADOR/A</strong>
+        ANEXO V
+    </div>
+
+    <div class="main-title">
+        TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO<br><br>
+        DOCENTE ORIENTADOR/A
     </div>
 
     <p class="declaracao">
-        Eu, <span class="inline-val">{{ORIENTADOR_NOME}}</span>, SIAPE nº <span class="inline-val">{{ORIENTADOR_SIAPE}}</span>, docente do Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco – IFPE, Campus <span class="inline-val">{{CAMPUS_NOME}}</span>, solicito meu afastamento da orientação do Trabalho de Conclusão de Curso (TCC) do/a orientando/a <span class="inline-val">{{ESTUDANTE_NOME}}</span>, matrícula nº <span class="inline-val">{{ESTUDANTE_MATRICULA}}</span>, do curso de <span class="inline-val">{{CURSO_NOME}}</span>.
+        Eu, <span class="inline-val min-w-350">{{ORIENTADOR_NOME}}</span>, SIAPE nº: <span class="inline-val min-w-150">{{ORIENTADOR_SIAPE}}</span>, docente orientador/a do Trabalho de Conclusão de Curso (TCC), venho solicitar o meu afastamento da orientação do/a estudante <span class="inline-val min-w-300">{{ESTUDANTE_NOME}}</span> em elaboração do TCC do Curso de <span class="inline-val min-w-250">{{CURSO_NOME}}</span>.
     </p>
 
     <div class="justificativa-header">JUSTIFICATIVA</div>
@@ -121,15 +148,30 @@
 
     <div class="signature-section">
         <div class="signature-line"></div>
-        <div class="signature-label">Orientador/a</div>
+        <div class="signature-label">Docente orientador/a</div>
+    </div>
+
+    <p class="declaracao">
+        Eu, orientando/a <span class="inline-val min-w-350">{{ESTUDANTE_NOME}}</span>, estou ciente do afastamento da orientação para a elaboração do Trabalho de Conclusão do Curso de <span class="inline-val min-w-250">{{CURSO_NOME}}</span> por parte do/a docente orientador/a.<br>
+        Por ser verdade, firmo o presente.
+    </p>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div class="signature-label">Orientando/a</div>
     </div>
 
     <div class="date-section">
-        <span class="inline-val">{{CAMPUS_CIDADE}}</span>, <span class="inline-val">{{DIA}}</span> de <span class="inline-val">{{MES}}</span> de <span class="inline-val">{{ANO}}</span>.
+        <span class="inline-val min-w-150">{{CAMPUS_CIDADE}}</span>, <span class="inline-val min-w-40">{{DIA}}</span> de <span class="inline-val min-w-120">{{MES}}</span> de <span class="inline-val min-w-60">{{ANO}}</span>.
     </div>
 
     <div class="obs-footer">
-        <strong>Obs.: A Coordenação do curso receberá este Termo de Afastamento somente após a assinatura de todas as pessoas acima identificadas..</strong>
+        <strong>Obs.: A Coordenação do curso receberá este Termo de Afastamento somente após a assinatura de todas as pessoas acima identificadas.</strong>
+    </div>
+
+    <div class="sei-footer">
+        <span>Anexo (01) Anexo - Resolução nº 195, de 19 de junho de 2023 (0726916)</span>
+        <span>SEI 23294.027329/2022-21 / pg. 18</span>
     </div>
 
 </body>

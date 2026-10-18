@@ -89,7 +89,7 @@ public class RequestAdvisorChangeUseCase(
             var docTypes = await documentTypeGateway.FindAll();
             var targetDocType = roleUpper == "STUDENT"
                 ? docTypes.FirstOrDefault(dt => dt.Name.Contains("ANEXO IX") || dt.Name.Contains("SUBSTITUIÇÃO") || dt.Name.Contains("SUBSTITUICAO"))
-                : docTypes.FirstOrDefault(dt => dt.Name.Contains("ANEXO V") || dt.Name.Contains("AFASTAMENTO"));
+                : docTypes.FirstOrDefault(dt => dt.Name.Contains("ANEXO V -") || dt.Name.Contains("AFASTAMENTO"));
 
             Domain.Entities.Document.DocumentEntity? generatedDocument = null;
             if (targetDocType != null)

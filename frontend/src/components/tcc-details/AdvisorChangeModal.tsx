@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { FormSelect } from '@/components/ui/form-select';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { UseFormReturn, SubmitHandler } from 'react-hook-form';
+import { UseFormReturn, SubmitHandler, Controller } from 'react-hook-form';
 import { AdvisorChangeSchemaType } from '@/app/schemas/advisorChangeSchema';
 
 interface AdvisorOption {
@@ -95,21 +94,28 @@ export function AdvisorChangeModal({
                     <span className="text-red-500 ml-1">*</span>
                   )}
                 </Label>
-                <FormSelect
-                  id="suggested-advisor"
+                <Controller
                   control={control}
                   name="suggestedAdvisorId"
-                  className="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-[#002B18]"
-                >
-                  <option value={0} className="text-gray-500">
-                    Selecione um orientador substituto...
-                  </option>
-                  {availableAdvisors.map((advisor) => (
-                    <option key={advisor.id} value={advisor.id}>
-                      {advisor.name}
-                    </option>
-                  ))}
-                </FormSelect>
+                  render={({ field }) => (
+                    <select
+                      id="suggested-advisor"
+                      value={field.value ?? 0}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onBlur={field.onBlur}
+                      className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-[#002B18] cursor-pointer"
+                    >
+                      <option value={0} disabled>
+                        Selecione um orientador substituto...
+                      </option>
+                      {availableAdvisors.map((advisor) => (
+                        <option key={advisor.id} value={advisor.id}>
+                          {advisor.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
                 {errors.suggestedAdvisorId && (
                   <p className="text-sm text-red-600">
                     {errors.suggestedAdvisorId.message}
