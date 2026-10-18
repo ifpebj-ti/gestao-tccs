@@ -8,6 +8,7 @@ using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccCancellation;
+using gestaotcc.Domain.Entities.TccAdvisorChange;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.TccSchedule;
 using gestaotcc.Domain.Entities.User;
@@ -27,6 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<UserTccEntity> UserTccs { get; set; }
     public DbSet<TccInviteEntity> TccInvites { get; set; }
     public DbSet<TccCancellationEntity> TccCancellations { get; set; }
+    public DbSet<TccAdvisorChangeEntity> TccAdvisorChanges { get; set; }
     public DbSet<TccScheduleEntity> TccSchedules { get; set; }
     public DbSet<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> TccBankingMembers { get; set; }
     public DbSet<DocumentEntity> Documents { get; set; }

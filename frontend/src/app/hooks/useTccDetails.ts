@@ -17,10 +17,30 @@ import {
   ScheduleSchemaType
 } from '@/app/schemas/scheduleSchema';
 import { editTccSchema, EditTccSchemaType } from '@/app/schemas/editTccSchema';
+import {
+  advisorChangeSchema,
+  AdvisorChangeSchemaType
+} from '@/app/schemas/advisorChangeSchema';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+
+export interface PendingAdvisorChange {
+  id: number;
+  tccId: number;
+  requesterUserId: number;
+  requesterName: string;
+  requesterRole: string;
+  currentAdvisorId: number;
+  currentAdvisorName: string;
+  suggestedAdvisorId?: number | null;
+  suggestedAdvisorName?: string | null;
+  reason: string;
+  status: string;
+  documentId?: number | null;
+  createdAt: string;
+}
 
 interface Member {
   id: number;
@@ -118,6 +138,22 @@ export function useTccDetails() {
     defaultValues: { title: '', summary: '' }
   });
 
+  const [pendingAdvisorChange, setPendingAdvisorChange] =
+    useState<PendingAdvisorChange | null>(null);
+  const [isAdvisorChangeModalOpen, setIsAdvisorChangeModalOpen] =
+    useState(false);
+  const [advisorChangeType, setAdvisorChangeType] = useState<
+    'STUDENT_REQUEST' | 'ADVISOR_DEPARTURE'
+  >('STUDENT_REQUEST');
+  const [availableAdvisors, setAvailableAdvisors] = useState<
+    { id: number; name: string }[]
+  >([]);
+
+  const advisorChangeForm = useForm<AdvisorChangeSchemaType>({
+    resolver: zodResolver(advisorChangeSchema),
+    defaultValues: { reason: '', suggestedAdvisorId: undefined }
+  });
+
   const fetchTccDetails = useCallback(async () => {
     setLoading(true);
     const token = Cookies.get('token');
@@ -172,6 +208,23 @@ export function useTccDetails() {
       } else {
         setCancellationDetails(null);
       }
+
+      try {
+        const advisorChangeRes = await fetch(
+          `${API_URL}/Tcc/advisor-change?tccId=${tccId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        if (advisorChangeRes.ok) {
+          const changeData = await advisorChangeRes.json();
+          setPendingAdvisorChange(changeData);
+        } else {
+          setPendingAdvisorChange(null);
+        }
+      } catch {
+        setPendingAdvisorChange(null);
+      }
     } catch {
       toast.error('Erro ao carregar dados do TCC.');
     } finally {
@@ -200,6 +253,25 @@ export function useTccDetails() {
       }
     };
     fetchMembers();
+  }, [API_URL]);
+
+  useEffect(() => {
+    const fetchAdvisors = async () => {
+      const token = Cookies.get('token');
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_URL}/User/filter?Profile=ADVISOR`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableAdvisors(data);
+        }
+      } catch {
+        // silencioso
+      }
+    };
+    fetchAdvisors();
   }, [API_URL]);
 
   const handleRequestCancellation: SubmitHandler<
@@ -249,6 +321,59 @@ export function useTccDetails() {
     } catch {
       toast.error('Erro ao aprovar o cancelamento.');
     }
+  };
+
+  const handleRequestAdvisorChange: SubmitHandler<
+    AdvisorChangeSchemaType
+  > = async (data) => {
+    try {
+      const token = Cookies.get('token');
+      const requesterRole =
+        advisorChangeType === 'STUDENT_REQUEST' ? 'STUDENT' : 'ADVISOR';
+      const res = await fetch(`${API_URL}/Tcc/advisor-change/request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          tccId,
+          reason: data.reason,
+          suggestedAdvisorId: data.suggestedAdvisorId || null,
+          requesterRole
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(
+          errData?.detail ||
+            errData?.message ||
+            'Falha ao enviar solicitação.'
+        );
+      }
+
+      toast.success(
+        advisorChangeType === 'STUDENT_REQUEST'
+          ? 'Solicitação de substituição de orientador enviada com sucesso!'
+          : 'Solicitação de afastamento enviada com sucesso!'
+      );
+      setIsAdvisorChangeModalOpen(false);
+      advisorChangeForm.reset();
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Erro ao enviar solicitação.'
+      );
+    }
+  };
+
+  const openAdvisorChangeModal = (
+    type: 'STUDENT_REQUEST' | 'ADVISOR_DEPARTURE'
+  ) => {
+    setAdvisorChangeType(type);
+    advisorChangeForm.reset();
+    setIsAdvisorChangeModalOpen(true);
   };
 
   const handleRegisterBanking: SubmitHandler<
@@ -713,6 +838,14 @@ export function useTccDetails() {
     isConfirmingLibrary,
     isConcluding,
     orientadorToken,
-    setOrientadorToken
+    setOrientadorToken,
+    pendingAdvisorChange,
+    isAdvisorChangeModalOpen,
+    setIsAdvisorChangeModalOpen,
+    advisorChangeType,
+    availableAdvisors,
+    advisorChangeForm,
+    handleRequestAdvisorChange,
+    openAdvisorChangeModal
   };
 }

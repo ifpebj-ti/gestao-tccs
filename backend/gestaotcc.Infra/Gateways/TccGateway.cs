@@ -82,6 +82,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.Signatures)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.DocumentType)
+            .Include(x => x.AdvisorChanges)
             .Include(x => x.Semester)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
@@ -198,5 +199,30 @@ public class TccGateway(AppDbContext context) : ITccGateway
         }
 
         return await query.FirstOrDefaultAsync();
+    }
+
+    public async Task<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity?> FindPendingAdvisorChange(long tccId)
+    {
+        return await context.TccAdvisorChanges
+            .Include(x => x.RequesterUser)
+            .Include(x => x.CurrentAdvisor)
+            .Include(x => x.SuggestedAdvisor)
+            .Include(x => x.Document)
+                .ThenInclude(d => d!.Signatures)
+            .Where(x => x.TccId == tccId && (x.Status == "PENDING_SIGNATURES" || x.Status == "PENDING_COORDINATION"))
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task SaveAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange)
+    {
+        await context.TccAdvisorChanges.AddAsync(advisorChange);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange)
+    {
+        context.TccAdvisorChanges.Update(advisorChange);
+        await context.SaveChangesAsync();
     }
 }

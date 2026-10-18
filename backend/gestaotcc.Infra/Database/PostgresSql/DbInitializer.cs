@@ -230,6 +230,42 @@ public static class DbInitializer
                 ON CONFLICT DO NOTHING;
             ");
         }
+
+        if (!context.DocumentTypes.Any(dt => dt.Name == "ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO"))
+        {
+            var anexoVType = new DocumentTypeEntity
+            {
+                Name = "ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO",
+                SignatureOrder = 3,
+                MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
+            };
+            context.DocumentTypes.Add(anexoVType);
+            context.SaveChanges();
+
+            context.Database.ExecuteSqlRaw($@"
+                INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
+                VALUES ({anexoVType.Id}, 4), ({anexoVType.Id}, 6)
+                ON CONFLICT DO NOTHING;
+            ");
+        }
+
+        if (!context.DocumentTypes.Any(dt => dt.Name == "ANEXO IX - TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO"))
+        {
+            var anexoIXType = new DocumentTypeEntity
+            {
+                Name = "ANEXO IX - TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO",
+                SignatureOrder = 3,
+                MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
+            };
+            context.DocumentTypes.Add(anexoIXType);
+            context.SaveChanges();
+
+            context.Database.ExecuteSqlRaw($@"
+                INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
+                VALUES ({anexoIXType.Id}, 4), ({anexoIXType.Id}, 6)
+                ON CONFLICT DO NOTHING;
+            ");
+        }
     }
 
     private static void SeedDocumentTypeProfile(AppDbContext context)

@@ -400,6 +400,76 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.ToTable("Tccs");
                 });
 
+            modelBuilder.Entity("gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CurrentAdvisorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DocumentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("RequesterRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long>("RequesterUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("ReviewedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("PENDING_SIGNATURES");
+
+                    b.Property<long?>("SuggestedAdvisorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TccId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentAdvisorId");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("RequesterUserId");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("SuggestedAdvisorId");
+
+                    b.HasIndex("TccId");
+
+                    b.ToTable("TccAdvisorChanges");
+                });
+
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity", b =>
                 {
                     b.Property<long>("Id")
@@ -779,6 +849,54 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Navigation("Semester");
                 });
 
+            modelBuilder.Entity("gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity", b =>
+                {
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "CurrentAdvisor")
+                        .WithMany()
+                        .HasForeignKey("CurrentAdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("gestaotcc.Domain.Entities.Document.DocumentEntity", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "RequesterUser")
+                        .WithMany()
+                        .HasForeignKey("RequesterUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", "SuggestedAdvisor")
+                        .WithMany()
+                        .HasForeignKey("SuggestedAdvisorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("gestaotcc.Domain.Entities.Tcc.TccEntity", "Tcc")
+                        .WithMany("AdvisorChanges")
+                        .HasForeignKey("TccId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CurrentAdvisor");
+
+                    b.Navigation("Document");
+
+                    b.Navigation("RequesterUser");
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("SuggestedAdvisor");
+
+                    b.Navigation("Tcc");
+                });
+
             modelBuilder.Entity("gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity", b =>
                 {
                     b.HasOne("gestaotcc.Domain.Entities.Tcc.TccEntity", "Tcc")
@@ -892,6 +1010,8 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
 
             modelBuilder.Entity("gestaotcc.Domain.Entities.Tcc.TccEntity", b =>
                 {
+                    b.Navigation("AdvisorChanges");
+
                     b.Navigation("BankingMembers");
 
                     b.Navigation("Documents");

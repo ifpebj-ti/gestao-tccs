@@ -1,6 +1,7 @@
 using System.Collections;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.TccCancellation;
+using gestaotcc.Domain.Entities.TccAdvisorChange;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.TccSchedule;
 using gestaotcc.Domain.Entities.UserTcc;
@@ -22,6 +23,7 @@ public class TccEntity
     public ICollection<TccInviteEntity> TccInvites { get; set; } = new List<TccInviteEntity>();
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public TccCancellationEntity? TccCancellation { get; set; } = null;
+    public ICollection<TccAdvisorChangeEntity> AdvisorChanges { get; set; } = new List<TccAdvisorChangeEntity>();
     public TccScheduleEntity? TccSchedule { get; set; } = null;
     public string? RejectionReason { get; set; } = null;
     public ICollection<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> BankingMembers { get; set; } = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>();
