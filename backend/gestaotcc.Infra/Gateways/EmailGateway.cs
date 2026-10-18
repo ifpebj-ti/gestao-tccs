@@ -140,6 +140,7 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "FINAL-SUBMISSION-NOTICE" ? Path.Combine(directory, "Templates", "final-submission-notice-template.html")
             : typeTemplate == "FORWARD-LIBRARY" ? Path.Combine(directory, "Templates", "forward-library-template.html")
             : typeTemplate == "TCC-COMPLETED" ? Path.Combine(directory, "Templates", "tcc-completed-template.html")
+            : typeTemplate == "ADVISOR-CHANGE-COORDINATION" ? Path.Combine(directory, "Templates", "advisor-change-coordination-template.html")
             : throw new ArgumentException($"Template type {typeTemplate} not found.");
         return File.ReadAllText(filePath);
     }
