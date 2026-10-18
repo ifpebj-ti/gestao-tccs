@@ -160,6 +160,60 @@ public class FindAllPendingSignaturesUseCase(
                     }
                 }
             }
+
+            // Assinaturas pendentes para alteração/afastamento de orientador (Anexos V e IX)
+            var pendingAdvisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.Status == "PENDING_SIGNATURES");
+            if (pendingAdvisorChange != null && pendingAdvisorChange.DocumentId.HasValue)
+            {
+                var changeDoc = tcc.Documents.FirstOrDefault(d => d.Id == pendingAdvisorChange.DocumentId.Value);
+                if (changeDoc != null)
+                {
+                    var requiredUserIds = new HashSet<long> { pendingAdvisorChange.CurrentAdvisorId };
+                    foreach (var st in userTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+                    {
+                        requiredUserIds.Add(st.UserId);
+                    }
+                    if (pendingAdvisorChange.SuggestedAdvisorId.HasValue)
+                    {
+                        requiredUserIds.Add(pendingAdvisorChange.SuggestedAdvisorId.Value);
+                    }
+
+                    var signedUserIds = changeDoc.Signatures.Select(s => s.UserId).ToHashSet();
+                    foreach (var reqUserId in requiredUserIds)
+                    {
+                        if (!signedUserIds.Contains(reqUserId))
+                        {
+                            var userTcc = userTccs.FirstOrDefault(ut => ut.UserId == reqUserId);
+                            string userName;
+                            string userRole;
+                            if (userTcc != null)
+                            {
+                                userName = userTcc.User.Name;
+                                userRole = userTcc.Profile.Role;
+                            }
+                            else if (reqUserId == pendingAdvisorChange.SuggestedAdvisorId)
+                            {
+                                userName = pendingAdvisorChange.SuggestedAdvisor?.Name ?? "Orientador Substituto";
+                                userRole = RoleType.ADVISOR.ToString();
+                            }
+                            else
+                            {
+                                userName = pendingAdvisorChange.CurrentAdvisor?.Name ?? "Orientador";
+                                userRole = RoleType.ADVISOR.ToString();
+                            }
+
+                            pendingDetails.Add(new FindAllPendingSignatureDetailsDTO(
+                                changeDoc.Id,
+                                changeDoc.DocumentType.Name,
+                                new List<FindAllPendignSignatureUserDetailsDTO>
+                                {
+                                    new(reqUserId, userName, userRole, null, null)
+                                }
+                            ));
+                        }
+                    }
+                }
+            }
             
             logger.LogDebug("TccId {TccId}: Encontrados {PendingCount} detalhes de assinatura pendente (antes do filtro).", tcc.Id, pendingDetails.Count);
 
