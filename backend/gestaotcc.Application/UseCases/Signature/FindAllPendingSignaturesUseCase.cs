@@ -190,10 +190,6 @@ public class FindAllPendingSignaturesUseCase(
                                     usersToPending.Add(st.UserId);
                                 }
                             }
-                            if (pendingAdvisorChange.SuggestedAdvisorId.HasValue && !signedUserIds.Contains(pendingAdvisorChange.SuggestedAdvisorId.Value))
-                            {
-                                usersToPending.Add(pendingAdvisorChange.SuggestedAdvisorId.Value);
-                            }
                         }
                     }
                     else
@@ -203,11 +199,6 @@ public class FindAllPendingSignaturesUseCase(
                         {
                             requiredUserIds.Add(st.UserId);
                         }
-                        if (pendingAdvisorChange.SuggestedAdvisorId.HasValue)
-                        {
-                            requiredUserIds.Add(pendingAdvisorChange.SuggestedAdvisorId.Value);
-                        }
-
                         foreach (var reqUserId in requiredUserIds)
                         {
                             if (!signedUserIds.Contains(reqUserId))

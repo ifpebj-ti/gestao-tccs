@@ -2,6 +2,8 @@ using System.IO;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Signature;
 using gestaotcc.Domain.Dtos.Signature;
+using gestaotcc.Domain.Dtos.User;
+using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Profile;
@@ -10,6 +12,7 @@ using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
+using gestaotcc.Domain.Errors;
 using iText.Kernel.Pdf;
 using NSubstitute;
 
@@ -23,10 +26,110 @@ public class SignSignatureUseCaseTests
     private readonly SignSignatureUseCase _useCase;
     private readonly IAppLoggerGateway<SignSignatureUseCase> _logger = Substitute.For<IAppLoggerGateway<SignSignatureUseCase>>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
+    private readonly IUserGateway _userGateway = Substitute.For<IUserGateway>();
 
     public SignSignatureUseCaseTests()
     {
-        _useCase = new SignSignatureUseCase(_documentTypeGateway, _tccGateway, _storageGateway, _emailGateway, _logger);
+        _useCase = new SignSignatureUseCase(_documentTypeGateway, _tccGateway, _storageGateway, _emailGateway, _userGateway, _logger);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldMoveAdvisorChangeToCoordination_AndNotifyActiveCoordinatorAndSupervisor_WhenLastSignatureIsAdded()
+    {
+        var (tcc, document, advisor) = CreatePendingAdvisorChange(suggestedAdvisorId: 6);
+        var coordinator = new UserEntity { Id = 3, Name = "Coordenação", Email = "coord@test.com", Status = "ACTIVE" };
+        var supervisor = new UserEntity { Id = 4, Name = "Supervisão", Email = "supervisor@test.com", Status = "ACTIVE" };
+        var inactiveCoordinator = new UserEntity { Id = 5, Name = "Inativo", Email = "inactive@test.com", Status = "INACTIVE" };
+
+        _tccGateway.FindTccById(tcc.Id).Returns(tcc);
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { document.DocumentType });
+        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(f => f.Profile == RoleType.COORDINATOR.ToString()), 7)
+            .Returns(new List<UserEntity> { coordinator, inactiveCoordinator });
+        _userGateway.FindAllByFilter(Arg.Is<UserFilterDTO>(f => f.Profile == RoleType.SUPERVISOR.ToString()), 7)
+            .Returns(new List<UserEntity> { supervisor });
+        _storageGateway.Send(document.FileName, Arg.Any<byte[]>(), "application/pdf").Returns(Task.CompletedTask);
+        _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult(true));
+
+        var result = await _useCase.Execute(new SignSignatureDTO(
+            tcc.Id, document.Id, advisor.Id, CreateSignedPdfBytes("ANEXO IX"), 1, "application/pdf", "ANEXO IX.pdf"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("PENDING_COORDINATION", tcc.AdvisorChanges.Single().Status);
+        await _tccGateway.Received(1).UpdateAdvisorChange(Arg.Is<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity>(c => c.Status == "PENDING_COORDINATION"));
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(e => e.Recipient == coordinator.Email && e.TypeTemplate == "ADVISOR-CHANGE-COORDINATION"));
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(e => e.Recipient == supervisor.Email && e.TypeTemplate == "ADVISOR-CHANGE-COORDINATION"));
+        await _emailGateway.DidNotReceive().Send(Arg.Is<SendEmailDTO>(e => e.Recipient == inactiveCoordinator.Email));
+    }
+
+    [Fact]
+    public async Task Execute_ShouldNotMoveAdvisorChangeOrNotifyCoordination_WhileStudentSignatureIsMissing()
+    {
+        var (tcc, document, advisor) = CreatePendingAdvisorChange(studentAlreadySigned: false);
+        _tccGateway.FindTccById(tcc.Id).Returns(tcc);
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { document.DocumentType });
+        _storageGateway.Send(document.FileName, Arg.Any<byte[]>(), "application/pdf").Returns(Task.CompletedTask);
+
+        var result = await _useCase.Execute(new SignSignatureDTO(
+            tcc.Id, document.Id, advisor.Id, CreateSignedPdfBytes("ANEXO IX"), 1, "application/pdf", "ANEXO IX.pdf"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("PENDING_SIGNATURES", tcc.AdvisorChanges.Single().Status);
+        await _tccGateway.DidNotReceive().UpdateAdvisorChange(Arg.Any<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity>());
+        await _emailGateway.DidNotReceive().Send(Arg.Any<SendEmailDTO>());
+    }
+
+    private static (TccEntity Tcc, DocumentEntity Document, UserEntity Advisor) CreatePendingAdvisorChange(long? suggestedAdvisorId = null, bool studentAlreadySigned = true)
+    {
+        var advisor = new UserEntity { Id = 1, Name = "Orientador", Email = "advisor@test.com", Status = "ACTIVE" };
+        var student = new UserEntity { Id = 2, Name = "Estudante", Email = "student@test.com", Status = "ACTIVE", CampiCourseId = 7 };
+        var advisorProfile = new ProfileEntity { Id = 11, Role = RoleType.ADVISOR.ToString() };
+        var studentProfile = new ProfileEntity { Id = 12, Role = RoleType.STUDENT.ToString() };
+        var docType = new DocumentTypeEntity
+        {
+            Id = 90,
+            Name = "ANEXO IX - TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO",
+            SignatureOrder = 0,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { advisorProfile, studentProfile }
+        };
+        var document = new DocumentEntity
+        {
+            Id = 91,
+            DocumentTypeId = docType.Id,
+            DocumentType = docType,
+            FileName = "anexo-ix",
+            Signatures = studentAlreadySigned
+                ? new List<SignatureEntity> { new() { Id = 92, UserId = student.Id, DocumentId = 91, User = student } }
+                : new List<SignatureEntity>()
+        };
+        var tcc = new TccEntity
+        {
+            Id = 93,
+            Title = "TCC de Teste",
+            Step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString(),
+            Documents = new List<DocumentEntity> { document },
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { Id = 94, UserId = advisor.Id, User = advisor, Profile = advisorProfile },
+                new() { Id = 95, UserId = student.Id, User = student, Profile = studentProfile }
+            },
+            AdvisorChanges = new List<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity>
+            {
+                new()
+                {
+                    Id = 96,
+                    TccId = 93,
+                    DocumentId = document.Id,
+                    RequesterUserId = student.Id,
+                    RequesterRole = RoleType.STUDENT.ToString(),
+                    CurrentAdvisorId = advisor.Id,
+                    SuggestedAdvisorId = suggestedAdvisorId,
+                    Status = "PENDING_SIGNATURES",
+                    CurrentAdvisor = advisor
+                }
+            }
+        };
+        return (tcc, document, advisor);
     }
 
     [Fact]

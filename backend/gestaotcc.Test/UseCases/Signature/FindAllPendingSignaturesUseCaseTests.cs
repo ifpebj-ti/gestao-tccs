@@ -363,5 +363,9 @@ public async Task Execute_ShouldReturnPendingSignatures_WhenThereAreDocumentsToS
         var studentDetails = resultStudent.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id).ToList();
         Assert.Single(studentDetails);
         Assert.Equal(studentUser.Id, studentDetails[0].UserDetails[0].UserId);
+
+        var resultSuggestedAdvisor = await _useCase.Execute(30, 1);
+        Assert.True(resultSuggestedAdvisor.IsSuccess);
+        Assert.Empty(resultSuggestedAdvisor.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id));
     }
 }
