@@ -513,9 +513,14 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                     b.Property<DateTime?>("TokenExpiryDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TccId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("TccBankingMembers", (string)null);
                 });
@@ -904,6 +909,11 @@ namespace gestaotcc.Infra.Database.PostgresSql.Migrations
                         .HasForeignKey("TccId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("gestaotcc.Domain.Entities.User.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Tcc");
                 });

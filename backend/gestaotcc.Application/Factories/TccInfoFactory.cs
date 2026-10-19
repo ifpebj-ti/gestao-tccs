@@ -48,7 +48,8 @@ public class TccInfoFactory
         var bankingMembersDto = tcc.BankingMembers?.Select(bm => new gestaotcc.Domain.Dtos.Tcc.BankingMemberDto(
             Name: bm.Name,
             Email: bm.Email,
-            Role: bm.Role
+            Role: bm.Role,
+            UserId: bm.UserId
         )).ToList() ?? new List<gestaotcc.Domain.Dtos.Tcc.BankingMemberDto>();
 
         // 4.1 Cálculo da média final e parecer se houver avaliações
