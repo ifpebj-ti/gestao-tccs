@@ -872,6 +872,38 @@ public class TccController : ControllerBase
         return Ok(result.Data);
     }
 
+    [Authorize(Roles = "COORDINATOR")]
+    [HttpPatch("{id}/advisor-change/approve")]
+    public async Task<IActionResult> ApproveAdvisorChange([FromRoute] long id,
+        [FromServices] ApproveAdvisorChangeUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var result = await useCase.Execute(id, userId);
+        if (result.IsFailure) return result.ErrorDetails?.Status switch
+        {
+            400 => BadRequest(result.ErrorDetails), 401 => Unauthorized(), 403 => Forbid(),
+            404 => NotFound(result.ErrorDetails), 409 => Conflict(result.ErrorDetails),
+            _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+        };
+        return Ok(new MessageSuccessResponseModel("Substituição de orientador homologada com sucesso."));
+    }
+
+    [Authorize(Roles = "COORDINATOR")]
+    [HttpPatch("{id}/advisor-change/reject")]
+    public async Task<IActionResult> RejectAdvisorChange([FromRoute] long id, [FromBody] RejectAdvisorChangeDTO dto,
+        [FromServices] RejectAdvisorChangeUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var result = await useCase.Execute(id, userId, dto);
+        if (result.IsFailure) return result.ErrorDetails?.Status switch
+        {
+            400 => BadRequest(result.ErrorDetails), 401 => Unauthorized(), 403 => Forbid(),
+            404 => NotFound(result.ErrorDetails), 409 => Conflict(result.ErrorDetails),
+            _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+        };
+        return Ok(new MessageSuccessResponseModel("Solicitação de substituição recusada."));
+    }
+
     /// <summary>
     /// Encaminha o TCC com cópia física em capa dura confirmada para a Biblioteca do Campus.
     /// Apenas a Coordenação do Curso pode executar esta ação.

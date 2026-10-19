@@ -91,6 +91,7 @@ interface CoordinationPendingCounts {
   awaitingHardCoverCount: number;
   awaitingLibraryForwardCount: number;
   awaitingCancellationCount: number;
+  awaitingAdvisorChangesCount: number;
   total: number;
 }
 
@@ -364,11 +365,13 @@ export default function HomePage() {
         const hardCover = data.awaitingHardCoverCount || 0;
         const library = data.awaitingLibraryForwardCount || 0;
         const cancel = data.awaitingCancellationCount || 0;
+        const advisorChanges = data.awaitingAdvisorChangesCount || 0;
         setCoordinationPending({
           awaitingHardCoverCount: hardCover,
           awaitingLibraryForwardCount: library,
           awaitingCancellationCount: cancel,
-          total: hardCover + library + cancel
+          awaitingAdvisorChangesCount: advisorChanges,
+          total: hardCover + library + cancel + advisorChanges
         });
       }
     } catch {
@@ -747,6 +750,12 @@ export default function HomePage() {
                       <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
                         <AlertTriangle className="w-3.5 h-3.5 text-[#C8FF47]" />
                         <strong>{coordinationPending.awaitingCancellationCount}</strong> solicitação(ões) de cancelamento
+                      </span>
+                    )}
+                    {coordinationPending.awaitingAdvisorChangesCount > 0 && (
+                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
+                        <ClipboardList className="w-3.5 h-3.5 text-[#C8FF47]" />
+                        <strong>{coordinationPending.awaitingAdvisorChangesCount}</strong> substituição(ões) de orientador
                       </span>
                     )}
                   </div>

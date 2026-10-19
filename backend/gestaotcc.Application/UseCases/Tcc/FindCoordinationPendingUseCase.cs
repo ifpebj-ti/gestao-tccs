@@ -84,13 +84,26 @@ public class FindCoordinationPendingUseCase
             ))
             .ToList();
 
+        var awaitingAdvisorChanges = allInProgress
+            .SelectMany(t => t.AdvisorChanges
+                .Where(change => change.Status == "PENDING_COORDINATION")
+                .Select(change => new CoordinationPendingAdvisorChangeDTO(
+                    t.Id, change.Id, t.Title ?? "TCC sem título",
+                    t.UserTccs.Where(u => u.Profile.Role == "STUDENT").Select(u => u.User.Name ?? u.User.Email ?? "Aluno").ToList(),
+                    change.RequesterUser?.Name ?? "Solicitante", change.RequesterRole,
+                    change.CurrentAdvisor?.Name ?? "Orientador atual", change.SuggestedAdvisor?.Name,
+                    change.Reason, change.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"), change.DocumentId)))
+            .ToList();
+
         var result = new CoordinationPendingDTO(
             awaitingHardCover.Count,
             awaitingLibraryForward.Count,
             awaitingCancellation.Count,
             awaitingHardCover,
             awaitingLibraryForward,
-            awaitingCancellation
+            awaitingCancellation,
+            awaitingAdvisorChanges.Count,
+            awaitingAdvisorChanges
         );
 
         return ResultPattern<CoordinationPendingDTO>.SuccessResult(result);

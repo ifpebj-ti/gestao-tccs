@@ -56,12 +56,14 @@ public class TccFilesEndpointTests : IAsyncLifetime
     [InlineData("/api/Tcc/42/files")]
     [InlineData("/api/Tcc/42/files/download")]
     [InlineData("/api/Tcc/42/files/10/download")]
+    [InlineData("/api/Tcc/42/files/10/preview")]
     [InlineData("/api/Signature/all/documents/download/42")]
     public async Task AnonymousCannotReadFiles(string path) => Assert.Equal(HttpStatusCode.Unauthorized, (await _client.GetAsync(path)).StatusCode);
 
     [Theory]
     [InlineData("/api/Tcc/43/files")]
     [InlineData("/api/Tcc/43/files/10/download")]
+    [InlineData("/api/Tcc/43/files/10/preview")]
     [InlineData("/api/Tcc/42/files/99/download")]
     [InlineData("/api/Signature/all/documents/download/43")]
     public async Task ChangingIdsCannotReadOtherFiles(string path)
@@ -84,6 +86,10 @@ public class TccFilesEndpointTests : IAsyncLifetime
         Assert.Equal("attachment", file.Content.Headers.ContentDisposition?.DispositionType);
         Assert.Equal("nosniff", Assert.Single(file.Headers.GetValues("X-Content-Type-Options")));
         Assert.Equal(4, (await file.Content.ReadAsByteArrayAsync()).Length);
+        var preview = await _client.GetAsync("/api/Tcc/42/files/10/preview");
+        Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
+        Assert.Equal("application/pdf", preview.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("inline", preview.Content.Headers.ContentDisposition?.DispositionType);
     }
 
     private class IdentityHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
