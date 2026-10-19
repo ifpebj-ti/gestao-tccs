@@ -13,6 +13,7 @@ export const scheduleSchema = z.object({
   bankingMembers: z
     .array(
       z.object({
+        userId: z.number().int().positive().nullable().optional(),
         name: z
           .string()
           .min(1, { message: 'Nome do examinador é obrigatório.' }),

@@ -76,7 +76,7 @@ interface TccDetailsResponse {
   }[];
   infoAdvisor: { name: string; email: string };
   infoBanking: {
-    members: { name: string; email: string; role: string }[];
+    members: { name: string; email: string; role: string; userId?: number | null }[];
   };
   cancellationRequest: boolean;
 }
@@ -191,7 +191,8 @@ export function useTccDetails() {
         bankingMembers: result.infoBanking?.members?.map(m => ({
           name: m.name,
           email: m.email,
-          role: m.role
+          role: m.role,
+          userId: m.userId ?? null
         })) || []
       });
 
