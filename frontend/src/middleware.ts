@@ -41,6 +41,7 @@ const protectedRoutes: Record<string, string[]> = {
     'BANKING'
   ],
   '/libraryPending': ['LIBRARY', 'ADMIN'],
+  '/coordinationPending': ['COORDINATOR', 'SUPERVISOR'],
   '/users': ['ADMIN', 'COORDINATOR', 'SUPERVISOR'],
   '/semestres': ['ADMIN', 'COORDINATOR', 'SUPERVISOR']
 };
@@ -165,6 +166,7 @@ export const config = {
     '/completedTCCs/:path*',
     '/pendingSignatures/:path*',
     '/libraryPending/:path*',
+    '/coordinationPending/:path*',
     '/users/:path*',
     '/semestres/:path*'
   ]

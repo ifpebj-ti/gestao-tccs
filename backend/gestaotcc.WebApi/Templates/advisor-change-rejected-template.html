@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Solicitação de orientação recusada</title></head>
+<body style="margin:0;padding:24px;background:#f0f4f0;font-family:Arial,sans-serif;color:#183e2d">
+  <main style="max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
+    <header style="padding:24px;background:#002b18;color:#fff"><strong style="font-size:20px">Gradus Flow</strong></header>
+    <section style="padding:32px">
+      <h1 style="font-size:22px">Olá, {{recipientName}}.</h1>
+      <p>A Coordenação recusou a solicitação de <strong>{{requestType}}</strong> referente ao TCC <strong>{{tccTitle}}</strong>.</p>
+      <p><strong>Solicitante:</strong> {{requesterName}}</p>
+      <p><strong>Orientador atual:</strong> {{currentAdvisorName}}</p>
+      <p><strong>Orientador indicado:</strong> {{suggestedAdvisorName}}</p>
+      <p><strong>Estudante(s):</strong> {{studentNames}}</p>
+      <p><strong>Parecer da Coordenação:</strong></p>
+      <blockquote style="margin:12px 0;padding:12px 16px;border-left:4px solid #bd3030;background:#fff5f5;white-space:pre-wrap">{{reviewNotes}}</blockquote>
+      <p>O vínculo atual de orientação foi mantido. Acesse o sistema para consultar o processo.</p>
+    </section>
+    <footer style="padding:18px 32px;background:#f5fff0;color:#526452;font-size:12px">Notificação automática do sistema Gradus Flow.</footer>
+  </main>
+</body>
+</html>

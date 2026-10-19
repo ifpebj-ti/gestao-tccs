@@ -26,6 +26,23 @@ public class TccFilesController(TccFilesUseCase files) : ControllerBase
         return ToDownload(await files.Download(tccId, userId, documentId));
     }
 
+    [HttpGet("{documentId:long}/preview")]
+    public async Task<IActionResult> Preview(long tccId, long documentId)
+    {
+        if (!TryUserId(out var userId)) return Unauthorized();
+        var result = await files.Download(tccId, userId, documentId);
+        if (result.IsFailure) return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        var contentType = Path.GetExtension(result.Data.FileName).ToLowerInvariant() switch
+        {
+            ".pdf" => "application/pdf",
+            ".html" => "text/html; charset=utf-8",
+            _ => "application/octet-stream"
+        };
+        Response.Headers["Content-Disposition"] = "inline";
+        return File(result.Data.File, contentType);
+    }
+
     [HttpGet("download")]
     public async Task<IActionResult> DownloadAll(long tccId)
     {
