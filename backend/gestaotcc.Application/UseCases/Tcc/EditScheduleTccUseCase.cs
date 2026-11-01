@@ -43,27 +43,64 @@ public class EditScheduleTccUseCase(
                 tcc.TccSchedule.Location = data.ScheduleLocation;
             }
 
+            var bankingProfile = profileGateway != null ? await profileGateway.FindByRole("BANKING") : null;
             if (data.BankingMembers != null)
             {
-                var bankingProfile = profileGateway != null ? await profileGateway.FindByRole("BANKING") : null;
                 var baseUser = tcc.UserTccs.FirstOrDefault()?.User;
+                var retainedMembers = new HashSet<TccBankingMemberEntity>();
 
                 foreach (var memberDto in data.BankingMembers)
                 {
-                    var existingMember = tcc.BankingMembers.FirstOrDefault(m => m.Email.Equals(memberDto.Email, StringComparison.OrdinalIgnoreCase));
+                    gestaotcc.Domain.Entities.User.UserEntity? registeredUser = null;
+                    if (memberDto.UserId.HasValue)
+                    {
+                        if (userGateway is null)
+                            return ResultPattern<string>.FailureResult("Não foi possível validar o examinador interno.", 500);
+
+                        registeredUser = await userGateway.FindById(memberDto.UserId.Value);
+                        if (registeredUser is null ||
+                            !string.Equals(registeredUser.Status, "ACTIVE", StringComparison.OrdinalIgnoreCase) ||
+                            registeredUser.Profile is null ||
+                            !registeredUser.Profile.Any(profile => profile.Role == "ADVISOR"))
+                            return ResultPattern<string>.FailureResult("O usuário selecionado não é um orientador ativo.", 400);
+                    }
+
+                    var memberEmail = registeredUser?.Email ?? memberDto.Email;
+                    var existingMember = tcc.BankingMembers.FirstOrDefault(m =>
+                        (registeredUser != null && m.UserId == registeredUser.Id) ||
+                        m.Email.Equals(memberEmail, StringComparison.OrdinalIgnoreCase));
                     if (existingMember != null)
                     {
-                        existingMember.Name = memberDto.Name;
-                        existingMember.Role = memberDto.Role;
+                        existingMember.Name = registeredUser?.Name ?? memberDto.Name;
+                        existingMember.Email = memberEmail;
+                        existingMember.Role = registeredUser is null ? memberDto.Role : "Examinador Interno";
+                        existingMember.UserId = registeredUser?.Id;
+                        retainedMembers.Add(existingMember);
                     }
                     else
                     {
                         var token = Guid.NewGuid().ToString("N");
-                        var member = new TccBankingMemberEntity(memberDto.Name, memberDto.Email, memberDto.Role, token, tcc.Id);
+                        var member = new TccBankingMemberEntity(
+                            registeredUser?.Name ?? memberDto.Name,
+                            memberEmail,
+                            registeredUser is null ? memberDto.Role : "Examinador Interno",
+                            token,
+                            tcc.Id)
+                        {
+                            UserId = registeredUser?.Id
+                        };
                         tcc.BankingMembers.Add(member);
+                        retainedMembers.Add(member);
                     }
 
-                    if (userGateway != null && bankingProfile != null)
+                    if (registeredUser != null)
+                    {
+                        if (bankingProfile is null)
+                            return ResultPattern<string>.FailureResult("Perfil de banca não encontrado.", 500);
+
+                        TccFactory.UpdateUsersTccToCreateBanking(tcc, registeredUser, bankingProfile);
+                    }
+                    else if (userGateway != null && bankingProfile != null)
                     {
                         var existingUser = await userGateway.FindByEmail(memberDto.Email);
                         if (existingUser == null)
@@ -82,13 +119,38 @@ public class EditScheduleTccUseCase(
                         }
                         else
                         {
-                            if (!tcc.UserTccs.Any(ut => ut.UserId == existingUser.Id))
+                            if (!tcc.UserTccs.Any(ut => ut.UserId == existingUser.Id && ut.Profile?.Role == "BANKING"))
                             {
                                 TccFactory.UpdateUsersTccToCreateBanking(tcc, existingUser, bankingProfile);
                             }
                         }
                     }
                 }
+
+                var advisorEmail = tcc.UserTccs
+                    .FirstOrDefault(ut => ut.Profile?.Role == gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User.Email;
+                foreach (var member in tcc.BankingMembers.ToList())
+                {
+                    if (member.Email.Equals(advisorEmail, StringComparison.OrdinalIgnoreCase) || retainedMembers.Contains(member))
+                        continue;
+
+                    tcc.BankingMembers.Remove(member);
+                }
+
+                var activeBankingEmails = tcc.BankingMembers
+                    .Select(member => member.Email)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var activeBankingUserIds = tcc.BankingMembers
+                    .Where(member => member.UserId.HasValue)
+                    .Select(member => member.UserId!.Value)
+                    .ToHashSet();
+                var obsoleteBankingLinks = tcc.UserTccs
+                    .Where(userTcc => userTcc.Profile?.Role == "BANKING" &&
+                        !activeBankingUserIds.Contains(userTcc.UserId) &&
+                        !activeBankingEmails.Contains(userTcc.User.Email))
+                    .ToList();
+                foreach (var link in obsoleteBankingLinks)
+                    tcc.UserTccs.Remove(link);
             }
 
             // Garante que o orientador esteja presente na banca
@@ -96,8 +158,20 @@ public class EditScheduleTccUseCase(
             if (advisorUser != null && !tcc.BankingMembers.Any(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase)))
             {
                 var token = Guid.NewGuid().ToString("N");
-                var advisorMember = new TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id);
+                var advisorMember = new TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id)
+                {
+                    UserId = advisorUser.Id
+                };
                 tcc.BankingMembers.Add(advisorMember);
+                if (bankingProfile is not null)
+                    TccFactory.UpdateUsersTccToCreateBanking(tcc, advisorUser, bankingProfile);
+            }
+            else if (advisorUser != null)
+            {
+                var advisorMember = tcc.BankingMembers.First(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase));
+                advisorMember.UserId ??= advisorUser.Id;
+                if (bankingProfile is not null)
+                    TccFactory.UpdateUsersTccToCreateBanking(tcc, advisorUser, bankingProfile);
             }
             
             logger.LogInformation("Salvando alterações do agendamento para o TccId: {TccId}", data.IdTcc);

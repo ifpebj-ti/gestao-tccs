@@ -42,9 +42,11 @@ export interface PendingAdvisorChange {
   createdAt: string;
 }
 
-interface Member {
+interface InternalExaminer {
   id: number;
   name: string;
+  email: string;
+  profile: string;
 }
 
 interface TccDetailsResponse {
@@ -116,7 +118,7 @@ export function useTccDetails() {
   const [isConfirmingHardCover, setIsConfirmingHardCover] = useState(false);
   const [isDownloadingFinalFile, setIsDownloadingFinalFile] = useState(false);
 
-  const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
+  const [internalExaminers, setInternalExaminers] = useState<InternalExaminer[]>([]);
 
   const searchParams = useSearchParams();
   const tccId = Number(searchParams.get('id'));
@@ -192,7 +194,10 @@ export function useTccDetails() {
           name: m.name,
           email: m.email,
           role: m.role,
-          userId: m.userId ?? null
+          userId: m.userId ?? null,
+          memberType: m.userId || m.role.toLowerCase().includes('orientador')
+            ? 'INTERNAL' as const
+            : 'EXTERNAL' as const
         })) || []
       });
 
@@ -239,22 +244,21 @@ export function useTccDetails() {
   }, [fetchTccDetails]);
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchInternalExaminers = async () => {
       const token = Cookies.get('token');
       if (!token) return;
       try {
-        const res = await fetch(`${API_URL}/User/filter?Profile=BANKING`, {
+        const advisorsRes = await fetch(`${API_URL}/User/filter?Profile=ADVISOR`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.ok) {
-          const data = await res.json();
-          setAllBankingMembers(data);
-        }
+        if (!advisorsRes.ok) throw new Error();
+        const advisors: InternalExaminer[] = await advisorsRes.json();
+        setInternalExaminers(advisors.filter(user => user.id && user.name && user.email));
       } catch {
-        toast.error('Erro ao carregar lista de membros da banca.');
+        toast.error('Erro ao carregar examinadores cadastrados.');
       }
     };
-    fetchMembers();
+    fetchInternalExaminers();
   }, [API_URL]);
 
   useEffect(() => {
@@ -441,7 +445,16 @@ export function useTccDetails() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ ...data, idTcc: tccId })
+        body: JSON.stringify({
+          ...data,
+          idTcc: tccId,
+          bankingMembers: data.bankingMembers?.map(member => ({
+            name: member.name,
+            email: member.email,
+            role: member.memberType === 'INTERNAL' ? 'Examinador Interno' : 'Examinador Externo',
+            userId: member.userId
+          }))
+        })
       });
       if (!res.ok)
         throw new Error(
@@ -846,7 +859,7 @@ export function useTccDetails() {
     bankingForm,
     scheduleForm,
     editTccForm,
-    allBankingMembers,
+    internalExaminers,
     handleRequestCancellation,
     handleApproveCancellation,
     handleRegisterBanking,

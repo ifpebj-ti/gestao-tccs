@@ -9,8 +9,10 @@ import { CheckCircle2, FileText, Mic, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { BankingSignatures, FindAllPendingSignatureDTO } from './BankingSignatures';
 import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
 interface AvaliacaoFormProps {
   token?: string | null;
+  internalTccId?: number | null;
   onSuccessCallback?: () => void;
   hideLogoAndMinHeight?: boolean;
 }
@@ -28,7 +30,7 @@ interface BackendSignatureDTO {
   documents?: BackendDocumentDTO[];
 }
 
-export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight = false }: AvaliacaoFormProps) {
+export function AvaliacaoForm({ token, internalTccId, onSuccessCallback, hideLogoAndMinHeight = false }: AvaliacaoFormProps) {
   const API_URL = env('NEXT_PUBLIC_API_URL');
 
   // Oral Grades
@@ -148,7 +150,7 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!token) {
+    if (!token && !internalTccId) {
       toast.error('Token não encontrado na URL.');
       return;
     }
@@ -169,11 +171,16 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
     try {
       setIsSubmitting(true);
 
-      const res = await fetch(`${API_URL}/Tcc/evaluate`, {
+      const isInternalEvaluation = Boolean(internalTccId);
+      const authToken = Cookies.get('token');
+      const res = await fetch(`${API_URL}/Tcc/${isInternalEvaluation ? 'evaluate/internal' : 'evaluate'}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(isInternalEvaluation && authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
-          token,
+          ...(isInternalEvaluation ? { tccId: internalTccId } : { token }),
           grade: parseFloat(finalGrade.toFixed(2)),
           evaluationComments: autoParecer,
           evaluationDetails
@@ -214,7 +221,7 @@ export function AvaliacaoForm({ token, onSuccessCallback, hideLogoAndMinHeight =
     setTextualGrades(prev => ({ ...prev, [key]: value }));
   };
 
-  if (!token) {
+  if (!token && !internalTccId) {
     return (
       <div className={hideLogoAndMinHeight ? 'w-full p-4' : 'min-h-screen flex items-center justify-center bg-[#FAF9F5] p-4'}>
         <div className="w-full py-8 text-center max-w-md mx-auto">

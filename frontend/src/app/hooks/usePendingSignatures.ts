@@ -159,6 +159,7 @@ export function usePendingSignatures() {
     showAll,
     setShowAll,
     pendingData,
-    userId
+    userId,
+    fetchPendingSignatures
   };
 }

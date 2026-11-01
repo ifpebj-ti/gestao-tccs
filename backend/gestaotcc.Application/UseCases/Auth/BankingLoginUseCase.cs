@@ -22,6 +22,9 @@ public class BankingLoginUseCase(
             return ResultPattern<TokenDTO>.FailureResult("Link inválido ou expirado.", 401);
         }
 
+        if (member.UserId.HasValue)
+            return ResultPattern<TokenDTO>.FailureResult("Este examinador deve acessar o sistema com sua conta cadastrada.", 403);
+
         if (member.TokenExpiryDate.HasValue && member.TokenExpiryDate.Value < DateTime.UtcNow)
         {
             logger.LogWarning("Token expirado: {Token}", token);
