@@ -118,6 +118,10 @@ public class ApproveTccProposalUseCase(
             if (docType.Name != null && docType.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA"))
                 continue;
 
+            if (docType.Name?.Contains("ANEXO V -", StringComparison.OrdinalIgnoreCase) == true ||
+                docType.Name?.Contains("ANEXO IX", StringComparison.OrdinalIgnoreCase) == true)
+                continue;
+
             var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
             var method = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
 
