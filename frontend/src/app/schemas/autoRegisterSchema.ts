@@ -28,15 +28,15 @@ export const autoRegisterSchema = z.object({
   userClass: z.string().min(1, { message: 'A turma é obrigatória.' }),
 
   shift: z.coerce
-    .number({ invalid_type_error: 'Selecione um turno válido' })
+    .number<number>({ error: 'Selecione um turno válido' })
     .min(1, 'O turno é obrigatório.'),
 
   campusId: z.coerce
-    .number({ invalid_type_error: 'Selecione um campus' })
+    .number<number>({ error: 'Selecione um campus' })
     .min(1, 'Campus é obrigatório'),
     
   courseId: z.coerce
-    .number({ invalid_type_error: 'Selecione um curso' })
+    .number<number>({ error: 'Selecione um curso' })
     .min(1, 'Curso é obrigatório'),
 
   password: z

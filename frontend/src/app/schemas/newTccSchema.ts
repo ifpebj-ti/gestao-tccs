@@ -25,11 +25,11 @@ export const newTccSchema = z.object({
   students: z.array(
     z.object({
       studentEmail: z.string(),
-      courseId: z.coerce.number()
+      courseId: z.coerce.number<number>()
     })
   ),
   advisorId: z.coerce
-    .number()
+    .number<number>()
     .int('Selecione um orientador válido')
     .min(1, 'Selecione um orientador'),
   title: z
@@ -53,7 +53,7 @@ export const newTccManagementSchema = newTccSchema.extend({
     .array(
       z.object({
         studentEmail: z.string().trim().email('Informe um e-mail válido'),
-        courseId: z.coerce.number().int().min(1, 'Selecione um curso')
+        courseId: z.coerce.number<number>().int().min(1, 'Selecione um curso')
       })
     )
     .min(1, 'Informe pelo menos um estudante')

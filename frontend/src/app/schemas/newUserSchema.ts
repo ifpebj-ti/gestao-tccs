@@ -47,13 +47,13 @@ export const newUserSchema = z
       { message: 'A seleção de um perfil é obrigatória.' }
     ),
 
-    shift: z.coerce.number().optional(),
+    shift: z.coerce.number<number>().optional(),
 
     campusId: z.coerce
-      .number({ invalid_type_error: 'Selecione um campus' })
+      .number<number>({ error: 'Selecione um campus' })
       .min(1, 'Campus é obrigatório'),
     courseId: z.coerce
-      .number({ invalid_type_error: 'Selecione um curso' })
+      .number<number>({ error: 'Selecione um curso' })
       .min(1, 'Curso é obrigatório')
   })
   // --- Validações Condicionais ---
