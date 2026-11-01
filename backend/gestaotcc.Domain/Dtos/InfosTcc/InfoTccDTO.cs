@@ -8,4 +8,13 @@ public record InfoTccDTO(
     string? PresentationLocation, 
     string? RejectionReason = null,
     decimal? FinalGrade = null,
-    string? FinalOpinion = null);
+    string? FinalOpinion = null,
+    string? SemesterName = null,
+    int PendingParticipantCount = 0,
+    string? Step = null,
+    DateTime? FinalSubmissionDeadline = null,
+    string? FinalTccFile = null,
+    DateTime? HardCoverReceivedAt = null,
+    DateTime? ForwardedToLibraryAt = null,
+    DateTime? LibraryReceivedAt = null,
+    string? LibraryCatalogCode = null);

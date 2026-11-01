@@ -32,7 +32,9 @@ public static class IocDependencyExtensions
         services.AddScoped<IBcryptGateway, BcryptGateway>();
         services.AddScoped<ITokenGateway, TokenGateway>();
         services.AddScoped<ITccGateway, TccGateway>();
-        services.AddScoped<IMinioGateway, MinioGateway>();
+        services.AddScoped<IProposalGateway, ProposalGateway>();
+        services.AddScoped<ProposalParticipantsUseCase>();
+        services.AddScoped<IStorageGateway, StorageGateway>();
         services.AddScoped<IITextGateway, ITextGateway>();
         services.AddScoped(typeof(IAppLoggerGateway<>), typeof(AppLoggerGateway<>));
 
@@ -55,6 +57,10 @@ public static class IocDependencyExtensions
         services.AddScoped<AutoRegisterUseCase>();
         services.AddScoped<UpdateUserUseCase>();
         services.AddScoped<FindAllUserUseCase>();
+        services.AddScoped<MyProfileUseCase>();
+        services.AddScoped<TccFilesUseCase>();
+        services.AddScoped<ChangeOwnPasswordUseCase>();
+        services.AddScoped<FindAvailableAdvisorsUseCase>();
         
         // Tcc
         services.AddScoped<CreateTccUseCase>();
@@ -65,6 +71,9 @@ public static class IocDependencyExtensions
         services.AddScoped<FindTccWorkflowUseCase>();
         services.AddScoped<RequestCancellationTccUseCase>();
         services.AddScoped<ApproveCancellationTccUseCase>();
+        services.AddScoped<RequestAdvisorChangeUseCase>();
+        services.AddScoped<RequestAdvisorDepartureUseCase>();
+        services.AddScoped<FindPendingAdvisorChangeUseCase>();
         services.AddScoped<LinkBankingUserUseCase>();
         services.AddScoped<FindTccCancellationUseCase>();
         services.AddScoped<CreateScheduleTccUseCase>();
@@ -82,6 +91,15 @@ public static class IocDependencyExtensions
         services.AddScoped<RejectTccProposalUseCase>();
         services.AddScoped<ReformulateTccProposalUseCase>();
         services.AddScoped<CancelTccProposalUseCase>();
+        services.AddScoped<UploadFinalTccFileUseCase>();
+        services.AddScoped<ConfirmHardCoverUseCase>();
+        services.AddScoped<DownloadFinalTccFileUseCase>();
+        services.AddScoped<FindCoordinationPendingUseCase>();
+        services.AddScoped<ApproveAdvisorChangeUseCase>();
+        services.AddScoped<RejectAdvisorChangeUseCase>();
+        services.AddScoped<ForwardToLibraryUseCase>();
+        services.AddScoped<ConfirmLibraryReceiptUseCase>();
+        services.AddScoped<FindLibraryPendingUseCase>();
 
         // Profile
         services.AddScoped<FindAllProfilesUseCase>();
@@ -104,5 +122,19 @@ public static class IocDependencyExtensions
         // Course
         services.AddScoped<FindAllCampiUseCase>();
         services.AddScoped<FindAllCourseByCampiCourseIdUseCase>();
+        services.AddScoped<CreateCampiUseCase>();
+        services.AddScoped<UpdateCampiUseCase>();
+        services.AddScoped<DeleteCampiUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Course.CreateCourseUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Course.UpdateCourseUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Course.DeleteCourseUseCase>();
+        
+        // Semester
+        services.AddScoped<ISemesterGateway, SemesterGateway>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.CreateSemesterUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.UpdateSemesterUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.DeleteSemesterUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.FindAllSemestersUseCase>();
+        services.AddScoped<gestaotcc.Application.UseCases.Semester.FindActiveSemestersUseCase>();
     }
 }

@@ -10,7 +10,7 @@ namespace gestaotcc.WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class SignatureController : ControllerBase
+public class SignatureController(TccFilesUseCase files) : ControllerBase
 {
     /// <summary>
     /// Busca todas as assinaturas pendentes
@@ -87,6 +87,7 @@ public class SignatureController : ControllerBase
     public async Task<ActionResult> DownloaDocument([FromQuery] long tccId, [FromQuery] long documentId, [FromQuery] string? studentId,
         [FromServices] DownloadDocumentUseCase downloadDocumentUseCase)
     {
+        if (!await CanReadDocument(tccId, documentId, studentId)) return NotFound();
         long? parsedStudentId = null;
         if (!string.IsNullOrEmpty(studentId) && studentId != "null" && long.TryParse(studentId, out var parsed))
         {
@@ -131,6 +132,7 @@ public class SignatureController : ControllerBase
         [FromBody] DownloadDocumentHtmlInputModel input,
         [FromServices] DownloadDocumentUseCase downloadDocumentUseCase)
     {
+        if (!await CanReadDocument(input.TccId, input.DocumentId, input.StudentId)) return NotFound();
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
         if (campiCourseId == null) return Unauthorized();
 
@@ -165,6 +167,7 @@ public class SignatureController : ControllerBase
         [FromQuery] long studentId,
         [FromServices] FindDocumentUseCase findDocumentUseCase)
     {
+        if (!await CanReadDocument(tccId, documentId, studentId.ToString())) return NotFound();
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
         
         long parsedCampiCourseId = 0;
@@ -196,10 +199,11 @@ public class SignatureController : ControllerBase
     /// <param name="tccId">Id do tcc</param>
     [Authorize]
     [HttpGet("all/documents/download/{tccId}")]
-    public async Task<ActionResult> AllDownloadDocuments([FromRoute] long tccId,
-        [FromServices] AllDownloadDocumentsUseCase allDownloadDocumentsUseCase)
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<ActionResult> AllDownloadDocuments([FromRoute] long tccId)
     {
-        var useCaseResult = await allDownloadDocumentsUseCase.Execute(tccId);
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var useCaseResult = await files.DownloadAll(tccId, userId);
         if (useCaseResult.IsFailure)
         {
             
@@ -208,11 +212,20 @@ public class SignatureController : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
-                : NotFound(useCaseResult.ErrorDetails);
+            return StatusCode(useCaseResult.ErrorDetails?.Status ?? 500, useCaseResult.ErrorDetails);
         }
         
-        return File(useCaseResult.Data.File, "application/zip", $"{useCaseResult.Data.FolderName}.zip");
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        return File(useCaseResult.Data.File, "application/zip", useCaseResult.Data.FileName);
+    }
+
+    private async Task<bool> CanReadDocument(long tccId, long documentId, string? studentId)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return false;
+        var tcc = await files.FindAccessible(tccId, userId);
+        if (tcc is null || !tcc.Documents.Any(doc => doc.Id == documentId)) return false;
+        if (string.IsNullOrEmpty(studentId) || studentId is "null" or "0") return true;
+        return long.TryParse(studentId, out var id)
+            && tcc.UserTccs.Any(link => link.UserId == id && link.Profile.Role == "STUDENT");
     }
 }

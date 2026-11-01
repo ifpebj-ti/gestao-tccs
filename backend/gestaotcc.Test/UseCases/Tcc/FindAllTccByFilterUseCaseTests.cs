@@ -1,4 +1,4 @@
-using gestaotcc.Application.Gateways;
+﻿using gestaotcc.Application.Gateways;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Profile;
@@ -26,7 +26,7 @@ public class FindAllTccByFilterUseCaseTests
     public async Task Execute_ShouldReturnFilteredTccs_AsDTOs()
     {
         // Arrange
-        var tccFilter = new TccFilterDTO( 1,  "IN_PROGRESS");
+        var tccFilter = new TccFilterDTO( 1,  "IN_PROGRESS", null);
 
         var tccList = new List<TccEntity>
         {

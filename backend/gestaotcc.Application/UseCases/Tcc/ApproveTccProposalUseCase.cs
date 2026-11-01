@@ -14,9 +14,13 @@ public class ApproveTccProposalUseCase(
     ITccGateway tccGateway,
     IDocumentTypeGateway documentTypeGateway,
     IEmailGateway emailGateway,
-    IAppLoggerGateway<ApproveTccProposalUseCase> logger)
+    IAppLoggerGateway<ApproveTccProposalUseCase> logger,
+    IProposalGateway? proposals = null)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId, long advisorUserId)
+    public Task<ResultPattern<string>> Execute(long tccId, long advisorUserId) =>
+        proposals == null ? Approve(tccId, advisorUserId) : proposals.Atomic(() => Approve(tccId, advisorUserId));
+
+    private async Task<ResultPattern<string>> Approve(long tccId, long advisorUserId)
     {
         logger.LogInformation("Iniciando aprovação de proposta de TCC {TccId} pelo orientador {AdvisorId}", tccId, advisorUserId);
 
@@ -27,7 +31,8 @@ public class ApproveTccProposalUseCase(
             return ResultPattern<string>.FailureResult("TCC não encontrado", 404);
         }
 
-        var advisorUserTcc = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == advisorUserId);
+        var advisorUserTcc = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == advisorUserId &&
+            ut.Profile.Role is "ADVISOR" or "COORDINATOR" or "SUPERVISOR");
         if (advisorUserTcc is null)
         {
             logger.LogWarning("Usuário {AdvisorId} não está vinculado como orientador do TCC {TccId}.", advisorUserId, tccId);
@@ -40,6 +45,20 @@ public class ApproveTccProposalUseCase(
             return ResultPattern<string>.FailureResult("A proposta não está pendente de aprovação", 409);
         }
 
+        if (tcc.ParticipantInvitations.Any(x => x.Status != "ACCEPTED"))
+            return ResultPattern<string>.FailureResult("A proposta aguarda o aceite de todos os participantes.", 409);
+        foreach (var participant in tcc.UserTccs.Where(x => x.Profile.Role == "STUDENT"))
+        {
+            // Revalidation prevents approving a consented group whose accounts have since changed.
+            if (tcc.ParticipantInvitations.Count > 0 && !ProposalParticipantsUseCase.Eligible(participant.User))
+                return ResultPattern<string>.FailureResult("Todos os integrantes devem manter uma conta discente ativa.", 409);
+        }
+        if (tcc.ParticipantInvitations.Count > 0)
+        {
+            var students = tcc.UserTccs.Where(x => x.Profile.Role == "STUDENT").Select(x => x.User).ToList();
+            if (students.Any(x => x.CampiCourseId == null) || students.Select(x => x.CampiCourseId).Distinct().Count() != 1)
+                return ResultPattern<string>.FailureResult("Todos os integrantes devem permanecer no mesmo campus e curso.", 409);
+        }
         tcc.Status = StatusTccType.IN_PROGRESS.ToString();
         tcc.Step = StepTccType.START_AND_ORGANIZATION.ToString();
         tcc.RejectionReason = null;

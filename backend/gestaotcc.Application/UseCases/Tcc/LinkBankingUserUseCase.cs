@@ -4,7 +4,7 @@ using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IMinioGateway minioGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
+public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IStorageGateway storageGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(LinkBankingUserDTO data)
     {

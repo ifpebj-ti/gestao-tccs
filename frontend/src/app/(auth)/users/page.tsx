@@ -1,9 +1,13 @@
 'use client';
 
-import { CollapseCard } from '@/components/CollapseCard';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
+import { PageState } from '@/components/layout/PageState';
+
+import { PageTitle } from '@/components/layout/PageTitle';
+
+import { ResponsiveRecordCard } from '@/components/ResponsiveRecordCard';
 import { faUser, faPen, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -179,10 +183,7 @@ export default function UsersPage() {
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal text-gray-800 mb-6">
-        Usuários
-      </h1>
+      <PageTitle className="mb-6">Usuários</PageTitle>
 
       {/* --- BARRA DE PESQUISA --- */}
       <div className="mb-8 flex justify-end">
@@ -198,103 +199,71 @@ export default function UsersPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-center text-gray-500 mt-4">Carregando...</p>
+        <PageState loading>Carregando...</PageState>
       ) : usersToDisplay.length === 0 && !searchQuery ? (
         // Se não houver usuários E a busca estiver vazia
-        <p className="text-center text-gray-500 mt-4">
-          Nenhum usuário encontrado.
-        </p>
+        <PageState>Nenhum usuário encontrado.</PageState>
       ) : usersToDisplay.length === 0 && searchQuery ? (
         // Se não houver usuários MAS a busca estiver ativa
-        <p className="text-center text-gray-500 mt-4">
+        <PageState>
           Nenhum resultado encontrado para &quot;{searchQuery}&quot;.
-        </p>
+        </PageState>
       ) : (
-        <>
-          {/* Mobile */}
-          <div className="md:hidden flex flex-col gap-2">
-            {usersToDisplay.map((user) => {
-              const statusTag = formatStatusTag(user.status);
-              const profileText = formatProfile(user.profile);
+        <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
+          {usersToDisplay.map((user) => {
+            const statusTag = formatStatusTag(user.status);
+            const profileText = formatProfile(user.profile);
 
-              return (
-                <div key={user.id}>
-                  <CollapseCard
-                    title={user.name || 'Usuário sem nome'}
-                    icon={faUser}
-                    profileText={profileText}
-                    statusText={statusTag.text}
-                    statusClass={statusTag.className}
-                    indicatorColor={
-                      statusTag.text === 'Ativo' ? 'bg-green-600' : 'bg-red-600'
-                    }
-                  >
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => push(`/users/details?id=${user.id}`)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
-                      >
-                        <FontAwesomeIcon
-                          icon={faPen}
-                          className="text-[#1351B4]"
-                        />
-                        <span>Editar Usuário</span>
-                      </button>
-                    </div>
-                  </CollapseCard>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Desktop */}
-          <div className="hidden md:grid grid-cols-2 gap-4">
-            {usersToDisplay.map((user) => {
-              const statusTag = formatStatusTag(user.status);
-              const profileText = formatProfile(user.profile);
-
-              return (
-                <div key={user.id}>
-                  <CollapseCard
-                    title={user.name || 'Usuário sem nome'}
-                    profileText={profileText}
-                    statusText={statusTag.text}
-                    statusClass={statusTag.className}
-                    icon={faUser}
-                    indicatorColor={
-                      statusTag.text === 'Ativo' ? 'bg-green-600' : 'bg-red-600'
-                    }
+            return (
+              <ResponsiveRecordCard
+                key={user.id}
+                onClick={() => push(`/users/details?id=${user.id}`)}
+                title={user.name || 'Usuário sem nome'}
+                icon={faUser}
+                profileText={profileText}
+                statusText={statusTag.text}
+                statusClass={statusTag.className}
+                indicatorColor={
+                  statusTag.text === 'Ativo' ? 'bg-green-600' : 'bg-red-600'
+                }
+              >
+                <div className="flex flex-col gap-2">
+                  <button
                     onClick={() => push(`/users/details?id=${user.id}`)}
-                  />
+                    className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
+                  >
+                    <FontAwesomeIcon icon={faPen} className="text-[#006633]" />
+                    <span>Editar Usuário</span>
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        </>
+              </ResponsiveRecordCard>
+            );
+          })}
+        </div>
       )}
 
       {/* --- Seção de Paginação (Lógica 1-indexed) --- */}
       {!isLoading && totalPages > 1 && !searchQuery && (
         <div className="flex justify-center items-center gap-4 mt-8">
-          <button
+          <Button
+            variant="outline"
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
-            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
           >
             Anterior
-          </button>
+          </Button>
 
           <span className="text-gray-700">
             Página {currentPage} de {totalPages}
           </span>
 
-          <button
+          <Button
+            variant="outline"
             onClick={handleNextPage}
             disabled={currentPage >= totalPages}
-            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition"
           >
             Próximo
-          </button>
+          </Button>
         </div>
       )}
     </div>

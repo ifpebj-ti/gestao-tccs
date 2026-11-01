@@ -1,6 +1,7 @@
 using FluentValidation;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Tcc;
+using gestaotcc.WebApi.InputModel;
 using gestaotcc.WebApi.ResponseModels;
 using gestaotcc.WebApi.Validators.Tcc;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +17,7 @@ public class TccController : ControllerBase
     /// <summary>
     /// Criar uma nova proposta de tcc
     /// </summary>
-    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
     [HttpPost]
     public async Task<ActionResult<MessageSuccessResponseModel>> Create([FromBody] CreateTccDTO data,
         [FromServices] CreateTccUseCase createTccUseCase)
@@ -248,6 +249,107 @@ public class TccController : ControllerBase
                 : NotFound(result.ErrorDetails);
         }
         return Ok(new MessageSuccessResponseModel("Cancelamento do TCC aprovado com sucesso"));
+    }
+
+    /// <summary>
+    /// Solicitar substituição (estudante) ou afastamento (orientador) de orientação de TCC
+    /// </summary>
+    [Authorize(Roles = "STUDENT, ADVISOR")]
+    [HttpPost("advisor-change/request")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> RequestAdvisorChange(
+        [FromBody] RequestAdvisorChangeDTO data,
+        [FromServices] RequestAdvisorChangeUseCase requestAdvisorChangeUseCase)
+    {
+        var validator = new RequestAdvisorChangeValidator();
+        var validationResult = await validator.ValidateAsync(data);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.ToString());
+        }
+
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null || !long.TryParse(userIdClaim, out var userId)) 
+            return Unauthorized();
+
+        var result = await requestAdvisorChangeUseCase.Execute(data, userId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            if (result.ErrorDetails != null)
+                result.ErrorDetails.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                _ => StatusCode(500, result.ErrorDetails)
+            };
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data ?? "Solicitação enviada com sucesso"));
+    }
+
+    /// <summary>
+    /// Consultar solicitação pendente de substituição/afastamento de orientador de um TCC
+    /// </summary>
+    [Authorize]
+    [HttpGet("advisor-change")]
+    public async Task<ActionResult<FindTccAdvisorChangeDTO?>> GetPendingAdvisorChange(
+        [FromQuery] long tccId,
+        [FromServices] FindPendingAdvisorChangeUseCase findPendingAdvisorChangeUseCase)
+    {
+        var result = await findPendingAdvisorChangeUseCase.Execute(tccId);
+        if (result.IsFailure)
+        {
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Solicitar afastamento da orientação de TCC pelo próprio docente orientador (Anexo V)
+    /// </summary>
+    /// <param name="id">Id do TCC</param>
+    [Authorize(Roles = "ADVISOR")]
+    [HttpPost("{id}/request-advisor-departure")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> RequestAdvisorDeparture(
+        [FromRoute] long id,
+        [FromBody] RequestAdvisorDepartureInputModel data,
+        [FromServices] RequestAdvisorDepartureUseCase requestAdvisorDepartureUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(data.Reason) || data.Reason.Trim().Length < 10)
+            return BadRequest(new { detail = "Justificativa obrigatória e deve ter ao menos 10 caracteres." });
+
+        if (data.SuggestedAdvisorId <= 0)
+            return BadRequest(new { detail = "É obrigatório indicar um docente substituto disponível." });
+
+        var dto = new RequestAdvisorDepartureDTO(id, data.Reason.Trim(), data.SuggestedAdvisorId);
+        var result = await requestAdvisorDepartureUseCase.Execute(dto, userId);
+
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            if (result.ErrorDetails != null)
+                result.ErrorDetails.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                _ => StatusCode(500, result.ErrorDetails)
+            };
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Data ?? "Solicitação de afastamento enviada com sucesso"));
     }
 
     /// <summary>
@@ -488,7 +590,90 @@ public class TccController : ControllerBase
         }
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
+
+    /// <summary>
+    /// Fazer upload do arquivo PDF da versão final do TCC pós-banca
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
+    [HttpPost("{tccId}/upload-final-file")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> UploadFinalTccFile(
+        [FromRoute] long tccId, 
+        [FromForm] IFormFile file,
+        [FromServices] UploadFinalTccFileUseCase uploadFinalTccFileUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "Nenhum arquivo enviado" });
+
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        var fileBytes = memoryStream.ToArray();
+
+        var result = await uploadFinalTccFileUseCase.Execute(tccId, userId, fileBytes, file.FileName, file.ContentType);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
+
+    /// <summary>
+    /// Confirmar o recebimento da versão final em capa dura pela coordenação
+    /// </summary>
+    [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR")]
+    [HttpPatch("{tccId}/confirm-hardcover")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ConfirmHardCover(
+        [FromRoute] long tccId,
+        [FromServices] ConfirmHardCoverUseCase confirmHardCoverUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var coordinatorUserId))
+            return Unauthorized();
+
+        var result = await confirmHardCoverUseCase.Execute(tccId, coordinatorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel(result.Message));
+    }
+
+    /// <summary>
+    /// Baixar o arquivo PDF da versão final do TCC
+    /// </summary>
+    [Authorize]
+    [HttpGet("{tccId}/final-file/download")]
+    public async Task<IActionResult> DownloadFinalTccFile(
+        [FromRoute] long tccId,
+        [FromServices] DownloadFinalTccFileUseCase downloadFinalTccFileUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await downloadFinalTccFileUseCase.Execute(tccId, userId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["Access-Control-Expose-Headers"] = "Content-Disposition";
+        return File(result.Data.File, "application/pdf", result.Data.FileName);
+    }
         
+    /// <summary>
     /// Submeter proposta de TCC pelo estudante
     /// </summary>
     [Authorize(Roles = "STUDENT")]
@@ -662,5 +847,151 @@ public class TccController : ControllerBase
 
         return Ok(new MessageSuccessResponseModel(result.Data));
     }
+
+    /// <summary>
+    /// Retorna todas as pendências de coordenação: TCCs aguardando capa dura,
+    /// encaminhamento à biblioteca e solicitações de cancelamento.
+    /// </summary>
+    [Authorize(Roles = "COORDINATOR, SUPERVISOR")]
+    [HttpGet("coordination-pending")]
+    public async Task<ActionResult<CoordinationPendingDTO>> GetCoordinationPending(
+        [FromServices] FindCoordinationPendingUseCase findCoordinationPendingUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var coordinatorUserId))
+            return Unauthorized();
+
+        var result = await findCoordinationPendingUseCase.Execute(coordinatorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(result.Data);
+    }
+
+    [Authorize(Roles = "COORDINATOR")]
+    [HttpPatch("{id}/advisor-change/approve")]
+    public async Task<IActionResult> ApproveAdvisorChange([FromRoute] long id,
+        [FromServices] ApproveAdvisorChangeUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var result = await useCase.Execute(id, userId);
+        if (result.IsFailure) return result.ErrorDetails?.Status switch
+        {
+            400 => BadRequest(result.ErrorDetails), 401 => Unauthorized(), 403 => Forbid(),
+            404 => NotFound(result.ErrorDetails), 409 => Conflict(result.ErrorDetails),
+            _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+        };
+        return Ok(new MessageSuccessResponseModel("Substituição de orientador homologada com sucesso."));
+    }
+
+    [Authorize(Roles = "COORDINATOR")]
+    [HttpPatch("{id}/advisor-change/reject")]
+    public async Task<IActionResult> RejectAdvisorChange([FromRoute] long id, [FromBody] RejectAdvisorChangeDTO dto,
+        [FromServices] RejectAdvisorChangeUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var result = await useCase.Execute(id, userId, dto);
+        if (result.IsFailure) return result.ErrorDetails?.Status switch
+        {
+            400 => BadRequest(result.ErrorDetails), 401 => Unauthorized(), 403 => Forbid(),
+            404 => NotFound(result.ErrorDetails), 409 => Conflict(result.ErrorDetails),
+            _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+        };
+        return Ok(new MessageSuccessResponseModel("Solicitação de substituição recusada."));
+    }
+
+    /// <summary>
+    /// Encaminha o TCC com cópia física em capa dura confirmada para a Biblioteca do Campus.
+    /// Apenas a Coordenação do Curso pode executar esta ação.
+    /// </summary>
+    [Authorize(Roles = "COORDINATOR, SUPERVISOR")]
+    [HttpPatch("{tccId}/forward-library")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ForwardToLibrary(
+        [FromRoute] long tccId,
+        [FromServices] ForwardToLibraryUseCase forwardToLibraryUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var coordinatorUserId))
+            return Unauthorized();
+
+        var result = await forwardToLibraryUseCase.Execute(tccId, coordinatorUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel("TCC encaminhado com sucesso para a Biblioteca do Campus."));
+    }
+
+    /// <summary>
+    /// Homologa o recebimento do TCC no acervo da Biblioteca, informando código de catalogação opcional,
+    /// e marca o TCC como concluído (COMPLETED). Apenas o setor da Biblioteca ou Admin pode executar esta ação.
+    /// </summary>
+    [Authorize(Roles = "LIBRARY, ADMIN")]
+    [HttpPatch("{tccId}/confirm-library")]
+    public async Task<ActionResult<MessageSuccessResponseModel>> ConfirmLibrary(
+        [FromRoute] long tccId,
+        [FromBody] ConfirmLibraryReceiptDTO? dto,
+        [FromServices] ConfirmLibraryReceiptUseCase confirmLibraryReceiptUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var librarianUserId))
+            return Unauthorized();
+
+        var result = await confirmLibraryReceiptUseCase.Execute(tccId, librarianUserId, dto ?? new ConfirmLibraryReceiptDTO());
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+
+            return result.ErrorDetails?.Status is 400
+                ? BadRequest(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 409
+                ? Conflict(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
+                : NotFound(result.ErrorDetails);
+        }
+
+        return Ok(new MessageSuccessResponseModel("TCC homologado com sucesso no acervo da Biblioteca e marcado como concluído."));
+    }
+
+    /// <summary>
+    /// Retorna todos os TCCs que aguardam homologação no acervo da Biblioteca
+    /// e o histórico recente de TCCs catalogados. Acesso restrito a LIBRARY e ADMIN.
+    /// </summary>
+    [Authorize(Roles = "LIBRARY, ADMIN")]
+    [HttpGet("library-pending")]
+    public async Task<ActionResult<LibraryPendingDTO>> GetLibraryPending(
+        [FromServices] FindLibraryPendingUseCase findLibraryPendingUseCase)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var librarianUserId))
+            return Unauthorized();
+
+        var result = await findLibraryPendingUseCase.Execute(librarianUserId);
+        if (result.IsFailure)
+        {
+            var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            result.ErrorDetails!.Type = endpointUrl;
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
+        }
+
+        return Ok(result.Data);
+    }
 }
+
 

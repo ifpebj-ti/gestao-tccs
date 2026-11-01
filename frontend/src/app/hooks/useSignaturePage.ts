@@ -83,7 +83,7 @@ export function useSignaturePage() {
     const token = Cookies.get('token');
     if (!tccId || !documentId || !token) {
       toast.error('Informações insuficientes para realizar o download.');
-      return;
+      return false;
     }
 
     try {
@@ -224,8 +224,10 @@ export function useSignaturePage() {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
+      return true;
     } catch {
       toast.error('Não foi possível baixar o documento.');
+      return false;
     }
   };
 

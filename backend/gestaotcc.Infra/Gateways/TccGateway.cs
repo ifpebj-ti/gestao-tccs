@@ -23,12 +23,19 @@ public class TccGateway(AppDbContext context) : ITccGateway
         await context.SaveChangesAsync();
     }
 
+    public async Task UpdateSemesterId(long tccId, long semesterId)
+    {
+        await context.Tccs
+            .Where(t => t.Id == tccId)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.SemesterId, semesterId));
+    }
+
     public async Task<List<TccInviteEntity>> FindAllInviteTcc()
     {
         return await context.TccInvites
-            .Where(x => 
-                x.IsValidCode && 
-                (x.Tcc == null || (x.Tcc.Status != StatusTccType.CANCELED.ToString() 
+            .Where(x =>
+                x.IsValidCode &&
+                (x.Tcc == null || (x.Tcc.Status != StatusTccType.CANCELED.ToString()
                 && x.Tcc.Status != StatusTccType.COMPLETED.ToString())))
             .ToListAsync();
     }
@@ -53,6 +60,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<TccEntity?> FindTccById(long id)
     {
         return await context.Tccs
+            .Include(x => x.ParticipantInvitations)
             .Include(x => x.TccInvites)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
@@ -74,13 +82,67 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.Signatures)
             .Include(x => x.Documents)
                 .ThenInclude(x => x.DocumentType)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.CurrentAdvisor)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.RequesterUser)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.SuggestedAdvisor)
+            .Include(x => x.Semester)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    // verificar
+    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId)
+    {
+        var query = context.Tccs.AsQueryable();
+
+        if(campiCourseId != 0)
+            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
+
+        if(tccFilter.UserId.HasValue)
+            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId)
+                || x.AdvisorChanges.Any(ac => ac.SuggestedAdvisorId == tccFilter.UserId && (ac.Status == "PENDING_SIGNATURES" || ac.Status == "PENDING_COORDINATION")));
+
+        if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
+            query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
+
+        if (tccFilter.SemesterId.HasValue)
+            query = query.Where(x => x.SemesterId == tccFilter.SemesterId.Value);
+
+        return await query
+            .Include(x => x.Semester)
+            .Include(x => x.BankingMembers)
+            .Include(x => x.UserTccs)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.DocumentType)
+            .Include(x => x.Documents)
+                .ThenInclude(x => x.Signatures)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.SuggestedAdvisor)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.CurrentAdvisor)
+            .Include(x => x.AdvisorChanges)
+                .ThenInclude(x => x.RequesterUser)
+            .ToListAsync();
+    }
+
+    public async Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token)
+    {
+        return await context.TccBankingMembers.FirstOrDefaultAsync(x => x.AccessToken == token);
+    }
+
+    public async Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member)
+    {
+        context.TccBankingMembers.Update(member);
+        await context.SaveChangesAsync();
+
+    }
     public async Task<TccEntity?> FindTccInformations(long id)
     {
         return await context.Tccs
+            .Include(x => x.ParticipantInvitations)
             .Include(x => x.TccCancellation)
             .Include(x => x.TccSchedule)
             .Include(x => x.TccInvites)
@@ -95,6 +157,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(x => x.User)
                     .ThenInclude(x => x.CampiCourse)
                         .ThenInclude(x => x!.Campi)
+            .Include(x => x.Semester)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -115,8 +178,8 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await context.Tccs
             .Include(x => x.TccCancellation)
             .Include(x => x.UserTccs)
-            .ThenInclude(x => x.User)
-            .ThenInclude(x => x.Profile)
+                .ThenInclude(x => x.User)
+                    .ThenInclude(x => x.Profile)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -150,39 +213,28 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<List<TccEntity>> FindAllTccByFilter(TccFilterDTO tccFilter, long campiCourseId)
+    public async Task<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity?> FindPendingAdvisorChange(long tccId)
     {
-        var query = context.Tccs.AsQueryable();
-        
-        if(campiCourseId != 0)
-            query = query.Where(x => x.UserTccs.Any(ut => ut.User.CampiCourse!.Id == campiCourseId));
-        
-        if(!string.IsNullOrEmpty(tccFilter.UserId.ToString()))
-            query = query.Where(x => x.UserTccs.Any(y => y.UserId == tccFilter.UserId));
-        
-        if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
-            query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
-        
-        return await query
-            .Include(x => x.BankingMembers)
-            .Include(x => x.UserTccs)
-                .ThenInclude(x => x.User)
-                    .ThenInclude(x => x.Profile)
-            .Include(x => x.Documents)
-                .ThenInclude(x => x.DocumentType)
-            .Include(x => x.Documents)
-                .ThenInclude(x => x.Signatures)
-            .ToListAsync();
+        return await context.TccAdvisorChanges
+            .Include(x => x.RequesterUser)
+            .Include(x => x.CurrentAdvisor)
+            .Include(x => x.SuggestedAdvisor)
+            .Include(x => x.Document)
+                .ThenInclude(d => d!.Signatures)
+            .Where(x => x.TccId == tccId && (x.Status == "PENDING_SIGNATURES" || x.Status == "PENDING_COORDINATION"))
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token)
+    public async Task SaveAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange)
     {
-        return await context.TccBankingMembers.FirstOrDefaultAsync(x => x.AccessToken == token);
+        await context.TccAdvisorChanges.AddAsync(advisorChange);
+        await context.SaveChangesAsync();
     }
 
-    public async Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member)
+    public async Task UpdateAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange)
     {
-        context.TccBankingMembers.Update(member);
+        context.TccAdvisorChanges.Update(advisorChange);
         await context.SaveChangesAsync();
     }
 }

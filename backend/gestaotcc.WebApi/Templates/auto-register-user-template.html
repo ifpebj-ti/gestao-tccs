@@ -1,64 +1,126 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bem-vindo à Plataforma</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .content {
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-            .content h2 {
-                color: #333;
-            }
-
-            .content p {
-                color: #666;
-            }
-
-        .footer {
-            text-align: center;
-            color: #888;
-            padding: 20px 0;
-        }
-
-            .footer p {
-                margin: 0;
-                font-size: 14px;
-            }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conta Criada — Gradus Flow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8FAF9;
+      color: #1F2937;
+      padding: 32px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      padding: 24px 32px 20px;
+      border-bottom: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #002B18;
+    }
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #002B18;
+      letter-spacing: -0.02em;
+    }
+    .brand-title span {
+      color: #15803D;
+    }
+    .content {
+      padding: 32px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #002B18;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #4B5563;
+      margin-bottom: 16px;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 24px 0 20px;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #002B18;
+      color: #FFFFFF !important;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 26px;
+      border-radius: 6px;
+      letter-spacing: 0.01em;
+    }
+    .divider {
+      height: 1px;
+      background-color: #F1F5F9;
+      margin: 24px 0 16px;
+    }
+    .footer {
+      padding: 0 32px 24px;
+      text-align: center;
+    }
+    .footer p {
+      font-size: 11px;
+      color: #9CA3AF;
+      line-height: 1.5;
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="content">
-            <h2>Olá, {{username}}!</h2>
-            <p>Seja bem-vindo à nossa plataforma de Gestão de TCCs!</p>
-            <p>A partir de agora, você poderá acompanhar seu projeto e participar de todas as etapas do processo de forma simples e organizada.</p>
-            <p>Estamos felizes em ter você com a gente. Bons estudos e sucesso no seu TCC!</p>
-        </div>
-        <div class="footer">
-            <p>Em caso de dúvidas, procure seu orientador ou a coordenação do curso.</p>
-            <p>Obrigado por usar nossos serviços!</p>
-        </div>
+  <div class="container">
+    <div class="header">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="#002B18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+      </svg>
+      <div class="brand-title">Gradus<span>Flow</span></div>
     </div>
+    
+    <div class="content">
+      <h1>Bem-vindo(a), {{username}}!</h1>
+      <p>Sua conta no <strong>Gradus Flow</strong> &mdash; plataforma de Gestão de TCCs do IFPE &mdash; foi criada com sucesso.</p>
+      <p>Agora você já pode cadastrar suas propostas de TCC, indicar orientadores e acompanhar todo o seu fluxo acadêmico de forma 100% digital.</p>
+
+      <div class="btn-container">
+        <a href="http://localhost:3000" class="btn">Acessar o Gradus Flow &rarr;</a>
+      </div>
+
+      <div class="divider"></div>
+      
+      <div class="footer">
+        <p>Gradus Flow &middot; Instituto Federal de Pernambuco<br>
+        Equipe de Tecnologia e Coordenação de Cursos</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

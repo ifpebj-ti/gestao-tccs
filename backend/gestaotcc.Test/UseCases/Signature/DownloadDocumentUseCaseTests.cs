@@ -14,7 +14,7 @@ namespace gestaotcc.Test.UseCases.Signature;
 public class DownloadDocumentUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
-    private readonly FindDocumentUseCase _findDocumentUseCase = Substitute.For<FindDocumentUseCase>(Substitute.For<ITccGateway>(), Substitute.For<IMinioGateway>(), Substitute.For<IUserGateway>(), Substitute.For<IITextGateway>(), Substitute.For<IAppLoggerGateway<FindDocumentUseCase>>());
+    private readonly FindDocumentUseCase _findDocumentUseCase = Substitute.For<FindDocumentUseCase>(Substitute.For<ITccGateway>(), Substitute.For<IStorageGateway>(), Substitute.For<IUserGateway>(), Substitute.For<IITextGateway>(), Substitute.For<IAppLoggerGateway<FindDocumentUseCase>>());
     private readonly IITextGateway _iTextGateway = Substitute.For<IITextGateway>();
     private readonly IAppLoggerGateway<DownloadDocumentUseCase> _logger = Substitute.For<IAppLoggerGateway<DownloadDocumentUseCase>>();
     private readonly DownloadDocumentUseCase _useCase;

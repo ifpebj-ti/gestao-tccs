@@ -17,10 +17,30 @@ import {
   ScheduleSchemaType
 } from '@/app/schemas/scheduleSchema';
 import { editTccSchema, EditTccSchemaType } from '@/app/schemas/editTccSchema';
+import {
+  advisorChangeSchema,
+  AdvisorChangeSchemaType
+} from '@/app/schemas/advisorChangeSchema';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+
+export interface PendingAdvisorChange {
+  id: number;
+  tccId: number;
+  requesterUserId: number;
+  requesterName: string;
+  requesterRole: string;
+  currentAdvisorId: number;
+  currentAdvisorName: string;
+  suggestedAdvisorId?: number | null;
+  suggestedAdvisorName?: string | null;
+  reason: string;
+  status: string;
+  documentId?: number | null;
+  createdAt: string;
+}
 
 interface Member {
   id: number;
@@ -38,6 +58,14 @@ interface TccDetailsResponse {
     presentationLocation: string;
     finalGrade?: number | null;
     finalOpinion?: string | null;
+    semesterName?: string | null;
+    step?: string | null;
+    finalSubmissionDeadline?: string | null;
+    finalTccFile?: string | null;
+    hardCoverReceivedAt?: string | null;
+    forwardedToLibraryAt?: string | null;
+    libraryReceivedAt?: string | null;
+    libraryCatalogCode?: string | null;
   };
   infoStudent: {
     name: string;
@@ -48,7 +76,7 @@ interface TccDetailsResponse {
   }[];
   infoAdvisor: { name: string; email: string };
   infoBanking: {
-    members: { name: string; email: string; role: string }[];
+    members: { name: string; email: string; role: string; userId?: number | null }[];
   };
   cancellationRequest: boolean;
 }
@@ -63,6 +91,7 @@ interface CancellationDetailsResponse {
 interface DecodedToken {
   role: string | string[];
   userId: string;
+  campiCourseId?: string;
 }
 
 export function useTccDetails() {
@@ -83,6 +112,9 @@ export function useTccDetails() {
   const [isScheduleFormVisible, setIsScheduleFormVisible] = useState(false);
   const [isEditingTccInfo, setIsEditingTccInfo] = useState(false);
   const [isConcluding, setIsConcluding] = useState(false);
+  const [isUploadingFinalFile, setIsUploadingFinalFile] = useState(false);
+  const [isConfirmingHardCover, setIsConfirmingHardCover] = useState(false);
+  const [isDownloadingFinalFile, setIsDownloadingFinalFile] = useState(false);
 
   const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
 
@@ -105,6 +137,22 @@ export function useTccDetails() {
   const editTccForm = useForm<EditTccSchemaType>({
     resolver: zodResolver(editTccSchema),
     defaultValues: { title: '', summary: '' }
+  });
+
+  const [pendingAdvisorChange, setPendingAdvisorChange] =
+    useState<PendingAdvisorChange | null>(null);
+  const [isAdvisorChangeModalOpen, setIsAdvisorChangeModalOpen] =
+    useState(false);
+  const [advisorChangeType, setAdvisorChangeType] = useState<
+    'STUDENT_REQUEST' | 'ADVISOR_DEPARTURE'
+  >('STUDENT_REQUEST');
+  const [availableAdvisors, setAvailableAdvisors] = useState<
+    { id: number; name: string }[]
+  >([]);
+
+  const advisorChangeForm = useForm<AdvisorChangeSchemaType>({
+    resolver: zodResolver(advisorChangeSchema),
+    defaultValues: { reason: '', suggestedAdvisorId: undefined }
   });
 
   const fetchTccDetails = useCallback(async () => {
@@ -143,7 +191,8 @@ export function useTccDetails() {
         bankingMembers: result.infoBanking?.members?.map(m => ({
           name: m.name,
           email: m.email,
-          role: m.role
+          role: m.role,
+          userId: m.userId ?? null
         })) || []
       });
 
@@ -161,12 +210,29 @@ export function useTccDetails() {
       } else {
         setCancellationDetails(null);
       }
+
+      try {
+        const advisorChangeRes = await fetch(
+          `${API_URL}/Tcc/advisor-change?tccId=${tccId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        if (advisorChangeRes.ok) {
+          const changeData = await advisorChangeRes.json();
+          setPendingAdvisorChange(changeData);
+        } else {
+          setPendingAdvisorChange(null);
+        }
+      } catch {
+        setPendingAdvisorChange(null);
+      }
     } catch {
       toast.error('Erro ao carregar dados do TCC.');
     } finally {
       setLoading(false);
     }
-  }, [tccId, API_URL, editTccForm]);
+  }, [tccId, API_URL, editTccForm, scheduleForm]);
 
   useEffect(() => {
     fetchTccDetails();
@@ -189,6 +255,30 @@ export function useTccDetails() {
       }
     };
     fetchMembers();
+  }, [API_URL]);
+
+  useEffect(() => {
+    const fetchAdvisors = async () => {
+      const token = Cookies.get('token');
+      if (!token) return;
+      try {
+        const decoded = jwtDecode<DecodedToken>(token);
+        const campiCourseId = decoded.campiCourseId;
+        const url = campiCourseId
+          ? `${API_URL}/User/available-advisors/${campiCourseId}`
+          : `${API_URL}/User/filter?Profile=ADVISOR`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableAdvisors(data);
+        }
+      } catch {
+        // silencioso
+      }
+    };
+    fetchAdvisors();
   }, [API_URL]);
 
   const handleRequestCancellation: SubmitHandler<
@@ -238,6 +328,83 @@ export function useTccDetails() {
     } catch {
       toast.error('Erro ao aprovar o cancelamento.');
     }
+  };
+
+  const handleRequestAdvisorChange: SubmitHandler<
+    AdvisorChangeSchemaType
+  > = async (data) => {
+    try {
+      const token = Cookies.get('token');
+
+      if (advisorChangeType === 'ADVISOR_DEPARTURE') {
+        // Endpoint dedicado para afastamento pelo orientador (Issue #669)
+        const res = await fetch(
+          `${API_URL}/Tcc/${tccId}/request-advisor-departure`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              reason: data.reason,
+              suggestedAdvisorId: data.suggestedAdvisorId || 0
+            })
+          }
+        );
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(
+            errData?.detail ||
+              errData?.message ||
+              'Falha ao enviar solicitação de afastamento.'
+          );
+        }
+        toast.success('Solicitação de afastamento enviada com sucesso!');
+      } else {
+        // Endpoint genérico para substituição pelo estudante
+        const res = await fetch(`${API_URL}/Tcc/advisor-change/request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            tccId,
+            reason: data.reason,
+            suggestedAdvisorId: data.suggestedAdvisorId || null,
+            requesterRole: 'STUDENT'
+          })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(
+            errData?.detail ||
+              errData?.message ||
+              'Falha ao enviar solicitação de substituição.'
+          );
+        }
+        toast.success(
+          'Solicitação de substituição de orientador enviada com sucesso!'
+        );
+      }
+
+      setIsAdvisorChangeModalOpen(false);
+      advisorChangeForm.reset();
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Erro ao enviar solicitação.'
+      );
+    }
+  };
+
+  const openAdvisorChangeModal = (
+    type: 'STUDENT_REQUEST' | 'ADVISOR_DEPARTURE'
+  ) => {
+    setAdvisorChangeType(type);
+    advisorChangeForm.reset();
+    setIsAdvisorChangeModalOpen(true);
   };
 
   const handleRegisterBanking: SubmitHandler<
@@ -346,47 +513,6 @@ export function useTccDetails() {
     }
   };
 
-  const handleDownloadAllDocuments = async () => {
-    const token = Cookies.get('token');
-    if (!tccId || !token) {
-      toast.error('Não foi possível identificar o TCC para download.');
-      return;
-    }
-
-    try {
-      const res = await fetch(
-        `${API_URL}/Signature/all/documents/download/${tccId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      if (!res.ok) throw new Error('Erro ao baixar os documentos.');
-
-      const contentDisposition = res.headers.get('Content-Disposition');
-      let filename = `TCC_${tccId}_documentos.zip`;
-
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
-        }
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch {
-      toast.error('Não foi possível baixar o pacote de documentos.');
-    }
-  };
-
   const handleEditTccInfo: SubmitHandler<EditTccSchemaType> = async (data) => {
     try {
       const token = Cookies.get('token');
@@ -485,6 +611,224 @@ export function useTccDetails() {
     }
   };
 
+  const handleUploadFinalTccFile = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Apenas arquivos em formato PDF são permitidos.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsUploadingFinalFile(true);
+    try {
+      toast.info('Enviando versão final do TCC...', { autoClose: 2000 });
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/upload-final-file`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha no envio da versão final.'
+        );
+      }
+
+      toast.success('Versão final pós-banca enviada com sucesso!');
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao enviar a versão final do TCC.'
+      );
+    } finally {
+      setIsUploadingFinalFile(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleConfirmHardCover = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsConfirmingHardCover(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/confirm-hardcover`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao confirmar recebimento da capa dura.'
+        );
+      }
+
+      toast.success(
+        'Recebimento da versão em capa dura confirmado com sucesso!'
+      );
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao confirmar entrega da capa dura.'
+      );
+    } finally {
+      setIsConfirmingHardCover(false);
+    }
+  };
+
+  const handleDownloadFinalTccFile = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsDownloadingFinalFile(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/final-file/download`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao baixar versão final.'
+        );
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `TCC_${tccId}_Versao_Final.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Erro ao baixar o arquivo final.'
+      );
+    } finally {
+      setIsDownloadingFinalFile(false);
+    }
+  };
+
+  const [isForwardingToLibrary, setIsForwardingToLibrary] = useState(false);
+  const [isConfirmingLibrary, setIsConfirmingLibrary] = useState(false);
+
+  const handleForwardToLibrary = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsForwardingToLibrary(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/forward-library`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao encaminhar TCC para a Biblioteca.'
+        );
+      }
+
+      toast.success('TCC encaminhado com sucesso para a Biblioteca do Campus!');
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao encaminhar TCC para a Biblioteca.'
+      );
+    } finally {
+      setIsForwardingToLibrary(false);
+    }
+  };
+
+  const handleConfirmLibrary = async (catalogCode?: string) => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Autenticação necessária.');
+      return;
+    }
+
+    setIsConfirmingLibrary(true);
+    try {
+      const res = await fetch(`${API_URL}/Tcc/${tccId}/confirm-library`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ catalogCode: catalogCode?.trim() || null })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+            errorData?.message ||
+            'Falha ao homologar TCC na Biblioteca.'
+        );
+      }
+
+      toast.success(
+        'TCC homologado no acervo da Biblioteca e concluído com sucesso!'
+      );
+      await fetchTccDetails();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : 'Erro ao homologar TCC na Biblioteca.'
+      );
+    } finally {
+      setIsConfirmingLibrary(false);
+    }
+  };
+
   return {
     tccData,
     cancellationDetails,
@@ -510,12 +854,29 @@ export function useTccDetails() {
     handleSendScheduleEmail,
     resendingInviteTo,
     handleResendInvite,
-    handleDownloadAllDocuments,
     handleEditTccInfo,
     handleConcludePresentation,
     handleUploadTccFile,
+    handleUploadFinalTccFile,
+    handleConfirmHardCover,
+    handleDownloadFinalTccFile,
+    handleForwardToLibrary,
+    handleConfirmLibrary,
+    isUploadingFinalFile,
+    isConfirmingHardCover,
+    isDownloadingFinalFile,
+    isForwardingToLibrary,
+    isConfirmingLibrary,
     isConcluding,
     orientadorToken,
-    setOrientadorToken
+    setOrientadorToken,
+    pendingAdvisorChange,
+    isAdvisorChangeModalOpen,
+    setIsAdvisorChangeModalOpen,
+    advisorChangeType,
+    availableAdvisors,
+    advisorChangeForm,
+    handleRequestAdvisorChange,
+    openAdvisorChangeModal
   };
 }

@@ -11,9 +11,13 @@ public class ReformulateTccProposalUseCase(
     IUserGateway userGateway,
     ITccGateway tccGateway,
     IEmailGateway emailGateway,
-    IAppLoggerGateway<ReformulateTccProposalUseCase> logger)
+    IAppLoggerGateway<ReformulateTccProposalUseCase> logger,
+    IProposalGateway? proposals = null)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId, ReformulateTccProposalDTO data, long studentUserId)
+    public Task<ResultPattern<string>> Execute(long tccId, ReformulateTccProposalDTO data, long studentUserId) =>
+        proposals == null ? Reformulate(tccId, data, studentUserId) : proposals.Atomic(() => Reformulate(tccId, data, studentUserId));
+
+    private async Task<ResultPattern<string>> Reformulate(long tccId, ReformulateTccProposalDTO data, long studentUserId)
     {
         logger.LogInformation("Iniciando reformulação de proposta de TCC {TccId} pelo estudante {StudentId}", tccId, studentUserId);
 
@@ -37,9 +41,22 @@ public class ReformulateTccProposalUseCase(
             return ResultPattern<string>.FailureResult("Apenas propostas recusadas podem ser reformuladas", 409);
         }
 
+        foreach (var member in tcc.UserTccs.Where(x => x.Profile.Role == "STUDENT"))
+        {
+            var existing = await tccGateway.FindAllTccByFilter(new TccFilterDTO(member.UserId, null), 0);
+            if (existing != null && existing.Any(x => x.Id != tccId && ProposalParticipantsUseCase.Active(x)))
+                return ResultPattern<string>.FailureResult("Um integrante já possui outra proposta ou TCC ativo.", 409);
+        }
+        // A changed proposal requires fresh consent from invited participants.
+        foreach (var invitation in tcc.ParticipantInvitations)
+        {
+            var member = tcc.UserTccs.FirstOrDefault(x => x.UserId == invitation.UserId && x.Profile.Role == "STUDENT");
+            if (member != null) tcc.UserTccs.Remove(member);
+            invitation.Status = "PENDING"; invitation.RespondedAt = null;
+        }
         tcc.Title = data.Title;
         tcc.Summary = data.Summary;
-        tcc.Status = StatusTccType.PENDING_APPROVAL.ToString();
+        tcc.Status = tcc.ParticipantInvitations.Count == 0 ? "PENDING_APPROVAL" : "AWAITING_PARTICIPANTS";
         tcc.Step = StepTccType.PROPOSAL_REGISTRATION.ToString();
         tcc.RejectionReason = null;
 
@@ -68,7 +85,7 @@ public class ReformulateTccProposalUseCase(
         logger.LogInformation("Proposta de TCC {TccId} reformulada e reenviada com sucesso.", tccId);
 
         var advisorUt = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString() || ut.Profile.Role == RoleType.COORDINATOR.ToString() || ut.Profile.Role == RoleType.SUPERVISOR.ToString());
-        if (advisorUt?.User != null)
+        if (advisorUt?.User != null && tcc.ParticipantInvitations.Count == 0)
         {
             try
             {

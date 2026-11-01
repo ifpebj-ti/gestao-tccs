@@ -22,6 +22,7 @@ public class FindAllPendingSignaturesUseCase(
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+        { StepTccType.FINALIZATION_AND_PUBLICATION, 6 },
     };
 
     private readonly List<string> _signatureQueueByProfile = new()
@@ -35,7 +36,7 @@ public class FindAllPendingSignaturesUseCase(
     {
         logger.LogInformation("Iniciando busca por assinaturas pendentes. UserId: {UserId}", userId.HasValue ? userId.Value.ToString() : "GLOBAL");
         
-        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString()), campiCourseId);
+        var tccs = await tccGateway.FindAllTccByFilter(new TccFilterDTO(userId, StatusTccType.IN_PROGRESS.ToString(), null), campiCourseId);
         if (!tccs.Any())
         {
             logger.LogInformation("Nenhum TCC em andamento encontrado para o filtro aplicado. Retornando lista vazia.");
@@ -55,24 +56,27 @@ public class FindAllPendingSignaturesUseCase(
 
             if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep))
             {
-                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' é inválida.", tcc.Id, tcc.Step);
+                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' Ã© invÃ¡lida.", tcc.Id, tcc.Step);
                 continue;
             }
             if (!_stepSignatureOrderMap.TryGetValue(tccStep, out var currentOrder))
             {
-                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' não mapeada para ordem de assinatura.", tcc.Id, tcc.Step);
+                logger.LogDebug("TccId {TccId} pulado: Etapa '{TccStep}' nÃ£o mapeada para ordem de assinatura.", tcc.Id, tcc.Step);
                 continue;
             }
             if (tccStep == StepTccType.PROPOSAL_REGISTRATION)
             {
-                logger.LogDebug("TccId {TccId} pulado: Etapa é PROPOSAL_REGISTRATION.", tcc.Id);
+                logger.LogDebug("TccId {TccId} pulado: Etapa Ã© PROPOSAL_REGISTRATION.", tcc.Id);
                 continue;
             }
 
             var userTccs = tcc.UserTccs.ToList();
             var studentNames = GetStudentNames(tcc, userTccs);
+            var pendingAdvisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.Status == "PENDING_SIGNATURES");
             var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userTccs, currentOrder);
-            var documentsInStep = tcc.Documents.Where(d => d.DocumentType.SignatureOrder == currentOrder).ToList();
+            var documentsInStep = tcc.Documents
+                .Where(d => d.DocumentType.SignatureOrder == currentOrder && d.Id != pendingAdvisorChange?.DocumentId)
+                .ToList();
 
             var pendingDetails = new List<FindAllPendingSignatureDetailsDTO>();
 
@@ -159,6 +163,83 @@ public class FindAllPendingSignaturesUseCase(
                     }
                 }
             }
+
+            // Assinaturas pendentes para alteração/afastamento de orientador (Anexos V e IX)
+            if (pendingAdvisorChange != null && pendingAdvisorChange.DocumentId.HasValue)
+            {
+                var changeDoc = tcc.Documents.FirstOrDefault(d => d.Id == pendingAdvisorChange.DocumentId.Value);
+                if (changeDoc != null)
+                {
+                    var isAnexoV = changeDoc.DocumentType.Name.Contains("ANEXO V -") || pendingAdvisorChange.RequesterRole == "ADVISOR";
+                    var signedUserIds = changeDoc.Signatures.Select(s => s.UserId).ToHashSet();
+
+                    var usersToPending = new List<long>();
+                    if (isAnexoV)
+                    {
+                        // Para o Anexo V (afastamento): primeiro chega para o professor, depois para o aluno
+                        if (!signedUserIds.Contains(pendingAdvisorChange.CurrentAdvisorId))
+                        {
+                            usersToPending.Add(pendingAdvisorChange.CurrentAdvisorId);
+                        }
+                        else
+                        {
+                            foreach (var st in userTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+                            {
+                                if (!signedUserIds.Contains(st.UserId))
+                                {
+                                    usersToPending.Add(st.UserId);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var requiredUserIds = new HashSet<long> { pendingAdvisorChange.CurrentAdvisorId };
+                        foreach (var st in userTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+                        {
+                            requiredUserIds.Add(st.UserId);
+                        }
+                        foreach (var reqUserId in requiredUserIds)
+                        {
+                            if (!signedUserIds.Contains(reqUserId))
+                            {
+                                usersToPending.Add(reqUserId);
+                            }
+                        }
+                    }
+
+                    foreach (var reqUserId in usersToPending)
+                    {
+                        var userTcc = userTccs.FirstOrDefault(ut => ut.UserId == reqUserId);
+                        string userName;
+                        string userRole;
+                        if (userTcc != null)
+                        {
+                            userName = userTcc.User.Name;
+                            userRole = userTcc.Profile.Role;
+                        }
+                        else if (reqUserId == pendingAdvisorChange.SuggestedAdvisorId)
+                        {
+                            userName = pendingAdvisorChange.SuggestedAdvisor?.Name ?? "Orientador Substituto";
+                            userRole = RoleType.ADVISOR.ToString();
+                        }
+                        else
+                        {
+                            userName = pendingAdvisorChange.CurrentAdvisor?.Name ?? "Orientador";
+                            userRole = RoleType.ADVISOR.ToString();
+                        }
+
+                        pendingDetails.Add(new FindAllPendingSignatureDetailsDTO(
+                            changeDoc.Id,
+                            changeDoc.DocumentType.Name,
+                            new List<FindAllPendignSignatureUserDetailsDTO>
+                            {
+                                new(reqUserId, userName, userRole, null, null)
+                            }
+                        ));
+                    }
+                }
+            }
             
             logger.LogDebug("TccId {TccId}: Encontrados {PendingCount} detalhes de assinatura pendente (antes do filtro).", tcc.Id, pendingDetails.Count);
 
@@ -168,12 +249,12 @@ public class FindAllPendingSignaturesUseCase(
                 pendingDetails = pendingDetails
                     .Where(pd => pd.UserDetails.Any(u => u.UserId == userId.Value))
                     .ToList();
-                logger.LogInformation("TccId {TccId}: Filtrando para UserId {UserId}. Contagem de pendências foi de {OriginalCount} para {FilteredCount}.", tcc.Id, userId.Value, originalCount, pendingDetails.Count);
+                logger.LogInformation("TccId {TccId}: Filtrando para UserId {UserId}. Contagem de pendÃªncias foi de {OriginalCount} para {FilteredCount}.", tcc.Id, userId.Value, originalCount, pendingDetails.Count);
             }
 
             if (pendingDetails.Any())
             {
-                logger.LogInformation("TccId {TccId} possui {PendingDetailsCount} assinaturas pendentes e será adicionado ao resultado.", tcc.Id, pendingDetails.Count);
+                logger.LogInformation("TccId {TccId} possui {PendingDetailsCount} assinaturas pendentes e serÃ¡ adicionado ao resultado.", tcc.Id, pendingDetails.Count);
                 results.Add(new FindAllPendingSignatureDTO(
                     tcc.Id,
                     studentNames,
@@ -181,7 +262,7 @@ public class FindAllPendingSignaturesUseCase(
             }
         }
 
-        logger.LogInformation("Busca por assinaturas pendentes concluída. Retornando {ResultCount} TCCs com pendências.", results.Count);
+        logger.LogInformation("Busca por assinaturas pendentes concluÃ­da. Retornando {ResultCount} TCCs com pendÃªncias.", results.Count);
         return ResultPattern<List<FindAllPendingSignatureDTO>>.SuccessResult(results);
     }
 
@@ -202,6 +283,8 @@ public class FindAllPendingSignaturesUseCase(
     {
         return allDocTypes
             .Where(dt => dt.SignatureOrder == stepOrder &&
+                         !dt.Name.Contains("ANEXO V -") &&
+                         !dt.Name.Contains("ANEXO IX") &&
                          dt.Profiles.Any(p => userTccs.Any(u => u.Profile.Id == p.Id)))
             .ToList();
     }
@@ -226,3 +309,7 @@ public class FindAllPendingSignaturesUseCase(
             });
     }
 }
+
+
+
+

@@ -38,7 +38,8 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
             { StepTccType.START_AND_ORGANIZATION, 2 },
             { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
             { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
-            { StepTccType.PRESENTATION_AND_EVALUATION, 5 }
+            { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+            { StepTccType.FINALIZATION_AND_PUBLICATION, 6 }
         };
         
         logger.LogInformation("Criando DTO de workflow para TccId: {TccId} na etapa: {TccStep}", tcc.Id, tcc.Step);
@@ -65,7 +66,7 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         }
 
         var workflowSignatures = allDocumentsType
-            .Where(x => x.SignatureOrder == signatureOrder)
+            .Where(x => x.SignatureOrder == signatureOrder && !(x.Name != null && x.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA")))
             .Select(documentType => CreateSignatureDto(documentType, tcc.Documents, userTccs))
             .OrderBy(x => x.DocumentId)
             .ToList();

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ANEXO IX - TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        @page {
+            size: A4 portrait;
+            margin-top: 2cm;
+            margin-bottom: 1.5cm;
+            margin-left: 2.5cm;
+            margin-right: 2.5cm;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header img {
+            width: 75px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        .header-text {
+            font-size: 10pt;
+            line-height: 1.25;
+            color: #000;
+        }
+        .anexo-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 25px;
+            font-size: 11pt;
+            line-height: 1.3;
+        }
+        .declaracao {
+            text-align: justify;
+            text-indent: 1.5cm;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .justificativa-header {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 11pt;
+            letter-spacing: 1px;
+        }
+        .justificativa-box {
+            min-height: 90px;
+            text-align: justify;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            padding: 4px 0;
+        }
+        .signature-section {
+            margin-top: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .signature-line {
+            width: 320px;
+            border-bottom: 1px solid black;
+            margin: 0 auto 5px auto;
+        }
+        .signature-label {
+            font-size: 10.5pt;
+        }
+        .date-section {
+            text-align: right;
+            margin-top: 30px;
+            margin-bottom: 25px;
+            font-size: 11pt;
+        }
+        .inline-val {
+            font-weight: normal;
+            border-bottom: 1px solid #000;
+            padding: 0 4px;
+        }
+        .obs-footer {
+            font-size: 8.5pt;
+            margin-top: 25px;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="{{BRASAO_SRC}}" alt="Brasão da República">
+        <div class="header-text">
+            Ministério da Educação<br>
+            Secretaria de Educação Profissional e Tecnológica<br>
+            Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco<br>
+            Pró-Reitoria de Ensino
+        </div>
+    </div>
+
+    <div class="anexo-title">
+        <strong>ANEXO IX</strong><br><br>
+        <strong>TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO</strong><br>
+        <strong>ORIENTANDO/A</strong>
+    </div>
+
+    <p class="declaracao">
+        Eu, <span class="inline-val">{{ESTUDANTE_NOME}}</span>, matrícula nº <span class="inline-val">{{ESTUDANTE_MATRICULA}}</span>, orientando/a regularmente matriculado/a no componente curricular Trabalho de Conclusão de Curso (TCC), venho solicitar a substituição do/a docente orientador/a <span class="inline-val">{{ORIENTADOR_NOME}}</span> para elaboração do TCC do curso de <span class="inline-val">{{CURSO_NOME}}</span>.
+    </p>
+
+    <div class="justificativa-header">JUSTIFICATIVA</div>
+    <div class="justificativa-box">
+        {{MOTIVO_SUBSTITUICAO}}
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div class="signature-label">Orientando/a</div>
+    </div>
+
+    <p class="declaracao">
+        Eu, <span class="inline-val">{{ORIENTADOR_NOME}}</span>, docente orientador/a, estou ciente do afastamento da orientação para elaboração do Trabalho de Conclusão de Curso de <span class="inline-val">{{CURSO_NOME}}</span> por solicitação do/a orientando/a requerente.
+    </p>
+    <p class="declaracao" style="text-indent: 0;">
+        Por ser verdade, firmo esta declaração.
+    </p>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div class="signature-label">Docente orientador/a</div>
+    </div>
+
+    <div class="date-section">
+        <span class="inline-val">{{CAMPUS_CIDADE}}</span>, <span class="inline-val">{{DIA}}</span> de <span class="inline-val">{{MES}}</span> de <span class="inline-val">{{ANO}}</span>.
+    </div>
+
+    <div class="obs-footer">
+        <strong>Obs.: A Coordenação do curso receberá este Termo de Substituição somente após a assinatura de todas as pessoas acima identificadas..</strong>
+    </div>
+
+</body>
+</html>

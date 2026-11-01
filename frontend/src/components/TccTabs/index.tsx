@@ -3,21 +3,26 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-export default function TccTabs() {
+export default function TccTabs({ tccId }: { tccId?: string } = {}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const id = searchParams.get('id') || '';
+  const id = tccId ?? searchParams.get('id') ?? '';
+  const completed = pathname.startsWith('/completedTCCs');
 
   const tabs = [
-    { label: 'Assinaturas', slug: 'signatures' },
-    { label: 'Informações', slug: 'details' }
+    ...(!completed ? [{ label: 'Assinaturas', slug: 'signatures' }] : []),
+    { label: 'Informações', slug: 'details' },
+    { label: 'Arquivos', slug: 'files' }
   ];
 
   if (!id) return null;
 
   const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
 
-  const isActive = (slug: string) => pathname.endsWith(`/${slug}`);
+  const isActive = (slug: string) =>
+    completed && slug === 'details'
+      ? !pathname.endsWith('/files')
+      : pathname.endsWith(`/${slug}`);
 
   return (
     <div className="w-full border-b border-gray-200 overflow-x-auto mb-5">
@@ -25,13 +30,18 @@ export default function TccTabs() {
         {tabs.map((tab) => (
           <li key={tab.slug} className="flex-shrink-0">
             <Link
-              href={`${basePath}/${tab.slug}?id=${id}`}
+              href={
+                completed && tab.slug === 'details'
+                  ? `/completedTCCs/${id}`
+                  : `${basePath}/${tab.slug}?id=${id}`
+              }
+              aria-current={isActive(tab.slug) ? 'page' : undefined}
               className={`inline-block px-4 py-3 text-sm font-medium border-b-4
-                transition-all duration-200
+                transition-colors duration-150 duration-200
                 ${
                   isActive(tab.slug)
-                    ? 'border-[#1351B4] text-[#1351B4] font-semibold hover:bg-blue-50'
-                    : 'border-transparent hover:text-[#1351B4] hover:bg-blue-50'
+                    ? 'border-[#006633] text-[#006633] font-semibold'
+                    : 'border-transparent hover:text-[#006633]'
                 }`}
             >
               {tab.label}

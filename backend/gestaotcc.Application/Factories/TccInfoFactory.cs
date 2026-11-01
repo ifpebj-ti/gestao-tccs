@@ -42,13 +42,14 @@ public class TccInfoFactory
 
         // 3. Orientador
         var advisor = tcc.UserTccs
-            .FirstOrDefault(ut => ut.Profile.Role == RoleType.ADVISOR.ToString());
+            .FirstOrDefault(ut => ut.Profile.Role is "ADVISOR" or "COORDINATOR" or "SUPERVISOR");
 
         // 4. Membros da banca avaliadora (Temporários)
         var bankingMembersDto = tcc.BankingMembers?.Select(bm => new gestaotcc.Domain.Dtos.Tcc.BankingMemberDto(
             Name: bm.Name,
             Email: bm.Email,
-            Role: bm.Role
+            Role: bm.Role,
+            UserId: bm.UserId
         )).ToList() ?? new List<gestaotcc.Domain.Dtos.Tcc.BankingMemberDto>();
 
         // 4.1 Cálculo da média final e parecer se houver avaliações
@@ -82,7 +83,16 @@ public class TccInfoFactory
                 PresentationLocation: tcc.TccSchedule?.Location ?? string.Empty,
                 RejectionReason: tcc.RejectionReason,
                 FinalGrade: finalGrade,
-                FinalOpinion: finalOpinion
+                FinalOpinion: finalOpinion,
+                SemesterName: tcc.Semester?.Name,
+                PendingParticipantCount: tcc.ParticipantInvitations.Count(x => x.Status == "PENDING"),
+                Step: tcc.Step,
+                FinalSubmissionDeadline: tcc.FinalSubmissionDeadline,
+                FinalTccFile: tcc.FinalTccFile,
+                HardCoverReceivedAt: tcc.HardCoverReceivedAt,
+                ForwardedToLibraryAt: tcc.ForwardedToLibraryAt,
+                LibraryReceivedAt: tcc.LibraryReceivedAt,
+                LibraryCatalogCode: tcc.LibraryCatalogCode
             ),
             InfoStudent: students,
             InfoAdvisor: new InfoAdvisorDTO(

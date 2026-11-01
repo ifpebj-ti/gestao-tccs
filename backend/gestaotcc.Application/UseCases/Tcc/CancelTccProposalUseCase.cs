@@ -6,9 +6,13 @@ namespace gestaotcc.Application.UseCases.Tcc;
 
 public class CancelTccProposalUseCase(
     ITccGateway tccGateway,
-    IAppLoggerGateway<CancelTccProposalUseCase> logger)
+    IAppLoggerGateway<CancelTccProposalUseCase> logger,
+    IProposalGateway? proposals = null)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId, long studentUserId)
+    public Task<ResultPattern<string>> Execute(long tccId, long studentUserId) =>
+        proposals == null ? Cancel(tccId, studentUserId) : proposals.Atomic(() => Cancel(tccId, studentUserId));
+
+    private async Task<ResultPattern<string>> Cancel(long tccId, long studentUserId)
     {
         logger.LogInformation("Iniciando cancelamento de proposta de TCC {TccId} pelo estudante {StudentId}", tccId, studentUserId);
 
@@ -26,13 +30,15 @@ public class CancelTccProposalUseCase(
             return ResultPattern<string>.FailureResult("Você não tem permissão para cancelar esta proposta", 403);
         }
 
-        if (tcc.Status != StatusTccType.PENDING_APPROVAL.ToString() && tcc.Status != StatusTccType.REJECTED.ToString())
+        if (tcc.Status is not ("PENDING_APPROVAL" or "REJECTED" or "AWAITING_PARTICIPANTS"))
         {
             logger.LogWarning("TCC {TccId} com status {Status} não pode ser cancelado via fluxo de proposta.", tccId, tcc.Status);
             return ResultPattern<string>.FailureResult("Apenas propostas pendentes ou recusadas podem ser canceladas por este fluxo", 409);
         }
 
         tcc.Status = StatusTccType.CANCELED.ToString();
+        foreach (var invitation in tcc.ParticipantInvitations.Where(x => x.Status == "PENDING"))
+        { invitation.Status = "CANCELED"; invitation.RespondedAt = DateTime.UtcNow; }
 
         await tccGateway.Update(tcc);
         logger.LogInformation("Proposta de TCC {TccId} cancelada com sucesso.", tccId);

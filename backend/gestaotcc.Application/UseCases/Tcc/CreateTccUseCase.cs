@@ -5,9 +5,12 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
-public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway, IAppLoggerGateway<CreateTccUseCase> logger)
+public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, IEmailGateway emailGateway, IDocumentTypeGateway documentTypeGateway, ISemesterGateway semesterGateway, IAppLoggerGateway<CreateTccUseCase> logger, IProposalGateway? proposals = null)
 {
-    public async Task<ResultPattern<string>> Execute(CreateTccDTO data)
+    public Task<ResultPattern<string>> Execute(CreateTccDTO data) =>
+        proposals == null ? Create(data) : proposals.Atomic(() => Create(data));
+
+    private async Task<ResultPattern<string>> Create(CreateTccDTO data)
     {
         logger.LogInformation("Iniciando criação de TCC. Título: {TccTitle}, OrientadorId: {AdvisorId}, Alunos: {StudentCount}", data.Title, data.AdvisorId, data.Students.Count);
         var studentEmails = data.Students.Select(s => s.StudentEmail).ToList();
@@ -20,6 +23,12 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
             return ResultPattern<string>.FailureResult("Erro ao criar tcc", 404);
         }
         
+        foreach (var student in users)
+        {
+            var existing = await tccGateway.FindAllTccByFilter(new TccFilterDTO(student.Id, null), 0);
+            if (existing != null && existing.Any(ProposalParticipantsUseCase.Active))
+                return ResultPattern<string>.FailureResult("Um estudante já possui proposta ou TCC ativo.", 409);
+        }
         if (users.Count > 0 && users.Any(u => u.CampiCourse!.Id != advisor!.CampiCourse!.Id))
         {
             logger.LogWarning("Falha na criação do TCC: Orientador com Id {AdvisorId} e orientandos de campus diferentes.", data.AdvisorId);
@@ -47,11 +56,29 @@ public class CreateTccUseCase(IUserGateway userGateway, ITccGateway tccGateway, 
         usersNotInvite.Add(advisor);
         
         logger.LogInformation("Criando entidade TCC via factory...");
-        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes, advisor.CampiCourse!.CampiId);
+        var activeSemesters = await semesterGateway.FindActive();
+        var activeSemester = activeSemesters.FirstOrDefault();
+        if (activeSemester is null)
+        {
+            logger.LogWarning("Nenhum semestre letivo ativo encontrado. O TCC não pode ser criado sem um semestre ativo.");
+            return ResultPattern<string>.FailureResult("Nenhum semestre letivo ativo encontrado. Cadastre um semestre ativo antes de criar um TCC.", 422);
+        }
+
+        var tcc = TccFactory.CreateTcc(data, usersNotInvite, usersInviteEmails, documentTypes, advisor.CampiCourse!.CampiId, activeSemester.Id);
+
+        // Vincula a navegação de forma explícita para que o EF Core persista a FK com segurança
+        tcc.Semester = activeSemester;
+        logger.LogInformation("TCC vinculado ao semestre ativo: {SemesterName} (Id: {SemesterId})", activeSemester.Name, activeSemester.Id);
 
         logger.LogInformation("Salvando nova entidade TCC no banco de dados...");
         await tccGateway.Save(tcc);
-        logger.LogInformation("Entidade TCC salva com sucesso.");
+        logger.LogInformation("Entidade TCC salva com sucesso. TCC Id: {TccId}", tcc.Id);
+
+        // Garantia adicional: atualiza a FK diretamente no banco caso o rastreamento
+        // do EF Core não tenha persistido a relação com o semestre.
+        await tccGateway.UpdateSemesterId(tcc.Id, activeSemester.Id);
+        logger.LogInformation("SemesterId {SemesterId} confirmado para TCC Id {TccId}.", activeSemester.Id, tcc.Id);
+
         
         logger.LogInformation("Enviando e-mails de notificação para {UserCount} usuários existentes...", tcc.UserTccs.Count);
         foreach (var item in tcc.UserTccs)

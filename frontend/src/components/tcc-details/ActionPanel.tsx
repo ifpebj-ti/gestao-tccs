@@ -1,7 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { PageState } from '@/components/layout/PageState';
 
+import { Button } from '@/components/ui/button';
 
 interface CancellationDetails {
   reasonCancellation: string;
@@ -44,10 +45,11 @@ export function ActionPanel({
               </blockquote>
             </div>
           ) : (
-            <p className="text-sm italic mt-2">Carregando motivo...</p>
+            <PageState loading>Carregando motivo...</PageState>
           )}
           <div className="flex gap-2 mt-4">
             <Button
+              variant="destructive"
               size="default"
               onClick={onApprove}
               className="w-full md:w-fit"

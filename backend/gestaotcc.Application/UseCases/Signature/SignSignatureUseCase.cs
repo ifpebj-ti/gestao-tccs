@@ -15,7 +15,7 @@ using Hangfire;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IMinioGateway minioGateway, IEmailGateway emailGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
+public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IStorageGateway storageGateway, IEmailGateway emailGateway, IUserGateway userGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
 {
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
@@ -24,6 +24,7 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         { StepTccType.DEVELOPMENT_AND_MONITORING, 3 },
         { StepTccType.PREPARATION_FOR_PRESENTATION, 4 },
         { StepTccType.PRESENTATION_AND_EVALUATION, 5 },
+        { StepTccType.FINALIZATION_AND_PUBLICATION, 6 },
     };
 
     private readonly List<string> _signatureQueueByProfile = new()
@@ -129,6 +130,59 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         logger.LogInformation("Validações bem-sucedidas. Adicionando assinatura do UserId {UserId} ao DocumentId {DocumentId}.", user.Id, document.Id);
         document.Signatures.Add(SignatureFactory.CreateSignature(user));
 
+        var advisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.DocumentId == document.Id);
+        if (advisorChange != null)
+        {
+            var isAnexoV = document.DocumentType.Name.Contains("ANEXO V -") || advisorChange.RequesterRole == "ADVISOR";
+
+            if (isAnexoV && user.Id == advisorChange.CurrentAdvisorId)
+            {
+                var students = tcc.UserTccs
+                    .Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString())
+                    .Select(ut => ut.User)
+                    .ToList();
+
+                foreach (var studentUser in students)
+                {
+                    try
+                    {
+                        var details = new List<SendPendingSignatureDetailsDTO> { new SendPendingSignatureDetailsDTO(document.DocumentType.Name, null) };
+                        var emailDto = EmailFactory.CreateSendEmailDTO(new SendPendingSignatureDTO(studentUser.Email, studentUser.Name, details, tcc.Title ?? string.Empty));
+                        await emailGateway.Send(emailDto);
+                        logger.LogInformation("Notificação de assinatura pendente do Anexo V enviada para o estudante {Email}", studentUser.Email);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Erro ao enviar e-mail de notificação de assinatura de afastamento para o estudante {Email}", studentUser.Email);
+                    }
+                }
+            }
+
+            var requiredUserIds = new HashSet<long> { advisorChange.CurrentAdvisorId };
+            foreach (var st in tcc.UserTccs.Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString()))
+            {
+                requiredUserIds.Add(st.UserId);
+            }
+            var signedUserIds = document.Signatures.Select(s => s.UserId).ToHashSet();
+            var allRequiredPartiesSigned = requiredUserIds.IsSubsetOf(signedUserIds);
+            var reachedCoordination = advisorChange.Status == "PENDING_SIGNATURES" && allRequiredPartiesSigned;
+            if (reachedCoordination)
+            {
+                advisorChange.Status = "PENDING_COORDINATION";
+                logger.LogInformation("Todas as partes assinaram o termo de alteração de orientador. Status atualizado para PENDING_COORDINATION para TccId {TccId}.", tcc.Id);
+                await tccGateway.UpdateAdvisorChange(advisorChange);
+            }
+
+            await tccGateway.Update(tcc);
+            await storageGateway.Send(document.FileName, data.File, data.FileContentType);
+            if (reachedCoordination)
+            {
+                await NotifyCoordination(tcc, document, advisorChange);
+            }
+            logger.LogInformation("Assinatura do documento de alteração de orientador concluída com sucesso para UserId {UserId}, DocumentId {DocumentId}.", user.Id, document.Id);
+            return ResultPattern<string>.SuccessResult();
+        }
+
         if (!Enum.TryParse<StepTccType>(tcc.Step, out var tccStep))
         {
             logger.LogError("Falha na assinatura para TccId {TccId}: A etapa atual '{TccStep}' é inválida.", tcc.Id, tcc.Step);
@@ -153,8 +207,49 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             var oldStep = tcc.Step;
             if (tccStep == StepTccType.PRESENTATION_AND_EVALUATION)
             {
-                tcc.Status = StatusTccType.COMPLETED.ToString();
-                logger.LogInformation("Todas as assinaturas da etapa final foram concluídas. TCC marcado como COMPLETED.");
+                var avgGrade = tcc.BankingMembers.Any(m => m.Grade.HasValue)
+                    ? tcc.BankingMembers.Where(m => m.Grade.HasValue).Average(m => m.Grade!.Value)
+                    : 0;
+
+                var isApproved = avgGrade >= 7.00m;
+
+                if (isApproved)
+                {
+                    tcc.Step = StepTccType.FINALIZATION_AND_PUBLICATION.ToString();
+                    tcc.FinalSubmissionDeadline = DateTime.UtcNow.AddDays(30);
+                    logger.LogInformation("Todas as assinaturas da apresentação foram concluídas com aprovação (Média: {Grade}). Avançando para FINALIZATION_AND_PUBLICATION com prazo de 30 dias: {Deadline}.", avgGrade, tcc.FinalSubmissionDeadline);
+
+                    var studentUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == RoleType.STUDENT.ToString())?.User;
+                    if (studentUser != null)
+                    {
+                        var templateVars = new Dictionary<string, object>
+                        {
+                            { "studentName", studentUser.Name },
+                            { "tccTitle", tcc.Title ?? string.Empty },
+                            { "deadline", tcc.FinalSubmissionDeadline.Value.ToString("dd/MM/yyyy") }
+                        };
+                        var emailDto = new SendEmailDTO(
+                            "",
+                            "TCC Aprovado - Prazo para Entrega da Versão Final",
+                            studentUser.Email,
+                            "FINAL-SUBMISSION-NOTICE",
+                            templateVars);
+
+                        try
+                        {
+                            await emailGateway.Send(emailDto);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Erro ao enviar e-mail de aviso da etapa final para {Email}", studentUser.Email);
+                        }
+                    }
+                }
+                else
+                {
+                    tcc.Status = StatusTccType.REJECTED.ToString();
+                    logger.LogInformation("Todas as assinaturas da apresentação foram concluídas com reprovação (Média: {Grade}). TCC marcado como REJECTED.", avgGrade);
+                }
             }
             else
             {
@@ -189,8 +284,8 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         logger.LogInformation("Atualizando TCC no banco de dados. TccId: {TccId}", tcc.Id);
         await tccGateway.Update(tcc);
         
-        logger.LogInformation("Enviando arquivo assinado para o Minio. FileName: {FileName}", document.FileName);
-        await minioGateway.Send(document.FileName, data.File, data.FileContentType);
+        logger.LogInformation("Enviando arquivo assinado para o Storage. FileName: {FileName}", document.FileName);
+        await storageGateway.Send(document.FileName, data.File, data.FileContentType);
         
         // Notificar o próximo usuário da fila se for ONLY_DOCS (fila única)
         var docType = document.DocumentType;
@@ -241,6 +336,79 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         return ResultPattern<string>.SuccessResult();
     }
 
+    private async Task NotifyCoordination(TccEntity tcc, DocumentEntity document, gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange)
+    {
+        var courseId = tcc.UserTccs
+            .Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString())
+            .Select(ut => ut.User.CampiCourseId)
+            .FirstOrDefault(id => id.HasValue);
+
+        if (!courseId.HasValue)
+        {
+            logger.LogWarning("Sem curso associado aos estudantes do TCC {TccId}; notificação da solicitação assinada não enviada.", tcc.Id);
+            return;
+        }
+
+        var recipients = new List<UserEntity>();
+        try
+        {
+            foreach (var role in new[] { RoleType.COORDINATOR, RoleType.SUPERVISOR })
+            {
+                var users = await userGateway.FindAllByFilter(
+                    new gestaotcc.Domain.Dtos.User.UserFilterDTO(null, null, null, role.ToString()),
+                    courseId.Value);
+                recipients.AddRange(users.Where(u => u.Status == "ACTIVE" && !string.IsNullOrWhiteSpace(u.Email)));
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao localizar coordenação/supervisão do curso {CourseId} para o TCC {TccId}.", courseId.Value, tcc.Id);
+            return;
+        }
+
+        var isAdvisorDeparture = advisorChange.RequesterRole == RoleType.ADVISOR.ToString();
+        var requesterName = isAdvisorDeparture
+            ? advisorChange.CurrentAdvisor?.Name ?? "Orientador(a)"
+            : tcc.UserTccs.FirstOrDefault(ut => ut.UserId == advisorChange.RequesterUserId)?.User.Name ?? "Estudante";
+        var requestType = isAdvisorDeparture ? "afastamento de orientação" : "substituição de orientação";
+
+        foreach (var recipient in recipients.DistinctBy(u => u.Email.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            var email = new SendEmailDTO(
+                "",
+                $"Solicitação assinada aguardando coordenação - {tcc.Title}",
+                recipient.Email,
+                "ADVISOR-CHANGE-COORDINATION",
+                new Dictionary<string, object>
+                {
+                    ["recipientName"] = recipient.Name,
+                    ["tccTitle"] = tcc.Title ?? string.Empty,
+                    ["documentName"] = document.DocumentType.Name,
+                    ["requestType"] = requestType,
+                    ["requesterName"] = requesterName
+                });
+
+            try
+            {
+                var result = await emailGateway.Send(email);
+                if (!result.IsSuccess)
+                {
+                    logger.LogError("Falha ao enviar aviso de solicitação assinada para {Email}, TCC {TccId}: {ErrorMessage}",
+                        recipient.Email, tcc.Id, result.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro ao enviar aviso de solicitação assinada para {Email}, TCC {TccId}.", recipient.Email, tcc.Id);
+            }
+        }
+
+        if (recipients.Count == 0)
+        {
+            logger.LogWarning("Nenhum Coordenador ou Supervisor ativo com e-mail foi encontrado para o curso {CourseId}, TCC {TccId}.", courseId.Value, tcc.Id);
+        }
+    }
+
     private static bool IsValidFile(SignSignatureDTO data)
     {
         if (data.FileSize > 5 || data.FileContentType != "application/pdf")
@@ -288,7 +456,18 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
 
     private static UserEntity GetUserInTcc(TccEntity tcc, long userId)
     {
-        return tcc.UserTccs.First(ut => ut.UserId == userId).User;
+        var utUser = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == userId)?.User;
+        if (utUser != null) return utUser;
+
+        var suggestedAdvisor = tcc.AdvisorChanges
+            .FirstOrDefault(ac => ac.SuggestedAdvisorId == userId)?.SuggestedAdvisor;
+        if (suggestedAdvisor != null) return suggestedAdvisor;
+
+        var currentAdvisor = tcc.AdvisorChanges
+            .FirstOrDefault(ac => ac.CurrentAdvisorId == userId)?.CurrentAdvisor;
+        if (currentAdvisor != null) return currentAdvisor;
+
+        return tcc.UserTccs.First().User;
     }
 
     private static bool UserAlreadySigned(TccEntity tcc, long documentId, long userId)
@@ -371,6 +550,22 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
     
     private bool UserCanSignDocument(UserEntity user, TccEntity tcc, DocumentEntity document)
     {
+        var advisorChange = tcc.AdvisorChanges?.FirstOrDefault(ac => ac.DocumentId == document.Id);
+        if (advisorChange != null)
+        {
+            bool isStudent = tcc.UserTccs.Any(ut => ut.UserId == user.Id && ut.Profile.Role == RoleType.STUDENT.ToString());
+            bool isCurrentAdvisor = advisorChange.CurrentAdvisorId == user.Id;
+            var isAnexoV = document.DocumentType.Name.Contains("ANEXO V -") || advisorChange.RequesterRole == "ADVISOR";
+            if (isAnexoV && isStudent)
+            {
+                var advisorSigned = document.Signatures.Any(s => s.UserId == advisorChange.CurrentAdvisorId);
+                if (!advisorSigned)
+                    return false;
+            }
+
+            return isStudent || isCurrentAdvisor;
+        }
+
         var userTcc = tcc.UserTccs.FirstOrDefault(ut => ut.User.Id == user.Id);
         if (userTcc == null) return false;
 

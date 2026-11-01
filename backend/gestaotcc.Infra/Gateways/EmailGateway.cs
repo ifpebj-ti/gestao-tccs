@@ -120,7 +120,11 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
     private string GetFileTemplate(string typeTemplate)
     {
         var directory = Directory.GetCurrentDirectory();
-        var filePath = typeTemplate == "CREATE-USER" 
+        var filePath = typeTemplate == "PROPOSAL-DECLINED"
+            ? Path.Combine(directory, "Templates", "proposal-declined-template.html")
+            : typeTemplate == "PROPOSAL-PARTICIPANT"
+            ? Path.Combine(directory, "Templates", "proposal-participant-template.html")
+            : typeTemplate == "CREATE-USER"
             ? Path.Combine(directory, "Templates", "create-user-template.html")
             : typeTemplate == "AUTO-REGISTER-USER" ? Path.Combine(directory, "Templates", "auto-register-user-template.html")
             : typeTemplate == "RESEND-INVITE-TCC" ? Path.Combine(directory, "Templates", "resend-invite-tcc-template.html")
@@ -133,6 +137,12 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "BANKING-EVALUATION" ? Path.Combine(directory, "Templates", "banking-evaluation-template.html")
             : typeTemplate == "UPDATE-PASSWORD" ? Path.Combine(directory, "Templates", "update-password-template.html")
             : typeTemplate == "SCHEDULE-ALLOWED" ? Path.Combine(directory, "Templates", "schedule-allowed-template.html")
+            : typeTemplate == "FINAL-SUBMISSION-NOTICE" ? Path.Combine(directory, "Templates", "final-submission-notice-template.html")
+            : typeTemplate == "FORWARD-LIBRARY" ? Path.Combine(directory, "Templates", "forward-library-template.html")
+            : typeTemplate == "TCC-COMPLETED" ? Path.Combine(directory, "Templates", "tcc-completed-template.html")
+            : typeTemplate == "ADVISOR-CHANGE-COORDINATION" ? Path.Combine(directory, "Templates", "advisor-change-coordination-template.html")
+            : typeTemplate == "ADVISOR-CHANGE-APPROVED" ? Path.Combine(directory, "Templates", "advisor-change-approved-template.html")
+            : typeTemplate == "ADVISOR-CHANGE-REJECTED" ? Path.Combine(directory, "Templates", "advisor-change-rejected-template.html")
             : throw new ArgumentException($"Template type {typeTemplate} not found.");
         return File.ReadAllText(filePath);
     }

@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import { isValidProfilePhone } from '@/lib/phone';
 
 export const editUserSchema = z
   .object({
     id: z.number(),
-    name: z.string().min(1, { message: 'Nome é obrigatório' }),
+    name: z.string().trim().min(1, { message: 'Nome é obrigatório' }),
     email: z.string().email({ message: 'Email inválido' }),
 
-    phone: z.string().min(1, { message: 'Telefone é obrigatório.' }).min(10, {
+    phone: z.string().refine(isValidProfilePhone, {
       message:
         'Telefone inválido, deve conter DDD e número (mínimo 10 dígitos).'
     }),

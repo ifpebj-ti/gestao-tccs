@@ -37,7 +37,7 @@ public class GetInfoHomeUseCaseTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(404, result.ErrorDetails?.Status);
-        Assert.Contains("não encontrado", result.Message);
+        Assert.Contains("Usuário não encontrado ou não possui perfil", result.Message);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class GetInfoHomeUseCaseTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(404, result.ErrorDetails?.Status);
-        Assert.Contains("não possui perfil", result.Message);
+        Assert.Contains("Usuário não encontrado ou não possui perfil", result.Message);
     }
 
     [Fact]

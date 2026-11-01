@@ -4,7 +4,7 @@ using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Signature;
 
-public class AllDownloadDocumentsUseCase(ITccGateway tccGateway, IMinioGateway minioGateway, IAppLoggerGateway<AllDownloadDocumentsUseCase> logger)
+public class AllDownloadDocumentsUseCase(ITccGateway tccGateway, IStorageGateway storageGateway, IAppLoggerGateway<AllDownloadDocumentsUseCase> logger)
 {
     public async Task<ResultPattern<AllDownloadDocumentsDTO>> Execute(long tccId)
     {
@@ -21,14 +21,14 @@ public class AllDownloadDocumentsUseCase(ITccGateway tccGateway, IMinioGateway m
         
         var currentYear = DateTime.Now.Year;
         var folder = $"{currentYear}/{tcc.Title}";
-        logger.LogInformation("Caminho da pasta no Minio a ser baixada: {MinioFolderPath}", folder);
+        logger.LogInformation("Caminho da pasta no Storage a ser baixada: {StorageFolderPath}", folder);
         
-        var zipBytes = await minioGateway.DownloadFolderAsZip(folder);
-        logger.LogInformation("Gateway Minio retornou um arquivo zip com {ZipSizeInBytes} bytes.", zipBytes.Length);
+        var zipBytes = await storageGateway.DownloadFolderAsZip(folder);
+        logger.LogInformation("Gateway Storage retornou um arquivo zip com {ZipSizeInBytes} bytes.", zipBytes.Length);
 
         if (zipBytes.Length == 0)
         {
-            logger.LogWarning("Download falhou ou a pasta {MinioFolderPath} está vazia. O arquivo zip retornado tem 0 bytes.", folder);
+            logger.LogWarning("Download falhou ou a pasta {StorageFolderPath} está vazia. O arquivo zip retornado tem 0 bytes.", folder);
             return ResultPattern<AllDownloadDocumentsDTO>.FailureResult("Erro ao carregar arquivos", 404);
         }
         

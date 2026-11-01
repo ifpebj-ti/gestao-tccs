@@ -30,10 +30,11 @@ builder.Services.AddCorsExtension(builder.Configuration);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
+builder.Services.AddOwnPasswordRateLimit();
 builder.Host.AddSerilogExtension(builder.Configuration);
 builder.Services.AddHangfireExtension(builder.Configuration);
 builder.Services.AddOpenTelemetryExtension(builder.Environment, builder.Configuration);
-builder.Services.AddMinioExtension(builder.Configuration, builder.Environment);
+builder.Services.AddStorageExtension(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
@@ -66,6 +67,7 @@ app.MapPrometheusScrapingEndpoint();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

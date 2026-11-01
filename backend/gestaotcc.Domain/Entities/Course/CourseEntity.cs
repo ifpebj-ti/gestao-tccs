@@ -18,4 +18,10 @@ public class CourseEntity
         Name = name;
         Level = level;
     }
+
+    public void Update(string name, string level)
+    {
+        Name = name;
+        Level = level;
+    }
 }

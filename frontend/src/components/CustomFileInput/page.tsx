@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Button } from '../ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 import { faFilePdf, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -10,13 +10,15 @@ interface CustomFileInputProps {
   onFileSelect: (file: File | null) => void;
   disabled?: boolean;
   accept?: string;
+  buttonVariant?: ButtonProps['variant'];
 }
 
 export function CustomFileInput({
   selectedFile,
   onFileSelect,
   disabled = false,
-  accept = '.pdf'
+  accept = '.pdf',
+  buttonVariant = 'brand'
 }: CustomFileInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +51,7 @@ export function CustomFileInput({
 
       <Button
         type="button"
-        variant="outline"
+        variant={buttonVariant}
         onClick={handleButtonClick}
         disabled={disabled}
         className="w-full"
@@ -72,10 +74,12 @@ export function CustomFileInput({
             </span>
           </div>
           <Button
-            variant="ghost"
+            type="button"
+            variant="destructive"
+            aria-label="Remover arquivo selecionado"
             size="sm"
             onClick={handleRemoveFile}
-            className="h-auto p-1 text-gray-500 hover:text-red-600"
+            className="h-8 w-8 shrink-0 p-0"
           >
             <FontAwesomeIcon icon={faTimesCircle} />
           </Button>

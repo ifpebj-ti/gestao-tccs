@@ -1,85 +1,133 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bem-vindo à Plataforma de Gestão de TCCs</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .content {
-            padding: 20px;
-            line-height: 1.6;
-        }
-
-            .content h2 {
-                color: #333;
-            }
-
-            .content p {
-                color: #666;
-            }
-
-        .button {
-            text-align: center;
-            margin: 30px 0;
-        }
-
-            .button a {
-                background-color: #0056b3; /* Azul */
-                color: white;
-                padding: 15px 25px;
-                text-decoration: none;
-                border-radius: 5px;
-                font-size: 16px;
-            }
-
-                .button a:hover {
-                    background-color: #003d80; /* Azul mais escuro */
-                }
-
-        .footer {
-            text-align: center;
-            color: #888;
-            padding: 20px 0;
-        }
-
-            .footer p {
-                margin: 0;
-                font-size: 14px;
-            }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bem-vindo ao Gradus Flow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8FAF9;
+      color: #1F2937;
+      padding: 32px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      padding: 24px 32px 20px;
+      border-bottom: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #002B18;
+    }
+    .brand-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #002B18;
+      letter-spacing: -0.02em;
+    }
+    .brand-title span {
+      color: #15803D;
+    }
+    .content {
+      padding: 32px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #002B18;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #4B5563;
+      margin-bottom: 16px;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 24px 0 20px;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #002B18;
+      color: #FFFFFF !important;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 26px;
+      border-radius: 6px;
+      letter-spacing: 0.01em;
+    }
+    .instruction {
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.5;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .divider {
+      height: 1px;
+      background-color: #F1F5F9;
+      margin: 24px 0 16px;
+    }
+    .footer {
+      padding: 0 32px 24px;
+      text-align: center;
+    }
+    .footer p {
+      font-size: 11px;
+      color: #9CA3AF;
+      line-height: 1.5;
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="content">
-            <h2>Bem-vindo à Plataforma, {{username}}!</h2>
-            <p>Você foi cadastrado na plataforma de Gestão de TCCs.</p>
-            <p>Para acessar pela primeira vez, é necessário definir sua senha. Clique no botão abaixo e utilize a opção <strong>"Esqueceu a senha?"</strong>.</p>
-            <div class="button">
-                <a href="{{urlfront}}" target="_blank">Acessar Plataforma</a><!--Colocar o link do site quando finalizar-->
-            </div>
-            <p>Após definir sua senha, você poderá acompanhar os projetos e usar todas os recursos que nossa plataforma tem a oferecer.</p>
-        </div>
-        <div class="footer">
-            <p>Se você tiver qualquer dúvida, entre em contato com a coordenação.</p>
-            <p>Obrigado por usar nossos serviços!</p>
-        </div>
+  <div class="container">
+    <div class="header">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="#002B18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+      </svg>
+      <div class="brand-title">Gradus<span>Flow</span></div>
     </div>
+    
+    <div class="content">
+      <h1>Bem-vindo(a), {{username}}!</h1>
+      <p>Você foi cadastrado na plataforma <strong>Gradus Flow</strong> de Gestão de TCCs do IFPE.</p>
+      <p>Para o primeiro acesso, utilize a opção <em>"Esqueceu a senha?"</em> na tela de login para definir sua senha pessoal com segurança.</p>
+
+      <div class="btn-container">
+        <a href="{{urlfront}}" class="btn">Acessar o Gradus Flow &rarr;</a>
+      </div>
+
+      <div class="divider"></div>
+      
+      <div class="footer">
+        <p>Gradus Flow &middot; Instituto Federal de Pernambuco<br>
+        Equipe de Tecnologia e Coordenação de Cursos</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

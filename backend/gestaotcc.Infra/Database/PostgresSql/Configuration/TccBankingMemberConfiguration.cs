@@ -1,4 +1,5 @@
 using gestaotcc.Domain.Entities.TccBankingMember;
+using gestaotcc.Domain.Entities.User;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -46,5 +47,10 @@ public class TccBankingMemberConfiguration : IEntityTypeConfiguration<TccBanking
             .WithMany(t => t.BankingMembers)
             .HasForeignKey(t => t.TccId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne<UserEntity>()
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

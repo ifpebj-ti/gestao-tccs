@@ -4,8 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import notAllowedImage from '../../../public/403-art.svg';
-import Image from 'next/image';
+import { AccessPage } from '@/components/layout/AccessPage';
 
 export default function Unauthorized() {
   const { push } = useRouter();
@@ -19,12 +18,8 @@ export default function Unauthorized() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen text-center p-4 gap-4">
-      <Image alt="Not Found" src={notAllowedImage} className="h-1/2 mb-6" />
-      <p className="text-xl mt-4 text-gray-700">
-        Você não tem permissão para acessar essa página.
-      </p>
+    <AccessPage code="403" title="Acesso restrito" description="Você não tem permissão para acessar essa página. Volte ao início para acessar as ferramentas disponíveis para seu perfil.">
       <Button onClick={handleRedirect}>Voltar</Button>
-    </div>
+    </AccessPage>
   );
 }

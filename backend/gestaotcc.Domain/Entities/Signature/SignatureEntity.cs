@@ -19,5 +19,6 @@ public class SignatureEntity
         this.SignatureDate = signatureDate;
         this.Document = document;
         this.User = user;
+        this.UserId = user.Id;
     }
 }

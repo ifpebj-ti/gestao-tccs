@@ -1,9 +1,11 @@
 using System.Collections;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.TccCancellation;
+using gestaotcc.Domain.Entities.TccAdvisorChange;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.TccSchedule;
 using gestaotcc.Domain.Entities.UserTcc;
+using gestaotcc.Domain.Entities.Semester;
 
 namespace gestaotcc.Domain.Entities.Tcc;
 
@@ -17,12 +19,27 @@ public class TccEntity
     public string? TccFile { get; set; }
     public DateTime CreationDate { get; set; }
     public ICollection<UserTccEntity> UserTccs { get; set; } = new List<UserTccEntity>();
+    public ICollection<ProposalParticipantEntity> ParticipantInvitations { get; set; } = new List<ProposalParticipantEntity>();
     public ICollection<TccInviteEntity> TccInvites { get; set; } = new List<TccInviteEntity>();
     public ICollection<DocumentEntity> Documents { get; set; } = new List<DocumentEntity>();
     public TccCancellationEntity? TccCancellation { get; set; } = null;
+    public ICollection<TccAdvisorChangeEntity> AdvisorChanges { get; set; } = new List<TccAdvisorChangeEntity>();
     public TccScheduleEntity? TccSchedule { get; set; } = null;
     public string? RejectionReason { get; set; } = null;
     public ICollection<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> BankingMembers { get; set; } = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>();
+    
+    public SemesterEntity? Semester { get; set; } = null;
+    public long? SemesterId { get; set; }
+
+    public DateTime? FinalSubmissionDeadline { get; set; }
+    public string? FinalTccFile { get; set; }
+    public DateTime? HardCoverReceivedAt { get; set; }
+    public long? HardCoverReceivedByUserId { get; set; }
+    public DateTime? ForwardedToLibraryAt { get; set; }
+    public DateTime? LibraryReceivedAt { get; set; }
+    public long? LibraryReceivedByUserId { get; set; }
+    public string? LibraryCatalogCode { get; set; }
+
     public TccEntity() { }
 
     public TccEntity(

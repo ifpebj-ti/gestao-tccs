@@ -5,6 +5,10 @@ FROM node:24-alpine AS builder
 ARG NEXT_PUBLIC_APP_VERSION
 ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
 
+# URL da API — precisa estar disponível em build time para o Next.js embutir no bundle
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Define diretório de trabalho
 WORKDIR /app
 

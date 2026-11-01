@@ -1,134 +1,273 @@
 'use client';
 
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
-import Image from 'next/image';
-import LoginImage from '../../public/login image.svg';
-import IFPELogo from '../../public/IFPE Logo.png';
-import LogoImage from '../../public/flat-color-icons_graduation-cap.svg';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Eye, EyeOff } from 'lucide-react';
 import { useLogin } from '@/app/hooks/useLogin';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { AuthEditorialPanel } from '@/components/auth/AuthEditorialPanel';
 
-export default function Login() {
-  const { form, submitForm } = useLogin();
+export default function LoginPage() {
+  const { form, submitForm, isSubmitting } = useLogin();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = form;
-
-  const handleRedirectToFirstAccess = () => {
-    window.location.href = '/firstAccess';
-  };
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen lg:max-h-screen py-10 lg:py-40 px-6 lg:px-10">
-      {/* image */}
-      <Image
-        src={LoginImage}
-        alt="Login Image"
-        className="w-full md:w-2/3 priority"
+    <AuthLayout>
+      {/* ── LEFT: Editorial Panel Reutilizável ── */}
+      <AuthEditorialPanel
+        title="Potencialize sua jornada acadêmica com clareza."
+        description="Acompanhe cada etapa do seu trabalho, desde a proposta inicial até a defesa final em um fluxo contínuo e transparente."
+        stat1Value="100%"
+        stat1Label="Digital & Sem papel"
+        stat2Value="Fluxo"
+        stat2Label="Integrado ao Campus"
       />
 
-      {/* content */}
-      <div className="w-full lg:w-1/3 flex flex-col justify-between gap-10">
-        <div className="flex flex-col w-full gap-6">
-          <div className="flex items-center justify-center gap-4">
-            <Image
-              src={LogoImage}
-              alt="Logo Image"
-              className="md:h-14 h-12 w-min"
+      {/* ── RIGHT: Seamless Flat Form (NO CARD) ── */}
+      <div style={{ paddingLeft: '1rem' }}>
+        <h2
+          style={{
+            fontSize: '1.9rem',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            color: '#002B18',
+            margin: 0,
+            marginBottom: '2rem'
+          }}
+        >
+          Faça login para continuar
+        </h2>
+
+        <form onSubmit={handleSubmit(submitForm)} noValidate style={{ width: '100%' }}>
+          {/* E-mail para Docente e Discente */}
+          <div style={{ marginBottom: '1.75rem' }}>
+            <label
+              htmlFor="login-email"
+              style={{
+                display: 'block',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#374151',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                marginBottom: '0.5rem'
+              }}
+            >
+              E-mail institucional (docente ou discente)
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="seu.email@ifpe.edu.br ou @discente.ifpe.edu.br"
+              {...register('email')}
+              autoComplete="email"
+              style={{
+                display: 'block',
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                borderBottom: `2px solid ${errors.email ? '#EF4444' : '#002B18'}`,
+                padding: '0.65rem 0',
+                fontSize: '0.95rem',
+                color: '#111827',
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+                boxSizing: 'border-box',
+                fontFamily: 'inherit'
+              }}
             />
-            <h1 className="text-3xl lg:text-4xl font-medium">Gradus Flow</h1>
+            {errors.email && (
+              <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                {errors.email.message}
+              </p>
+            )}
           </div>
-          {/* form */}
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={handleSubmit(submitForm)}
-          >
-            <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="email">
-                Email
-              </Label>
-              <Input
-                placeholder="Digite seu email"
-                icon={faEnvelope}
-                errorText={errors.email?.message?.toString()}
-                {...register('email')}
-              />
-            </div>
-            <div className="grid items-center gap-1.5">
-              <Label className="font-semibold" htmlFor="password">
+
+          {/* Senha */}
+          <div style={{ marginBottom: '2.5rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.5rem'
+              }}
+            >
+              <label
+                htmlFor="login-password"
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#374151',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase'
+                }}
+              >
                 Senha
-              </Label>
-              <Input
-                placeholder="Digite sua senha"
-                icon={faLock}
-                isPassword={true}
-                errorText={errors.password?.message?.toString()}
-                {...register('password')}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="terms" />
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-regular leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Manter-me conectado
-                </label>
-              </div>
+              </label>
               <Link
                 href="/forgotPassword"
-                className="text-[#1351B4] text-xs font-semibold underline"
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#6B7280',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  transition: 'color 0.15s'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#002B18')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#6B7280')}
               >
                 Esqueceu a senha?
               </Link>
             </div>
-            <Button type="submit">
-              {isSubmitting ? 'Carregando...' : 'Entrar'}
-            </Button>
-          </form>
-          <div className="flex flex-col gap-2">
-            <Button
-              type="button"
-              onClick={handleRedirectToFirstAccess}
-              variant={'outline'}
-              className="w-full text-blue-700 border-blue-600 hover:bg-blue-50"
-            >
-              Primeiro acesso (Criar conta de estudante)
-            </Button>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••••••"
+                {...register('password')}
+                autoComplete="current-password"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: `2px solid ${errors.password ? '#EF4444' : '#002B18'}`,
+                  padding: '0.65rem 2.25rem 0.65rem 0',
+                  fontSize: '1rem',
+                  color: '#111827',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit'
+                }}
+              />
+              <button
+                type="button"
+                id="toggle-password-visibility"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                onClick={() => setShowPassword(p => !p)}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#6B7280',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                {errors.password.message}
+              </p>
+            )}
           </div>
-        </div>
-        {/* footer desktop */}
-        <div className="lg:flex hidden items-center justify-between w-full">
-          <Image
-            src={IFPELogo}
-            alt="Logo IFPE"
-            className="w-32 lg:w-40 h-auto"
-          />
-          <Link
-            href="/"
-            className="text-[#1351B4] text-xs font-semibold underline"
+
+          {/* Botão de Entrar */}
+          <button
+            id="login-submit"
+            type="submit"
+            disabled={isSubmitting}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              width: '100%',
+              padding: '0.95rem 1.5rem',
+              background: isSubmitting ? '#A3E635' : '#C8FF47',
+              color: '#002B18',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              border: 'none',
+              borderRadius: '9999px',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              letterSpacing: '0.02em',
+              boxShadow: '0 4px 14px rgba(200, 255, 71, 0.35)',
+              transition: 'all 0.15s ease',
+              fontFamily: 'inherit'
+            }}
+            onMouseEnter={e => {
+              if (!isSubmitting) {
+                e.currentTarget.style.background = '#002B18';
+                e.currentTarget.style.color = '#C8FF47';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                const arrow = e.currentTarget.querySelector('.btn-arrow') as HTMLElement;
+                if (arrow) {
+                  arrow.style.background = '#C8FF47';
+                  arrow.style.color = '#002B18';
+                }
+              }
+            }}
+            onMouseLeave={e => {
+              if (!isSubmitting) {
+                e.currentTarget.style.background = '#C8FF47';
+                e.currentTarget.style.color = '#002B18';
+                e.currentTarget.style.transform = 'translateY(0)';
+                const arrow = e.currentTarget.querySelector('.btn-arrow') as HTMLElement;
+                if (arrow) {
+                  arrow.style.background = '#002B18';
+                  arrow.style.color = '#C8FF47';
+                }
+              }
+            }}
           >
-            Precisa de ajuda?
-          </Link>
+            <span>{isSubmitting ? 'Autenticando...' : 'Acessar Plataforma'}</span>
+            <span
+              className="btn-arrow"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '26px',
+                height: '26px',
+                borderRadius: '50%',
+                background: '#002B18',
+                color: '#C8FF47',
+                fontSize: '0.85rem',
+                fontWeight: 900,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              →
+            </span>
+          </button>
+        </form>
+
+        {/* Primeiro Acesso com sublinhado limpo e profissional */}
+        <div style={{ marginTop: '2.25rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.85rem', color: '#6B7280', margin: 0 }}>
+            Primeiro acesso ao sistema?{' '}
+            <Link
+              href="/firstAccess"
+              style={{
+                color: '#002B18',
+                fontWeight: 700,
+                textDecoration: 'underline',
+                textUnderlineOffset: '3px',
+                transition: 'color 0.15s ease'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#006633')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#002B18')}
+            >
+              Configure sua conta aqui
+            </Link>
+          </p>
         </div>
       </div>
-      {/* footer mobile */}
-      <div className="flex lg:hidden items-center justify-between w-full">
-        <Image src={IFPELogo} alt="Logo IFPE" className="w-32 lg:w-40 h-auto" />
-        <Link
-          href="/"
-          className="text-[#1351B4] text-xs font-semibold underline"
-        >
-          Precisa de ajuda?
-        </Link>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }

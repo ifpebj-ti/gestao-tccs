@@ -14,6 +14,7 @@ public class TccBankingMemberEntity
     public string? EvaluationComments { get; set; }
     public string? EvaluationDetails { get; set; }
     public long TccId { get; set; }
+    public long? UserId { get; set; }
     public TccEntity Tcc { get; set; } = null!;
 
     public TccBankingMemberEntity() { }

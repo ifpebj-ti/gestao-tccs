@@ -50,6 +50,7 @@ export function useNewUserForm() {
   const {
     handleSubmit,
     register,
+    control,
     formState: { errors, isSubmitting },
     reset,
     watch,
@@ -148,6 +149,7 @@ export function useNewUserForm() {
 
   return {
     register,
+    control,
     submitForm,
     handleSubmit,
     errors,

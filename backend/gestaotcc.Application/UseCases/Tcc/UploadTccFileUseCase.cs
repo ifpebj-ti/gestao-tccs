@@ -7,12 +7,12 @@ namespace gestaotcc.Application.UseCases.Tcc;
 public class UploadTccFileUseCase
 {
     private readonly ITccGateway _tccGateway;
-    private readonly IMinioGateway _minioGateway;
+    private readonly IStorageGateway _storageGateway;
 
-    public UploadTccFileUseCase(ITccGateway tccGateway, IMinioGateway minioGateway)
+    public UploadTccFileUseCase(ITccGateway tccGateway, IStorageGateway storageGateway)
     {
         _tccGateway = tccGateway;
-        _minioGateway = minioGateway;
+        _storageGateway = storageGateway;
     }
 
     public async Task<ResultPattern<string>> Execute(long tccId, byte[] fileBytes, string fileName, string contentType)
@@ -24,7 +24,7 @@ public class UploadTccFileUseCase
         var extension = Path.GetExtension(fileName);
         var finalFileName = $"filled/tcc_{tccId}_{Guid.NewGuid()}{extension}";
 
-        await _minioGateway.Send(finalFileName, fileBytes, contentType, isFilledPdfProcess: true);
+        await _storageGateway.Send(finalFileName, fileBytes, contentType, isFilledPdfProcess: true);
 
         tcc.TccFile = finalFileName;
         await _tccGateway.Update(tcc);

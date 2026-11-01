@@ -1,25 +1,12 @@
 'use client';
 
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  faArrowLeft,
-  faEnvelope,
-  faTag,
-  faPaperPlane,
-  faCheckCircle,
-  faRotateRight,
-  faPen
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Image from 'next/image';
-import LoginImage from '../../../public/login image.svg';
-import IFPELogo from '../../../public/IFPE Logo.png';
-import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { ArrowRight, RotateCw } from 'lucide-react';
 import { useVerifyTccCode } from '@/app/hooks/useVerifyTccCode';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { AuthEditorialPanel } from '@/components/auth/AuthEditorialPanel';
 
 function FirstAccessContent() {
   const searchParams = useSearchParams();
@@ -56,172 +43,346 @@ function FirstAccessContent() {
     }
   };
 
-  const handleRedirectToLogin = () => {
-    window.location.href = '/';
-  };
-
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen lg:max-h-screen py-10 lg:py-40 px-6 lg:px-10">
-      {/* image */}
-      <Image src={LoginImage} alt="Login Image" className="w-full md:w-2/3" priority />
+    <AuthLayout showBackToLogin={true}>
+      {/* ── LEFT: Editorial Reutilizável ── */}
+      <AuthEditorialPanel
+        title="Primeiro acesso à plataforma."
+        description="Ative sua conta institucional no sistema de TCCs. Você receberá um código de confirmação no seu e-mail do IFPE."
+        stat1Value="100%"
+        stat1Label="Digital & Sem papel"
+        stat2Value="Ativação"
+        stat2Label="Rápida em 2 Etapas"
+      />
 
-      {/* content */}
-      <div className="w-full lg:w-1/3 flex flex-col justify-between gap-10">
-        <div className="flex flex-col w-full gap-6">
-          <Button
-            icon={faArrowLeft}
-            className="w-min lg:block hidden"
-            onClick={handleRedirectToLogin}
-            variant={'ghost'}
-          >
-            Voltar para Login
-          </Button>
+      {/* ── RIGHT: Flat Form ── */}
+      <div style={{ paddingLeft: '1rem' }}>
+        <h2
+          style={{
+            fontSize: '1.9rem',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            color: '#002B18',
+            margin: 0,
+            marginBottom: '0.5rem'
+          }}
+        >
+          {step === 'send' ? 'Configurar Conta' : 'Confirmar Código'}
+        </h2>
 
-          <div>
-            <h1 className="text-2xl lg:text-4xl font-medium mt-2 mb-1">
-              Primeiro acesso
-            </h1>
-            <p className="text-sm text-gray-500">
-              {step === 'send'
-                ? 'Informe seu e-mail institucional para receber um código de acesso.'
-                : 'Insira o código de 6 caracteres enviado para o seu e-mail.'}
-            </p>
-          </div>
+        <p
+          style={{
+            fontSize: '0.88rem',
+            color: '#6B7280',
+            margin: 0,
+            marginBottom: '2rem'
+          }}
+        >
+          {step === 'send'
+            ? 'Informe seu e-mail institucional para receber o código.'
+            : 'Insira o código de 6 caracteres enviado para o seu e-mail.'}
+        </p>
 
-          {step === 'send' ? (
-            <div className="flex flex-col gap-4">
-              <div className="grid items-center gap-1.5">
-                <Label className="font-semibold" htmlFor="userEmail">
-                  E-mail institucional
-                </Label>
-                <Input
-                  placeholder="exemplo@discente.ifpe.edu.br"
-                  icon={faEnvelope}
-                  errorText={errors.userEmail?.message?.toString()}
-                  {...register('userEmail')}
-                />
-                <span className="text-xs text-gray-500">
-                  O e-mail deve pertencer ao domínio @discente.ifpe.edu.br
-                </span>
-              </div>
+        {step === 'send' ? (
+          <div style={{ width: '100%' }}>
+            {/* E-mail para Docente e Discente */}
+            <div style={{ marginBottom: '2.5rem' }}>
+              <label
+                htmlFor="userEmail"
+                style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#374151',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  marginBottom: '0.5rem'
+                }}
+              >
+                E-mail institucional (docente ou discente)
+              </label>
+              <input
+                id="userEmail"
+                type="email"
+                placeholder="seu.email@ifpe.edu.br ou @discente.ifpe.edu.br"
+                {...register('userEmail')}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: `2px solid ${errors.userEmail ? '#EF4444' : '#002B18'}`,
+                  padding: '0.65rem 0',
+                  fontSize: '0.95rem',
+                  color: '#111827',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit'
+                }}
+              />
+              {errors.userEmail && (
+                <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                  {errors.userEmail.message?.toString()}
+                </p>
+              )}
+            </div>
 
-              <Button
+            {/* Botão Enviar Código */}
+            <button
+              type="button"
+              onClick={handleSendCode}
+              disabled={isSendingCode}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                width: '100%',
+                padding: '0.95rem 1.5rem',
+                background: isSendingCode ? '#A3E635' : '#C8FF47',
+                color: '#002B18',
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                border: 'none',
+                borderRadius: '9999px',
+                cursor: isSendingCode ? 'not-allowed' : 'pointer',
+                letterSpacing: '0.02em',
+                boxShadow: '0 4px 14px rgba(200, 255, 71, 0.35)',
+                transition: 'all 0.15s ease',
+                fontFamily: 'inherit'
+              }}
+              onMouseEnter={e => {
+                if (!isSendingCode) {
+                  e.currentTarget.style.background = '#002B18';
+                  e.currentTarget.style.color = '#C8FF47';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isSendingCode) {
+                  e.currentTarget.style.background = '#C8FF47';
+                  e.currentTarget.style.color = '#002B18';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              <span>{isSendingCode ? 'Enviando...' : 'Enviar Código de Acesso'}</span>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: '#002B18',
+                  color: '#C8FF47',
+                  fontSize: '0.85rem',
+                  fontWeight: 900
+                }}
+              >
+                <ArrowRight size={14} />
+              </span>
+            </button>
+
+            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+              <button
                 type="button"
-                icon={faPaperPlane}
+                onClick={() => setStep('verify')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '0.82rem',
+                  color: '#002B18',
+                  fontWeight: 600,
+                  textDecoration: 'underline',
+                  cursor: 'pointer'
+                }}
+              >
+                Já possuo um código de verificação
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(submitForm)} noValidate style={{ width: '100%' }}>
+            {/* Badge com e-mail */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.65rem 0.95rem',
+                background: 'rgba(0, 43, 24, 0.05)',
+                borderRadius: '6px',
+                marginBottom: '1.75rem',
+                fontSize: '0.85rem'
+              }}
+            >
+              <span style={{ color: '#002B18', fontWeight: 600 }}>{userEmail}</span>
+              <button
+                type="button"
+                onClick={() => setStep('send')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '0.78rem',
+                  color: '#002B18',
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                  cursor: 'pointer'
+                }}
+              >
+                Alterar
+              </button>
+            </div>
+
+            {/* Código */}
+            <div style={{ marginBottom: '2.5rem' }}>
+              <label
+                htmlFor="code"
+                style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#374151',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  marginBottom: '0.5rem'
+                }}
+              >
+                Código de verificação
+              </label>
+              <input
+                id="code"
+                type="text"
+                placeholder="Ex: ABC123"
+                maxLength={6}
+                {...register('code')}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: `2px solid ${errors.code ? '#EF4444' : '#002B18'}`,
+                  padding: '0.65rem 0',
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.2em',
+                  color: '#002B18',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontFamily: 'monospace'
+                }}
+              />
+              {errors.code && (
+                <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#EF4444' }}>
+                  {errors.code.message?.toString()}
+                </p>
+              )}
+            </div>
+
+            {/* Botão Confirmar */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                width: '100%',
+                padding: '0.95rem 1.5rem',
+                background: isSubmitting ? '#A3E635' : '#C8FF47',
+                color: '#002B18',
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                border: 'none',
+                borderRadius: '9999px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                letterSpacing: '0.02em',
+                boxShadow: '0 4px 14px rgba(200, 255, 71, 0.35)',
+                transition: 'all 0.15s ease',
+                fontFamily: 'inherit'
+              }}
+              onMouseEnter={e => {
+                if (!isSubmitting) {
+                  e.currentTarget.style.background = '#002B18';
+                  e.currentTarget.style.color = '#C8FF47';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isSubmitting) {
+                  e.currentTarget.style.background = '#C8FF47';
+                  e.currentTarget.style.color = '#002B18';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              <span>{isSubmitting ? 'Confirmando...' : 'Confirmar e Continuar'}</span>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: '#002B18',
+                  color: '#C8FF47',
+                  fontSize: '0.85rem',
+                  fontWeight: 900
+                }}
+              >
+                <ArrowRight size={14} />
+              </span>
+            </button>
+
+            {/* Reenviar */}
+            <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+              <button
+                type="button"
                 disabled={isSendingCode}
                 onClick={handleSendCode}
-                className="mt-2"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '0.82rem',
+                  color: '#002B18',
+                  fontWeight: 600,
+                  textDecoration: 'underline',
+                  cursor: isSendingCode ? 'not-allowed' : 'pointer'
+                }}
               >
-                {isSendingCode ? 'Enviando código...' : 'Receber código por e-mail'}
-              </Button>
-
-              <div className="text-center mt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep('verify')}
-                  className="text-sm text-blue-600 font-semibold underline hover:text-blue-800"
-                >
-                  Já possuo um código de verificação
-                </button>
-              </div>
+                <RotateCw size={13} className={isSendingCode ? 'animate-spin' : ''} />
+                <span>{isSendingCode ? 'Reenviando...' : 'Não recebeu? Reenviar código'}</span>
+              </button>
             </div>
-          ) : (
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={handleSubmit(submitForm)}
+          </form>
+        )}
+
+        {/* Link voltar para login */}
+        <div style={{ marginTop: '2.25rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.85rem', color: '#6B7280', margin: 0 }}>
+            Já possui acesso configurado?{' '}
+            <Link
+              href="/"
+              style={{
+                color: '#002B18',
+                fontWeight: 700,
+                textDecoration: 'underline',
+                textUnderlineOffset: '3px'
+              }}
             >
-              {/* Badge com o e-mail em validação */}
-              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
-                <div className="flex items-center gap-2 truncate">
-                  <FontAwesomeIcon icon={faEnvelope} className="text-blue-600" />
-                  <span className="font-medium truncate">{userEmail}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setStep('send')}
-                  className="text-xs text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-1 shrink-0 ml-2"
-                >
-                  <FontAwesomeIcon icon={faPen} className="text-[10px]" />
-                  Alterar
-                </button>
-              </div>
-
-              <div className="grid items-center gap-1.5">
-                <Label className="font-semibold" htmlFor="accessCode">
-                  Código de verificação
-                </Label>
-                <Input
-                  placeholder="Ex: ABC123"
-                  icon={faTag}
-                  maxLength={6}
-                  className="uppercase tracking-widest font-mono text-center text-lg"
-                  helperText="Verifique também sua caixa de spam ou lixo eletrônico."
-                  errorText={errors.code?.message?.toString()}
-                  {...register('code')}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                icon={faCheckCircle}
-                disabled={isSubmitting}
-                className="mt-2"
-              >
-                {isSubmitting ? 'Confirmando...' : 'Confirmar código e continuar'}
-              </Button>
-
-              <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
-                <span>Não recebeu o e-mail?</span>
-                <button
-                  type="button"
-                  disabled={isSendingCode}
-                  onClick={handleSendCode}
-                  className="text-blue-600 font-semibold hover:text-blue-800 underline flex items-center gap-1"
-                >
-                  <FontAwesomeIcon icon={faRotateRight} className={isSendingCode ? 'animate-spin' : ''} />
-                  {isSendingCode ? 'Reenviando...' : 'Reenviar código'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          <Button
-            icon={faArrowLeft}
-            className="lg:hidden block mt-4"
-            onClick={handleRedirectToLogin}
-            variant={'ghost'}
-          >
-            Voltar para Login
-          </Button>
-        </div>
-
-        {/* footer desktop */}
-        <div className="lg:flex hidden items-center justify-between w-full">
-          <Image
-            src={IFPELogo}
-            alt="Logo IFPE"
-            className="w-32 lg:w-40 h-auto"
-          />
-          <Link
-            href="/"
-            className="text-[#1351B4] text-xs font-semibold underline"
-          >
-            Precisa de ajuda?
-          </Link>
+              Fazer login
+            </Link>
+          </p>
         </div>
       </div>
-
-      {/* footer mobile */}
-      <div className="flex lg:hidden items-center justify-between w-full">
-        <Image src={IFPELogo} alt="Logo IFPE" className="w-32 lg:w-40 h-auto" />
-        <Link
-          href="/"
-          className="text-[#1351B4] text-xs font-semibold underline"
-        >
-          Precisa de ajuda?
-        </Link>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }
 

@@ -130,6 +130,20 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     }
 
     /// <summary>
+    /// Listar docentes disponíveis para assumir orientação em um campus/curso
+    /// </summary>
+    /// <param name="campiCourseId">Id do campus/curso</param>
+    [Authorize(Roles = "STUDENT, ADVISOR, COORDINATOR, SUPERVISOR, ADMIN")]
+    [HttpGet("available-advisors/{campiCourseId}")]
+    public async Task<ActionResult<List<FindAllUserByFilterDTO>>> FindAvailableAdvisors(
+        [FromRoute] long campiCourseId,
+        [FromServices] FindAvailableAdvisorsUseCase findAvailableAdvisorsUseCase)
+    {
+        var useCaseResult = await findAvailableAdvisorsUseCase.Execute(campiCourseId);
+        return Ok(useCaseResult.Data);
+    }
+
+    /// <summary>
     /// Auto cadastro de estudantes
     /// Para o campo de Shift, pode ser as seguintes opções: 1 = MORNING, 2 = AFTERNOON, 3 = NIGHT, 4 = DAYTIME
     /// </summary>

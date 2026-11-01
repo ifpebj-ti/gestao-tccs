@@ -1,6 +1,7 @@
 'use client';
 
-import { CircleUserRound, LogOut, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronDown, CircleUserRound, KeyRound, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,63 +12,60 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 
-interface User {
-  name: string;
-  roles: string[];
-}
-
 interface UserProfileProps {
-  user: User;
+  user: { name: string; roles: string[] };
   onLogout: () => void;
 }
 
 export default function UserProfile({ user, onLogout }: UserProfileProps) {
+  const firstName = user.name.trim().split(/\s+/)[0];
   return (
     <DropdownMenu>
-      {/* O ícone que o usuário irá clicar */}
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="default" className="rounded-full">
-          <CircleUserRound className="h-6 w-6" />
+        <Button
+          variant="ghost"
+          aria-label="Abrir menu do usuário"
+          className="gap-2 rounded-full px-2 hover:bg-[#ECEAE2]"
+        >
+          <CircleUserRound
+            className="size-6 text-[#002B18]"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
+          <span className="hidden text-sm font-semibold text-[#002B18] lg:inline">
+            {firstName}
+          </span>
+          <ChevronDown
+            className="hidden size-3.5 text-gray-500 sm:block"
+            aria-hidden="true"
+          />
         </Button>
       </DropdownMenuTrigger>
-
-      {/* O conteúdo que aparece ao clicar */}
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        {/* Nome do usuário */}
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-xs font-semibold mb-2 text-muted-foreground">
-              Usuário:
-            </p>
-            <p className="text-sm font-medium leading-none">{user.name}</p>
-          </div>
-        </DropdownMenuLabel>
-
-        {/* Separador visual */}
-        <DropdownMenuSeparator />
-
-        {/* Lista de perfis/roles do usuário */}
-        <div className="px-2 py-1.5">
-          <p className="text-xs font-semibold mb-2 text-muted-foreground">
-            Seus Perfis:
+      <DropdownMenuContent
+        className="w-64 rounded-xl border-[#DDD9CD] bg-[#FAF9F5] p-2"
+        align="end"
+      >
+        <DropdownMenuLabel className="px-3 py-3 font-normal">
+          <p className="font-[family-name:var(--font-poppins)] text-sm font-semibold text-[#002B18]">
+            {user.name}
           </p>
-          {user.roles.map((role) => (
-            <div
-              key={role}
-              className="flex items-center text-sm text-gray-800 mb-1 last:mb-0"
-            >
-              <ShieldCheck className="mr-2 h-4 w-4 text-green-600 flex-shrink-0" />
-              <span>{role}</span>
-            </div>
-          ))}
-        </div>
-
+          <p className="mt-1 text-xs text-gray-500">{user.roles.join(' · ')}</p>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-
-        {/* Item de Logout */}
-        <DropdownMenuItem onClick={onLogout} className="cursor-pointer">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sair</span>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/profile?section=password"
+            className="cursor-pointer gap-2 py-2.5"
+          >
+            <KeyRound size={16} /> Alterar senha
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={onLogout}
+          className="cursor-pointer gap-2 py-2.5 text-red-700"
+        >
+          <LogOut size={16} /> Sair da conta
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,0 +1,13 @@
+{
+  "fixture": "Dados fictícios; todas as chamadas de API interceptadas",
+  "checks": [
+    "E-mail inválido apresenta erro associado ao campo e não envia proposta",
+    "Proposta válida envia título, resumo, orientador e convite normalizado",
+    "Home apresenta projeto, resumo, solicitante e consentimento",
+    "Resposta bloqueia ambos os botões; conflito mantém convite e permite nova tentativa",
+    "Falha na listagem mostra erro e nova tentativa recupera os convites",
+    "Convite mobile sem rolagem horizontal",
+    "Aceite envia consentimento explícito e atualiza a navegação",
+    "Recusa envia false e remove convite após atualização"
+  ]
+}

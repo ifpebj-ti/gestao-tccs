@@ -9,6 +9,7 @@ public interface ITccGateway
 {
     Task Save(TccEntity tcc);
     Task Update(TccEntity tcc);
+    Task UpdateSemesterId(long tccId, long semesterId);
     Task<List<TccInviteEntity>> FindAllInviteTcc();
     Task<TccInviteEntity?> FindInviteTccByEmail(string email);
     Task SaveTccInvite(TccInviteEntity tccInvite);
@@ -21,4 +22,7 @@ public interface ITccGateway
     Task<TccEntity?> FindTccInformations(long id);
     Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token);
     Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member);
+    Task<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity?> FindPendingAdvisorChange(long tccId);
+    Task SaveAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange);
+    Task UpdateAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange);
 }

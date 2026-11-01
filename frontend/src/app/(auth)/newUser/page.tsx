@@ -1,6 +1,10 @@
 'use client';
 
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
+import { FormSelect } from '@/components/ui/form-select';
+
+import { PageTitle } from '@/components/layout/PageTitle';
+import { SectionTitle } from '@/components/layout/SectionTitle';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +24,7 @@ export default function NewUser() {
     errors,
     handleSubmit,
     register,
+    control,
     submitForm,
     isSubmitting,
     watch,
@@ -96,17 +101,12 @@ export default function NewUser() {
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
-      <h1 className="md:text-4xl text-3xl font-semibold md:font-normal mb-10">
-        Novo usuário
-      </h1>
+      <PageTitle className="mb-10">Novo usuário</PageTitle>
 
       <form className="flex flex-col gap-8" onSubmit={handleSubmit(submitForm)}>
         {/* --- SEÇÃO 1: INFORMAÇÕES PESSOAIS --- */}
         <div>
-          <h2 className="text-lg font-extrabold uppercase mb-4">
-            Informações do usuário
-          </h2>
+          <SectionTitle className="mb-4">Informações do usuário</SectionTitle>
           <div className="grid md:grid-cols-2 gap-4">
             {/* NOME */}
             <div className="grid items-center gap-1.5">
@@ -128,10 +128,11 @@ export default function NewUser() {
               <Label className="font-semibold" htmlFor="profile">
                 Perfil
               </Label>
-              <select
+              <FormSelect
                 id="profile"
-                {...register('profile')}
-                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
+                control={control}
+                name={'profile'}
+                className="w-full min-w-0 border-0 border-b-2 border-[#002B18] bg-transparent py-2.5 text-sm text-gray-800 outline-none focus-visible:border-[#006633] disabled:opacity-50"
               >
                 <option value="">Selecione um perfil</option>
                 <option value="ADMIN">Administrador</option>
@@ -140,7 +141,7 @@ export default function NewUser() {
                 <option value="ADVISOR">Orientador</option>
                 <option value="BANKING">Banca</option>
                 <option value="LIBRARY">Bibliotecário</option>
-              </select>
+              </FormSelect>
               {errors.profile && (
                 <p className="text-red-500 text-sm">{errors.profile.message}</p>
               )}
@@ -237,18 +238,17 @@ export default function NewUser() {
 
         {/* --- SEÇÃO 2: INFORMAÇÕES ACADÊMICAS --- */}
         <div>
-          <h2 className="text-lg font-extrabold uppercase mb-4">
-            Informações Acadêmicas
-          </h2>
+          <SectionTitle className="mb-4">Informações Acadêmicas</SectionTitle>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="grid items-center gap-1.5">
               <Label className="font-semibold" htmlFor="campusId">
                 Campus
               </Label>
-              <select
+              <FormSelect
                 id="campusId"
-                {...register('campusId')}
-                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer"
+                control={control}
+                name={'campusId'}
+                className="w-full min-w-0 border-0 border-b-2 border-[#002B18] bg-transparent py-2.5 text-sm text-gray-800 outline-none focus-visible:border-[#006633] disabled:opacity-50"
               >
                 <option value="0">Selecione um campus</option>
                 {campus.map((campi) => (
@@ -256,7 +256,7 @@ export default function NewUser() {
                     {campi.name}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
               {errors.campusId && (
                 <p className="text-red-500 text-sm">
                   {errors.campusId.message}
@@ -267,11 +267,12 @@ export default function NewUser() {
               <Label className="font-semibold" htmlFor="courseId">
                 Curso
               </Label>
-              <select
+              <FormSelect
                 id="courseId"
-                {...register('courseId')}
+                control={control}
+                name={'courseId'}
                 disabled={!campusValue || courses.length === 0}
-                className="flex items-center border border-gray-400 bg-white rounded-xs px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full min-w-0 border-0 border-b-2 border-[#002B18] bg-transparent py-2.5 text-sm text-gray-800 outline-none focus-visible:border-[#006633] disabled:opacity-50"
               >
                 <option value="0">Selecione um curso</option>
                 {courses.map((course) => (
@@ -279,7 +280,7 @@ export default function NewUser() {
                     {course.name}
                   </option>
                 ))}
-              </select>
+              </FormSelect>
               {errors.courseId && (
                 <p className="text-red-500 text-sm">
                   {errors.courseId.message}
@@ -292,7 +293,7 @@ export default function NewUser() {
         <div className="flex gap-2 md:self-end mt-4">
           <Button
             onClick={() => push('/homePage')}
-            variant="outline"
+            variant="destructive"
             className="w-full md:w-fit"
             type="button"
           >

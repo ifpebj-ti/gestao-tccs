@@ -135,10 +135,12 @@ public static class DbInitializer
         // Seed User
         if (!context.Users.Any())
         {
-            var profile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
+            var adminProfile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.ADMIN.ToString());
+            var studentProfile = context.Profiles.FirstOrDefault(x => x.Role == RoleType.STUDENT.ToString());
             var course = context.CampiCourses.FirstOrDefault(x => x.Id == 22);
             var password = bcryptGateway.GenerateHashPassword("Senha@123");
 
+            // Admin dev seed
             context.Users.Add(new UserEntityBuilder()
                 .WithName("dev-test")
                 .WithCpf("000.000.000-00")
@@ -146,8 +148,21 @@ public static class DbInitializer
                 .WithPassword(password)
                 .WithCampiCourse(course)
                 .WithStatus("ACTIVE")
-                .WithProfile(new List<ProfileEntity>() { profile! })
+                .WithProfile(new List<ProfileEntity>() { adminProfile! })
                 .Build());
+
+            // Student seed — login: aluna@discente.ifpe.edu.br / Senha@123
+            context.Users.Add(new UserEntityBuilder()
+                .WithName("Aluna Teste")
+                .WithCpf("111.111.111-11")
+                .WithEmail("aluna@discente.ifpe.edu.br")
+                .WithRegistration("2024001")
+                .WithPassword(password)
+                .WithCampiCourse(course)
+                .WithStatus("ACTIVE")
+                .WithProfile(new List<ProfileEntity>() { studentProfile! })
+                .Build());
+
             context.SaveChanges();
         }
 
@@ -196,6 +211,8 @@ public static class DbInitializer
             context.SaveChanges();
         }
 
+        SeedDocumentTypeProfile(context);
+
         if (!context.DocumentTypes.Any(dt => dt.Name == "ATA DE TRABALHO DE CONCLUSÃO DE CURSO"))
         {
             var ataType = new DocumentTypeEntity
@@ -209,38 +226,66 @@ public static class DbInitializer
 
             context.Database.ExecuteSqlRaw($@"
                 INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
-                VALUES ({ataType.Id}, 4), ({ataType.Id}, 5);
+                VALUES ({ataType.Id}, 4), ({ataType.Id}, 5)
+                ON CONFLICT DO NOTHING;
             ");
         }
 
-        SeedDocumentTypeProfile(context);
+        if (!context.DocumentTypes.Any(dt => dt.Name == "ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO"))
+        {
+            var anexoVType = new DocumentTypeEntity
+            {
+                Name = "ANEXO V - TERMO DE AFASTAMENTO DE ORIENTAÇÃO DE TRABALHO DE CONCLUSÃO DE CURSO",
+                SignatureOrder = 3,
+                MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
+            };
+            context.DocumentTypes.Add(anexoVType);
+            context.SaveChanges();
+
+            context.Database.ExecuteSqlRaw($@"
+                INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
+                VALUES ({anexoVType.Id}, 4), ({anexoVType.Id}, 6)
+                ON CONFLICT DO NOTHING;
+            ");
+        }
+
+        if (!context.DocumentTypes.Any(dt => dt.Name == "ANEXO IX - TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO"))
+        {
+            var anexoIXType = new DocumentTypeEntity
+            {
+                Name = "ANEXO IX - TERMO DE SUBSTITUIÇÃO DE ORIENTAÇÃO DO TRABALHO DE CONCLUSÃO DE CURSO",
+                SignatureOrder = 3,
+                MethodSignature = MethoSignatureType.ONLY_DOCS.ToString()
+            };
+            context.DocumentTypes.Add(anexoIXType);
+            context.SaveChanges();
+
+            context.Database.ExecuteSqlRaw($@"
+                INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") 
+                VALUES ({anexoIXType.Id}, 4), ({anexoIXType.Id}, 6)
+                ON CONFLICT DO NOTHING;
+            ");
+        }
     }
 
     private static void SeedDocumentTypeProfile(AppDbContext context)
     {
-        var existing = context.Database.ExecuteSqlRaw(@"
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM ""documentType_profile""
-                ) THEN
-                    INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") VALUES
-                        (1, 4),
-                        (2, 4),
-                        (1, 6),
-                        (2, 6),
-                        (3, 6),
-                        (4, 4),
-                        (5, 4),
-                        (4, 6),
-                        (5, 6),
-                        (6, 4),
-                        (7, 4),
-                        (7, 5),
-                        (7, 6);
-                END IF;
-            END
-            $$;
+        context.Database.ExecuteSqlRaw(@"
+            INSERT INTO ""documentType_profile"" (""DocumentTypesId"", ""ProfilesId"") VALUES
+                (1, 4),
+                (2, 4),
+                (1, 6),
+                (2, 6),
+                (3, 6),
+                (4, 4),
+                (5, 4),
+                (4, 6),
+                (5, 6),
+                (6, 4),
+                (7, 4),
+                (7, 5),
+                (7, 6)
+            ON CONFLICT DO NOTHING;
         ");
     }
 }

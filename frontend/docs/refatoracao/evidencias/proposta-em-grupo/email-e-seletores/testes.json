@@ -1,0 +1,22 @@
+﻿{
+    "backend":  {
+                    "postgres":  10,
+                    "failed":  0,
+                    "total":  283,
+                    "passed":  283
+                },
+    "nativeDotNet8":  {
+                          "passed":  273,
+                          "skippedPostgresWithoutNetwork":  10
+                      },
+    "frontend":  {
+                     "typescript":  "aprovado",
+                     "productionBuild":  "aprovado",
+                     "lint":  "aprovado",
+                     "passed":  72
+                 },
+    "browser":  {
+                    "checks":  17,
+                    "api":  "interceptada com dados fictícios"
+                }
+}

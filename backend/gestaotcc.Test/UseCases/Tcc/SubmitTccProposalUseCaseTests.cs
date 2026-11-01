@@ -3,6 +3,7 @@ using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Profile;
+using gestaotcc.Domain.Entities.Semester;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Enums;
@@ -17,13 +18,14 @@ public class SubmitTccProposalUseCaseTests
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
     private readonly IProfileGateway _profileGateway = Substitute.For<IProfileGateway>();
     private readonly IEmailGateway _emailGateway = Substitute.For<IEmailGateway>();
+    private readonly ISemesterGateway _semesterGateway = Substitute.For<ISemesterGateway>();
     private readonly IAppLoggerGateway<SubmitTccProposalUseCase> _logger = Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>();
 
     private readonly SubmitTccProposalUseCase _useCase;
 
     public SubmitTccProposalUseCaseTests()
     {
-        _useCase = new SubmitTccProposalUseCase(_userGateway, _tccGateway, _profileGateway, _emailGateway, _logger);
+        _useCase = new SubmitTccProposalUseCase(_userGateway, _tccGateway, _profileGateway, _emailGateway, _semesterGateway, _logger);
     }
 
     [Fact]
@@ -51,6 +53,10 @@ public class SubmitTccProposalUseCaseTests
         _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(Task.FromResult(new List<TccEntity>()));
         _tccGateway.Save(Arg.Any<TccEntity>()).Returns(Task.CompletedTask);
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(Task.FromResult(ResultPattern<bool>.SuccessResult(true)));
+        _semesterGateway.FindActive().Returns(Task.FromResult(new List<SemesterEntity>
+        {
+            new SemesterEntity { Id = 1, Name = "2026.2", IsActive = true }
+        }));
 
         var dto = new SubmitTccProposalDTO("Novo TCC sobre IA", "Resumo detalhado", 2);
 

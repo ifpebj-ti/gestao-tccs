@@ -9,9 +9,13 @@ namespace gestaotcc.Application.UseCases.Tcc;
 public class RejectTccProposalUseCase(
     ITccGateway tccGateway,
     IEmailGateway emailGateway,
-    IAppLoggerGateway<RejectTccProposalUseCase> logger)
+    IAppLoggerGateway<RejectTccProposalUseCase> logger,
+    IProposalGateway? proposals = null)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId, RejectTccProposalDTO data, long advisorUserId)
+    public Task<ResultPattern<string>> Execute(long tccId, RejectTccProposalDTO data, long advisorUserId) =>
+        proposals == null ? Reject(tccId, data, advisorUserId) : proposals.Atomic(() => Reject(tccId, data, advisorUserId));
+
+    private async Task<ResultPattern<string>> Reject(long tccId, RejectTccProposalDTO data, long advisorUserId)
     {
         logger.LogInformation("Iniciando recusa de proposta de TCC {TccId} pelo orientador {AdvisorId}", tccId, advisorUserId);
 
@@ -27,7 +31,8 @@ public class RejectTccProposalUseCase(
             return ResultPattern<string>.FailureResult("TCC não encontrado", 404);
         }
 
-        var advisorUserTcc = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == advisorUserId);
+        var advisorUserTcc = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == advisorUserId &&
+            ut.Profile.Role is "ADVISOR" or "COORDINATOR" or "SUPERVISOR");
         if (advisorUserTcc is null)
         {
             logger.LogWarning("Usuário {AdvisorId} não está vinculado como orientador do TCC {TccId}.", advisorUserId, tccId);
@@ -40,6 +45,8 @@ public class RejectTccProposalUseCase(
             return ResultPattern<string>.FailureResult("A proposta não está pendente de aprovação", 409);
         }
 
+        if (tcc.ParticipantInvitations.Any(x => x.Status != "ACCEPTED"))
+            return ResultPattern<string>.FailureResult("A proposta aguarda o aceite de todos os participantes.", 409);
         tcc.Status = StatusTccType.REJECTED.ToString();
         tcc.RejectionReason = data.Reason.Trim();
 

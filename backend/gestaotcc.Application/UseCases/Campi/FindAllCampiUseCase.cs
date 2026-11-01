@@ -17,7 +17,8 @@ public class FindAllCampiUseCase(ICourseGateway courseGateway, IAppLoggerGateway
         var campisReturn = campis.Select(c => new FindAllCampiDTO(
             c.Id,
             c.Name,
-            c.CampiCourses.Select(cc => new CourseDetailsForFindAllCampiDTO(cc.CourseId, cc.Course.Name)).ToList()
+            c.City,
+            c.CampiCourses.Select(cc => new CourseDetailsForFindAllCampiDTO(cc.CourseId, cc.Course.Name, cc.Course.Level)).ToList()
             )).ToList();
         
         logger.LogInformation("Finalizando busca para pegar campis");

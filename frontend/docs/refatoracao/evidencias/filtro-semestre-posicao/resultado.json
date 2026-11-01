@@ -1,0 +1,128 @@
+{
+  "fixture": "API interceptada e dados fictícios; sem alterações no banco real",
+  "checks": [
+    "ongoingTCCs: filtro alinhado abaixo do título",
+    "ongoingTCCs: seleção visual mantém SemesterId, status e restrição de usuário aplicável",
+    "ongoingTCCs: Todos os semestres remove filtro e restaura listagem",
+    "ongoingTCCs: filtro também funciona no celular sem overflow",
+    "completedTCCs: filtro alinhado abaixo do título",
+    "completedTCCs: seleção visual mantém SemesterId, status e restrição de usuário aplicável",
+    "completedTCCs: Todos os semestres remove filtro e restaura listagem",
+    "completedTCCs: filtro também funciona no celular sem overflow"
+  ],
+  "calls": [
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS"
+      },
+      "method": "OPTIONS"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS",
+        "SemesterId": "1"
+      },
+      "method": "OPTIONS"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS",
+        "SemesterId": "1"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS",
+        "SemesterId": "2"
+      },
+      "method": "OPTIONS"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "UserId": "3",
+        "StatusTcc": "IN_PROGRESS",
+        "SemesterId": "2"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED"
+      },
+      "method": "OPTIONS"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED",
+        "SemesterId": "1"
+      },
+      "method": "OPTIONS"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED",
+        "SemesterId": "1"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED"
+      },
+      "method": "GET"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED",
+        "SemesterId": "2"
+      },
+      "method": "OPTIONS"
+    },
+    {
+      "path": "/api/Tcc/filter",
+      "query": {
+        "StatusTcc": "COMPLETED",
+        "SemesterId": "2"
+      },
+      "method": "GET"
+    }
+  ]
+}

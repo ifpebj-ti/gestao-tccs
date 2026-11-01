@@ -1,15 +1,17 @@
 'use client';
 
 import { useCompletedTccDetails } from '@/app/hooks/useCompletedTCCsDetails';
-import { BreadcrumbAuto } from '@/components/ui/breadcrumb';
-import { TccHeader } from '@/components/tcc-details/TccHeader';
+import { TccOverview } from '@/components/tcc-details/TccOverview';
+import { useParams } from 'next/navigation';
 import { TccInfoSection } from '@/components/tcc-details/TccInfoSection';
 import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection';
 import { AdvisorInfoSection } from '@/components/tcc-details/AdvisorInfoSection';
 import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection';
 import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
+import { FinalSubmissionBanner } from '@/components/tcc-details/FinalSubmissionBanner';
 
 export default function CompletedTccDetailsClient() {
+  const { id } = useParams<{ id: string }>();
   const { tccDetails, isLoading } = useCompletedTccDetails();
 
   if (isLoading) {
@@ -26,12 +28,20 @@ export default function CompletedTccDetailsClient() {
 
   return (
     <div className="flex flex-col">
-      <BreadcrumbAuto />
-
       <div className="mt-6">
-        <TccHeader
-          infoStudent={tccDetails.infoStudent}
-          cancellationRequested={false}
+        <TccOverview title={tccDetails.infoTcc.title} tccId={id} step={6} />
+      </div>
+
+      <div className="mt-4">
+        <FinalSubmissionBanner
+          step={tccDetails.infoTcc.step}
+          finalSubmissionDeadline={tccDetails.infoTcc.finalSubmissionDeadline}
+          finalTccFile={tccDetails.infoTcc.finalTccFile}
+          hardCoverReceivedAt={tccDetails.infoTcc.hardCoverReceivedAt}
+          forwardedToLibraryAt={tccDetails.infoTcc.forwardedToLibraryAt}
+          libraryReceivedAt={tccDetails.infoTcc.libraryReceivedAt}
+          libraryCatalogCode={tccDetails.infoTcc.libraryCatalogCode}
+          isCompleted={true}
         />
       </div>
 
@@ -43,7 +53,10 @@ export default function CompletedTccDetailsClient() {
           <AdvisorInfoSection advisor={tccDetails.infoAdvisor} />
         )}
 
-        <BankingInfoSection bankingData={tccDetails.infoBanking} isCompleted={true} />
+        <BankingInfoSection
+          bankingData={tccDetails.infoBanking}
+          isCompleted={true}
+        />
 
         <ScheduleSection
           infoTcc={tccDetails.infoTcc}
