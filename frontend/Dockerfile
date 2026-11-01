@@ -14,6 +14,7 @@ WORKDIR /app
 
 # Copia os arquivos de dependência primeiro para aproveitar o cache
 COPY package*.json ./
+COPY scripts/minimatch-compat.cjs ./scripts/minimatch-compat.cjs
 
 # Instala as dependências
 RUN npm install
@@ -27,6 +28,9 @@ RUN npm run build
 # Etapa 2: Imagem leve para rodar a aplicação
 FROM node:24-alpine AS runner
 
+# O runtime executa apenas Node; evita distribuir o npm e suas dependências.
+RUN npm uninstall --global npm
+
 # Define diretório de trabalho
 WORKDIR /app
 
@@ -37,4 +41,4 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 
 # Comando padrão ao iniciar o container
-CMD ["npm", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start"]

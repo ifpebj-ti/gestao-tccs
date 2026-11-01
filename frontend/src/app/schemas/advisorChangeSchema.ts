@@ -5,7 +5,7 @@ export const advisorChangeSchema = z.object({
     message: 'A justificativa deve ter pelo menos 20 caracteres.'
   }),
   suggestedAdvisorId: z
-    .number({ invalid_type_error: 'Selecione um orientador substituto.' })
+    .number({ error: 'Selecione um orientador substituto.' })
     .positive({ message: 'Selecione um orientador substituto.' })
     .optional()
 });
