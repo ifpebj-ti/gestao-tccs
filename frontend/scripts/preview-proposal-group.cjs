@@ -1,3 +1,4 @@
+const { fillInput } = require('./browser-input.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -242,10 +243,7 @@ async function run() {
     });
     await waitFor('document.querySelector("[role=menuitemradio]")');
   };
-  const fill = async (id, value) =>
-    evaluate(
-      `(() => { const input = document.getElementById(${JSON.stringify(id)}); Object.getOwnPropertyDescriptor(input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); })()`
-    );
+  const fill = (id, value) => fillInput(send, id, value);
   try {
     fs.mkdirSync(output, { recursive: true });
     await send('Page.enable');
