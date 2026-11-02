@@ -99,8 +99,8 @@ export function ScheduleSection({
                   className="w-full md:w-auto"
                   onClick={onSendScheduleEmail}
                 >
-                  <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Enviar
-                  Agenda
+                  <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Reenviar
+                  Comunicados
                 </Button>
               )}
               <Button

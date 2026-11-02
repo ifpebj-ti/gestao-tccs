@@ -210,6 +210,14 @@ test('o apoio apresenta atividades coerentes com o perfil', () => {
   );
 });
 
+test('usuário autenticado com avaliação pendente recebe o atalho Banca', () => {
+  const { shortcuts } = model({
+    profile: 'STUDENT',
+    pendingBankingEvaluations: [{ tccId: 10 }]
+  });
+  assert.equal(shortcuts.find((card) => card.title === 'Banca').visible, true);
+});
+
 test('os atalhos mantêm os destinos para assinaturas e propostas recebidas', () => {
   let route;
 

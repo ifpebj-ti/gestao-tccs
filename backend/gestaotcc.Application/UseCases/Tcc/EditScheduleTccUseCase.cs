@@ -10,7 +10,8 @@ public class EditScheduleTccUseCase(
     IAppLoggerGateway<EditScheduleTccUseCase> logger,
     IUserGateway? userGateway = null, 
     IProfileGateway? profileGateway = null,
-    IEmailGateway? emailGateway = null)
+    IEmailGateway? emailGateway = null,
+    IStorageGateway? storageGateway = null)
 {
     public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data, long currentUserId)
     {
@@ -29,6 +30,8 @@ public class EditScheduleTccUseCase(
             logger.LogWarning("Falha na edição de agendamento para TccId {TccId}: TCC não possui um agendamento para editar.", data.IdTcc);
             return ResultPattern<string>.FailureResult("TCC ainda não possui agendamento de defesa", 409);
         }
+        var previousScheduledDate = tcc.TccSchedule.ScheduledDate;
+        var previousLocation = tcc.TccSchedule.Location;
         try
         {
             logger.LogInformation("Agendamento atual para TccId {TccId}: Data: {CurrentDate}, Local: {CurrentLocation}", data.IdTcc, tcc.TccSchedule.ScheduledDate, tcc.TccSchedule.Location);
@@ -45,12 +48,16 @@ public class EditScheduleTccUseCase(
                 logger.LogInformation("Atualizando local do agendamento para: {NewLocation}", data.ScheduleLocation);
                 tcc.TccSchedule.Location = data.ScheduleLocation;
             }
+            var scheduleWasChanged = tcc.TccSchedule.ScheduledDate != previousScheduledDate ||
+                !string.Equals(tcc.TccSchedule.Location, previousLocation, StringComparison.Ordinal);
 
             var bankingProfile = profileGateway != null ? await profileGateway.FindByRole("BANKING") : null;
+            var newExternalMembers = new List<TccBankingMemberEntity>();
             if (data.BankingMembers != null)
             {
                 var baseUser = tcc.UserTccs.FirstOrDefault()?.User;
                 var retainedMembers = new HashSet<TccBankingMemberEntity>();
+                var submittedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var memberDto in data.BankingMembers)
                 {
@@ -68,10 +75,22 @@ public class EditScheduleTccUseCase(
                             return ResultPattern<string>.FailureResult("O usuário selecionado não é um orientador ativo.", 400);
                     }
 
+                    else if (userGateway is not null &&
+                        string.Equals(memberDto.Role, "Examinador Interno", StringComparison.OrdinalIgnoreCase))
+                    {
+                        registeredUser = await userGateway.FindByEmail(memberDto.Email);
+                        if (registeredUser is not null &&
+                            !string.Equals(registeredUser.Status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                            return ResultPattern<string>.FailureResult("O e-mail informado pertence a uma conta inativa.", 400);
+                    }
+
                     var memberEmail = registeredUser?.Email ?? memberDto.Email;
+                    if (!submittedEmails.Add(memberEmail.Trim()))
+                        return ResultPattern<string>.FailureResult("A mesma pessoa não pode ser adicionada mais de uma vez à banca.", 400);
                     var existingMember = tcc.BankingMembers.FirstOrDefault(m =>
                         (registeredUser != null && m.UserId == registeredUser.Id) ||
                         m.Email.Equals(memberEmail, StringComparison.OrdinalIgnoreCase));
+                    var wasInternalMember = existingMember?.UserId.HasValue == true;
                     if (existingMember != null)
                     {
                         existingMember.Name = registeredUser?.Name ?? memberDto.Name;
@@ -94,6 +113,14 @@ public class EditScheduleTccUseCase(
                         };
                         tcc.BankingMembers.Add(member);
                         retainedMembers.Add(member);
+                        if (registeredUser is null)
+                            newExternalMembers.Add(member);
+                    }
+                    if (existingMember is not null && registeredUser is null && wasInternalMember)
+                    {
+                        existingMember.AccessToken = Guid.NewGuid().ToString("N");
+                        existingMember.TokenExpiryDate = null;
+                        newExternalMembers.Add(existingMember);
                     }
 
                     if (registeredUser != null)
@@ -182,13 +209,19 @@ public class EditScheduleTccUseCase(
 
             if (emailGateway is not null && tcc.TccSchedule is not null)
             {
+                var tccAttachment = storageGateway is null ? null : await TryLoadTccAttachment(tcc, storageGateway);
                 foreach (var member in tcc.BankingMembers
                              .Where(member => member.UserId.HasValue && !member.Grade.HasValue)
                              .DistinctBy(member => member.Email, StringComparer.OrdinalIgnoreCase))
                 {
                     try
                     {
-                        var notice = EmailFactory.CreateInternalBankingScheduleNotice(member.Name, member.Email, tcc, tcc.TccSchedule);
+                        var isAdvisor = member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase);
+                        var notice = isAdvisor
+                            ? EmailFactory.CreateAdvisorScheduleNotice(member.Name, member.Email, tcc, tcc.TccSchedule, hasTccAttachment: false)
+                            : EmailFactory.CreateInternalBankingScheduleNotice(
+                                member.Name, member.Email, tcc, tcc.TccSchedule, tccAttachment is not null);
+                        notice.Attachments = isAdvisor ? null : tccAttachment;
                         var result = await emailGateway.Send(notice);
                         if (result.IsFailure)
                             logger.LogWarning("Failed to notify internal examiner {Email} about TCC {TccId} schedule change.", member.Email, tcc.Id);
@@ -197,6 +230,18 @@ public class EditScheduleTccUseCase(
                     {
                         logger.LogWarning("Failed to send schedule change notice to internal examiner {Email}: {Error}", member.Email, ex.Message);
                     }
+                }
+
+                var externalMembersToNotify = scheduleWasChanged
+                    ? tcc.BankingMembers.Where(member => member.UserId is null)
+                    : newExternalMembers;
+                foreach (var member in externalMembersToNotify.DistinctBy(member => member.Email, StringComparer.OrdinalIgnoreCase))
+                {
+                    var invite = EmailFactory.CreateExternalBankingScheduleNotice(
+                        member.Name, member.Email, member.Role, member.AccessToken,
+                        tcc, tcc.TccSchedule, tccAttachment is not null);
+                    invite.Attachments = tccAttachment;
+                    await emailGateway.Send(invite);
                 }
             }
         }
@@ -208,5 +253,25 @@ public class EditScheduleTccUseCase(
         
         logger.LogInformation("Agendamento de defesa do TCC {TccId} editado com sucesso.", data.IdTcc);
         return ResultPattern<string>.SuccessResult("Agendamento de defesa do TCC editado com sucesso.");
+    }
+
+    private async Task<List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>?> TryLoadTccAttachment(
+        gestaotcc.Domain.Entities.Tcc.TccEntity tcc, IStorageGateway storageGateway)
+    {
+        if (string.IsNullOrWhiteSpace(tcc.TccFile)) return null;
+        try
+        {
+            var fileBytes = await storageGateway.Download(tcc.TccFile, false);
+            if (fileBytes is null || fileBytes.Length == 0) return null;
+            return new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
+            {
+                new(tcc.TccFile.Replace("filled/", ""), fileBytes, "application/pdf")
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Falha ao baixar o arquivo do TCC para anexar aos e-mails da banca. Erro: {Erro}", ex.Message);
+            return null;
+        }
     }
 }

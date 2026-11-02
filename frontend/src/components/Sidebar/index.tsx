@@ -29,9 +29,7 @@ export default function Sidebar({
   onToggle
 }: SidebarProps) {
   const pathname = usePathname();
-  const { evaluations } = usePendingInternalBankingEvaluations(
-    roles.includes('BANKING') || roles.includes('ADVISOR')
-  );
+  const { evaluations } = usePendingInternalBankingEvaluations();
   const [selection, setSelection] = useState<{
     from: string;
     href: string;
