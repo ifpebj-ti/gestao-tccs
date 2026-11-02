@@ -32,6 +32,11 @@ public class TccFactory
             if (docType.Name != null && docType.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA"))
                 continue;
 
+            // Anexos V e IX só são criados quando há solicitação de afastamento/troca.
+            if (docType.Name?.Contains("ANEXO V -", StringComparison.OrdinalIgnoreCase) == true ||
+                docType.Name?.Contains("ANEXO IX", StringComparison.OrdinalIgnoreCase) == true)
+                continue;
+
             var acceptedRoles = docType.Profiles.Select(p => p.Role).ToHashSet();
             var method = Enum.Parse<MethoSignatureType>(docType.MethodSignature);
 
@@ -120,9 +125,9 @@ public class TccFactory
     
     public static TccEntity UpdateUsersTccToCreateBanking(TccEntity tcc, UserEntity user, ProfileEntity profile)
     {
-        var alreadyAdded = user.Id != 0 
-            ? tcc.UserTccs.Any(ut => ut.UserId == user.Id)
-            : tcc.UserTccs.Any(ut => ut.User.Email == user.Email);
+        var alreadyAdded = user.Id != 0
+            ? tcc.UserTccs.Any(ut => ut.UserId == user.Id && ut.Profile?.Id == profile.Id)
+            : tcc.UserTccs.Any(ut => ut.User.Email == user.Email && ut.Profile?.Id == profile.Id);
         
         if (!alreadyAdded)
         {

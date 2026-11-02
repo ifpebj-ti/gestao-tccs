@@ -21,6 +21,8 @@ public interface ITccGateway
     Task<TccEntity?> FindTccScheduling(long id);
     Task<TccEntity?> FindTccInformations(long id);
     Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByToken(string token);
+    Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByTccAndUser(long tccId, long userId);
+    Task<List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>> FindPendingInternalBankingMembers(long userId);
     Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member);
     Task<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity?> FindPendingAdvisorChange(long tccId);
     Task SaveAdvisorChange(gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity advisorChange);

@@ -133,6 +133,30 @@ public class TccGateway(AppDbContext context) : ITccGateway
         return await context.TccBankingMembers.FirstOrDefaultAsync(x => x.AccessToken == token);
     }
 
+    public async Task<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity?> FindBankingMemberByTccAndUser(long tccId, long userId)
+    {
+        return await context.TccBankingMembers
+            .FirstOrDefaultAsync(member => member.TccId == tccId && member.UserId == userId);
+    }
+
+    public async Task<List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>> FindPendingInternalBankingMembers(long userId)
+    {
+        return await context.TccBankingMembers
+            .Where(member => member.UserId == userId && member.Grade == null &&
+                (member.Role == "Examinador Interno" || member.Role.Contains("Orientador")) &&
+                member.Tcc.TccSchedule != null && member.Tcc.Status == "IN_PROGRESS")
+            .Include(member => member.Tcc)
+                .ThenInclude(tcc => tcc.TccSchedule)
+            .Include(member => member.Tcc)
+                .ThenInclude(tcc => tcc.UserTccs)
+                    .ThenInclude(userTcc => userTcc.User)
+            .Include(member => member.Tcc)
+                .ThenInclude(tcc => tcc.UserTccs)
+                    .ThenInclude(userTcc => userTcc.Profile)
+            .OrderBy(member => member.Tcc.TccSchedule!.ScheduledDate)
+            .ToListAsync();
+    }
+
     public async Task UpdateBankingMember(gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity member)
     {
         context.TccBankingMembers.Update(member);
@@ -199,6 +223,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
                 .ThenInclude(d => d.DocumentType)
             .Include(x => x.Documents)
                 .ThenInclude(d => d.Signatures)
+            .Include(x => x.AdvisorChanges)
             .AsQueryable();
 
         if (tccId.HasValue)

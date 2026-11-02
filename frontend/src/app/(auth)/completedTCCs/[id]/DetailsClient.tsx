@@ -61,7 +61,6 @@ export default function CompletedTccDetailsClient() {
         <ScheduleSection
           infoTcc={tccDetails.infoTcc}
           isScheduleFormVisible={false}
-          onScheduleCancel={() => {}}
           canSchedule={false}
           isCompleted={true}
         />

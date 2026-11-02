@@ -13,6 +13,7 @@ export const scheduleSchema = z.object({
   bankingMembers: z
     .array(
       z.object({
+        memberType: z.enum(['INTERNAL', 'EXTERNAL']).optional(),
         userId: z.number().int().positive().nullable().optional(),
         name: z
           .string()

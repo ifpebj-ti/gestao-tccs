@@ -199,7 +199,9 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             .ToList();
 
         var documentsInStep = tcc.Documents
-            .Where(d => documentTypesInStep.Any(dt => dt.Id == d.DocumentTypeId))
+            .Where(d => documentTypesInStep.Any(dt => dt.Id == d.DocumentTypeId) &&
+                        (!IsAdvisorChangeDocumentType(d.DocumentType.Name) ||
+                         tcc.AdvisorChanges.Any(ac => ac.DocumentId == d.Id && ac.Status == "PENDING_SIGNATURES")))
             .ToList();
 
         if (AllDocumentsInStepAreSigned(tcc, documentsInStep))
@@ -476,6 +478,10 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             .Any(doc => doc.Signatures.Any(sig => sig.UserId == userId && sig.DocumentId == documentId));
     }
 
+    private static bool IsAdvisorChangeDocumentType(string? name) =>
+        name?.Contains("ANEXO V -", StringComparison.OrdinalIgnoreCase) == true ||
+        name?.Contains("ANEXO IX", StringComparison.OrdinalIgnoreCase) == true;
+
     private bool AllDocumentsInStepAreSigned(TccEntity tcc, List<DocumentEntity> documents)
     {
         foreach (var document in documents)
@@ -566,12 +572,11 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
             return isStudent || isCurrentAdvisor;
         }
 
-        var userTcc = tcc.UserTccs.FirstOrDefault(ut => ut.User.Id == user.Id);
+        var allowedRoles = document.DocumentType.Profiles.Select(p => p.Role).ToHashSet();
+        var userTcc = tcc.UserTccs.FirstOrDefault(ut => ut.User.Id == user.Id && allowedRoles.Contains(ut.Profile.Role));
         if (userTcc == null) return false;
 
         var profile = userTcc.Profile;
-        var allowedRoles = document.DocumentType.Profiles.Select(p => p.Role).ToHashSet();
-
         if (!allowedRoles.Contains(profile.Role))
             return false;
 

@@ -122,6 +122,8 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
 
             return useCaseResult.ErrorDetails?.Status is 401
                 ? Unauthorized(useCaseResult.ErrorDetails)
+                : useCaseResult.ErrorDetails?.Status is 403
+                ? Forbid()
                 : NotFound(useCaseResult.ErrorDetails);
         }
 

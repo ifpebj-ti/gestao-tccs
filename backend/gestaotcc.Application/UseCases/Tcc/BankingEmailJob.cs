@@ -17,6 +17,8 @@ public class BankingEmailJob(ITccGateway tccGateway, IEmailGateway emailGateway)
 
         foreach (var member in tcc.BankingMembers)
         {
+            if (member.UserId.HasValue) continue;
+
             var variables = new Dictionary<string, object>
             {
                 { "name", member.Name },

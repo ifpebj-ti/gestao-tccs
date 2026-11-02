@@ -402,9 +402,13 @@ public class TccController : ControllerBase
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC criado com sucesso"));
     }
@@ -435,9 +439,13 @@ public class TccController : ControllerBase
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC editado com sucesso"));
     }
@@ -559,9 +567,44 @@ public class TccController : ControllerBase
                 ? BadRequest(result.ErrorDetails)
                 : result.ErrorDetails?.Status is 401
                 ? Unauthorized(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
                 : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
         }
         return Ok(new { message = "Avaliação salva com sucesso!", tccId = result.Data });
+    }
+
+    [Authorize]
+    [HttpGet("banking/pending-evaluations")]
+    public async Task<ActionResult<List<PendingInternalBankingEvaluationDTO>>> FindPendingInternalBankingEvaluations(
+        [FromServices] FindPendingInternalBankingEvaluationsUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        return Ok(await useCase.Execute(userId));
+    }
+
+    [Authorize]
+    [HttpPost("evaluate/internal")]
+    public async Task<ActionResult<object>> EvaluateAsRegisteredUser(
+        [FromBody] EvaluateRegisteredTccInputModel data,
+        [FromServices] EvaluateTccUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var result = await useCase.ExecuteRegisteredUser(data.TccId, userId, data.Grade, data.EvaluationComments, data.EvaluationDetails);
+        if (result.IsFailure)
+        {
+            result.ErrorDetails!.Type = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            return result.ErrorDetails.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => Forbid(),
+                404 => NotFound(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails.Status ?? 500, result.ErrorDetails)
+            };
+        }
+
+        return Ok(new { tccId = result.Data });
     }
 
     /// <summary>
