@@ -1,0 +1,191 @@
+name: Controlled multi-platform image candidates
+
+# No push, PR-merge, release or schedule trigger. No deployment or mutable release tags.
+on:
+  workflow_dispatch:
+    inputs:
+      publish_candidates:
+        description: Publish NEW SHA/run-specific candidates after tests and security scans
+        type: boolean
+        default: false
+      confirm_sha:
+        description: For publishing, repeat the FULL commit SHA selected by the workflow ref
+        type: string
+        default: ''
+      api_url:
+        description: Public frontend API URL (test value by default; candidates are not deployed)
+        type: string
+        default: http://127.0.0.1:8080/api
+
+permissions:
+  contents: read
+
+concurrency:
+  group: controlled-image-candidates-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  DOCKER_BUILD_RECORD_UPLOAD: 'false'
+  DOCKER_BUILD_SUMMARY: 'false'
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.plan.outputs.tag }}
+      owner: ${{ steps.plan.outputs.owner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate publication guard and unique candidate names
+        id: plan
+        env:
+          PUBLISH_CANDIDATES: ${{ inputs.publish_candidates }}
+          CONFIRM_SHA: ${{ inputs.confirm_sha }}
+          CANDIDATE_API_URL: ${{ inputs.api_url }}
+          REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+        run: node scripts/controlled-publication.cjs plan
+      - name: Test registry and tag safety checks without publishing
+        run: |
+          node --test scripts/tests/controlled-publication.test.cjs
+          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+
+  build-test-scan:
+    needs: plan
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        service: [frontend, backend]
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    services:
+      postgres:
+        image: ${{ matrix.service == 'backend' && 'postgres:15' || '' }}
+        env:
+          POSTGRES_PASSWORD: validation-only-password
+          POSTGRES_DB: gradus_proposal_test
+        ports:
+          - 55439:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gradus_proposal_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      CANDIDATE_TAG: ${{ needs.plan.outputs.tag }}
+      IMAGE: ghcr.io/${{ needs.plan.outputs.owner }}/gestaotccs-${{ matrix.service }}
+      LOCAL_IMAGE: gradus-candidate/${{ matrix.service }}:${{ github.sha }}-${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-dotnet@v4
+        if: matrix.service == 'backend'
+        with:
+          dotnet-version: '8.0.x'
+      - name: Backend tests with PostgreSQL and OpenCover coverage
+        if: matrix.service == 'backend'
+        working-directory: backend
+        env:
+          GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
+        run: |
+          dotnet restore gestaotcc.Test/gestaotcc.Test.csproj --configfile NuGet.Public.config
+          dotnet test gestaotcc.Test/gestaotcc.Test.csproj --no-restore --configuration Release -m:1 -p:UseSharedCompilation=false --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage
+          python3 ../scripts/summarize-coverage.py coverage
+      - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config: scripts/buildkit-validation.toml
+      - name: Build and load exact platform using the tested Dockerfiles
+        uses: docker/build-push-action@v7
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile.multiarch
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          push: false
+          tags: ${{ env.LOCAL_IMAGE }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          build-args: |
+            NEXT_PUBLIC_APP_VERSION=${{ needs.plan.outputs.tag }}
+            NEXT_PUBLIC_API_URL=${{ inputs.api_url }}
+          provenance: false
+      - name: Architecture, native dependencies and HTTP smoke
+        env:
+          SERVICE: ${{ matrix.service }}
+          ARCH: ${{ matrix.arch }}
+        run: bash scripts/multiarch-smoke.sh "$SERVICE" "linux/$ARCH" "$LOCAL_IMAGE"
+      - name: Install pinned Trivy and scan the image before any push
+        env:
+          TRIVY_VERSION: v0.76.0
+        run: |
+          curl --fail --silent --show-error --location "https://raw.githubusercontent.com/aquasecurity/trivy/$TRIVY_VERSION/contrib/install.sh" --output "$RUNNER_TEMP/install-trivy.sh"
+          sh "$RUNNER_TEMP/install-trivy.sh" -b "$RUNNER_TEMP/trivy" "$TRIVY_VERSION"
+          "$RUNNER_TEMP/trivy/trivy" image --severity CRITICAL --exit-code 1 --ignore-unfixed "$LOCAL_IMAGE"
+      - uses: docker/login-action@v3
+        if: inputs.publish_candidates
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish only a new architecture-specific candidate
+        if: inputs.publish_candidates
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          node scripts/controlled-publication.cjs absent "$IMAGE" "$CANDIDATE_TAG-$ARCH"
+          docker tag "$LOCAL_IMAGE" "$IMAGE:$CANDIDATE_TAG-$ARCH"
+          docker push "$IMAGE:$CANDIDATE_TAG-$ARCH"
+          node scripts/controlled-publication.cjs verify "$IMAGE" "$CANDIDATE_TAG-$ARCH" "$ARCH"
+
+  manifests:
+    if: inputs.publish_candidates
+    needs: [plan, build-test-scan]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CANDIDATE_TAG: ${{ needs.plan.outputs.tag }}
+      IMAGE_OWNER: ${{ needs.plan.outputs.owner }}
+      GHCR_USERNAME: ${{ github.actor }}
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PUBLISH_CANDIDATES: ${{ inputs.publish_candidates }}
+      CONFIRM_SHA: ${{ inputs.confirm_sha }}
+      CANDIDATE_API_URL: ${{ inputs.api_url }}
+      REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Assemble indexes from verified immutable digests and verify both platforms
+        run: node scripts/controlled-publication.cjs assemble
