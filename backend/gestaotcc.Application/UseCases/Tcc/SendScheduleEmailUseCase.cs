@@ -1,98 +1,120 @@
 using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
+using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Tcc;
-public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emailGateway, IStorageGateway storageGateway, IAppLoggerGateway<SendScheduleEmailUseCase> logger)
+
+public class SendScheduleEmailUseCase(
+    ITccGateway tccGateway,
+    IEmailGateway emailGateway,
+    IStorageGateway storageGateway,
+    IAppLoggerGateway<SendScheduleEmailUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(long tccId, long currentUserId)
     {
-        logger.LogInformation("Iniciando envio de e-mails de agendamento para o TccId: {TccId}", tccId);
+        logger.LogInformation("Iniciando envio dos comunicados da apresentação do TCC {TccId}.", tccId);
 
         var tcc = await tccGateway.FindTccScheduling(tccId);
         if (tcc is null)
-        {
-            logger.LogWarning("Falha no envio de e-mails: TCC não encontrado para o TccId: {TccId}", tccId);
             return ResultPattern<string>.FailureResult("TCC não encontrado", 404);
-        }
         if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
             return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
         if (tcc.TccSchedule is null)
-        {
-            logger.LogWarning("Falha no envio de e-mails para TccId {TccId}: TCC não possui um agendamento de defesa.", tccId);
             return ResultPattern<string>.FailureResult("TCC não possui agendamento de defesa", 409);
-        }
+
         try
         {
-            logger.LogInformation("Enviando e-mails de agendamento para {UserCount} usuários do TccId {TccId}.", tcc.UserTccs.Count, tccId);
-            
-            // Tenta baixar o arquivo do TCC se houver
-            List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>? attachments = null;
-            if (!string.IsNullOrEmpty(tcc.TccFile))
-            {
-                try
-                {
-                    var fileBytes = await storageGateway.Download(tcc.TccFile, false);
-                    var contentType = "application/pdf"; 
-                    attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
-                    {
-                        new gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO(tcc.TccFile.Replace("filled/", ""), fileBytes, contentType)
-                    };
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Não foi possível baixar o arquivo do TCC {TccFile} para o e-mail de agendamento do TccId {TccId}", tcc.TccFile, tccId);
-                }
-            }
-
+            var attachment = await TryLoadTccAttachment(tcc);
             var sentEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // 1. Enviar para os membros da banca (examinadores com anexo)
-            if (tcc.BankingMembers != null)
+            foreach (var member in tcc.BankingMembers)
             {
-                foreach (var member in tcc.BankingMembers)
-                {
-                    if (string.IsNullOrWhiteSpace(member.Email) || sentEmails.Contains(member.Email))
-                        continue;
-
-                    logger.LogInformation("Enviando e-mail de agendamento para examinador da banca: {UserEmail} ({Name})", member.Email, member.Name);
-                    var emailDto = EmailFactory.CreateSendEmailDTO(member.Name, member.Email, tcc, tcc.TccSchedule);
-                    emailDto.Attachments = attachments;
-                    await emailGateway.Send(emailDto);
-                    sentEmails.Add(member.Email);
-                }
-            }
-
-            // 2. Enviar para os usuários vinculados ao TCC (aluno sem anexo, orientador/outros com anexo)
-            foreach (var userTcc in tcc.UserTccs)
-            {
-                if (userTcc.User == null || string.IsNullOrWhiteSpace(userTcc.User.Email) || sentEmails.Contains(userTcc.User.Email))
+                if (string.IsNullOrWhiteSpace(member.Email) || !sentEmails.Add(member.Email.Trim()))
                     continue;
 
-                logger.LogDebug("Enviando e-mail de agendamento para o usuário: {UserEmail} (UserId: {UserId})", userTcc.User.Email, userTcc.User.Id);
-                var emailDto = EmailFactory.CreateSendEmailDTO(userTcc.User.Name, userTcc.User.Email, tcc, tcc.TccSchedule);
-
-                var isStudent = string.Equals(userTcc.Profile?.Role, "STUDENT", StringComparison.OrdinalIgnoreCase);
-                if (!isStudent)
+                SendEmailDTO email;
+                if (member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase))
                 {
-                    emailDto.Attachments = attachments;
+                    email = EmailFactory.CreateAdvisorScheduleNotice(
+                        member.Name, member.Email, tcc, tcc.TccSchedule, hasTccAttachment: false);
+                }
+                else if (member.UserId.HasValue)
+                {
+                    email = EmailFactory.CreateInternalBankingScheduleNotice(
+                        member.Name, member.Email, tcc, tcc.TccSchedule, attachment is not null);
                 }
                 else
                 {
-                    emailDto.Attachments = null; // Aluno não recebe o anexo do TCC
+                    email = EmailFactory.CreateExternalBankingScheduleNotice(
+                        member.Name, member.Email, member.Role, member.AccessToken,
+                        tcc, tcc.TccSchedule, attachment is not null);
                 }
 
-                await emailGateway.Send(emailDto);
-                sentEmails.Add(userTcc.User.Email);
+                email.Attachments = member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase) ? null : attachment;
+                await Send(email);
+            }
+
+            foreach (var userTcc in tcc.UserTccs)
+            {
+                var user = userTcc.User;
+                if (user is null || string.IsNullOrWhiteSpace(user.Email) || !sentEmails.Add(user.Email.Trim()))
+                    continue;
+
+                var role = userTcc.Profile?.Role;
+                SendEmailDTO email;
+                if (string.Equals(role, "STUDENT", StringComparison.OrdinalIgnoreCase))
+                {
+                    email = EmailFactory.CreateStudentScheduleNotice(user.Name, user.Email, tcc, tcc.TccSchedule);
+                }
+                else if (string.Equals(role, "ADVISOR", StringComparison.OrdinalIgnoreCase))
+                {
+                    email = EmailFactory.CreateAdvisorScheduleNotice(
+                        user.Name, user.Email, tcc, tcc.TccSchedule, hasTccAttachment: false);
+                }
+                else
+                {
+                    email = EmailFactory.CreateParticipantScheduleNotice(
+                        user.Name, user.Email, tcc, tcc.TccSchedule, attachment is not null);
+                    email.Attachments = attachment;
+                }
+
+                await Send(email);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erro ao enviar e-mails de agendamento de defesa para o TccId: {TccId}", tccId);
-            return ResultPattern<string>.FailureResult("Erro ao enviar email de agendamento de defesa do TCC", 500);
+            logger.LogError(ex, "Erro ao enviar comunicados da apresentação do TCC {TccId}.", tccId);
+            return ResultPattern<string>.FailureResult("Erro ao enviar os comunicados do agendamento do TCC", 500);
         }
-        
-        logger.LogInformation("E-mails de agendamento para o TccId {TccId} enviados com sucesso.", tccId);
-        return ResultPattern<string>.SuccessResult("Emails de agendamento de defesa do TCC enviados com sucesso.");
+
+        logger.LogInformation("Comunicados da apresentação do TCC {TccId} enviados.", tccId);
+        return ResultPattern<string>.SuccessResult("Agenda enviada com mensagens adequadas ao perfil de cada participante.");
+    }
+
+    private async Task<List<EmailAttachmentDTO>?> TryLoadTccAttachment(gestaotcc.Domain.Entities.Tcc.TccEntity tcc)
+    {
+        if (string.IsNullOrWhiteSpace(tcc.TccFile)) return null;
+        try
+        {
+            var fileBytes = await storageGateway.Download(tcc.TccFile, false);
+            if (fileBytes is null || fileBytes.Length == 0) return null;
+            return new List<EmailAttachmentDTO>
+            {
+                new(tcc.TccFile.Replace("filled/", ""), fileBytes, "application/pdf")
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Não foi possível anexar o TCC {TccFile} aos comunicados: {Error}", tcc.TccFile, ex.Message);
+            return null;
+        }
+    }
+
+    private async Task Send(SendEmailDTO email)
+    {
+        var result = await emailGateway.Send(email);
+        if (result.IsFailure)
+            throw new InvalidOperationException($"Falha ao enviar e-mail para {email.Recipient}: {result.Message}");
     }
 }

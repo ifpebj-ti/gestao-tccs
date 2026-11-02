@@ -89,7 +89,7 @@ public class SendScheduleEmailUseCaseTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Equal("Emails de agendamento de defesa do TCC enviados com sucesso.", result.Data);
+        Assert.Equal("Agenda enviada com mensagens adequadas ao perfil de cada participante.", result.Data);
 
         await _emailGateway.Received(2).Send(Arg.Any<SendEmailDTO>());
         await _emailGateway.Received().Send(Arg.Is<SendEmailDTO>(e => e.Recipient == "joao@email.com"));
@@ -128,7 +128,75 @@ public class SendScheduleEmailUseCaseTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(500, result.ErrorDetails.Status);
-        Assert.Equal("Erro ao enviar email de agendamento de defesa do TCC", result.Message);
+        Assert.Equal("Erro ao enviar os comunicados do agendamento do TCC", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldSendRoleSpecificMessagesAndAttachTccOnlyToNonStudents()
+    {
+        var advisor = new UserEntity { Id = 9, Name = "Orientadora", Email = "advisor@example.com" };
+        var student = new UserEntity { Id = 10, Name = "Estudante", Email = "student@example.com" };
+        var tcc = AdvisorTcc(new TccEntity
+        {
+            Id = 1,
+            Title = "TCC de teste",
+            Summary = "Resumo detalhado",
+            TccFile = "filled/test.pdf",
+            TccSchedule = new TccScheduleEntity { ScheduledDate = new DateTime(2025, 12, 25, 14, 0, 0), Location = "Auditório" },
+            BankingMembers = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>
+            {
+                new("Examinador interno", "internal@example.com", "Examinador Interno", "internal-token", 1) { UserId = 11 },
+                new("Examinador externo", "external@example.com", "Examinador Externo", "external-token", 1),
+                new("Orientadora", advisor.Email, "Orientador(a)", "advisor-token", 1) { UserId = advisor.Id }
+            },
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = advisor, UserId = advisor.Id, Profile = new ProfileEntity { Role = "ADVISOR" } },
+                new() { User = student, UserId = student.Id, Profile = new ProfileEntity { Role = "STUDENT" } }
+            }
+        });
+        _tccGateway.FindTccScheduling(1).Returns(tcc);
+        _storageGateway.Download("filled/test.pdf", false).Returns(new byte[] { 1, 2, 3 });
+        _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult());
+
+        var result = await _useCase.Execute(1, 9);
+
+        Assert.True(result.IsSuccess);
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(email =>
+            email.Recipient == "internal@example.com" && email.TypeTemplate == "BANKING-INTERNAL-SCHEDULE" && email.Attachments!.Count == 1));
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(email =>
+            email.Recipient == "external@example.com" && email.TypeTemplate == "BANKING-INVITE" && email.Attachments!.Count == 1));
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(email =>
+            email.Recipient == "advisor@example.com" && email.TypeTemplate == "SCHEDULE-TCC-ADVISOR" && email.Attachments == null &&
+            (bool)email.Variables["has_tcc_attachment"] == false));
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(email =>
+            email.Recipient == "student@example.com" && email.TypeTemplate == "SCHEDULE-TCC-STUDENT" && email.Attachments == null));
+    }
+
+    [Fact]
+    public async Task Execute_ShouldTellExaminerWhenTccFileIsUnavailable()
+    {
+        var tcc = AdvisorTcc(new TccEntity
+        {
+            Id = 1,
+            Title = "TCC sem arquivo",
+            TccSchedule = new TccScheduleEntity { ScheduledDate = DateTime.UtcNow.AddDays(2), Location = "Sala 1" },
+            BankingMembers = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>
+            {
+                new("Examinador", "external@example.com", "Examinador Externo", "token", 1)
+            }
+        });
+        _tccGateway.FindTccScheduling(1).Returns(tcc);
+        _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult());
+
+        var result = await _useCase.Execute(1, 9);
+
+        Assert.True(result.IsSuccess);
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(email =>
+            email.Recipient == "external@example.com" &&
+            email.TypeTemplate == "BANKING-INVITE" &&
+            (bool)email.Variables["has_tcc_attachment"] == false &&
+            email.Attachments == null));
     }
 
     private static TccEntity AdvisorTcc(TccEntity tcc)

@@ -136,11 +136,8 @@ export default function HomePage() {
     useState<CoordinationPendingCounts | null>(null);
   const [libraryPending, setLibraryPending] =
     useState<LibraryPendingCounts | null>(null);
-  const hasBankingRole = Array.isArray(profile)
-    ? profile.some((role) => ['BANKING', 'ADVISOR'].includes(role))
-    : ['BANKING', 'ADVISOR'].includes(profile ?? '');
   const { evaluations: pendingBankingEvaluations } =
-    usePendingInternalBankingEvaluations(hasBankingRole);
+    usePendingInternalBankingEvaluations();
 
   const checkUserTccStatus = useCallback(
     async (userId: string) => {
@@ -578,7 +575,7 @@ export default function HomePage() {
       title: 'Banca',
       icon: ClipboardList,
       group: 'attention',
-      visible: canView(['BANKING', 'ADVISOR']),
+      visible: canView(['BANKING', 'ADVISOR']) || pendingBankingEvaluations.length > 0,
       description: pendingBankingEvaluations.length > 0
         ? `${pendingBankingEvaluations.length} apresentação(ões) aguardando sua avaliação`
         : 'Agende apresentações, cadastre examinadores e acompanhe a banca',

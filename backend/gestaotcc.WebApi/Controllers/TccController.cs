@@ -482,7 +482,7 @@ public class TccController : ControllerBase
                 _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
             };
         }
-        return Ok(new MessageSuccessResponseModel("Email de agendamento de defesa do TCC enviado com sucesso"));
+        return Ok(new MessageSuccessResponseModel(result.Data));
     }
 
     /// <summary>

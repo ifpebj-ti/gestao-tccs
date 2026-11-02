@@ -490,7 +490,8 @@ export function useTccDetails() {
       if (!res.ok) {
         throw new Error('Falha ao enviar email de agendamento.');
       }
-      toast.success('Agenda enviada por email para todos os envolvidos!');
+      const response = await res.json();
+      toast.success(response.message ?? 'Comunicados personalizados da agenda enviados aos participantes.');
     } catch {
       toast.error('Erro ao tentar enviar o email.');
     }

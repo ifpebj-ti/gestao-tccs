@@ -183,3 +183,8 @@ test('banking role has a dedicated area and a pending evaluation badge', () => {
   assert.equal(advisor.some((item) => item.href === '/banking'), true);
   assert.equal(advisor.find((item) => item.href === '/banking').badge, 0);
 });
+
+test('authenticated examiner with pending evaluation gets the banking area without a banking role', () => {
+  const items = getSidebarItems(['STUDENT'], { status: 'none' }, 1);
+  assert.equal(items.find((item) => item.href === '/banking')?.badge, 1);
+});

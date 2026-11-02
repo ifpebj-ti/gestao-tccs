@@ -75,7 +75,7 @@ export function getSidebarItems(
   ];
   const myTcc = studentTccHref(student);
 
-  if (has('BANKING', 'ADVISOR')) {
+  if (has('BANKING', 'ADVISOR') || pendingBankingEvaluations > 0) {
     items.push({
       label: 'Banca',
       href: '/banking',

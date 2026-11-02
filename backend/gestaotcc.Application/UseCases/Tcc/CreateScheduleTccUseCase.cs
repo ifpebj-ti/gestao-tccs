@@ -50,10 +50,12 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
         {
             var tccSchedule = tcc.TccSchedule;
             var bankingProfile = await profileGateway.FindByRole("BANKING");
+            var newExternalMembers = new List<TccBankingMemberEntity>();
 
             if (data.BankingMembers != null)
             {
                 var baseUser = tcc.UserTccs.FirstOrDefault()?.User;
+                var submittedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var memberDto in data.BankingMembers)
                 {
@@ -70,10 +72,21 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
                         }
                     }
 
+                    else if (string.Equals(memberDto.Role, "Examinador Interno", StringComparison.OrdinalIgnoreCase))
+                    {
+                        registeredUser = await userGateway.FindByEmail(memberDto.Email);
+                        if (registeredUser is not null &&
+                            !string.Equals(registeredUser.Status, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+                            return ResultPattern<string>.FailureResult("O e-mail informado pertence a uma conta inativa.", 400);
+                    }
+
                     var memberEmail = registeredUser?.Email ?? memberDto.Email;
+                    if (!submittedEmails.Add(memberEmail.Trim()))
+                        return ResultPattern<string>.FailureResult("A mesma pessoa não pode ser adicionada mais de uma vez à banca.", 400);
                     var member = tcc.BankingMembers.FirstOrDefault(m =>
                         (registeredUser != null && m.UserId == registeredUser.Id) ||
                         m.Email.Equals(memberEmail, StringComparison.OrdinalIgnoreCase));
+                    var wasInternalMember = member?.UserId.HasValue == true;
                     if (member is null)
                     {
                         member = new TccBankingMemberEntity(
@@ -83,6 +96,8 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
                             Guid.NewGuid().ToString("N"),
                             tcc.Id);
                         tcc.BankingMembers.Add(member);
+                        if (registeredUser is null)
+                            newExternalMembers.Add(member);
                     }
                     else
                     {
@@ -91,6 +106,12 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
                         member.Role = registeredUser is null ? memberDto.Role : "Examinador Interno";
                     }
                     member.UserId = registeredUser?.Id;
+                    if (registeredUser is null && wasInternalMember)
+                    {
+                        member.AccessToken = Guid.NewGuid().ToString("N");
+                        member.TokenExpiryDate = null;
+                        newExternalMembers.Add(member);
+                    }
 
                     if (registeredUser != null)
                     {
@@ -149,6 +170,7 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
             }
 
             await tccGateway.Update(tcc);
+            var tccAttachment = await TryLoadTccAttachment(tcc);
 
             foreach (var member in tcc.BankingMembers
                          .Where(member => member.UserId.HasValue && !member.Grade.HasValue)
@@ -156,7 +178,11 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
             {
                 try
                 {
-                    var notice = EmailFactory.CreateInternalBankingScheduleNotice(member.Name, member.Email, tcc, tccSchedule);
+                    var isAdvisor = member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase);
+                    var notice = isAdvisor
+                        ? EmailFactory.CreateAdvisorScheduleNotice(member.Name, member.Email, tcc, tccSchedule, hasTccAttachment: false)
+                        : EmailFactory.CreateInternalBankingScheduleNotice(member.Name, member.Email, tcc, tccSchedule, tccAttachment is not null);
+                    notice.Attachments = isAdvisor ? null : tccAttachment;
                     var result = await emailGateway.Send(notice);
                     if (result.IsFailure)
                         logger.LogWarning("Failed to notify internal examiner {Email} about TCC {TccId} schedule.", member.Email, tcc.Id);
@@ -170,49 +196,12 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
             // Send instant emails and schedule reminders
             if (tcc.BankingMembers.Any())
             {
-                foreach (var member in tcc.BankingMembers)
+                foreach (var member in newExternalMembers)
                 {
-                    if (member.UserId.HasValue) continue;
-
                     // Instant invite email
-                    var variables = new Dictionary<string, object>
-                    {
-                        { "username", member.Name },
-                        { "titulo_tcc", tcc.Title ?? "TCC" },
-                        { "resumo_tcc", tcc.Summary ?? "Resumo não informado." },
-                        { "data_horario", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
-                        { "local", tccSchedule.Location },
-                        { "token", member.AccessToken },
-                        { "role", member.Role }
-                    };
-                    
-                    var emailDto = new gestaotcc.Domain.Dtos.Email.SendEmailDTO(
-                        emailBody: string.Empty,
-                        subjet: "Convite para Banca Avaliadora",
-                        recipient: member.Email,
-                        typeTemplate: "BANKING-INVITE",
-                        variables: variables
-                    );
-                    
-                    if (!string.IsNullOrEmpty(tcc.TccFile))
-                    {
-                        try 
-                        {
-                            var tccBytes = await storageGateway.Download(tcc.TccFile, false);
-                            if (tccBytes != null && tccBytes.Length > 0)
-                            {
-                                emailDto.Attachments = new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
-                                {
-                                    new gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO(tcc.TccFile.Replace("filled/", ""), tccBytes, "application/pdf")
-                                };
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogWarning("Falha ao baixar arquivo do TCC para anexo no email da banca. Erro: {Erro}", ex.Message);
-                        }
-                    }
-                    
+                    var emailDto = EmailFactory.CreateExternalBankingScheduleNotice(
+                        member.Name, member.Email, member.Role, member.AccessToken, tcc, tccSchedule, tccAttachment is not null);
+                    emailDto.Attachments = tccAttachment;
                     await emailGateway.Send(emailDto);
                 }
 
@@ -237,5 +226,24 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
         
         logger.LogInformation("Agendamento de defesa do TCC {TccId} criado com sucesso.", data.IdTcc);
         return ResultPattern<string>.SuccessResult("Agendamento de defesa do TCC criado com sucesso.");
+    }
+
+    private async Task<List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>?> TryLoadTccAttachment(gestaotcc.Domain.Entities.Tcc.TccEntity tcc)
+    {
+        if (string.IsNullOrWhiteSpace(tcc.TccFile)) return null;
+        try
+        {
+            var fileBytes = await storageGateway.Download(tcc.TccFile, false);
+            if (fileBytes is null || fileBytes.Length == 0) return null;
+            return new List<gestaotcc.Domain.Dtos.Email.EmailAttachmentDTO>
+            {
+                new(tcc.TccFile.Replace("filled/", ""), fileBytes, "application/pdf")
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Falha ao baixar o arquivo do TCC para anexar aos e-mails da banca. Erro: {Erro}", ex.Message);
+            return null;
+        }
     }
 }

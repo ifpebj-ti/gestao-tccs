@@ -60,10 +60,15 @@ public class ConcludePresentationUseCase(
         // Revalidate/Generate token for each banking member and send email
         foreach (var member in tcc.BankingMembers)
         {
-            member.AccessToken = Guid.NewGuid().ToString("N");
             member.TokenExpiryDate = DateTime.UtcNow.AddHours(1); // Token válido por 1 hora
 
-            if (member.UserId.HasValue) continue;
+            if (member.UserId.HasValue)
+            {
+                member.AccessToken = string.Empty;
+                continue;
+            }
+
+            member.AccessToken = Guid.NewGuid().ToString("N");
 
             // Não enviar e-mail se for o Orientador, pois ele avalia direto na tela
             if (!member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase))
@@ -72,7 +77,9 @@ public class ConcludePresentationUseCase(
                 {
                     { "username", member.Name },
                     { "titulo_tcc", tcc.Title ?? "TCC" },
-                    { "token", member.AccessToken }
+                    { "token", member.AccessToken },
+                    { "data_horario", tcc.TccSchedule?.ScheduledDate.ToString("dd/MM/yyyy HH:mm") ?? string.Empty },
+                    { "local", tcc.TccSchedule?.Location ?? string.Empty }
                 };
 
                 var emailDto = new SendEmailDTO(

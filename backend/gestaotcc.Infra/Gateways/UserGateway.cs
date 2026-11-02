@@ -26,7 +26,7 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .Include(x => x.CampiCourse)
                 .ThenInclude(x => x!.Campi)
             .Include(x => x.AccessCode)
-            .FirstOrDefaultAsync(x => x.Email == email);
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
     }
 
     //verificar

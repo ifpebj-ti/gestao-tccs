@@ -1,5 +1,5 @@
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
-using gestaotcc.Domain.Dtos.Email;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
@@ -17,26 +17,12 @@ public class BankingEmailJob(ITccGateway tccGateway, IEmailGateway emailGateway)
 
         foreach (var member in tcc.BankingMembers)
         {
-            if (member.UserId.HasValue) continue;
+            if (string.IsNullOrWhiteSpace(member.Email)) continue;
 
-            var variables = new Dictionary<string, object>
-            {
-                { "name", member.Name },
-                { "tccTitle", tcc.Title ?? "TCC" },
-                { "date", tcc.TccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm") },
-                { "location", tcc.TccSchedule.Location },
-                { "token", member.AccessToken }
-            };
-
-            var emailDto = new SendEmailDTO(
-                emailBody: string.Empty,
-                subjet: "Lembrete: Defesa de TCC Amanhã",
-                recipient: member.Email,
-                typeTemplate: "BANKING-REMINDER",
-                variables: variables
-            );
-
-            await emailGateway.Send(emailDto);
+            var email = member.UserId.HasValue
+                ? EmailFactory.CreateInternalBankingReminder(member.Name, member.Email, tcc, tcc.TccSchedule)
+                : EmailFactory.CreateExternalBankingReminder(member.Name, member.Email, tcc, tcc.TccSchedule);
+            await emailGateway.Send(email);
         }
     }
 }
