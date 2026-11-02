@@ -14,7 +14,8 @@ api_bind_addr = "0.0.0.0:3900"
 root_domain  = ".s3.garage.localhost"
 
 [s3_web]
-bind_addr = "0.0.0.0:3902"
+# A porta 3902 pertence ao RPC; o servidor web precisa de outra porta.
+bind_addr = "0.0.0.0:3903"
 root_domain = ".web.garage.localhost"
 index = "index.html"
 
