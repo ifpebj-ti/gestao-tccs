@@ -46,6 +46,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+import { usePendingInternalBankingEvaluations } from '@/app/hooks/usePendingInternalBankingEvaluations';
 
 interface DecodedToken {
   unique_name: string;
@@ -135,6 +136,11 @@ export default function HomePage() {
     useState<CoordinationPendingCounts | null>(null);
   const [libraryPending, setLibraryPending] =
     useState<LibraryPendingCounts | null>(null);
+  const hasBankingRole = Array.isArray(profile)
+    ? profile.some((role) => ['BANKING', 'ADVISOR'].includes(role))
+    : ['BANKING', 'ADVISOR'].includes(profile ?? '');
+  const { evaluations: pendingBankingEvaluations } =
+    usePendingInternalBankingEvaluations(hasBankingRole);
 
   const checkUserTccStatus = useCallback(
     async (userId: string) => {
@@ -568,6 +574,18 @@ export default function HomePage() {
             : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
 
   const shortcuts: HomeShortcut[] = [
+    {
+      title: 'Banca',
+      icon: ClipboardList,
+      group: 'attention',
+      visible: canView(['BANKING', 'ADVISOR']),
+      description: pendingBankingEvaluations.length > 0
+        ? `${pendingBankingEvaluations.length} apresentação(ões) aguardando sua avaliação`
+        : 'Agende apresentações, cadastre examinadores e acompanhe a banca',
+      indicatorNumber: pendingBankingEvaluations.length,
+      indicatorColor: 'bg-red-600 text-white',
+      onClick: () => push('/banking')
+    },
     {
       title: 'Assinaturas pendentes',
       icon: FileSignature,

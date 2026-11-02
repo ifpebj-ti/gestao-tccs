@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Library,
+  ClipboardCheck,
   type LucideIcon
 } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export interface SidebarMenuItem {
   href: string;
   icon: LucideIcon;
   activePaths?: string[];
+  badge?: number;
 }
 
 export const roleLabels: Record<UserRole, string> = {
@@ -63,7 +65,8 @@ export function studentTccHref(student: StudentNavigation): string | null {
 
 export function getSidebarItems(
   roles: UserRole[],
-  student: StudentNavigation
+  student: StudentNavigation,
+  pendingBankingEvaluations = 0
 ): SidebarMenuItem[] {
   const has = (...allowed: UserRole[]) =>
     roles.some((role) => allowed.includes(role));
@@ -71,6 +74,15 @@ export function getSidebarItems(
     { label: 'Início', href: '/homePage', icon: Home }
   ];
   const myTcc = studentTccHref(student);
+
+  if (has('BANKING', 'ADVISOR')) {
+    items.push({
+      label: 'Banca',
+      href: '/banking',
+      icon: ClipboardCheck,
+      badge: pendingBankingEvaluations
+    });
+  }
 
   if (has('STUDENT')) {
     if (myTcc) {

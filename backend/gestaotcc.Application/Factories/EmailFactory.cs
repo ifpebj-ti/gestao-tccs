@@ -96,4 +96,28 @@ public class EmailFactory
         
         return emailDTO;
     }
+
+    public static SendEmailDTO CreateInternalBankingScheduleNotice(string name, string email, TccEntity tcc, TccScheduleEntity schedule)
+    {
+        var variables = new Dictionary<string, object>
+        {
+            ["username"] = name,
+            ["titulo_tcc"] = tcc.Title ?? "TCC",
+            ["data_horario"] = schedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm"),
+            ["local"] = schedule.Location
+        };
+
+        return new SendEmailDTO(string.Empty, "Apresentação de TCC agendada", email, "BANKING-INTERNAL-SCHEDULE", variables);
+    }
+
+    public static SendEmailDTO CreateInternalBankingEvaluationNotice(string name, string email, TccEntity tcc)
+    {
+        var variables = new Dictionary<string, object>
+        {
+            ["username"] = name,
+            ["titulo_tcc"] = tcc.Title ?? "TCC"
+        };
+
+        return new SendEmailDTO(string.Empty, "Avaliação de TCC pendente", email, "BANKING-INTERNAL-EVALUATION", variables);
+    }
 }

@@ -5,9 +5,7 @@ import { PageState } from '@/components/layout/PageState';
 import { PageTitle } from '@/components/layout/PageTitle';
 import { NoticeCard } from '@/components/layout/NoticeCard';
 
-import { useCallback, useEffect, useState } from 'react';
-import Cookies from 'js-cookie';
-import { toast } from 'react-toastify';
+import { useState } from 'react';
 import {
   usePendingSignatures,
   PendingTcc,
@@ -23,17 +21,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AvaliacaoForm } from '@/components/AvaliacaoForm';
-import { env } from 'next-runtime-env';
-
-interface PendingInternalEvaluation {
-  tccId: number;
-  tccTitle: string | null;
-  scheduledDate: string;
-  location: string;
-  studentNames: string[];
-}
 
 export default function PendingSignaturesPage() {
   const { push } = useRouter();
@@ -50,26 +37,6 @@ export default function PendingSignaturesPage() {
 
   const [openUserCards, setOpenUserCards] = useState<Set<number>>(new Set());
   const [openTccGroups, setOpenTccGroups] = useState<Set<string>>(new Set());
-  const [pendingEvaluations, setPendingEvaluations] = useState<PendingInternalEvaluation[]>([]);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<PendingInternalEvaluation | null>(null);
-
-  const loadPendingEvaluations = useCallback(async () => {
-    const token = Cookies.get('token');
-    if (!token) return;
-    try {
-      const response = await fetch(`${env('NEXT_PUBLIC_API_URL')}/Tcc/banking/pending-evaluations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error();
-      setPendingEvaluations(await response.json());
-    } catch {
-      toast.error('Erro ao carregar avaliações de banca pendentes.');
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPendingEvaluations();
-  }, [loadPendingEvaluations]);
 
   const profileLabels: Record<string, string> = {
     STUDENT: 'Aluno',
@@ -267,24 +234,6 @@ export default function PendingSignaturesPage() {
         )}
       </div>
 
-      {pendingEvaluations.length > 0 && (
-        <section className="mb-8 rounded-lg border border-[#DDD9CD] bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold text-[#002B18]">Avaliações de banca pendentes</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            {pendingEvaluations.map((evaluation) => (
-              <div key={evaluation.tccId} className="rounded-md border bg-[#FAF9F5] p-4">
-                <p className="font-semibold">{evaluation.tccTitle || `TCC ${evaluation.tccId}`}</p>
-                <p className="mt-1 text-sm text-slate-600">{evaluation.studentNames.join(', ') || 'TCC sem aluno definido'}</p>
-                <p className="mt-1 text-sm text-slate-600">
-                  {new Date(evaluation.scheduledDate).toLocaleString('pt-BR')} · {evaluation.location}
-                </p>
-                <Button className="mt-3" onClick={() => setSelectedEvaluation(evaluation)}>Avaliar TCC</Button>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {!isLoading &&
         (showAll ? groupedByUser.length > 0 : pendingData.length > 0) && (
           <NoticeCard title="Sobre as pendências" className="mb-6">
@@ -306,24 +255,6 @@ export default function PendingSignaturesPage() {
         </div>
       )}
 
-      <Dialog open={selectedEvaluation !== null} onOpenChange={(open) => !open && setSelectedEvaluation(null)}>
-        <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-y-auto sm:max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Avaliar apresentação</DialogTitle>
-          </DialogHeader>
-          {selectedEvaluation && (
-            <AvaliacaoForm
-              internalTccId={selectedEvaluation.tccId}
-              onSuccessCallback={() => {
-                setSelectedEvaluation(null);
-                void loadPendingEvaluations();
-                void fetchPendingSignatures();
-              }}
-              hideLogoAndMinHeight
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

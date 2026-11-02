@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Banca de TCC</title></head>
+<body style="margin:0;background:#f5f6f2;font-family:Arial,sans-serif;color:#183e2d;padding:24px">
+  <main style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;padding:32px">
+    <p style="font-size:12px;font-weight:bold;letter-spacing:1px;color:#52725d">BANCA EXAMINADORA</p>
+    <h1 style="font-size:24px">Olá, {{username}}!</h1>
+    <p>A apresentação de um TCC da sua banca foi agendada. Confira os dados:</p>
+    <section style="background:#f5fff0;border-left:4px solid #c8ff47;padding:16px;margin:20px 0">
+      <p><strong>TCC:</strong> {{titulo_tcc}}</p>
+      <p><strong>Data e horário:</strong> {{data_horario}}</p>
+      <p><strong>Local:</strong> {{local}}</p>
+    </section>
+    <p>Acesse a área Banca para acompanhar suas atividades e avaliações pendentes.</p>
+    <p style="text-align:center;margin:28px 0"><a href="{{urlfront}}/banking" style="display:inline-block;background:#c8ff47;color:#183e2d;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:6px">Abrir área Banca</a></p>
+    <p style="font-size:12px;color:#667">Esta mensagem foi enviada pelo sistema de gestão de TCCs.</p>
+  </main>
+</body>
+</html>

@@ -55,7 +55,7 @@ public class SendPendingSignatureUseCase(
             if (tccStep == StepTccType.PROPOSAL_REGISTRATION) continue;
 
             var userTccs = tcc.UserTccs.ToList();
-            var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userTccs, currentOrder);
+            var expectedDocTypes = GetExpectedDocumentTypes(documentTypes, userTccs, currentOrder, tcc);
             var documentsInStep = tcc.Documents.Where(d => d.DocumentType.SignatureOrder == currentOrder).ToList();
 
             foreach (var docType in expectedDocTypes)
@@ -145,13 +145,21 @@ public class SendPendingSignatureUseCase(
     private List<DocumentTypeEntity> GetExpectedDocumentTypes(
         List<DocumentTypeEntity> allDocTypes,
         List<UserTccEntity> userTccs,
-        int stepOrder)
+        int stepOrder,
+        gestaotcc.Domain.Entities.Tcc.TccEntity tcc)
     {
         return allDocTypes
             .Where(dt => dt.SignatureOrder == stepOrder &&
+                         (!IsAdvisorChangeDocumentType(dt.Name) || tcc.AdvisorChanges.Any(ac =>
+                             ac.Status == "PENDING_SIGNATURES" && ac.DocumentId.HasValue &&
+                             tcc.Documents.Any(d => d.Id == ac.DocumentId.Value && d.DocumentTypeId == dt.Id))) &&
                          dt.Profiles.Any(p => userTccs.Any(u => u.Profile.Id == p.Id)))
             .ToList();
     }
+
+    private static bool IsAdvisorChangeDocumentType(string? name) =>
+        name?.Contains("ANEXO V -", StringComparison.OrdinalIgnoreCase) == true ||
+        name?.Contains("ANEXO IX", StringComparison.OrdinalIgnoreCase) == true;
 
     private void NotifyUser(
         Dictionary<string, SendPendingSignatureDTO> usersToNotify,

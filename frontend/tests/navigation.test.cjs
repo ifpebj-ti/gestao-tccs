@@ -170,3 +170,16 @@ test('perfil biblioteca visualiza acervo e catalogação e não vê fluxos acad�
     false
   );
 });
+
+
+test('banking role has a dedicated area and a pending evaluation badge', () => {
+  const items = getSidebarItems(['BANKING'], { status: 'none' }, 3);
+  const banking = items.find((item) => item.href === '/banking');
+  assert.equal(banking.label, 'Banca');
+  assert.equal(banking.badge, 3);
+  assert.ok(items.some((item) => item.href === '/pendingSignatures'));
+
+  const advisor = getSidebarItems(['ADVISOR'], { status: 'none' });
+  assert.equal(advisor.some((item) => item.href === '/banking'), true);
+  assert.equal(advisor.find((item) => item.href === '/banking').badge, 0);
+});

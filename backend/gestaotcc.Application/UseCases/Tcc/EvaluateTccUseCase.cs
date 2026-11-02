@@ -16,6 +16,8 @@ public class EvaluateTccUseCase(
         var member = await tccGateway.FindBankingMemberByTccAndUser(tccId, userId);
         if (member is null || (member.Role != "Examinador Interno" && !member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase)))
             return ResultPattern<long>.FailureResult("O usuário não está cadastrado como examinador interno deste TCC.", 403);
+        if (!member.TokenExpiryDate.HasValue)
+            return ResultPattern<long>.FailureResult("A avaliacao ficara disponivel apos a conclusao da apresentacao.", 409);
         if (member.Grade.HasValue)
             return ResultPattern<long>.FailureResult("A avaliação já foi enviada.", 409);
 

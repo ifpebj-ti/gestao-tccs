@@ -3,6 +3,7 @@ using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccSchedule;
+using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Errors;
@@ -31,7 +32,7 @@ public class SendScheduleEmailUseCaseTests
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns((TccEntity?)null);
 
         // Act
-        var result = await _useCase.Execute(1);
+        var result = await _useCase.Execute(1, 9);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -43,11 +44,11 @@ public class SendScheduleEmailUseCaseTests
     public async Task Execute_ShouldReturnConflict_WhenTccHasNoSchedule()
     {
         // Arrange
-        var tcc = new TccEntity { Id = 1, Title = "TCC Teste", Summary = "Resumo", TccSchedule = null };
+        var tcc = AdvisorTcc(new TccEntity { Id = 1, Title = "TCC Teste", Summary = "Resumo", TccSchedule = null });
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(tcc);
 
         // Act
-        var result = await _useCase.Execute(1);
+        var result = await _useCase.Execute(1, 9);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -78,12 +79,13 @@ public class SendScheduleEmailUseCaseTests
                 new() { User = user2 }
             }
         };
+        AdvisorTcc(tcc);
 
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(tcc);
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult());
 
         // Act
-        var result = await _useCase.Execute(tcc.Id);
+        var result = await _useCase.Execute(tcc.Id, 9);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -115,16 +117,23 @@ public class SendScheduleEmailUseCaseTests
                 new() { User = user }
             }
         };
+        AdvisorTcc(tcc);
 
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(tcc);
         _emailGateway.Send(Arg.Any<SendEmailDTO>()).Throws(new Exception("Erro simulado"));
 
         // Act
-        var result = await _useCase.Execute(tcc.Id);
+        var result = await _useCase.Execute(tcc.Id, 9);
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(500, result.ErrorDetails.Status);
         Assert.Equal("Erro ao enviar email de agendamento de defesa do TCC", result.Message);
+    }
+
+    private static TccEntity AdvisorTcc(TccEntity tcc)
+    {
+        tcc.UserTccs.Add(new UserTccEntity { UserId = 9, Profile = new ProfileEntity { Role = "ADVISOR" } });
+        return tcc;
     }
 }

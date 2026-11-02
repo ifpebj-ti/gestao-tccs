@@ -70,7 +70,9 @@ export function ScheduleSection({
           <p className="text-sm text-gray-500 mt-1">
             {isCompleted
               ? 'Consulte o parecer final, nota da banca e informações da defesa.'
-              : 'Gerencie a data, local e os examinadores da banca do TCC.'}
+              : canSchedule
+                ? 'Gerencie a data, local e os examinadores da banca do TCC.'
+                : 'Consulte os dados da apresentação. O gerenciamento da banca fica na área Banca.'}
           </p>
         </div>
 

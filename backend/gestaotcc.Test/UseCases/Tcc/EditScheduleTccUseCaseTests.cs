@@ -3,6 +3,8 @@ using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Entities.TccSchedule;
+using gestaotcc.Domain.Entities.Profile;
+using gestaotcc.Domain.Entities.UserTcc;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 
@@ -25,7 +27,7 @@ public class EditScheduleTccUseCaseTests
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(Task.FromResult<TccEntity?>(null));
 
         var dto = new ScheduleTccDTO(null, null, null, 1);
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(404, result.ErrorDetails?.Status);
@@ -35,11 +37,11 @@ public class EditScheduleTccUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnConflict_WhenTccScheduleIsNull()
     {
-        var tcc = new TccEntity { TccSchedule = null };
+        var tcc = AdvisorTcc(new TccEntity { TccSchedule = null });
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(Task.FromResult<TccEntity?>(tcc));
 
         var dto = new ScheduleTccDTO(null, null, null, 1);
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(409, result.ErrorDetails?.Status);
@@ -51,7 +53,7 @@ public class EditScheduleTccUseCaseTests
     {
         var originalDate = DateTime.UtcNow.AddDays(1);
         var tccSchedule = new TccScheduleEntity { ScheduledDate = originalDate, Location = "Old Location" };
-        var tcc = new TccEntity { TccSchedule = tccSchedule };
+        var tcc = AdvisorTcc(new TccEntity { TccSchedule = tccSchedule });
 
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(Task.FromResult<TccEntity?>(tcc));
         _tccGateway.Update(Arg.Any<TccEntity>()).Returns(Task.CompletedTask);
@@ -62,7 +64,7 @@ public class EditScheduleTccUseCaseTests
 
         var dto = new ScheduleTccDTO(newDate, newTime, newLocation, 1);
 
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 1);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("Operação realizada com sucesso.", result.Message);
@@ -75,17 +77,23 @@ public class EditScheduleTccUseCaseTests
     public async Task Execute_ShouldReturnFailure_WhenExceptionOccurs()
     {
         var tccSchedule = new TccScheduleEntity { ScheduledDate = DateTime.UtcNow, Location = "Location" };
-        var tcc = new TccEntity { TccSchedule = tccSchedule };
+        var tcc = AdvisorTcc(new TccEntity { TccSchedule = tccSchedule });
 
         _tccGateway.FindTccScheduling(Arg.Any<long>()).Returns(Task.FromResult<TccEntity?>(tcc));
         _tccGateway.Update(Arg.Any<TccEntity>()).Throws(new Exception("DB error"));
 
         var dto = new ScheduleTccDTO(null, null, "New Location", 1);
 
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(500, result.ErrorDetails?.Status);
         Assert.Equal("Erro ao editar agendamento de defesa do TCC", result.Message);
+    }
+
+    private static TccEntity AdvisorTcc(TccEntity tcc)
+    {
+        tcc.UserTccs.Add(new UserTccEntity { UserId = 1, Profile = new ProfileEntity { Role = "ADVISOR" } });
+        return tcc;
     }
 }

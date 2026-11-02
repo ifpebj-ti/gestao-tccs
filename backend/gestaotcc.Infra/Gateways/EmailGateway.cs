@@ -135,6 +135,8 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "SCHEDULE-TCC" ? Path.Combine(directory, "Templates", "schedule-tcc-template.html")
             : typeTemplate == "BANKING-INVITE" ? Path.Combine(directory, "Templates", "banking-invite-template.html")
             : typeTemplate == "BANKING-EVALUATION" ? Path.Combine(directory, "Templates", "banking-evaluation-template.html")
+            : typeTemplate == "BANKING-INTERNAL-SCHEDULE" ? Path.Combine(directory, "Templates", "banking-internal-schedule-template.html")
+            : typeTemplate == "BANKING-INTERNAL-EVALUATION" ? Path.Combine(directory, "Templates", "banking-internal-evaluation-template.html")
             : typeTemplate == "UPDATE-PASSWORD" ? Path.Combine(directory, "Templates", "update-password-template.html")
             : typeTemplate == "SCHEDULE-ALLOWED" ? Path.Combine(directory, "Templates", "schedule-allowed-template.html")
             : typeTemplate == "FINAL-SUBMISSION-NOTICE" ? Path.Combine(directory, "Templates", "final-submission-notice-template.html")

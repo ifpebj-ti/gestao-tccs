@@ -10,7 +10,6 @@ import { StudentInfoSection } from '@/components/tcc-details/StudentInfoSection'
 import { AdvisorInfoSection } from '@/components/tcc-details/AdvisorInfoSection';
 import { BankingInfoSection } from '@/components/tcc-details/BankingInfoSection';
 import { ScheduleSection } from '@/components/tcc-details/ScheduleSection';
-import { ScheduleDialog } from '@/components/tcc-details/ScheduleDialog';
 import { ActionPanel } from '@/components/tcc-details/ActionPanel';
 import { CancellationModal } from '@/components/tcc-details/CancellationModal';
 import { AdvisorChangeModal } from '@/components/tcc-details/AdvisorChangeModal';
@@ -26,23 +25,16 @@ export default function DetailsClient() {
     // Modais e Visibilidade
     isCancellationModalOpen,
     setIsCancellationModalOpen,
-    isScheduleFormVisible,
-    setIsScheduleFormVisible,
     isEditingTccInfo,
     setIsEditingTccInfo,
     // Forms
     cancellationForm,
-    scheduleForm,
-    internalExaminers,
     editTccForm,
     // Handlers
     handleRequestCancellation,
     handleApproveCancellation,
-    handleScheduleSubmit,
-    handleSendScheduleEmail,
     handleResendInvite,
     handleEditTccInfo,
-    handleConcludePresentation,
     handleUploadTccFile,
     handleUploadFinalTccFile,
     handleConfirmHardCover,
@@ -54,7 +46,6 @@ export default function DetailsClient() {
     isDownloadingFinalFile,
     isForwardingToLibrary,
     isConfirmingLibrary,
-    isConcluding,
     orientadorToken,
     setOrientadorToken,
     // Alteração / Afastamento de Orientador
@@ -155,22 +146,8 @@ export default function DetailsClient() {
 
         <ScheduleSection
           infoTcc={tccData.infoTcc}
-          isScheduleFormVisible={isScheduleFormVisible}
-          onOpenSchedule={() => setIsScheduleFormVisible(true)}
-          canSchedule={canManageTcc && !tccData.cancellationRequest}
-          onSendScheduleEmail={handleSendScheduleEmail}
+        canSchedule={false}
           isCompleted={tccData.infoTcc.status === 'COMPLETED'}
-          onConcludePresentation={handleConcludePresentation}
-          isConcluding={isConcluding}
-        />
-
-        <ScheduleDialog
-          isOpen={isScheduleFormVisible}
-          hasSchedule={!!tccData.infoTcc.presentationDate}
-          onOpenChange={setIsScheduleFormVisible}
-          form={scheduleForm}
-          onSubmit={handleScheduleSubmit}
-          internalExaminers={internalExaminers}
         />
 
         <ActionPanel

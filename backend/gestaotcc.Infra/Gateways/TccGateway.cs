@@ -142,7 +142,7 @@ public class TccGateway(AppDbContext context) : ITccGateway
     public async Task<List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>> FindPendingInternalBankingMembers(long userId)
     {
         return await context.TccBankingMembers
-            .Where(member => member.UserId == userId && member.Grade == null &&
+            .Where(member => member.UserId == userId && member.Grade == null && member.TokenExpiryDate.HasValue &&
                 (member.Role == "Examinador Interno" || member.Role.Contains("Orientador")) &&
                 member.Tcc.TccSchedule != null && member.Tcc.Status == "IN_PROGRESS")
             .Include(member => member.Tcc)
