@@ -1,0 +1,106 @@
+name: Isolated AMD64 and ARM64 validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      export_oci:
+        description: Export multi-platform OCI archives as short-lived artifacts (no registry push)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: multiarch-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    # Deliberately manual and separate from every production/release job.
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        service: [frontend, backend]
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config: scripts/buildkit-validation.toml
+      - name: Build and execute architecture-specific tests
+        uses: docker/build-push-action@v7
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile.multiarch
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          push: false
+          tags: gradus-validation/${{ matrix.service }}:sha-${{ github.sha }}-${{ matrix.arch }}
+          build-args: |
+            NEXT_PUBLIC_APP_VERSION=validation-${{ github.sha }}
+            NEXT_PUBLIC_API_URL=http://127.0.0.1:8080/api
+          cache-from: type=gha,scope=validation-${{ matrix.service }}-${{ matrix.arch }}
+          cache-to: type=gha,scope=validation-${{ matrix.service }}-${{ matrix.arch }},mode=max
+          provenance: false
+      - name: Verify architecture, native dependencies and HTTP startup
+        env:
+          SERVICE: ${{ matrix.service }}
+          ARCH: ${{ matrix.arch }}
+          COMMIT: ${{ github.sha }}
+        run: bash scripts/multiarch-smoke.sh "$SERVICE" "linux/$ARCH" "gradus-validation/$SERVICE:sha-$COMMIT-$ARCH"
+
+  infrastructure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v4
+      - run: node scripts/multiarch-inventory.cjs
+
+  oci-archive:
+    if: inputs.export_oci
+    needs: [smoke, infrastructure]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      matrix:
+        service: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v4
+        with:
+          buildkitd-config: scripts/buildkit-validation.toml
+      - name: Export multi-platform image locally; never publish
+        uses: docker/build-push-action@v7
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile.multiarch
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: gradus-validation/${{ matrix.service }}:sha-${{ github.sha }}
+          outputs: type=oci,dest=${{ runner.temp }}/${{ matrix.service }}.tar
+          build-args: |
+            NEXT_PUBLIC_APP_VERSION=validation-${{ github.sha }}
+            NEXT_PUBLIC_API_URL=http://127.0.0.1:8080/api
+          cache-from: |
+            type=gha,scope=validation-${{ matrix.service }}-amd64
+            type=gha,scope=validation-${{ matrix.service }}-arm64
+      - name: Verify both platforms in exported OCI index
+        env:
+          OCI_ARCHIVE: ${{ runner.temp }}/${{ matrix.service }}.tar
+        run: node scripts/verify-oci-platforms.cjs "$OCI_ARCHIVE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oci-${{ matrix.service }}-${{ github.sha }}
+          path: ${{ runner.temp }}/${{ matrix.service }}.tar
+          retention-days: 1

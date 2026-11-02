@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+# Intentionally run every stage on TARGETPLATFORM: native addons must match it.
+FROM node:24-alpine AS validation
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_APP_VERSION=multiarch-validation
+ARG NEXT_PUBLIC_API_URL=http://127.0.0.1:8080/api
+ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+COPY package*.json ./
+COPY scripts/minimatch-compat.cjs ./scripts/minimatch-compat.cjs
+RUN npm ci
+COPY . .
+# Limit Next.js build workers on memory-constrained emulated builders.
+# This affects only this validation image, not the production Dockerfile.
+ENV CIRCLE_NODE_TOTAL=2
+RUN npm run test:ui && npm run lint
+RUN npm run build && npx tsc --noEmit --incremental false
+
+FROM node:24-alpine AS runtime
+RUN npm uninstall --global npm
+WORKDIR /app
+COPY --from=validation /app/package.json ./
+COPY --from=validation /app/.next ./.next
+COPY --from=validation /app/public ./public
+COPY --from=validation /app/node_modules ./node_modules
+CMD ["node", "node_modules/next/dist/bin/next", "start"]

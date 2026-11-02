@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1
+# TARGETPLATFORM is deliberate: tests execute using the destination's .NET SDK.
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS validation
+WORKDIR /app
+COPY . .
+RUN dotnet restore gestaotcc.Test/gestaotcc.Test.csproj --configfile NuGet.Public.config
+RUN dotnet test gestaotcc.Test/gestaotcc.Test.csproj --no-restore --configuration Release \
+    -m:1 -p:UseSharedCompilation=false --logger "console;verbosity=minimal"
+ARG TARGETARCH
+RUN case "$TARGETARCH" in amd64) arch=x64 ;; arm64) arch=arm64 ;; *) exit 1 ;; esac && \
+    dotnet publish gestaotcc.WebApi/gestaotcc.WebApi.csproj --configuration Release \
+    --runtime "linux-musl-$arch" --self-contained false --output /app/out \
+    -m:1 -p:UseSharedCompilation=false --configfile NuGet.Public.config
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+WORKDIR /app
+COPY --from=validation /app/out .
+COPY gestaotcc.WebApi/Templates ./Templates
+ENTRYPOINT ["dotnet", "gestaotcc.WebApi.dll"]

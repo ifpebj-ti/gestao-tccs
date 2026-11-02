@@ -1,0 +1,9 @@
+# Applies only to the isolated Dockerfile, not the production build context.
+**/bin
+**/obj
+**/TestResults
+**/coverage
+**/.vs
+**/*.user
+.env
+.env.*

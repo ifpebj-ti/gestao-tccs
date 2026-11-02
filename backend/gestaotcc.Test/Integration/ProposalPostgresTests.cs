@@ -234,13 +234,15 @@ public class ProposalPostgresTests : IAsyncLifetime
     {
         await using var context = Context();
         var migrator = context.GetService<IMigrator>();
-        await migrator.MigrateAsync("20261013193257_AddProposalParticipants");
         var owner = await context.Users.Include(x => x.Profile).SingleAsync(x => x.Id == ownerId);
         var teacher = await context.Users.Include(x => x.Profile).SingleAsync(x => x.Id == advisorId);
         var legacy = new TccEntity { Title = "Proposta anterior", Status = "PENDING_APPROVAL", Step = "PROPOSAL_REGISTRATION", CreationDate = DateTime.UtcNow };
         legacy.UserTccs.Add(new() { User = owner, Profile = owner.Profile.First(), BindingDate = DateTime.UtcNow });
         legacy.UserTccs.Add(new() { User = teacher, Profile = teacher.Profile.First(), BindingDate = DateTime.UtcNow });
         context.Tccs.Add(legacy); await context.SaveChangesAsync();
+        // The current model includes columns introduced after the invitation migration.
+        // Persist the fixture before downgrading; insert legacy invitations using SQL below.
+        await migrator.MigrateAsync("20261013193257_AddProposalParticipants");
         await context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "ProposalParticipants" ("TccId", "UserId", "Status", "CreatedAt")
             VALUES ({legacy.Id}, {guestId}, {"PENDING"}, {DateTime.UtcNow}),
@@ -274,11 +276,15 @@ public class ProposalPostgresTests : IAsyncLifetime
     {
         await using var context = Context();
         Assert.True((await Submit(context).Execute(new("Convite futuro", "Resumo", advisorId, ["future@example.com"]), ownerId)).IsSuccess);
-        await Assert.ThrowsAsync<PostgresException>(() => context.GetService<IMigrator>().MigrateAsync("20261013193257_AddProposalParticipants"));
+        var error = await Assert.ThrowsAsync<PostgresException>(() => context.GetService<IMigrator>().MigrateAsync("20261013193257_AddProposalParticipants"));
+        Assert.Equal("P0001", error.SqlState);
+        Assert.Contains("convites por e-mail sem conta vinculada", error.MessageText);
         await using var verify = Context();
         var invitation = await verify.ProposalParticipants.SingleAsync();
         Assert.Equal("future@example.com", invitation.Email); Assert.Null(invitation.UserId);
-        Assert.Equal("AWAITING_PARTICIPANTS", (await verify.Tccs.SingleAsync()).Status);
+        // Later migrations may already have been reverted before the invitation guard runs.
+        // Read only a column belonging to the schema under test.
+        Assert.Equal("AWAITING_PARTICIPANTS", await verify.Tccs.Select(x => x.Status).SingleAsync());
         Assert.Contains("20261013204914_AllowEmailProposalInvitations", await verify.Database.GetAppliedMigrationsAsync());
     }
 }
