@@ -56,6 +56,7 @@ function model(state = {}) {
     completedUserTCC: [],
     tccs: null,
     advisorPendingProposals: [],
+    pendingBankingEvaluations: [],
     coordinationPending: null,
     libraryPending: null,
     push: () => {},
@@ -74,7 +75,8 @@ function model(state = {}) {
     'Building2',
     'Calendar',
     'ClipboardList',
-    'Library'
+    'Library',
+    'ClipboardCheck'
   ])
     context[icon] = () => null;
   vm.runInNewContext(modelCode, context);
@@ -90,6 +92,7 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
       'Semestres Letivos'
     ],
     ADVISOR: [
+      'Banca',
       'Assinaturas pendentes',
       'Propostas de TCC pendentes',
       'TCCs em andamento',
@@ -116,7 +119,7 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
       'Usuários'
     ],
     LIBRARY: ['TCCs para Catalogar'],
-    BANKING: ['Assinaturas pendentes', 'TCCs em andamento'],
+    BANKING: ['Banca', 'Assinaturas pendentes', 'TCCs em andamento'],
     STUDENT: []
   };
   for (const [profile, titles] of Object.entries(expected)) {
@@ -168,7 +171,9 @@ test('múltiplos perfis preservam a união das permissões e a regra de assinatu
 
 test('a descrição distingue carregamento de ausência real de pendências', () => {
   const signature = (state) =>
-    model({ profile: 'ADVISOR', ...state }).shortcuts[0];
+    model({ profile: 'ADVISOR', ...state }).shortcuts.find(
+      (card) => card.title === 'Assinaturas pendentes'
+    );
   assert.equal(
     signature({}).description,
     'Documentos que aguardam sua validação digital'
@@ -182,12 +187,15 @@ test('a descrição distingue carregamento de ausência real de pendências', ()
     '3 aguardando sua assinatura'
   );
   assert.equal(
-    model({ profile: 'ADVISOR' }).shortcuts[1].description,
+    model({ profile: 'ADVISOR' }).shortcuts.find(
+      (card) => card.title === 'Propostas de TCC pendentes'
+    ).description,
     'Propostas submetidas por estudantes aguardando aceite'
   );
   assert.equal(
     model({ profile: 'ADVISOR', advisorPendingProposals: [{}, {}] })
-      .shortcuts[1].description,
+      .shortcuts.find((card) => card.title === 'Propostas de TCC pendentes')
+      .description,
     '2 aguardando seu aceite'
   );
 });
@@ -211,9 +219,9 @@ test('os atalhos mantêm os destinos para assinaturas e propostas recebidas', ()
       route = value;
     }
   }).shortcuts;
-  cards[0].onClick();
+  cards.find((card) => card.title === 'Assinaturas pendentes').onClick();
   assert.equal(route, '/pendingSignatures');
-  cards[1].onClick();
+  cards.find((card) => card.title === 'Propostas de TCC pendentes').onClick();
   assert.equal(route, '/receivedProposals');
 });
 

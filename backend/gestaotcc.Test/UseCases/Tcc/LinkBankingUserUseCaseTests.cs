@@ -34,7 +34,7 @@ public class LinkBankingUserUseCaseTests
         _tccGateway.FindTccById(dto.idTcc).Returns((TccEntity?)null);
 
         // Act
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 9);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -47,12 +47,12 @@ public class LinkBankingUserUseCaseTests
     {
         // Arrange
         var dto = new LinkBankingUserDTO(1, 2, 3);
-        _tccGateway.FindTccById(dto.idTcc).Returns(new TccEntity());
+        _tccGateway.FindTccById(dto.idTcc).Returns(AdvisorTcc(new TccEntity()));
         _userGateway.FindById(dto.idInternalBanking).Returns((UserEntity?)null);
         _userGateway.FindById(dto.idExternalBanking).Returns(new UserEntity());
 
         // Act
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 9);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -61,12 +61,36 @@ public class LinkBankingUserUseCaseTests
     }
 
     [Fact]
+    public async Task Execute_ShouldRejectExaminer_WhenUserIsNotTccAdvisor()
+    {
+        var dto = new LinkBankingUserDTO(1, 2, 3);
+        var tcc = new TccEntity
+        {
+            UserTccs =
+            {
+                new gestaotcc.Domain.Entities.UserTcc.UserTccEntity
+                {
+                    UserId = 12,
+                    Profile = new ProfileEntity { Role = "BANKING" }
+                }
+            }
+        };
+        _tccGateway.FindTccById(dto.idTcc).Returns(tcc);
+
+        var result = await _useCase.Execute(dto, 12);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(403, result.ErrorDetails?.Status);
+        await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
+    }
+
+    [Fact]
     public async Task Execute_ShouldReturnError_WhenBankingProfileNotFound()
     {
         // Arrange
         var dto = new LinkBankingUserDTO(1, 2, 3);
 
-        var tcc = new TccEntity { UserTccs = [], TccInvites = [] };
+        var tcc = AdvisorTcc(new TccEntity { UserTccs = [], TccInvites = [] });
         var user1 = new UserEntity { Id = 1, Email = "int@teste.com", Name = "Interno" };
         var user2 = new UserEntity { Id = 2, Email = "ext@teste.com", Name = "Externo" };
 
@@ -76,7 +100,7 @@ public class LinkBankingUserUseCaseTests
         _profileGateway.FindByRole("BANKING").Returns((ProfileEntity?)null);
         
         // Act
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 9);
         
         // Assert
         Assert.False(result.IsSuccess);
@@ -106,6 +130,7 @@ public class LinkBankingUserUseCaseTests
                 new TccInviteEntity { Email = userExternal.Email, IsValidCode = true }
             }
         };
+        AdvisorTcc(tcc);
 
         _tccGateway.FindTccById(dto.idTcc).Returns(tcc);
         _userGateway.FindById(dto.idInternalBanking).Returns(userInternal);
@@ -114,7 +139,7 @@ public class LinkBankingUserUseCaseTests
 
 
         // Act
-        var result = await _useCase.Execute(dto);
+        var result = await _useCase.Execute(dto, 9);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -126,5 +151,16 @@ public class LinkBankingUserUseCaseTests
             t.UserTccs.Any(u => u.User.Id == userExternal.Id)
         ));
 
+    }
+
+    private static TccEntity AdvisorTcc(TccEntity tcc)
+    {
+        tcc.UserTccs.Add(new gestaotcc.Domain.Entities.UserTcc.UserTccEntity
+        {
+            User = new UserEntity { Id = 9, Email = "advisor@example.com", Name = "Advisor" },
+            UserId = 9,
+            Profile = new ProfileEntity { Role = "ADVISOR" }
+        });
+        return tcc;
     }
 }

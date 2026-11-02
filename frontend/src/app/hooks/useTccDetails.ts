@@ -51,6 +51,7 @@ interface InternalExaminer {
 
 interface TccDetailsResponse {
   id: number;
+  advisorUserId?: number | null;
   infoTcc: {
     title: string;
     summary: string;

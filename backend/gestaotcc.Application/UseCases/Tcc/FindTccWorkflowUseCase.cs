@@ -91,9 +91,9 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         if (tcc.Step != StepTccType.DEVELOPMENT_AND_MONITORING.ToString()) return;
 
         var stepDocuments = tcc.Documents
-            .Where(document => document.DocumentType.SignatureOrder == 3 &&
+            .Where(document => document.DocumentType?.SignatureOrder == 3 &&
                                (!IsAdvisorChangeDocumentType(document.DocumentType.Name) ||
-                                tcc.AdvisorChanges.Any(change => change.DocumentId == document.Id && change.Status == "PENDING_SIGNATURES")))
+                                tcc.AdvisorChanges?.Any(change => change.DocumentId == document.Id && change.Status == "PENDING_SIGNATURES") == true))
             .ToList();
 
         // TCCs antigos podem ter somente os anexos opcionais restantes. Recalcula a etapa ao abrir o workflow.

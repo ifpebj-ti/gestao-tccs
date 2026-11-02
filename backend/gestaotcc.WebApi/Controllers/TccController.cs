@@ -180,16 +180,20 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
 
-        var result = await linkBankingUserUseCase.Execute(data);
+        var result = await linkBankingUserUseCase.Execute(data, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                403 => StatusCode(403, result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Usuário de banca vinculado com sucesso"));
     }
@@ -395,7 +399,7 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
         
-        var result = await createScheduleTccUseCase.Execute(data);
+        var result = await createScheduleTccUseCase.Execute(data, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
@@ -405,6 +409,7 @@ public class TccController : ControllerBase
             return result.ErrorDetails?.Status switch
             {
                 400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
                 409 => Conflict(result.ErrorDetails),
                 404 => NotFound(result.ErrorDetails),
                 _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
@@ -432,7 +437,7 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
         
-        var result = await editScheduleTccUseCase.Execute(data);
+        var result = await editScheduleTccUseCase.Execute(data, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
@@ -442,6 +447,7 @@ public class TccController : ControllerBase
             return result.ErrorDetails?.Status switch
             {
                 400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
                 409 => Conflict(result.ErrorDetails),
                 404 => NotFound(result.ErrorDetails),
                 _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
@@ -461,16 +467,20 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
         
-        var result = await sendScheduleEmailUseCase.Execute(tccId);
+        var result = await sendScheduleEmailUseCase.Execute(tccId, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                403 => StatusCode(403, result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Email de agendamento de defesa do TCC enviado com sucesso"));
     }
@@ -537,14 +547,21 @@ public class TccController : ControllerBase
     public async Task<ActionResult<object>> ConcludePresentation([FromRoute] long tccId,
         [FromServices] ConcludePresentationUseCase concludePresentationUseCase)
     {
-        var result = await concludePresentationUseCase.Execute(tccId);
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (!long.TryParse(userIdClaim, out var userId)) return Unauthorized();
+
+        var result = await concludePresentationUseCase.Execute(tccId, userId);
         if (result.IsFailure)
         {
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
-            return result.ErrorDetails?.Status is 400
-                ? BadRequest(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
 
         return Ok(new { message = result.Message, token = result.Data });

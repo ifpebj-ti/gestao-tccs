@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { usePendingInternalBankingEvaluations } from '@/app/hooks/usePendingInternalBankingEvaluations';
 import { AppBrand } from '@/components/layout/AppBrand';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import {
@@ -28,11 +29,14 @@ export default function Sidebar({
   onToggle
 }: SidebarProps) {
   const pathname = usePathname();
+  const { evaluations } = usePendingInternalBankingEvaluations(
+    roles.includes('BANKING') || roles.includes('ADVISOR')
+  );
   const [selection, setSelection] = useState<{
     from: string;
     href: string;
   } | null>(null);
-  const items = getSidebarItems(roles, student);
+  const items = getSidebarItems(roles, student, evaluations.length);
   const currentHref = activeSidebarHref(items, pathname);
   useEffect(() => {
     setSelection(null);
@@ -66,10 +70,18 @@ export default function Sidebar({
               }}
               aria-label={compact ? item.label : undefined}
               title={compact ? item.label : undefined}
-              className={`flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#006633] ${active ? 'bg-[#002B18] text-[#FAF9F5]' : 'text-[#374151] hover:bg-[#ECEAE2] hover:text-[#002B18]'}`}
+              className={`relative flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#006633] ${active ? 'bg-[#002B18] text-[#FAF9F5]' : 'text-[#374151] hover:bg-[#ECEAE2] hover:text-[#002B18]'}`}
             >
               <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
               <span className={compact ? 'sr-only' : ''}>{item.label}</span>
+              {item.badge !== undefined && item.badge > 0 && (
+                <span
+                  aria-label={`${item.badge} avaliações pendentes`}
+                  className={`ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white ${compact ? 'absolute ml-7 -mt-7' : ''}`}
+                >
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}

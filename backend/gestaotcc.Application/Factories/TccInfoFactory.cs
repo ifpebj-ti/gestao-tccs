@@ -101,7 +101,9 @@ public class TccInfoFactory
                 Email: advisor!.User.Email
             ),
             InfoBanking: new InfoBankingDTO(bankingMembersDto),
-            CancellationRequest: isCancellationRequest
+            CancellationRequest: isCancellationRequest,
+            AdvisorUserId: tcc.UserTccs
+                .FirstOrDefault(userTcc => userTcc.Profile.Role == RoleType.ADVISOR.ToString())?.UserId
         );
     }
 }

@@ -8,7 +8,7 @@ using Hangfire;
 namespace gestaotcc.Application.UseCases.Tcc;
 public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IAppLoggerGateway<CreateScheduleTccUseCase> logger, IEmailGateway emailGateway, IBackgroundJobClient backgroundJobClient, IStorageGateway storageGateway)
 {
-    public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
+    public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data, long currentUserId)
     {
         logger.LogInformation("Iniciando criação de agendamento de defesa para o TccId: {TccId}. Data: {ScheduledDate}", data.IdTcc, data.ScheduleDate);
 
@@ -18,6 +18,8 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
             logger.LogWarning("Falha na criação de agendamento: TCC não encontrado para o TccId: {TccId}", data.IdTcc);
             return ResultPattern<string>.FailureResult("TCC não encontrado", 404);
         }
+        if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
+            return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
         if (tcc.TccSchedule is not null)
         {
             logger.LogInformation("TCC {TccId} já possui agendamento. Atualizando dados se fornecidos.", data.IdTcc);
@@ -147,6 +149,23 @@ public class CreateScheduleTccUseCase(ITccGateway tccGateway, IUserGateway userG
             }
 
             await tccGateway.Update(tcc);
+
+            foreach (var member in tcc.BankingMembers
+                         .Where(member => member.UserId.HasValue && !member.Grade.HasValue)
+                         .DistinctBy(member => member.Email, StringComparer.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var notice = EmailFactory.CreateInternalBankingScheduleNotice(member.Name, member.Email, tcc, tccSchedule);
+                    var result = await emailGateway.Send(notice);
+                    if (result.IsFailure)
+                        logger.LogWarning("Failed to notify internal examiner {Email} about TCC {TccId} schedule.", member.Email, tcc.Id);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Failed to send schedule notice to internal examiner {Email}: {Error}", member.Email, ex.Message);
+                }
+            }
 
             // Send instant emails and schedule reminders
             if (tcc.BankingMembers.Any())

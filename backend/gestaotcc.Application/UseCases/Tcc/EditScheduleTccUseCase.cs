@@ -9,9 +9,10 @@ public class EditScheduleTccUseCase(
     ITccGateway tccGateway, 
     IAppLoggerGateway<EditScheduleTccUseCase> logger,
     IUserGateway? userGateway = null, 
-    IProfileGateway? profileGateway = null)
+    IProfileGateway? profileGateway = null,
+    IEmailGateway? emailGateway = null)
 {
-    public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data)
+    public async Task<ResultPattern<string>> Execute(ScheduleTccDTO data, long currentUserId)
     {
         logger.LogInformation("Iniciando edição de agendamento de defesa para o TccId: {TccId}", data.IdTcc);
 
@@ -21,6 +22,8 @@ public class EditScheduleTccUseCase(
             logger.LogWarning("Falha na edição de agendamento: TCC não encontrado para o TccId: {TccId}", data.IdTcc);
             return ResultPattern<string>.FailureResult("TCC não encontrado", 404);
         }
+        if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
+            return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
         if (tcc.TccSchedule is null)
         {
             logger.LogWarning("Falha na edição de agendamento para TccId {TccId}: TCC não possui um agendamento para editar.", data.IdTcc);
@@ -176,6 +179,26 @@ public class EditScheduleTccUseCase(
             
             logger.LogInformation("Salvando alterações do agendamento para o TccId: {TccId}", data.IdTcc);
             await tccGateway.Update(tcc);
+
+            if (emailGateway is not null && tcc.TccSchedule is not null)
+            {
+                foreach (var member in tcc.BankingMembers
+                             .Where(member => member.UserId.HasValue && !member.Grade.HasValue)
+                             .DistinctBy(member => member.Email, StringComparer.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var notice = EmailFactory.CreateInternalBankingScheduleNotice(member.Name, member.Email, tcc, tcc.TccSchedule);
+                        var result = await emailGateway.Send(notice);
+                        if (result.IsFailure)
+                            logger.LogWarning("Failed to notify internal examiner {Email} about TCC {TccId} schedule change.", member.Email, tcc.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning("Failed to send schedule change notice to internal examiner {Email}: {Error}", member.Email, ex.Message);
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {

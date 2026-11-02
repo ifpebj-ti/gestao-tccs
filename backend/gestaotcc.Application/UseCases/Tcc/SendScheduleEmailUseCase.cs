@@ -5,7 +5,7 @@ using gestaotcc.Domain.Errors;
 namespace gestaotcc.Application.UseCases.Tcc;
 public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emailGateway, IStorageGateway storageGateway, IAppLoggerGateway<SendScheduleEmailUseCase> logger)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId)
+    public async Task<ResultPattern<string>> Execute(long tccId, long currentUserId)
     {
         logger.LogInformation("Iniciando envio de e-mails de agendamento para o TccId: {TccId}", tccId);
 
@@ -15,6 +15,8 @@ public class SendScheduleEmailUseCase(ITccGateway tccGateway, IEmailGateway emai
             logger.LogWarning("Falha no envio de e-mails: TCC não encontrado para o TccId: {TccId}", tccId);
             return ResultPattern<string>.FailureResult("TCC não encontrado", 404);
         }
+        if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
+            return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
         if (tcc.TccSchedule is null)
         {
             logger.LogWarning("Falha no envio de e-mails para TccId {TccId}: TCC não possui um agendamento de defesa.", tccId);

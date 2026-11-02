@@ -6,7 +6,7 @@ using gestaotcc.Domain.Errors;
 namespace gestaotcc.Application.UseCases.Tcc;
 public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGateway, IProfileGateway profileGateway, IEmailGateway emailGateway, IStorageGateway storageGateway, IAppLoggerGateway<LinkBankingUserUseCase> logger)
 {
-    public async Task<ResultPattern<string>> Execute(LinkBankingUserDTO data)
+    public async Task<ResultPattern<string>> Execute(LinkBankingUserDTO data, long currentUserId)
     {
         logger.LogInformation("Iniciando vinculação de usuários de banca ao TccId: {TccId}. InternoId: {InternalId}, ExternoId: {ExternalId}", data.idTcc, data.idInternalBanking, data.idExternalBanking);
         
@@ -16,6 +16,8 @@ public class LinkBankingUserUseCase(ITccGateway tccGateway, IUserGateway userGat
             logger.LogWarning("Falha na vinculação: TCC não encontrado para o TccId: {TccId}", data.idTcc);
             return ResultPattern<string>.FailureResult("TCC não encontrado.", 404);
         }
+        if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
+            return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
         logger.LogInformation("TCC encontrado: {TccTitle} (Id: {TccId})", tcc.Title, tcc.Id);
         
         var userInternal = await userGateway.FindById(data.idInternalBanking);

@@ -137,7 +137,7 @@ export function ScheduleDialog({
 
                         {(member.memberType ?? 'EXTERNAL') === 'INTERNAL' ? (
                       <div className="grid gap-1.5 md:col-span-2">
-                        <Label htmlFor={`internal-examiner-${index}`}>Orientador cadastrado</Label>
+                        <Label htmlFor={`internal-examiner-${index}`}>Examinador interno cadastrado</Label>
                         <Controller
                           control={control}
                           name={`bankingMembers.${index}.userId`}
@@ -156,7 +156,7 @@ export function ScheduleDialog({
                               }}
                               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                             >
-                              <option value="">Selecione um orientador</option>
+                              <option value="">Selecione um examinador</option>
                               {internalExaminers.map(user => (
                                 <option key={user.id} value={user.id}>
                                   {user.name} ({user.email})

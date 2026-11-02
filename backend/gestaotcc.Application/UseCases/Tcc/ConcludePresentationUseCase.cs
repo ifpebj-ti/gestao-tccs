@@ -12,7 +12,7 @@ public class ConcludePresentationUseCase(
     IEmailGateway emailGateway,
     IAppLoggerGateway<ConcludePresentationUseCase> logger)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId)
+    public async Task<ResultPattern<string>> Execute(long tccId, long currentUserId)
     {
         logger.LogInformation("Iniciando conclusão de apresentação para o TccId: {TccId}", tccId);
 
@@ -23,6 +23,8 @@ public class ConcludePresentationUseCase(
             logger.LogWarning("TCC não encontrado para o TccId: {TccId}", tccId);
             return ResultPattern<string>.FailureResult("TCC não encontrado.", 404);
         }
+        if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
+            return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
 
         if (tcc.Status == StatusTccType.COMPLETED.ToString())
         {
@@ -88,6 +90,23 @@ public class ConcludePresentationUseCase(
         try
         {
             await tccGateway.Update(tcc);
+
+            foreach (var member in tcc.BankingMembers
+                         .Where(member => member.UserId.HasValue && !member.Grade.HasValue)
+                         .DistinctBy(member => member.Email, StringComparer.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var notice = EmailFactory.CreateInternalBankingEvaluationNotice(member.Name, member.Email, tcc);
+                    var result = await emailGateway.Send(notice);
+                    if (result.IsFailure)
+                        logger.LogWarning("Failed to notify internal examiner {Email} about pending evaluation for TCC {TccId}.", member.Email, tcc.Id);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Failed to send evaluation notice to internal examiner {Email}: {Error}", member.Email, ex.Message);
+                }
+            }
             logger.LogInformation("Apresentação do TCC {TccId} concluída com sucesso.", tccId);
             
             var advisorToken = tcc.BankingMembers
