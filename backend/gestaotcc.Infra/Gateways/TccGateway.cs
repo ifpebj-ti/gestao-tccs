@@ -106,11 +106,15 @@ public class TccGateway(AppDbContext context) : ITccGateway
         if(!string.IsNullOrEmpty(tccFilter.StatusTcc))
             query = query.Where(x => x.Status.ToLower() == tccFilter.StatusTcc.ToLower());
 
+        if (!string.IsNullOrEmpty(tccFilter.StepTcc))
+            query = query.Where(x => x.Step.ToLower() == tccFilter.StepTcc.ToLower());
+
         if (tccFilter.SemesterId.HasValue)
             query = query.Where(x => x.SemesterId == tccFilter.SemesterId.Value);
 
         return await query
             .Include(x => x.Semester)
+            .Include(x => x.TccSchedule)
             .Include(x => x.BankingMembers)
             .Include(x => x.UserTccs)
                 .ThenInclude(x => x.User)

@@ -578,7 +578,7 @@ export default function HomePage() {
       visible: canView(['BANKING', 'ADVISOR']) || pendingBankingEvaluations.length > 0,
       description: pendingBankingEvaluations.length > 0
         ? `${pendingBankingEvaluations.length} apresentação(ões) aguardando sua avaliação`
-        : 'Agende apresentações, cadastre examinadores e acompanhe a banca',
+        : 'Acesse as bancas disponíveis na etapa de apresentação e gerencie seus TCCs',
       indicatorNumber: pendingBankingEvaluations.length,
       indicatorColor: 'bg-red-600 text-white',
       onClick: () => push('/banking')

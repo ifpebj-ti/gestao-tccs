@@ -26,7 +26,10 @@ interface DecodedToken {
 interface OngoingTcc {
   tccId: number;
   studanteNames: string[];
+  title?: string | null;
   advisorUserId?: number | null;
+  step?: string | null;
+  hasSchedule?: boolean;
 }
 
 export default function BankingPage() {
@@ -54,7 +57,7 @@ export default function BankingPage() {
           setTccs([]);
           return;
         }
-        const query = `?UserId=${encodeURIComponent(userId)}&StatusTcc=IN_PROGRESS`;
+        const query = `?UserId=${encodeURIComponent(userId)}&StatusTcc=IN_PROGRESS&StepTcc=PRESENTATION_AND_EVALUATION`;
         const response = await fetch(`${apiUrl}/Tcc/filter${query}`, {
           headers: { Authorization: `Bearer ${token}` },
           cache: 'no-store'
@@ -77,7 +80,7 @@ export default function BankingPage() {
       <div>
         <PageTitle>Banca</PageTitle>
         <p className="mt-2 text-sm text-slate-600">
-          Agende apresentações, cadastre examinadores e acompanhe as avaliações da banca. As assinaturas dos documentos ficam na área Assinaturas.
+          Gerencie as bancas dos TCCs na etapa de apresentação e acompanhe suas avaliações pendentes. As assinaturas ficam na área Assinaturas.
         </p>
       </div>
 
@@ -88,20 +91,25 @@ export default function BankingPage() {
         isOpen={areManagedBanksOpen}
         onToggle={() => setAreManagedBanksOpen((open) => !open)}
       >
-        <p className="mb-4 text-sm text-slate-600">Selecione um TCC para agendar ou editar a apresentação e cadastrar os examinadores.</p>
+        <p className="mb-4 text-sm text-slate-600">Aqui aparecem somente os TCCs do orientador que chegaram à etapa de apresentação.</p>
         {isLoadingTccs ? (
           <PageState loading>Carregando TCCs em andamento...</PageState>
         ) : tccs.length === 0 ? (
-          <PageState>Nenhum TCC em andamento disponível para gerenciar.</PageState>
+          <PageState>Nenhum TCC está na etapa de cadastro da banca. Quando um trabalho chegar à etapa de apresentação, ele aparecerá aqui.</PageState>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {tccs.map((tcc) => (
               <article key={tcc.tccId} className="flex items-center justify-between gap-4 rounded-xl border border-[#DDD9CD] bg-white p-5 shadow-sm">
                 <div>
-                  <h3 className="font-semibold text-[#002B18]">{tcc.studanteNames?.join(', ') || `TCC ${tcc.tccId}`}</h3>
-                  <p className="mt-1 text-sm text-slate-600">Gerencie data, local e examinadores</p>
+                  <h3 className="font-semibold text-[#002B18]">{tcc.title || tcc.studanteNames?.join(', ') || `TCC ${tcc.tccId}`}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{tcc.studanteNames?.join(', ') || 'Estudante não informado'}</p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#006633]">
+                    {tcc.hasSchedule ? 'Apresentação agendada' : 'Cadastro da banca pendente'}
+                  </p>
                 </div>
-                <Button onClick={() => router.push(`/banking/manage?id=${tcc.tccId}`)}>Gerenciar banca</Button>
+                <Button onClick={() => router.push(`/banking/manage?id=${tcc.tccId}`)}>
+                  {tcc.hasSchedule ? 'Gerenciar banca' : 'Cadastrar banca'}
+                </Button>
               </article>
             ))}
           </div>

@@ -157,6 +157,13 @@ public class TccFactory
         var advisorUserId = tcc.UserTccs
             .FirstOrDefault(userTcc => userTcc.Profile?.Role == RoleType.ADVISOR.ToString())?.UserId;
 
-        return new FindAllTccByFilterDTO(tcc.Id, studentNames, tcc.Title, tcc.Status, advisorUserId);
+        return new FindAllTccByFilterDTO(
+            tcc.Id,
+            studentNames,
+            tcc.Title,
+            tcc.Status,
+            advisorUserId,
+            tcc.Step,
+            tcc.TccSchedule is not null);
     }
 }
