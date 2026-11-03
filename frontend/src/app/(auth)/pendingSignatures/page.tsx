@@ -20,7 +20,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+
 
 export default function PendingSignaturesPage() {
   const { push } = useRouter();
@@ -32,7 +32,7 @@ export default function PendingSignaturesPage() {
     setShowAll,
     pendingData,
     userId: loggedInUserId,
-    fetchPendingSignatures
+    
   } = usePendingSignatures();
 
   const [openUserCards, setOpenUserCards] = useState<Set<number>>(new Set());

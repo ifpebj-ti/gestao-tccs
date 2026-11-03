@@ -290,12 +290,40 @@ export function useSignaturePage() {
 
       toast.success('Documento assinado e enviado com sucesso!');
 
+      let bankingDestination: string | null = null;
+      if (token) {
+        try {
+          const decoded = jwtDecode<DecodedToken>(token);
+          const roles = Array.isArray(decoded.role) ? decoded.role : [decoded.role];
+          if (roles.includes('ADVISOR') && tccId) {
+            const tccResponse = await fetch(`${API_URL}/Tcc?tccId=${tccId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+              cache: 'no-store'
+            });
+            if (tccResponse.ok) {
+              const tcc = await tccResponse.json();
+              const isPresentationStage =
+                tcc.infoTcc?.step === 'PRESENTATION_AND_EVALUATION';
+              const isResponsibleAdvisor =
+                Number(tcc.advisorUserId) === Number(decoded.userId);
+              if (isPresentationStage && isResponsibleAdvisor) {
+                bankingDestination = `/banking/manage?id=${tccId}`;
+              }
+            }
+          }
+        } catch {
+          // Se não for possível confirmar a etapa, mantém o fluxo padrão de assinaturas.
+        }
+      }
+
       if (isDefesaDoc) {
         setSignatureSuccess({
           isOpen: true,
           isDefenseDocument: true,
           tccId
         });
+      } else if (bankingDestination) {
+        push(bankingDestination);
       } else if (documentName.includes("ANEXO VIII") || docNameFromParams?.includes("ANEXO VIII")) {
         push(`/ongoingTCCs/details?id=${tccId}`);
       } else {
