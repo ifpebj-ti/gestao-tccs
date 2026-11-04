@@ -27,16 +27,22 @@ export const FeatureActionCard = forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         {...props}
         className={cn(
-          'group h-fit w-full cursor-pointer rounded-xl bg-[#183E2D] p-7 text-left text-[#EFF2E8] transition-[background-color,transform] duration-150 hover:-translate-y-0.5 hover:bg-[#002B18] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#006633] motion-reduce:transform-none',
+          'group group/notification h-fit w-full cursor-pointer rounded-xl bg-[#183E2D] p-7 text-left text-[#EFF2E8] transition-[background-color,transform,translate] duration-300 ease-out motion-safe:hover:-translate-y-0.5 hover:bg-[#002B18] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#006633] motion-reduce:transform-none motion-reduce:translate-y-0 motion-reduce:transition-none',
           className
         )}
       >
         <span className="mb-6 flex items-center justify-between">
-          <Icon
-            className="size-7 text-[#C8FF47]"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
+          <span className="relative flex size-7 items-center justify-center text-[#C8FF47] transition-colors duration-300 ease-out group-hover/notification:text-[#002B18] group-focus-visible/notification:text-[#002B18] motion-reduce:transition-none">
+            <span
+              aria-hidden="true"
+              className="absolute -inset-2 scale-75 rounded-full bg-[#C8FF47] opacity-0 transition-[opacity,transform,scale] duration-300 ease-out group-hover/notification:scale-100 group-hover/notification:opacity-100 group-focus-visible/notification:scale-100 group-focus-visible/notification:opacity-100 motion-reduce:transition-none"
+            />
+            <Icon
+              className="relative size-7"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+          </span>
           {count !== undefined && count > 0 && (
             <span
               aria-label={`${count} pendências`}
@@ -57,7 +63,7 @@ export const FeatureActionCard = forwardRef<HTMLButtonElement, Props>(
           <ArrowUpRight
             size={16}
             aria-hidden="true"
-            className="transition-transform duration-150 group-hover:translate-x-1 group-hover:-translate-y-0.5 motion-reduce:transform-none"
+            className="transition-transform duration-150 motion-safe:group-hover:translate-x-1 motion-safe:group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:translate-x-0 motion-reduce:translate-y-0 motion-reduce:transition-none"
           />
         </span>
       </button>

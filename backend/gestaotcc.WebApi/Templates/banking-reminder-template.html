@@ -1,7 +1,31 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lembrete de banca</title></head>
-<body style="margin:0;background:#f5f6f2;font-family:Arial,sans-serif;color:#183e2d;padding:24px"><main style="max-width:620px;margin:0 auto;background:#fff;border-radius:12px;padding:32px">
-<p style="font-size:12px;font-weight:bold;letter-spacing:1px;color:#52725d">LEMBRETE — BANCA AMANHÃ</p><h1>Olá, {{username}}!</h1>
-<p>Este é um lembrete da apresentação de TCC para a qual você foi convidado(a) como examinador(a) externo(a).</p>
-<section style="background:#f5fff0;border-left:4px solid #c8ff47;padding:16px;margin:20px 0"><p><strong>Título:</strong> {{titulo_tcc}}</p><p><strong>Data e horário:</strong> {{data_horario}}</p><p><strong>Local:</strong> {{local}}</p></section>
-<p>Após a apresentação, você receberá o link pessoal para enviar sua avaliação.</p><p style="font-size:12px;color:#667">Sistema de gestão de TCCs — Instituto Federal de Pernambuco</p></main></body></html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lembrete de banca</title>
+<style>@media only screen and (max-width:480px){.email-pad{padding-left:22px!important;padding-right:22px!important}.email-ribbon td{font-size:8px!important;letter-spacing:.6px!important}}</style>
+</head>
+<body style="margin:0;padding:0;background:#FAF9F5;font-family:Arial,Helvetica,sans-serif;color:#002B18;-webkit-text-size-adjust:100%;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#FAF9F5;"><tr><td align="center" style="padding:24px 10px;">
+<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;border-collapse:collapse;table-layout:fixed;">
+<tr><td style="background:#002B18;border-top:2px solid #C8FF47;"><table class="email-ribbon" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;table-layout:fixed;"><tr>
+<td align="center" style="padding:12px 6px;color:#C8FF47;font-size:9px;font-weight:700;line-height:16px;letter-spacing:1px;">GEST&#195;O DE TCCs</td>
+<td width="14" align="center" style="width:14px;color:#C8FF47;font-size:14px;">&#10038;</td>
+<td align="center" style="padding:12px 6px;color:#C8FF47;font-size:9px;font-weight:700;line-height:16px;letter-spacing:1px;">PROPOSTAS &amp; PROJETOS</td>
+<td width="14" align="center" style="width:14px;color:#C8FF47;font-size:14px;">&#10038;</td>
+<td align="center" style="padding:12px 6px;color:#C8FF47;font-size:9px;font-weight:700;line-height:16px;letter-spacing:1px;">DEFESA P&#218;BLICA</td>
+</tr></table></td></tr>
+<tr><td class="email-pad" style="padding:30px 36px 24px;border-bottom:1px solid #DDD9CD;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td width="40" style="width:40px;vertical-align:middle;"><img src="{{urlfront}}/email-graduation-cap.png" width="32" height="32" alt="Capelo do Gradus Flow" style="display:block;width:32px;height:32px;border:0;border-radius:6px;background:#002B18;"></td><td style="vertical-align:middle;"><span style="color:#002B18;font-size:22px;font-weight:700;letter-spacing:-0.6px;">Gradus<span style="color:#006633;">Flow</span></span></td></tr></table></td></tr>
+<tr><td class="email-pad email-content" style="padding:28px 36px 30px;overflow-wrap:anywhere;">
+<p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;">LEMBRETE — BANCA AMANHÃ</p><h1 style="margin:0 0 20px;color:#002B18;font-size:24px;font-weight:600;line-height:32px;letter-spacing:-0.4px;">Olá, {{username}}!</h1>
+<p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;">Este é um lembrete da apresentação de TCC para a qual você foi convidado(a) como examinador(a) externo(a).</p>
+<section><p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;"><strong style="color:#002B18;font-weight:700;">Título:</strong> {{titulo_tcc}}</p><p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;"><strong style="color:#002B18;font-weight:700;">Data e horário:</strong> {{data_horario}}</p><p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;"><strong style="color:#002B18;font-weight:700;">Local:</strong> {{local}}</p></section>
+<p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;">Após a apresentação, você receberá o link pessoal para enviar sua avaliação.</p>
+</td></tr>
+<tr><td class="email-pad" style="padding:22px 36px;border-top:1px solid #DDD9CD;">
+<p style="margin:0 0 8px;color:#617265;font-size:12px;line-height:20px;">Sistema de gestão de TCCs — Instituto Federal de Pernambuco</p>
+</td></tr>
+</table></td></tr></table>
+</body>
+</html>

@@ -491,7 +491,10 @@ export default function HomePage() {
     return false;
   };
 
+  const isCoordinationView = canView(['COORDINATOR']) && !canView(['ADMIN']);
+
   const canShowPendingSignatures = () => {
+    if (isCoordinationView) return false;
     if (isStudent()) {
       return userTCCs.length > 0 || completedUserTCC.length > 0;
     }
@@ -562,13 +565,15 @@ export default function HomePage() {
     ? 'Confira o que precisa da sua atenção.'
     : canView(['ADMIN'])
       ? 'Gerencie usuários, instituições, cursos e períodos letivos em um só lugar.'
-      : canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
-        ? 'Avalie propostas, acompanhe suas orientações e assine os documentos de cada etapa acadêmica.'
-        : canView(['LIBRARY'])
-          ? 'Homologue e catalogue os Trabalhos de Conclusão de Curso encaminhados pela Coordenação para inclusão no acervo.'
-          : canView(['BANKING'])
-            ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
-            : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
+      : isCoordinationView
+        ? 'Acompanhe as pendências de biblioteca, substituições e cancelamentos, as bancas e os TCCs do curso.'
+        : canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
+          ? 'Avalie propostas, acompanhe suas orientações e assine os documentos de cada etapa acadêmica.'
+          : canView(['LIBRARY'])
+            ? 'Homologue e catalogue os Trabalhos de Conclusão de Curso encaminhados pela Coordenação para inclusão no acervo.'
+            : canView(['BANKING'])
+              ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
+              : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
 
   const shortcuts: HomeShortcut[] = [
     {
@@ -602,7 +607,8 @@ export default function HomePage() {
       title: 'Propostas de TCC pendentes',
       icon: Inbox,
       group: 'attention',
-      visible: canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']),
+      visible:
+        !isCoordinationView && canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']),
       description:
         advisorPendingProposals.length > 0
           ? `${advisorPendingProposals.length} aguardando seu aceite`
@@ -674,7 +680,7 @@ export default function HomePage() {
       title: 'Cadastrar nova proposta',
       icon: FilePlus2,
       group: 'management',
-      visible: canView(['COORDINATOR', 'SUPERVISOR']),
+      visible: !isCoordinationView && canView(['COORDINATOR', 'SUPERVISOR']),
       description: 'Inclusão direta de propostas e vínculos',
       onClick: () => push('/newTCC')
     },

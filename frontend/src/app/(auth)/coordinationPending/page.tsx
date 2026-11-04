@@ -17,6 +17,7 @@ import {
   Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageTitle } from '@/components/layout/PageTitle';
 import {
   AlertDialog,
@@ -77,10 +78,22 @@ function formatDeadline(deadline: string | null): {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-400">
-      <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+    <div role="status" className="flex items-start gap-2 py-2 text-sm leading-relaxed text-[#426650]">
+      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#426650]" />
       {message}
     </div>
+  );
+}
+
+function PendingIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="relative -mt-2 flex size-10 shrink-0 items-center justify-center text-[#006633] transition-colors duration-300 ease-out group-hover/pending:text-white group-focus-within/pending:text-white motion-reduce:transition-none">
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 scale-75 rounded-full bg-[#002B18] opacity-0 transition-[opacity,transform,scale] duration-300 ease-out group-hover/pending:scale-100 group-hover/pending:opacity-100 group-focus-within/pending:scale-100 group-focus-within/pending:opacity-100 motion-reduce:transition-none"
+      />
+      <span className="relative">{children}</span>
+    </span>
   );
 }
 
@@ -88,7 +101,6 @@ interface PendingSectionProps {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  iconBg: string;
   count: number;
   items: PendingTccItem[];
   emptyMessage: string;
@@ -98,7 +110,6 @@ interface PendingSectionProps {
   onPrimaryAction?: (tccId: number) => void;
   primaryActionIcon?: React.ReactNode;
   primaryLoadingId?: number | null;
-  badgeColor: string;
   showDeadline?: boolean;
 }
 
@@ -106,7 +117,6 @@ function PendingSection({
   title,
   subtitle,
   icon,
-  iconBg,
   count,
   items,
   emptyMessage,
@@ -116,31 +126,28 @@ function PendingSection({
   onPrimaryAction,
   primaryActionIcon,
   primaryLoadingId,
-  badgeColor,
   showDeadline = false
 }: PendingSectionProps) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Header da seÃ§Ã£o */}
-      <div className={`flex items-center gap-3 px-5 py-4 ${iconBg} border-b border-gray-100`}>
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-xs">
-          {icon}
-        </div>
+    <section className="group/pending border-b border-[#DDD9CD] pb-7">
+      {/* Header da seção */}
+      <div className="flex items-start gap-3 pb-4">
+        <PendingIcon>{icon}</PendingIcon>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold text-[#002B18] truncate">{title}</h2>
+            <h2 className="text-base font-semibold text-[#002B18]">{title}</h2>
             {count > 0 && (
-              <span className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold ${badgeColor}`}>
+              <span className="text-xs font-medium tabular-nums text-[#617265]">
                 {count}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-[#617265]">{subtitle}</p>
         </div>
       </div>
 
       {/* Lista de itens */}
-      <div className="divide-y divide-gray-50 px-5 py-3 flex flex-col gap-2">
+      <div className="flex flex-col divide-y divide-[#ECEAE2] pl-13">
         {items.length === 0 ? (
           <EmptyState message={emptyMessage} />
         ) : (
@@ -151,7 +158,7 @@ function PendingSection({
             return (
               <div
                 key={item.tccId}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-1 py-2.5"
+                className="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#002B18] truncate">{item.title}</p>
@@ -218,7 +225,7 @@ export default function CoordinationPendingPage() {
   const [authorized, setAuthorized] = useState(true);
   const [canReviewAdvisorChanges, setCanReviewAdvisorChanges] = useState(false);
 
-  // Estados dos modais de aÃ§Ã£o rÃ¡pida
+  // Estados dos modais de ação rápida
   const [selectedTccId, setSelectedTccId] = useState<number | null>(null);
   const [isHardCoverModalOpen, setIsHardCoverModalOpen] = useState(false);
   const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
@@ -253,11 +260,11 @@ export default function CoordinationPendingPage() {
       const res = await fetch(`${API_URL}/Tcc/coordination-pending`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Erro ao buscar pendÃªncias.');
+      if (!res.ok) throw new Error('Erro ao buscar pendências.');
       const result: CoordinationPending = await res.json();
       setData(result);
     } catch {
-      toast.error('Erro ao carregar pendÃªncias de coordenaÃ§Ã£o.');
+      toast.error('Erro ao carregar pendências de coordenação.');
     } finally {
       setLoading(false);
     }
@@ -267,7 +274,7 @@ export default function CoordinationPendingPage() {
     fetchPending();
   }, [fetchPending]);
 
-  // AÃ§Ã£o rÃ¡pida: Confirmar Capa Dura
+  // Ação rápida: Confirmar Capa Dura
   const handleConfirmHardCoverSubmit = async () => {
     if (!selectedTccId) return;
     const token = Cookies.get('token');
@@ -285,7 +292,7 @@ export default function CoordinationPendingPage() {
         throw new Error(err?.detail || err?.message || 'Falha ao confirmar capa dura.');
       }
 
-      toast.success('Recebimento da versÃ£o em capa dura confirmado com sucesso!');
+      toast.success('Recebimento da versão em capa dura confirmado com sucesso!');
       await fetchPending();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Erro ao confirmar capa dura.');
@@ -296,7 +303,7 @@ export default function CoordinationPendingPage() {
     }
   };
 
-  // AÃ§Ã£o rÃ¡pida: Encaminhar Ã  Biblioteca
+  // Ação rápida: Encaminhar à Biblioteca
   const handleForwardToLibrarySubmit = async () => {
     if (!selectedTccId) return;
     const token = Cookies.get('token');
@@ -343,12 +350,12 @@ export default function CoordinationPendingPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.detail || err?.message || 'NÃ£o foi possÃ­vel registrar a decisÃ£o.');
+        throw new Error(err?.detail || err?.message || 'Não foi possível registrar a decisão.');
       }
-      toast.success(approve ? 'SubstituiÃ§Ã£o homologada.' : 'SolicitaÃ§Ã£o recusada.');
+      toast.success(approve ? 'Substituição homologada.' : 'Solicitação recusada.');
       setRejectItem(null); setReviewNotes('');
       await fetchPending();
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Erro ao registrar decisÃ£o.'); }
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Erro ao registrar decisão.'); }
     finally { setActionLoadingId(null); }
   };
 
@@ -374,38 +381,35 @@ export default function CoordinationPendingPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <XCircle className="mb-4 size-12 text-red-400" />
-        <h2 className="text-lg font-bold text-[#002B18]">Acesso nÃ£o autorizado</h2>
+        <h2 className="text-lg font-bold text-[#002B18]">Acesso não autorizado</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Esta pÃ¡gina Ã© restrita Ã  CoordenaÃ§Ã£o e SupervisÃ£o.
+          Esta página é restrita à Coordenação e Supervisão.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full gap-6">
-      {/* CabeÃ§alho */}
-      <div className="mb-2">
-        <PageTitle>
-          PendÃªncias de{' '}
-          <span className="text-[#00A355]">CoordenaÃ§Ã£o</span>
-        </PageTitle>
-        <p className="mt-2 text-sm text-gray-500 max-w-2xl">
-          Centralize e resolva rapidamente todas as aÃ§Ãµes que aguardam a intervenÃ§Ã£o da CoordenaÃ§Ã£o.
+    <div className="flex w-full max-w-6xl flex-col gap-7">
+      {/* Cabeçalho */}
+      <div>
+        <PageTitle>Pendências</PageTitle>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#617265]">
+          Acompanhe as pendências de biblioteca, substituições e cancelamentos.
         </p>
       </div>
 
       {/* Badge total */}
       {!loading && data && totalPending > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-800 self-start">
+        <div role="status" className="flex items-center gap-2 text-sm font-medium text-[#426650]">
           <ClipboardList className="size-4 shrink-0" />
-          {totalPending} pendÃªncia{totalPending !== 1 ? 's' : ''} no total
+          {totalPending} pendência{totalPending !== 1 ? 's' : ''} no total
         </div>
       )}
       {!loading && data && totalPending === 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800 self-start">
+        <div role="status" className="flex items-center gap-2 text-sm font-medium text-[#426650]">
           <CheckCircle2 className="size-4 shrink-0" />
-          Nenhuma pendÃªncia no momento. Tudo em dia!
+          Nenhuma pendência no momento. Tudo em dia!
         </div>
       )}
 
@@ -416,16 +420,46 @@ export default function CoordinationPendingPage() {
         </div>
       )}
 
-      {/* SeÃ§Ãµes */}
+      {/* Seções */}
       {!loading && data && (
-        <div className="flex flex-col gap-5">
-          {/* 1 â€” Capa Dura */}
+        <Tabs defaultValue="biblioteca" className="gap-7">
+          <TabsList
+            aria-label="Tipos de pendências"
+            className="grid h-auto w-full grid-cols-3 items-stretch gap-2 sm:gap-8 lg:gap-16"
+          >
+            <TabsTrigger
+              value="biblioteca"
+              className="min-w-0 flex-wrap whitespace-normal px-2 text-center text-xs sm:px-3 sm:text-sm"
+            >
+              Biblioteca{' '}
+              <span className="ml-1 text-xs font-medium tabular-nums text-[#617265]">
+                {data.awaitingHardCoverCount + data.awaitingLibraryForwardCount}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="substituicoes"
+              className="min-w-0 flex-wrap whitespace-normal px-2 text-center text-xs sm:px-3 sm:text-sm"
+            >
+              Substituições{' '}
+              <span className="ml-1 text-xs font-medium tabular-nums text-[#617265]">
+                {data.awaitingAdvisorChangesCount}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="cancelamentos"
+              className="min-w-0 flex-wrap whitespace-normal px-2 text-center text-xs sm:px-3 sm:text-sm"
+            >
+              Solicitações de cancelamento{' '}
+              <span className="ml-1 text-xs font-medium tabular-nums text-[#617265]">
+                {data.awaitingCancellationCount}
+              </span>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="biblioteca" className="space-y-10">
           <PendingSection
             title="Aguardando Capa Dura"
-            subtitle="TCCs aprovados na defesa que ainda nÃ£o tiveram a capa dura entregue Ã  coordenaÃ§Ã£o"
-            icon={<BookOpen className="size-5 text-amber-600" />}
-            iconBg="bg-amber-50"
-            badgeColor="bg-amber-100 text-amber-800"
+            subtitle="TCCs aprovados na defesa que ainda não tiveram a capa dura entregue à coordenação"
+            icon={<BookOpen className="size-5" />}
             count={data.awaitingHardCoverCount}
             items={data.awaitingHardCover}
             emptyMessage="Nenhum TCC aguardando entrega da capa dura."
@@ -441,16 +475,35 @@ export default function CoordinationPendingPage() {
             onAction={(tccId) => push(`/ongoingTCCs/details?id=${tccId}`)}
           />
 
-          <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 bg-violet-50 border-b border-gray-100">
-              <ClipboardList className="size-5 text-violet-700" />
-              <div className="flex-1"><h2 className="text-sm font-bold text-[#002B18]">SubstituiÃ§Ãµes de Orientador</h2><p className="text-xs text-gray-500 mt-0.5">SolicitaÃ§Ãµes assinadas aguardando homologaÃ§Ã£o da CoordenaÃ§Ã£o</p></div>
-              {data.awaitingAdvisorChangesCount > 0 && <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold text-violet-800">{data.awaitingAdvisorChangesCount}</span>}
+          <PendingSection
+            title="Aguardando Envio à Biblioteca"
+            subtitle="TCCs com capa dura confirmada que ainda não foram encaminhados à biblioteca"
+            icon={<Library className="size-5" />}
+            count={data.awaitingLibraryForwardCount}
+            items={data.awaitingLibraryForward}
+            emptyMessage="Nenhum TCC aguardando encaminhamento à biblioteca."
+            actionLabel="Ver TCC"
+            primaryActionLabel="Encaminhar à Biblioteca"
+            primaryActionIcon={<Send className="size-3.5 mr-1" />}
+            primaryLoadingId={actionLoadingId}
+            onPrimaryAction={(tccId) => {
+              setSelectedTccId(tccId);
+              setIsForwardModalOpen(true);
+            }}
+            onAction={(tccId) => push(`/ongoingTCCs/details?id=${tccId}`)}
+          />
+          </TabsContent>
+          <TabsContent value="substituicoes">
+          <section className="group/pending border-b border-[#DDD9CD] pb-7">
+            <div className="flex items-start gap-3 pb-4">
+              <PendingIcon><ClipboardList className="size-5" /></PendingIcon>
+              <div className="flex-1"><h2 className="text-base font-semibold text-[#002B18]">Substituições de Orientador</h2><p className="mt-1 text-sm leading-relaxed text-[#617265]">Solicitações assinadas aguardando homologação da Coordenação</p></div>
+              {data.awaitingAdvisorChangesCount > 0 && <span className="text-xs font-medium tabular-nums text-[#617265]">{data.awaitingAdvisorChangesCount}</span>}
             </div>
-            <div className="divide-y divide-gray-100 px-5 py-3">
-              {data.awaitingAdvisorChanges.length === 0 ? <EmptyState message="Nenhuma substituiÃ§Ã£o de orientador aguardando anÃ¡lise." /> : data.awaitingAdvisorChanges.map(item => (
+            <div className="divide-y divide-[#ECEAE2] pl-13">
+              {data.awaitingAdvisorChanges.length === 0 ? <EmptyState message="Nenhuma substituição de orientador aguardando análise." /> : data.awaitingAdvisorChanges.map(item => (
                 <div key={item.advisorChangeId} className="flex flex-col gap-3 py-4">
-                  <div><p className="text-sm font-semibold text-[#002B18]">{item.title}</p><p className="text-xs text-gray-500">Estudantes: {item.studentNames.join(', ')} Â· Solicitante: {item.requesterName} ({item.requesterRole})</p><p className="text-xs text-gray-500">Orientador atual: {item.currentAdvisorName} Â· Novo: {item.suggestedAdvisorName || 'NÃ£o informado'}</p><p className="mt-2 text-sm text-gray-700">Justificativa: {item.reason}</p></div>
+                  <div><p className="text-sm font-semibold text-[#002B18]">{item.title}</p><p className="text-xs text-gray-500">Estudantes: {item.studentNames.join(', ')} · Solicitante: {item.requesterName} ({item.requesterRole})</p><p className="text-xs text-gray-500">Orientador atual: {item.currentAdvisorName} · Novo: {item.suggestedAdvisorName || 'Não informado'}</p><p className="mt-2 text-sm text-gray-700">Justificativa: {item.reason}</p></div>
                   <div className="flex flex-wrap gap-2">
                     {item.documentId && <Button size="sm" variant="outline" onClick={() => openSignedDocument(item)}>Abrir PDF assinado</Button>}
                     {canReviewAdvisorChanges && <Button size="sm" disabled={actionLoadingId === item.tccId} className="bg-emerald-700 text-white" onClick={() => reviewAdvisorChange(item, true)}>Homologar</Button>}
@@ -460,45 +513,23 @@ export default function CoordinationPendingPage() {
               ))}
             </div>
           </section>
-
-          {/* 2 â€” Encaminhamento Ã  Biblioteca */}
+          </TabsContent>
+          <TabsContent value="cancelamentos">
           <PendingSection
-            title="Aguardando Envio Ã  Biblioteca"
-            subtitle="TCCs com capa dura confirmada que ainda nÃ£o foram encaminhados Ã  biblioteca"
-            icon={<Library className="size-5 text-blue-600" />}
-            iconBg="bg-blue-50"
-            badgeColor="bg-blue-100 text-blue-800"
-            count={data.awaitingLibraryForwardCount}
-            items={data.awaitingLibraryForward}
-            emptyMessage="Nenhum TCC aguardando encaminhamento Ã  biblioteca."
-            actionLabel="Ver TCC"
-            primaryActionLabel="Encaminhar Ã  Biblioteca"
-            primaryActionIcon={<Send className="size-3.5 mr-1" />}
-            primaryLoadingId={actionLoadingId}
-            onPrimaryAction={(tccId) => {
-              setSelectedTccId(tccId);
-              setIsForwardModalOpen(true);
-            }}
-            onAction={(tccId) => push(`/ongoingTCCs/details?id=${tccId}`)}
-          />
-
-          {/* 3 â€” Cancelamentos */}
-          <PendingSection
-            title="SolicitaÃ§Ãµes de Cancelamento"
-            subtitle="SolicitaÃ§Ãµes de cancelamento enviadas por estudantes aguardando anÃ¡lise"
-            icon={<XCircle className="size-5 text-red-500" />}
-            iconBg="bg-red-50"
-            badgeColor="bg-red-100 text-red-700"
+            title="Solicitações de Cancelamento"
+            subtitle="Solicitações de cancelamento enviadas por estudantes aguardando análise"
+            icon={<XCircle className="size-5" />}
             count={data.awaitingCancellationCount}
             items={data.awaitingCancellation}
-            emptyMessage="Nenhuma solicitaÃ§Ã£o de cancelamento pendente."
+            emptyMessage="Nenhuma solicitação de cancelamento pendente."
             actionLabel="Analisar"
             onAction={(tccId) => push(`/ongoingTCCs/details?id=${tccId}`)}
           />
-        </div>
+          </TabsContent>
+        </Tabs>
       )}
 
-      {/* Modal de ConfirmaÃ§Ã£o RÃ¡pida de Capa Dura */}
+      {/* Modal de Confirmação Rápida de Capa Dura */}
       <AlertDialog
         open={isHardCoverModalOpen}
         onOpenChange={setIsHardCoverModalOpen}
@@ -507,8 +538,8 @@ export default function CoordinationPendingPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Recebimento da Capa Dura</AlertDialogTitle>
             <AlertDialogDescription>
-              VocÃª confirma que o estudante entregou a versÃ£o fÃ­sica encadernada
-              em capa dura Ã  CoordenaÃ§Ã£o do Curso?
+              Você confirma que o estudante entregou a versão física encadernada
+              em capa dura à Coordenação do Curso?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -526,23 +557,23 @@ export default function CoordinationPendingPage() {
 
       <AlertDialog open={rejectItem !== null} onOpenChange={(open) => { if (!open) setRejectItem(null); }}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Recusar solicitaÃ§Ã£o</AlertDialogTitle><AlertDialogDescription>Registre o parecer que serÃ¡ armazenado no processo.</AlertDialogDescription></AlertDialogHeader>
-          <textarea className="min-h-28 w-full rounded-md border border-gray-300 p-3 text-sm" maxLength={2000} value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} placeholder="Parecer da CoordenaÃ§Ã£o (obrigatÃ³rio)" />
+          <AlertDialogHeader><AlertDialogTitle>Recusar solicitação</AlertDialogTitle><AlertDialogDescription>Registre o parecer que será armazenado no processo.</AlertDialogDescription></AlertDialogHeader>
+          <textarea className="min-h-28 w-full rounded-md border border-gray-300 p-3 text-sm" maxLength={2000} value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} placeholder="Parecer da Coordenação (obrigatório)" />
           <AlertDialogFooter><AlertDialogCancel disabled={actionLoadingId !== null}>Cancelar</AlertDialogCancel><AlertDialogAction disabled={!reviewNotes.trim() || actionLoadingId !== null} className="bg-red-700 text-white" onClick={() => rejectItem && reviewAdvisorChange(rejectItem, false)}>Confirmar recusa</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Modal de Encaminhamento RÃ¡pido Ã  Biblioteca */}
+      {/* Modal de Encaminhamento Rápido à Biblioteca */}
       <AlertDialog
         open={isForwardModalOpen}
         onOpenChange={setIsForwardModalOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Encaminhar TCC Ã  Biblioteca</AlertDialogTitle>
+            <AlertDialogTitle>Encaminhar TCC à Biblioteca</AlertDialogTitle>
             <AlertDialogDescription>
-              Deseja encaminhar a versÃ£o fÃ­sica deste TCC para a Biblioteca do Campus?
-              A equipe da Biblioteca serÃ¡ notificada automaticamente para incluir a obra no acervo.
+              Deseja encaminhar a versão física deste TCC para a Biblioteca do Campus?
+              A equipe da Biblioteca será notificada automaticamente para incluir a obra no acervo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -552,7 +583,7 @@ export default function CoordinationPendingPage() {
               disabled={actionLoadingId !== null}
               onClick={handleForwardToLibrarySubmit}
             >
-              {actionLoadingId !== null ? 'Encaminhando...' : 'Sim, Encaminhar Ã  Biblioteca'}
+              {actionLoadingId !== null ? 'Encaminhando...' : 'Sim, Encaminhar à Biblioteca'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

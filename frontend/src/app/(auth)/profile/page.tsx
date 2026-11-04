@@ -22,12 +22,24 @@ export default function ProfilePage() {
   const changed =
     draftPhone !== null &&
     phoneDigits(phone) !== phoneDigits(profile?.phone ?? '');
+  const institutionalRole = (
+    ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'LIBRARY'] as const
+  ).find((role) => profile?.roles.includes(role));
+  const displayedRoles = institutionalRole
+    ? [institutionalRole]
+    : profile?.roles ?? [];
 
   return (
     <div className="max-w-5xl">
       <PageIntro
         title="Minha conta"
-        description="Mantenha seus dados pessoais atualizados e cuide do seu acesso."
+        description={
+          !profile
+            ? 'Consulte as informações da conta e gerencie o acesso.'
+            : institutionalRole
+              ? 'Consulte a identificação da conta institucional, atualize o contato e gerencie o acesso.'
+              : 'Mantenha seus dados pessoais atualizados e cuide do seu acesso.'
+        }
       />
       {status === 'loading' ? (
         <PageState loading>Carregando suas informações…</PageState>
@@ -46,12 +58,12 @@ export default function ProfilePage() {
               <dl className="grid gap-x-8 gap-y-6 py-6 sm:grid-cols-2">
                 {[
                   ...(!profile.roles.includes('STUDENT')
-                    ? [['Nome', profile.name]]
+                    ? [[institutionalRole ? 'Nome da conta' : 'Nome', profile.name]]
                     : []),
                   ['E-mail institucional', profile.email],
                   [
                     'Perfil de acesso',
-                    profile.roles
+                    displayedRoles
                       .map((role) => roleLabels[role as UserRole] ?? role)
                       .join(' · ')
                   ],
@@ -73,7 +85,9 @@ export default function ProfilePage() {
                 ))}
               </dl>
               <p className="text-xs leading-relaxed text-gray-500">
-                Para corrigir campus ou curso, procure a coordenação.
+                {institutionalRole
+                  ? 'Campus e curso seguem o cadastro institucional desta conta.'
+                  : 'Para corrigir campus ou curso, procure a coordenação.'}
               </p>
             </section>
             {profile.roles.includes('STUDENT') ? (

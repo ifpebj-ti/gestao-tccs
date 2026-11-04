@@ -132,7 +132,7 @@ test('assinatura compartilha título compacto, aviso verde e um único visualiza
   ]) {
     const html = signatureMarkup({ role });
     assert.match(html, /Assinar documento/);
-    assert.match(html, /text-2xl md:text-3xl/);
+    assert.match(html, /text-2xl font-semibold/);
     assert.match(html, /Confira antes de confirmar/);
     assert.match(html, /bg-\[#183E2D\]/);
     assert.match(
