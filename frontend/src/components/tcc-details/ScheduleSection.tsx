@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { AddToCalendarButton } from '@/components/calendar/AddToCalendarButton';
 
 interface ScheduleSectionProps {
   infoTcc: {
@@ -24,6 +25,9 @@ interface ScheduleSectionProps {
     finalGrade?: number | null;
     finalOpinion?: string | null;
   };
+  tccId?: number | string;
+  tccTitle?: string;
+  tccSummary?: string | null;
   isScheduleFormVisible?: boolean;
   onOpenSchedule?: () => void;
   canSchedule?: boolean;
@@ -35,6 +39,9 @@ interface ScheduleSectionProps {
 
 export function ScheduleSection({
   infoTcc,
+  tccId,
+  tccTitle,
+  tccSummary,
   isScheduleFormVisible = false,
   onOpenSchedule,
   canSchedule = false,
@@ -76,51 +83,68 @@ export function ScheduleSection({
           </p>
         </div>
 
-        {!isCompleted &&
-          canSchedule &&
-          !isScheduleFormVisible &&
-          onOpenSchedule && (
-            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-              {hasSchedule && onConcludePresentation && (
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {hasSchedule && tccId && !isCompleted && (
+            <AddToCalendarButton
+              eventData={{
+                tccId,
+                title: tccTitle || 'TCC',
+                summary: tccSummary,
+                location: infoTcc.presentationLocation,
+                presentationDate: infoTcc.presentationDate,
+                presentationTime: infoTcc.presentationTime
+              }}
+              variant="outline"
+              size="default"
+            />
+          )}
+
+          {!isCompleted &&
+            canSchedule &&
+            !isScheduleFormVisible &&
+            onOpenSchedule && (
+              <>
+                {hasSchedule && onConcludePresentation && (
+                  <Button
+                    variant="default"
+                    className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
+                    onClick={onConcludePresentation}
+                    disabled={isConcluding}
+                  >
+                    <Check className="w-4 h-4 mr-2" />{' '}
+                    {isConcluding ? 'Concluindo...' : 'Concluir Apresentação'}
+                  </Button>
+                )}
+                {hasSchedule && onSendScheduleEmail && (
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="w-full md:w-auto"
+                    onClick={onSendScheduleEmail}
+                  >
+                    <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Reenviar
+                    Comunicados
+                  </Button>
+                )}
                 <Button
                   variant="default"
-                  className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
-                  onClick={onConcludePresentation}
-                  disabled={isConcluding}
-                >
-                  <Check className="w-4 h-4 mr-2" />{' '}
-                  {isConcluding ? 'Concluindo...' : 'Concluir Apresentação'}
-                </Button>
-              )}
-              {hasSchedule && onSendScheduleEmail && (
-                <Button
-                  variant="outline"
                   size="default"
                   className="w-full md:w-auto"
-                  onClick={onSendScheduleEmail}
+                  onClick={onOpenSchedule}
                 >
-                  <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Reenviar
-                  Comunicados
+                  {hasSchedule ? (
+                    <>
+                      <Pencil className="w-4 h-4 mr-2" /> Inserir Examinadores
+                    </>
+                  ) : (
+                    <>
+                      <Calendar className="w-4 h-4 mr-2" /> Agendar Apresentação
+                    </>
+                  )}
                 </Button>
-              )}
-              <Button
-                variant="default"
-                size="default"
-                className="w-full md:w-auto"
-                onClick={onOpenSchedule}
-              >
-                {hasSchedule ? (
-                  <>
-                    <Pencil className="w-4 h-4 mr-2" /> Inserir Examinadores
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="w-4 h-4 mr-2" /> Agendar Apresentação
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+              </>
+            )}
+        </div>
       </div>
 
       {/* Card de Parecer e Nota Final da Banca quando concluído */}

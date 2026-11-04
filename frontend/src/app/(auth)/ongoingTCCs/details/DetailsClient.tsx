@@ -175,7 +175,10 @@ export default function DetailsClient() {
 
         <ScheduleSection
           infoTcc={tccData.infoTcc}
-        canSchedule={false}
+          tccId={tccData.id}
+          tccTitle={tccData.infoTcc.title || undefined}
+          tccSummary={tccData.infoTcc.summary}
+          canSchedule={false}
           isCompleted={tccData.infoTcc.status === 'COMPLETED'}
         />
 

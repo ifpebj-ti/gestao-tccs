@@ -6,6 +6,12 @@
 <div class="header"><span class="logo">🎓</span><span class="brand">Gradus<span>Flow</span></span></div>
 <div class="body"><span class="tag">Defesa agendada</span><h1>Olá, {{username}}!</h1>
 <p>A apresentação do seu Trabalho de Conclusão de Curso foi agendada. Confira data, horário e local:</p>
-<div class="info"><div class="item"><strong>Título do TCC</strong>{{titulo_tcc}}</div><div class="item"><strong>Data e horário</strong>{{data_horario}}</div><div class="item"><strong>Local</strong>{{local}}</div></div>
+<div class="info"><div class="item"><strong>Título do TCC</strong>{{titulo_tcc}}</div><div class="item"><strong>Data e horário</strong>{{data_horario}}</div><div class="item"><strong>Local</strong>{{local}}</div></div><div style="margin:20px 0;padding:16px 20px;background:#F0F9EB;border:1px solid #C8FF47;border-radius:8px;text-align:center;">
+  <p style="font-size:12px;font-weight:700;color:#002B18;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Salvar na sua agenda:</p>
+  <div>
+    <a href="{{google_calendar_url}}" target="_blank" style="display:inline-block;padding:8px 14px;background:#002B18;color:#C8FF47!important;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600;margin:3px;">Google Agenda</a>
+    <a href="{{outlook_calendar_url}}" target="_blank" style="display:inline-block;padding:8px 14px;background:#002B18;color:#C8FF47!important;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600;margin:3px;">Outlook</a>
+  </div>
+</div>
 <p>Este comunicado é destinado a você como estudante. O arquivo do TCC não está anexado a esta mensagem.</p></div>
 <div class="footer"><p><a href="{{urlfront}}">Gradus Flow</a> &nbsp;·&nbsp; Instituto Federal de Pernambuco</p></div></div></body></html>
