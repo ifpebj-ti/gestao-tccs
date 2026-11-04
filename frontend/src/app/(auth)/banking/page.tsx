@@ -41,6 +41,7 @@ export default function BankingPage() {
   const [selectedTccId, setSelectedTccId] = useState<number | null>(null);
   const [areManagedBanksOpen, setAreManagedBanksOpen] = useState(false);
   const [arePendingEvaluationsOpen, setArePendingEvaluationsOpen] = useState(false);
+  const [showSignatureHint, setShowSignatureHint] = useState(false);
 
   useEffect(() => {
     const loadTccs = async () => {
@@ -53,6 +54,7 @@ export default function BankingPage() {
       try {
         const { role, userId } = jwtDecode<DecodedToken>(token);
         const roles = Array.isArray(role) ? role : [role];
+        setShowSignatureHint(!roles.includes('COORDINATOR') || roles.includes('ADMIN'));
         if (!roles.includes('ADVISOR')) {
           setTccs([]);
           return;
@@ -80,7 +82,8 @@ export default function BankingPage() {
       <div>
         <PageTitle>Banca</PageTitle>
         <p className="mt-2 text-sm text-slate-600">
-          Gerencie as bancas dos TCCs na etapa de apresentação e acompanhe suas avaliações pendentes. As assinaturas ficam na área Assinaturas.
+          Gerencie as bancas dos TCCs na etapa de apresentação e acompanhe suas avaliações pendentes.
+          {showSignatureHint && ' As assinaturas ficam na área Assinaturas.'}
         </p>
       </div>
 

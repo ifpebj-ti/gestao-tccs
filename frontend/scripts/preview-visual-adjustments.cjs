@@ -1,3 +1,4 @@
+const { fillInput } = require('./browser-input.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -194,10 +195,7 @@ async function run() {
       path: '/'
     });
   };
-  const fill = (id, value) =>
-    evaluate(
-      `(()=>{const input=document.getElementById(${JSON.stringify(id)}); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,${JSON.stringify(value)});input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));})()`
-    );
+  const fill = (id, value) => fillInput(send, id, value);
   const upload = (index) =>
     evaluate(
       `(()=>{const input=document.querySelectorAll('input[type=file]')[${index}];const files=new DataTransfer();files.items.add(new File(['%PDF-ficticio'],'documento-assinado.pdf',{type:'application/pdf'}));input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`

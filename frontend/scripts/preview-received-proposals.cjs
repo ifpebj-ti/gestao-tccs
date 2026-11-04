@@ -1,3 +1,4 @@
+const { fillInput } = require('./browser-input.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -175,7 +176,7 @@ async function run() {
     const initialHeight = await evaluate('document.querySelector("textarea").getBoundingClientRect().height');
     assert.ok(initialHeight < 60, `Campo vazio alto demais: ${initialHeight}px`);
     await screenshot('recusa-vazia-desktop.png');
-    const fillReason = value => evaluate(`(()=>{const input=document.querySelector('textarea');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(input,${JSON.stringify(value)});input.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+    const fillReason = value => fillInput(send, null, value);
     await fillReason('Rever a metodologia e os objetivos da proposta. '.repeat(18));
     await wait(`document.querySelector('textarea').getBoundingClientRect().height > ${initialHeight + 20}`);
     assert.ok(await evaluate('document.querySelector("textarea").scrollHeight <= document.querySelector("textarea").clientHeight + 2'));

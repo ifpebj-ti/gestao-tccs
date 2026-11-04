@@ -13,7 +13,7 @@ export function TccHeader({ cancellationRequested, title }: TccHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:gap-4">
       <div className="min-w-0">
-        <PageTitle className="break-words text-2xl md:text-3xl">
+        <PageTitle className="break-words">
           {title || 'TCC'}
         </PageTitle>
       </div>

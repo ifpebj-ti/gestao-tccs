@@ -326,15 +326,15 @@ public class TccController : ControllerBase
         [FromBody] RequestAdvisorDepartureInputModel data,
         [FromServices] RequestAdvisorDepartureUseCase requestAdvisorDepartureUseCase)
     {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
         if (string.IsNullOrWhiteSpace(data.Reason) || data.Reason.Trim().Length < 10)
             return BadRequest(new { detail = "Justificativa obrigatória e deve ter ao menos 10 caracteres." });
 
         if (data.SuggestedAdvisorId <= 0)
             return BadRequest(new { detail = "É obrigatório indicar um docente substituto disponível." });
-
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null || !long.TryParse(userIdClaim, out var userId))
-            return Unauthorized();
 
         var dto = new RequestAdvisorDepartureDTO(id, data.Reason.Trim(), data.SuggestedAdvisorId);
         var result = await requestAdvisorDepartureUseCase.Execute(dto, userId);
@@ -688,12 +688,12 @@ public class TccController : ControllerBase
         [FromForm] IFormFile file,
         [FromServices] UploadFinalTccFileUseCase uploadFinalTccFileUseCase)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest(new { Message = "Nenhum arquivo enviado" });
-
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
             return Unauthorized();
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new { Message = "Nenhum arquivo enviado" });
 
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);

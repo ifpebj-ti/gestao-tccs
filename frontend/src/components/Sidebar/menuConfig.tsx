@@ -75,6 +75,27 @@ export function getSidebarItems(
   ];
   const myTcc = studentTccHref(student);
 
+  if (has('COORDINATOR') && !has('ADMIN')) {
+    return [
+      ...items,
+      {
+        label: 'Banca',
+        href: '/banking',
+        icon: ClipboardCheck,
+        badge: pendingBankingEvaluations
+      },
+      {
+        label: 'Pendências',
+        href: '/coordinationPending',
+        icon: ClipboardList
+      },
+      { label: 'Em andamento', href: '/ongoingTCCs', icon: GraduationCap },
+      { label: 'Concluídos', href: '/completedTCCs', icon: CheckCircle2 },
+      { label: 'Usuários', href: '/users', icon: Users },
+      { label: 'Minha conta', href: '/profile', icon: CircleUserRound }
+    ];
+  }
+
   if (has('BANKING', 'ADVISOR') || pendingBankingEvaluations > 0) {
     items.push({
       label: 'Banca',
@@ -108,8 +129,7 @@ export function getSidebarItems(
   }
   if (
     (has('STUDENT') && myTcc) ||
-    (!has('STUDENT') &&
-      has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING'))
+    (!has('STUDENT') && has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING'))
   ) {
     items.push({
       label: 'Assinaturas',
@@ -131,9 +151,7 @@ export function getSidebarItems(
       icon: Library
     });
   }
-  if (
-    has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'ADMIN')
-  ) {
+  if (has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'ADMIN')) {
     items.push({
       label: 'Em andamento',
       href: '/ongoingTCCs',

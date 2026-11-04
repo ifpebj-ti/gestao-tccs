@@ -355,7 +355,7 @@ export default function SignatureClient() {
     <div className="flex flex-col">
       <header className="mb-4 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <PageTitle className="text-2xl md:text-3xl">
+          <PageTitle>
             Assinar documento
           </PageTitle>
           <Link

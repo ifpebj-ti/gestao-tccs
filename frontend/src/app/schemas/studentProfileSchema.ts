@@ -23,7 +23,7 @@ export const studentProfileSchema = z
     registration: text('Matrícula', 1, 50),
     userClass: text('Turma', 1, 50),
     shift: z.coerce
-      .number()
+      .number<number>()
       .int()
       .min(1, 'Selecione um turno.')
       .max(4, 'Selecione um turno válido.')

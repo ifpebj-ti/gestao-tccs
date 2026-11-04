@@ -25,6 +25,7 @@ const ast = ts.createSourceFile(
 const names = new Set([
   'canView',
   'isStudent',
+  'isCoordinationView',
   'canShowPendingSignatures',
   'supportText',
   'shortcuts'
@@ -99,12 +100,9 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
       'TCCs concluídos'
     ],
     COORDINATOR: [
-      'Assinaturas pendentes',
-      'Propostas de TCC pendentes',
       'Pendências de Coordenação',
       'TCCs em andamento',
       'TCCs concluídos',
-      'Cadastrar nova proposta',
       'Cadastrar novo usuário',
       'Usuários'
     ],
@@ -136,6 +134,33 @@ test('os atalhos mantêm as permissões de cada perfil', () => {
     model().shortcuts.some((card) => card.visible),
     false
   );
+});
+
+test('início da coordenação não exibe assinaturas ou propostas dos perfis herdados', () => {
+  const { shortcuts, supportText } = model({
+    profile: ['COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING'],
+    tccs: { pendingSignature: 4, tccInprogress: 2 },
+    advisorPendingProposals: [{}, {}],
+    coordinationPending: { total: 3 }
+  });
+  for (const title of ['Assinaturas pendentes', 'Propostas de TCC pendentes', 'Cadastrar nova proposta']) {
+    assert.equal(shortcuts.find((card) => card.title === title).visible, false);
+  }
+  assert.equal(shortcuts.find((card) => card.title === 'Banca').visible, true);
+  const html = renderToStaticMarkup(React.createElement(HomeShortcuts, {
+    cards: shortcuts, attentionOnly: true
+  }));
+  assert.match(html, /Pendências de Coordenação/);
+  assert.doesNotMatch(html, /Assinaturas pendentes|Propostas de TCC pendentes/);
+  assert.match(supportText, /biblioteca, substituições e cancelamentos/);
+});
+
+test('administração mantém sua apresentação mesmo com perfis herdados', () => {
+  const { shortcuts, supportText } = model({
+    profile: ['ADMIN', 'COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING']
+  });
+  assert.equal(shortcuts.find((card) => card.title === 'Assinaturas pendentes').visible, true);
+  assert.match(supportText, /Gerencie usuários/);
 });
 
 test('discente só acessa Meu TCC e assinaturas quando há trabalho em andamento ou concluído', () => {

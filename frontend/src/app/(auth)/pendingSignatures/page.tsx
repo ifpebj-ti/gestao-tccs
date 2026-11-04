@@ -213,7 +213,7 @@ export default function PendingSignaturesPage() {
     <div className="flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
         <div className="space-y-3">
-          <PageTitle className="text-2xl md:text-3xl">
+          <PageTitle>
             Assinaturas pendentes
           </PageTitle>
           <p className="text-sm text-slate-600">
