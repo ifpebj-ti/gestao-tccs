@@ -5,6 +5,7 @@ using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.TccSchedule;
+using gestaotcc.Application.Helpers;
 
 namespace gestaotcc.Application.Factories;
 
@@ -75,7 +76,6 @@ public class EmailFactory
         return emailDTO;
     }
 
-
     public static SendEmailDTO CreateSendEmailDTO(UserEntity user, TccEntity tcc, TccScheduleEntity tccSchedule)
     {
         return CreateSendEmailDTO(user.Name, user.Email, tcc, tccSchedule);
@@ -83,17 +83,11 @@ public class EmailFactory
 
     public static SendEmailDTO CreateSendEmailDTO(string name, string email, TccEntity tcc, TccScheduleEntity tccSchedule)
     {
-        Dictionary<string, Object> variables = new Dictionary<string, Object>();
-        variables.Add("username", name);
-        variables.Add("titulo_tcc", tcc.Title ?? string.Empty);
-        variables.Add("resumo_tcc", tcc.Summary ?? string.Empty);
-        variables.Add("data_horario", tccSchedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm"));
-        variables.Add("local", tccSchedule.Location);
-        
+        var variables = CreateScheduleVariables(name, tcc, tccSchedule, hasTccAttachment: false);
         var chooseSubject = "Agendamento de defesa do TCC"; 
-        
         var emailDTO = new SendEmailDTO("", chooseSubject, email, "SCHEDULE-TCC", variables);
-        
+        emailDTO.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, tccSchedule.Location, tccSchedule.ScheduledDate);
         return emailDTO;
     }
 
@@ -104,7 +98,10 @@ public class EmailFactory
         string name, string email, TccEntity tcc, TccScheduleEntity schedule, bool hasTccAttachment)
     {
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment);
-        return new SendEmailDTO(string.Empty, $"Banca de TCC: apresentação agendada — {tcc.Title ?? "TCC"}", email, "BANKING-INTERNAL-SCHEDULE", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Banca de TCC: apresentação agendada — {tcc.Title ?? "TCC"}", email, "BANKING-INTERNAL-SCHEDULE", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateExternalBankingScheduleNotice(
@@ -113,39 +110,57 @@ public class EmailFactory
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment);
         variables["role"] = role;
         variables["token"] = token;
-        return new SendEmailDTO(string.Empty, $"Convite para banca de TCC: {tcc.Title ?? "TCC"}", email, "BANKING-INVITE", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Convite para banca de TCC: {tcc.Title ?? "TCC"}", email, "BANKING-INVITE", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateAdvisorScheduleNotice(
         string name, string email, TccEntity tcc, TccScheduleEntity schedule, bool hasTccAttachment)
     {
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment);
-        return new SendEmailDTO(string.Empty, $"Apresentação agendada: {tcc.Title ?? "TCC"}", email, "SCHEDULE-TCC-ADVISOR", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Apresentação agendada: {tcc.Title ?? "TCC"}", email, "SCHEDULE-TCC-ADVISOR", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateStudentScheduleNotice(string name, string email, TccEntity tcc, TccScheduleEntity schedule)
     {
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment: false);
-        return new SendEmailDTO(string.Empty, $"Data da apresentação do seu TCC: {tcc.Title ?? "TCC"}", email, "SCHEDULE-TCC-STUDENT", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Data da apresentação do seu TCC: {tcc.Title ?? "TCC"}", email, "SCHEDULE-TCC-STUDENT", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateParticipantScheduleNotice(
         string name, string email, TccEntity tcc, TccScheduleEntity schedule, bool hasTccAttachment)
     {
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment);
-        return new SendEmailDTO(string.Empty, $"Apresentação de TCC agendada: {tcc.Title ?? "TCC"}", email, "SCHEDULE-TCC-PARTICIPANT", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Apresentação de TCC agendada: {tcc.Title ?? "TCC"}", email, "SCHEDULE-TCC-PARTICIPANT", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateExternalBankingReminder(string name, string email, TccEntity tcc, TccScheduleEntity schedule)
     {
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment: false);
-        return new SendEmailDTO(string.Empty, $"Lembrete: banca de TCC amanhã — {tcc.Title ?? "TCC"}", email, "BANKING-REMINDER", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Lembrete: banca de TCC amanhã — {tcc.Title ?? "TCC"}", email, "BANKING-REMINDER", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateInternalBankingReminder(string name, string email, TccEntity tcc, TccScheduleEntity schedule)
     {
         var variables = CreateScheduleVariables(name, tcc, schedule, hasTccAttachment: false);
-        return new SendEmailDTO(string.Empty, $"Lembrete: banca de TCC amanhã — {tcc.Title ?? "TCC"}", email, "BANKING-INTERNAL-REMINDER", variables);
+        var dto = new SendEmailDTO(string.Empty, $"Lembrete: banca de TCC amanhã — {tcc.Title ?? "TCC"}", email, "BANKING-INTERNAL-REMINDER", variables);
+        dto.CalendarIcsContent = CalendarEventHelper.BuildIcsContent(
+            tcc.Id, tcc.Title ?? "TCC", tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        return dto;
     }
 
     public static SendEmailDTO CreateExternalBankingEvaluationNotice(string name, string email, string token, TccEntity tcc)
@@ -176,14 +191,21 @@ public class EmailFactory
 
     private static Dictionary<string, object> CreateScheduleVariables(string name, TccEntity tcc, TccScheduleEntity schedule, bool hasTccAttachment)
     {
+        var title = tcc.Title ?? "TCC";
+        var googleUrl = CalendarEventHelper.BuildGoogleCalendarUrl(title, tcc.Summary, schedule.Location, schedule.ScheduledDate);
+        var outlookUrl = CalendarEventHelper.BuildOutlookCalendarUrl(title, tcc.Summary, schedule.Location, schedule.ScheduledDate);
+
         return new Dictionary<string, object>
         {
             ["username"] = name,
-            ["titulo_tcc"] = tcc.Title ?? "TCC",
+            ["titulo_tcc"] = title,
             ["resumo_tcc"] = tcc.Summary ?? "Resumo não informado.",
             ["data_horario"] = schedule.ScheduledDate.ToString("dd/MM/yyyy HH:mm"),
             ["local"] = schedule.Location,
-            ["has_tcc_attachment"] = hasTccAttachment
+            ["has_tcc_attachment"] = hasTccAttachment,
+            ["tcc_id"] = tcc.Id,
+            ["google_calendar_url"] = googleUrl,
+            ["outlook_calendar_url"] = outlookUrl
         };
     }
 }

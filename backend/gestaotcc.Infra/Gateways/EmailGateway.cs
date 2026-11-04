@@ -86,6 +86,22 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         mailMessage.IsBodyHtml = true;
         mailMessage.Body = data.EmailBody;
         
+        if (!string.IsNullOrWhiteSpace(data.CalendarIcsContent))
+        {
+            var htmlView = AlternateView.CreateAlternateViewFromString(data.EmailBody, new System.Net.Mime.ContentType("text/html; charset=UTF-8"));
+            mailMessage.AlternateViews.Add(htmlView);
+
+            var calendarContentType = new System.Net.Mime.ContentType("text/calendar; method=REQUEST; charset=UTF-8");
+            calendarContentType.Parameters.Add("component", "VEVENT");
+            var calendarView = AlternateView.CreateAlternateViewFromString(data.CalendarIcsContent, calendarContentType);
+            calendarView.TransferEncoding = System.Net.Mime.TransferEncoding.SevenBit;
+            mailMessage.AlternateViews.Add(calendarView);
+
+            var icsBytes = System.Text.Encoding.UTF8.GetBytes(data.CalendarIcsContent);
+            var attachment = new Attachment(new MemoryStream(icsBytes), "convite-defesa.ics", "text/calendar; method=REQUEST; name=\"convite-defesa.ics\"");
+            mailMessage.Attachments.Add(attachment);
+        }
+        
         if (data.Attachments != null && data.Attachments.Any())
         {
             foreach (var attachment in data.Attachments)

@@ -7,6 +7,8 @@ using gestaotcc.WebApi.Validators.Tcc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using gestaotcc.Application.Gateways;
+using gestaotcc.Application.Helpers;
 
 namespace gestaotcc.WebApi.Controllers;
 
@@ -483,6 +485,31 @@ public class TccController : ControllerBase
             };
         }
         return Ok(new MessageSuccessResponseModel(result.Data));
+    }
+
+    /// <summary>
+    /// Baixar arquivo de calendário (.ics) da defesa do TCC
+    /// </summary>
+    /// <param name="tccId">Id do tcc</param>
+    [AllowAnonymous]
+    [HttpGet("{tccId}/schedule/calendar.ics")]
+    public async Task<IActionResult> DownloadScheduleCalendar(
+        [FromRoute] long tccId,
+        [FromServices] ITccGateway tccGateway)
+    {
+        var tcc = await tccGateway.FindTccScheduling(tccId);
+        if (tcc is null || tcc.TccSchedule is null)
+            return NotFound("Agendamento de defesa não encontrado para este TCC.");
+
+        var ics = CalendarEventHelper.BuildIcsContent(
+            tcc.Id,
+            tcc.Title ?? "TCC",
+            tcc.Summary,
+            tcc.TccSchedule.Location,
+            tcc.TccSchedule.ScheduledDate);
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(ics);
+        return File(bytes, "text/calendar; charset=utf-8", $"defesa-tcc-{tccId}.ics");
     }
 
     /// <summary>
