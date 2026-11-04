@@ -113,7 +113,21 @@ jobs:
 
       - name: Install Trivy
         run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          installer="$RUNNER_TEMP/install-trivy.sh"
+          curl --fail --show-error --location --retry 3 --retry-all-errors --connect-timeout 15 --max-time 120 \
+            https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh -o "$installer"
+          for attempt in 1 2 3; do
+            if sh "$installer" -d -b /usr/local/bin; then
+              trivy --version
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "::error::Não foi possível instalar o Trivy após três tentativas."
+              exit 1
+            fi
+            echo "::warning::Falha ao instalar o Trivy; nova tentativa em 10 segundos."
+            sleep 10
+          done
 
       - name: Run Trivy vulnerability scanner on repo
         run: |
