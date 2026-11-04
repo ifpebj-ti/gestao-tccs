@@ -4,6 +4,8 @@ import { PageState } from '@/components/layout/PageState';
 
 import { PageTitle } from '@/components/layout/PageTitle';
 import { SemesterFilter } from '@/components/SemesterFilter';
+import { TccSearch } from '@/components/TccSearch';
+import { useCoordinatorTccSearch } from '@/app/hooks/useCoordinatorTccSearch';
 
 import { useCompletedTCCs } from '@/app/hooks/useCompletedTCCs';
 import { useSemestres } from '@/app/hooks/useSemestres';
@@ -22,6 +24,7 @@ export default function CompletedTCCsPage() {
     selectedSemesterId
   );
   const { push } = useRouter();
+  const search = useCoordinatorTccSearch(completedTCCs);
 
   useEffect(() => {
     fetchSemesters();
@@ -29,22 +32,34 @@ export default function CompletedTCCsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="mb-6 flex flex-col items-start gap-5">
+      <div className="mb-10 flex flex-col items-start gap-8">
         <PageTitle>TCCs Concluídos</PageTitle>
-        <SemesterFilter
-          semesters={semesters}
-          value={selectedSemesterId}
-          onChange={setSelectedSemesterId}
-        />
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-y-7 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start lg:gap-x-16 xl:gap-x-24">
+          {search.enabled && (
+            <TccSearch
+              value={search.query}
+              onChange={search.setQuery}
+              includeAdvisor={search.includeAdvisor}
+              advisorSearchUnavailable={search.advisorSearchUnavailable}
+            />
+          )}
+          <SemesterFilter
+            semesters={semesters}
+            value={selectedSemesterId}
+            onChange={setSelectedSemesterId}
+          />
+        </div>
       </div>
 
       {isLoading ? (
         <PageState loading>Carregando TCCs concluídos...</PageState>
       ) : completedTCCs.length === 0 ? (
         <PageState>Nenhum TCC concluído foi encontrado.</PageState>
+      ) : search.filteredTccs.length === 0 ? (
+        <PageState>Nenhum TCC encontrado para esta busca.</PageState>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {completedTCCs.map((tcc) => (
+          {search.filteredTccs.map((tcc) => (
             <CollapseCard
               variant="flat"
               key={tcc.tccId}

@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+import type { SearchableTcc } from '@/lib/tccSearch';
 
-export interface CompletedTccItem {
-  tccId: number;
-  studanteNames: string[];
-}
+export type CompletedTccItem = SearchableTcc;
 
 export interface CompletedTccDetails {
   infoTcc: { title: string; summary: string; presentationDate: string | null; presentationTime: string | null; presentationLocation: string; };

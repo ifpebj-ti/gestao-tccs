@@ -4,6 +4,9 @@ import { PageState } from '@/components/layout/PageState';
 
 import { PageTitle } from '@/components/layout/PageTitle';
 import { SemesterFilter } from '@/components/SemesterFilter';
+import { TccSearch } from '@/components/TccSearch';
+import { useCoordinatorTccSearch } from '@/app/hooks/useCoordinatorTccSearch';
+import type { SearchableTcc } from '@/lib/tccSearch';
 
 import { ResponsiveRecordCard } from '@/components/ResponsiveRecordCard';
 import {
@@ -25,16 +28,14 @@ interface DecodedToken {
   userId: string;
 }
 
-interface TCCFromApi {
-  tccId: number;
-  studanteNames: string[];
-}
+type TCCFromApi = SearchableTcc;
 
 export default function OngoingTCCsPage() {
   const API_URL = env('NEXT_PUBLIC_API_URL');
   const { push } = useRouter();
   const { semesters, fetchSemesters } = useSemestres();
   const [tccs, setTccs] = useState<TCCFromApi[]>([]);
+  const search = useCoordinatorTccSearch(tccs);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSemesterId, setSelectedSemesterId] = useState<number | null>(
     null
@@ -102,22 +103,34 @@ export default function OngoingTCCsPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="mb-6 flex flex-col items-start gap-5">
+      <div className="mb-10 flex flex-col items-start gap-8">
         <PageTitle>TCCs em andamento</PageTitle>
-        <SemesterFilter
-          semesters={semesters}
-          value={selectedSemesterId}
-          onChange={setSelectedSemesterId}
-        />
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-y-7 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start lg:gap-x-16 xl:gap-x-24">
+          {search.enabled && (
+            <TccSearch
+              value={search.query}
+              onChange={search.setQuery}
+              includeAdvisor={search.includeAdvisor}
+              advisorSearchUnavailable={search.advisorSearchUnavailable}
+            />
+          )}
+          <SemesterFilter
+            semesters={semesters}
+            value={selectedSemesterId}
+            onChange={setSelectedSemesterId}
+          />
+        </div>
       </div>
 
       {isLoading ? (
         <PageState loading>Carregando...</PageState>
       ) : tccs.length === 0 ? (
         <PageState>Nenhum TCC em andamento encontrado.</PageState>
+      ) : search.filteredTccs.length === 0 ? (
+        <PageState>Nenhum TCC encontrado para esta busca.</PageState>
       ) : (
         <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 lg:grid-cols-3">
-          {tccs.map((tcc) => (
+          {search.filteredTccs.map((tcc) => (
             <ResponsiveRecordCard
               key={tcc.tccId}
               onClick={() => push(`/ongoingTCCs/signatures?id=${tcc.tccId}`)}

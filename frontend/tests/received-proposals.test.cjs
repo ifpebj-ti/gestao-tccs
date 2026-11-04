@@ -5,12 +5,17 @@ const { decideReceivedProposal, loadReceivedProposals } = loadSource(
   'src/lib/receivedProposals.ts'
 );
 const { getSidebarItems } = loadSource('src/components/Sidebar/menuConfig.tsx');
-test('professor recebe propostas sem acesso de cadastro; gestão preserva cadastro', () => {
+test('professor recebe propostas e supervisão preserva cadastro; coordenação usa o menu simplificado', () => {
   const advisor = getSidebarItems(['ADVISOR'], { status: 'none' });
   assert.ok(advisor.some((x) => x.href === '/receivedProposals'));
   assert.ok(!advisor.some((x) => x.href === '/newTCC'));
   assert.ok(
-    getSidebarItems(['ADVISOR', 'COORDINATOR'], { status: 'none' }).some(
+    getSidebarItems(['SUPERVISOR'], { status: 'none' }).some(
+      (x) => x.href === '/newTCC'
+    )
+  );
+  assert.ok(
+    !getSidebarItems(['ADVISOR', 'COORDINATOR'], { status: 'none' }).some(
       (x) => x.href === '/newTCC'
     )
   );
