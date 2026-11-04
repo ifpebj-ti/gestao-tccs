@@ -113,21 +113,20 @@ jobs:
 
       - name: Install Trivy
         run: |
-          installer="$RUNNER_TEMP/install-trivy.sh"
-          curl --fail --show-error --location --retry 3 --retry-all-errors --connect-timeout 15 --max-time 120 \
-            https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh -o "$installer"
-          for attempt in 1 2 3; do
-            if sh "$installer" -d -b /usr/local/bin; then
-              trivy --version
-              break
-            fi
-            if [ "$attempt" -eq 3 ]; then
-              echo "::error::Não foi possível instalar o Trivy após três tentativas."
-              exit 1
-            fi
-            echo "::warning::Falha ao instalar o Trivy; nova tentativa em 10 segundos."
-            sleep 10
+          version="0.76.1"
+          archive="trivy_${version}_Linux-64bit.tar.gz"
+          checksums="trivy_${version}_checksums.txt"
+          release="https://github.com/aquasecurity/trivy/releases/download/v${version}"
+          cd "$RUNNER_TEMP"
+          for file in "$archive" "$checksums"; do
+            curl --fail --show-error --location --retry 3 --retry-all-errors --connect-timeout 15 --max-time 180 \
+              "$release/$file" -o "$file"
           done
+          grep -F "  $archive" "$checksums" > trivy-checksum.txt
+          sha256sum --check trivy-checksum.txt
+          tar -xzf "$archive" trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+          trivy --version
 
       - name: Run Trivy vulnerability scanner on repo
         run: |
