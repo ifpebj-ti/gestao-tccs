@@ -368,4 +368,192 @@ public async Task Execute_ShouldReturnPendingSignatures_WhenThereAreDocumentsToS
         Assert.True(resultSuggestedAdvisor.IsSuccess);
         Assert.Empty(resultSuggestedAdvisor.Data.SelectMany(d => d.PendingDetails).Where(pd => pd.DocumentId == anexoVDoc.Id));
     }
+
+    [Fact]
+    public async Task Execute_ShouldSkipTcc_WhenStepIsProposalRegistration()
+    {
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Step = StepTccType.PROPOSAL_REGISTRATION.ToString(),
+            Status = StatusTccType.IN_PROGRESS.ToString()
+        };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity>());
+
+        var result = await _useCase.Execute(1, 1);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldNotReturnSignaturesForOrder5_WhenBankingMembersNotAllGraded()
+    {
+        var advisorUser = new UserEntity { Id = 10, Name = "Orientador" };
+        var advisorProfile = new Domain.Entities.Profile.ProfileEntity { Id = 1, Role = RoleType.ADVISOR.ToString() };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Step = StepTccType.PRESENTATION_AND_EVALUATION.ToString(),
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = advisorUser, UserId = 10, Profile = advisorProfile }
+            },
+            BankingMembers = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>
+            {
+                new("Membro 1", "m1@test.com", "Examinador", "tok1", 1) { Grade = null } // Sem nota!
+            }
+        };
+
+        var docType = new DocumentTypeEntity
+        {
+            Id = 5,
+            Name = "Ata de Defesa",
+            SignatureOrder = 5,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<Domain.Entities.Profile.ProfileEntity> { advisorProfile }
+        };
+
+        var doc = new DocumentEntity
+        {
+            Id = 50,
+            DocumentType = docType,
+            DocumentTypeId = 5,
+            Signatures = new List<SignatureEntity>()
+        };
+        tcc.Documents = new List<DocumentEntity> { doc };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
+
+        var result = await _useCase.Execute(10, 1);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data);
+    }
+
+    [Fact]
+    public async Task Execute_AnexoIX_ShouldReturnPending_ForCurrentAdvisorAndStudent()
+    {
+        var advisorUser = new UserEntity { Id = 10, Name = "Prof Orientador" };
+        var studentUser = new UserEntity { Id = 20, Name = "Aluno Orientando" };
+        var advisorProfile = new Domain.Entities.Profile.ProfileEntity { Id = 1, Role = RoleType.ADVISOR.ToString() };
+        var studentProfile = new Domain.Entities.Profile.ProfileEntity { Id = 2, Role = RoleType.STUDENT.ToString() };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString(),
+            Status = StatusTccType.IN_PROGRESS.ToString(),
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = advisorUser, UserId = 10, Profile = advisorProfile },
+                new() { User = studentUser, UserId = 20, Profile = studentProfile }
+            }
+        };
+
+        var anexoIXDocType = new DocumentTypeEntity
+        {
+            Id = 90,
+            Name = "ANEXO IX - SUBSTITUIÇÃO DE ORIENTADOR",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<Domain.Entities.Profile.ProfileEntity> { advisorProfile, studentProfile }
+        };
+
+        var anexoIXDoc = new DocumentEntity
+        {
+            Id = 190,
+            DocumentType = anexoIXDocType,
+            DocumentTypeId = 90,
+            FileName = "ANEXO IX - SUBSTITUICAO",
+            Signatures = new List<SignatureEntity>()
+        };
+        tcc.Documents = new List<DocumentEntity> { anexoIXDoc };
+
+        var advisorChange = new gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity
+        {
+            Id = 1,
+            TccId = tcc.Id,
+            DocumentId = anexoIXDoc.Id,
+            CurrentAdvisorId = advisorUser.Id,
+            SuggestedAdvisorId = 30,
+            RequesterUserId = studentUser.Id,
+            RequesterRole = "STUDENT",
+            Status = "PENDING_SIGNATURES"
+        };
+        tcc.AdvisorChanges = new List<gestaotcc.Domain.Entities.TccAdvisorChange.TccAdvisorChangeEntity> { advisorChange };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { anexoIXDocType });
+
+        var resultAdvisor = await _useCase.Execute(advisorUser.Id, 1);
+        Assert.True(resultAdvisor.IsSuccess);
+        Assert.NotEmpty(resultAdvisor.Data);
+
+        var resultStudent = await _useCase.Execute(studentUser.Id, 1);
+        Assert.True(resultStudent.IsSuccess);
+        Assert.NotEmpty(resultStudent.Data);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturnPending_WhenMethodSignatureIsNotOnlyDocs()
+    {
+        var studentUser = new UserEntity { Id = 20, Name = "Aluno" };
+        var advisorUser = new UserEntity { Id = 10, Name = "Orientador" };
+        var studentProfile = new Domain.Entities.Profile.ProfileEntity { Id = 1, Role = RoleType.STUDENT.ToString() };
+        var advisorProfile = new Domain.Entities.Profile.ProfileEntity { Id = 2, Role = RoleType.ADVISOR.ToString() };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Step = StepTccType.START_AND_ORGANIZATION.ToString(),
+            Status = StatusTccType.IN_PROGRESS.ToString(),
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = studentUser, UserId = 20, Profile = studentProfile },
+                new() { User = advisorUser, UserId = 10, Profile = advisorProfile }
+            }
+        };
+
+        var docType = new DocumentTypeEntity
+        {
+            Id = 30,
+            Name = "ANEXO III - PROPOSTA",
+            SignatureOrder = 2,
+            MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString(),
+            Profiles = new List<Domain.Entities.Profile.ProfileEntity> { studentProfile, advisorProfile }
+        };
+
+        // Aluno já assinou, falta o orientador
+        var doc = new DocumentEntity
+        {
+            Id = 300,
+            DocumentType = docType,
+            DocumentTypeId = 30,
+            User = studentUser,
+            UserId = 20,
+            Signatures = new List<SignatureEntity> { new() { UserId = 20, User = studentUser, DocumentId = 300 } }
+        };
+        tcc.Documents = new List<DocumentEntity> { doc };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
+
+        // Orientador deve ter pendência para assinar o documento do aluno
+        var resultAdvisor = await _useCase.Execute(10, 1);
+
+        Assert.True(resultAdvisor.IsSuccess);
+        Assert.NotEmpty(resultAdvisor.Data);
+        var details = resultAdvisor.Data.SelectMany(d => d.PendingDetails).ToList();
+        Assert.Single(details);
+        Assert.Equal(10, details[0].UserDetails[0].UserId);
+    }
 }
