@@ -7,7 +7,9 @@ export const updatePasswordSchema = z
       .min(1, { message: 'Campo obrigatório' })
       .email('Email Inválido'),
     userPassword: z
-      .string(),
+      .string()
+      .min(8, 'A senha deve ter pelo menos 8 caracteres.')
+      .refine((value) => new TextEncoder().encode(value).length <= 72, 'A senha deve ter até 72 bytes.'),
     confirmPassword: z
       .string()
       .min(1, { message: 'Campo obrigatório' })

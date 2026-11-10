@@ -11,6 +11,7 @@ using Serilog;
 using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 // Add services to the container.
 
@@ -26,17 +27,22 @@ builder.Services.AddSwaggerGen(options =>
 
 // Extension methods
 builder.Services.AddDbContextExtension(builder.Configuration);
-builder.Services.AddCorsExtension(builder.Configuration);
+builder.Services.AddCorsExtension(builder.Configuration, builder.Environment);
 builder.Services.AddSwaggerExtension();
 builder.Services.AddIocDependencies();
 builder.Services.AddAuthenticationExtension(builder.Configuration);
 builder.Services.AddOwnPasswordRateLimit();
+builder.Services.AddDataProtection();
+builder.Services.AddScoped<PasswordResetSession>();
 builder.Host.AddSerilogExtension(builder.Configuration);
 builder.Services.AddHangfireExtension(builder.Configuration);
 builder.Services.AddOpenTelemetryExtension(builder.Environment, builder.Configuration);
 builder.Services.AddStorageExtension(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<GlobalExceptionHandler>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -59,8 +65,6 @@ app.UseCors("CorsPolicy");
 app.UseHttpsRedirection();
 
 // Middlewares
-app.UseMiddleware<SecurityHeadersMiddleware>();
-app.UseMiddleware<GlobalExceptionHandler>();
 app.UseMiddleware<LogMiddleware>();
 
 app.MapPrometheusScrapingEndpoint();

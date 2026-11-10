@@ -19,7 +19,7 @@ public static class HangfireExtension
     
     public static IApplicationBuilder UseHangfireExtension(this IApplicationBuilder app, IServiceProvider serviceProvider)
     {
-        app.UseHangfireDashboard();
+        // Background jobs remain active. The dashboard is not exposed by the application.
 
         using var scope = serviceProvider.CreateScope();
         var resendInvitationUseCase = scope.ServiceProvider.GetRequiredService<ResendInvitationTccEmailUseCase>();

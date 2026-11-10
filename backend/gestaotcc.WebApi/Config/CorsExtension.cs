@@ -2,12 +2,14 @@ namespace gestaotcc.WebApi.Config;
 
 public static class CorsExtension
 {
-    public static IServiceCollection AddCorsExtension(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCorsExtension(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var corsSettings = configuration.GetSection("CORS_SETTINGS");
         var urlFront = corsSettings.GetValue<string>("URL_FRONT");
         
-        var allowedOrigins = new List<string> { "https://gestao-tcc.local", "https://localhost", "http://localhost:3000", "http://localhost" };
+        var allowedOrigins = environment.IsDevelopment()
+            ? new List<string> { "http://localhost:3000", "http://127.0.0.1:3000" }
+            : new List<string>();
         if (!string.IsNullOrEmpty(urlFront) && !allowedOrigins.Contains(urlFront))
         {
             allowedOrigins.Add(urlFront);
@@ -20,7 +22,8 @@ public static class CorsExtension
                 {
                     policy.WithOrigins(allowedOrigins.ToArray())
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                        .AllowCredentials();
                 });
         });
 
