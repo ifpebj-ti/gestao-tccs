@@ -96,6 +96,8 @@ jobs:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:8080/api
           NEXT_TELEMETRY_DISABLED: '1'
       - run: npx --no-install tsc --noEmit --incremental false
+      - name: Verify defensive headers over HTTP
+        run: node ../scripts/verify-security-headers.cjs .
       - name: Audit dependencies and retain report even on failure
         if: success() || failure()
         run: |
