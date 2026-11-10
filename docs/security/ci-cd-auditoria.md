@@ -98,6 +98,8 @@ Não atribuir automaticamente score 5. O documento exige governança efetiva e e
 
 ## Plano de ação corretiva inicial
 
+As descobertas desta seção registram a primeira inspeção e o primeiro DAST. O endurecimento posterior da aplicação, com controles implementados, validação e pendências, está nas [tasks de segurança para 11/11/2026](tasks-seguranca-2026-11-11.md). Relatórios antigos não comprovam o resultado do código posterior às correções.
+
 | ID | Descoberta inicial | Ação | Responsável sugerido | Aceite |
 | --- | --- | --- | --- | --- |
 | CI-01 | npm audit, SCA e DAST permitiam falhas | Gates e relatórios sem neutralizar erro | DevSecOps | Run com achado bloqueia release |
