@@ -150,4 +150,125 @@ public class SendPendingSignatureUseCaseTests
             ((List<SendPendingSignatureDetailsDTO>)dto.Variables["details"]!).Any(d => d.DocumentName == "DocType1")
         ));
     }
+
+    [Fact]
+    public async Task Execute_ShouldNotNotify_WhenSignatureOrderIs5_AndBankingNotAllGraded()
+    {
+        var profile = new ProfileEntity { Id = 1, Role = RoleType.ADVISOR.ToString() };
+        var user = new UserEntity { Id = 1, Name = "Advisor", Email = "advisor@email.com" };
+        var userTcc = new UserTccEntity { User = user, Profile = profile };
+
+        var docType = new DocumentTypeEntity
+        {
+            Id = 15,
+            Name = "Ata de Defesa",
+            SignatureOrder = 5,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { profile }
+        };
+
+        var document = new DocumentEntity
+        {
+            Id = 105,
+            DocumentType = docType,
+            DocumentTypeId = 15,
+            FileName = "ata",
+            Signatures = new List<SignatureEntity>(),
+            UserId = null
+        };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Title = "TCC Defesa",
+            Step = StepTccType.PRESENTATION_AND_EVALUATION.ToString(),
+            UserTccs = new List<UserTccEntity> { userTcc },
+            Documents = new List<DocumentEntity> { document },
+            BankingMembers = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity>
+            {
+                new("Membro 1", "m1@test.com", "Examinador", "tok1", 1) { Grade = null } // Sem nota!
+            }
+        };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
+
+        var result = await _useCase.Execute(1);
+
+        Assert.True(result.IsSuccess);
+        await _emailGateway.DidNotReceive().Send(Arg.Any<SendEmailDTO>());
+    }
+
+    [Fact]
+    public async Task Execute_ShouldNotifyUser_WhenMethodSignatureIsNotOnlyDocs_AndMultipleDocumentsForSameUser()
+    {
+        var advisorProfile = new ProfileEntity { Id = 1, Role = RoleType.ADVISOR.ToString() };
+        var studentProfile = new ProfileEntity { Id = 2, Role = RoleType.STUDENT.ToString() };
+
+        var advisorUser = new UserEntity { Id = 1, Name = "Advisor", Email = "advisor@email.com" };
+        var studentUser = new UserEntity { Id = 2, Name = "Student", Email = "student@email.com" };
+
+        var docType1 = new DocumentTypeEntity
+        {
+            Id = 20,
+            Name = "DocNotOnlyDocs1",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { advisorProfile, studentProfile }
+        };
+        var docType2 = new DocumentTypeEntity
+        {
+            Id = 21,
+            Name = "DocNotOnlyDocs2",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.NOT_ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { advisorProfile, studentProfile }
+        };
+
+        // Documentos do aluno onde o aluno já assinou, falta o orientador
+        var doc1 = new DocumentEntity
+        {
+            Id = 201,
+            DocumentType = docType1,
+            DocumentTypeId = 20,
+            User = studentUser,
+            UserId = studentUser.Id,
+            Signatures = new List<SignatureEntity> { new() { UserId = studentUser.Id } }
+        };
+        var doc2 = new DocumentEntity
+        {
+            Id = 202,
+            DocumentType = docType2,
+            DocumentTypeId = 21,
+            User = studentUser,
+            UserId = studentUser.Id,
+            Signatures = new List<SignatureEntity> { new() { UserId = studentUser.Id } }
+        };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Title = "TCC NotOnlyDocs",
+            Step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString(),
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = studentUser, Profile = studentProfile, UserId = studentUser.Id },
+                new() { User = advisorUser, Profile = advisorProfile, UserId = advisorUser.Id }
+            },
+            Documents = new List<DocumentEntity> { doc1, doc2 }
+        };
+
+        _tccGateway.FindAllTccByFilter(Arg.Any<TccFilterDTO>(), Arg.Any<long>()).Returns(new List<TccEntity> { tcc });
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType1, docType2 });
+        _emailGateway.Send(Arg.Any<SendEmailDTO>()).Returns(ResultPattern<bool>.SuccessResult(true));
+
+        var result = await _useCase.Execute(1);
+
+        Assert.True(result.IsSuccess);
+        // O orientador deve receber 1 e-mail agrupando as pendências dos dois documentos
+        await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(dto =>
+            dto.Recipient == advisorUser.Email &&
+            ((List<SendPendingSignatureDetailsDTO>)dto.Variables["details"]!).Count == 2
+        ));
+    }
 }
