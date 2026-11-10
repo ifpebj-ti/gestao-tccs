@@ -10,6 +10,7 @@ using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
 using gestaotcc.Domain.Enums;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace gestaotcc.Test.UseCases.Tcc;
@@ -192,5 +193,114 @@ public class ForwardToLibraryUseCaseTests
         await _emailGateway.Received(1).Send(Arg.Is<SendEmailDTO>(e =>
             e.TypeTemplate == "FORWARD-LIBRARY" &&
             e.Recipient == "biblioteca@ifpe.edu.br"));
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturnForbidden_WhenCoordinatorBelongsToDifferentCourseThanStudent()
+    {
+        var coordinator = new UserEntity
+        {
+            Id = 10,
+            Status = "ACTIVE",
+            CampiCourseId = 1,
+            Profile = new[] { new ProfileEntity { Role = "COORDINATOR" } }
+        };
+        _userGateway.FindById(10).Returns(coordinator);
+
+        var student = new UserEntity
+        {
+            Id = 20,
+            CampiCourseId = 2 // Curso diferente!
+        };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Step = StepTccType.FINALIZATION_AND_PUBLICATION.ToString(),
+            HardCoverReceivedAt = DateTime.UtcNow.AddDays(-1),
+            UserTccs = new List<UserTccEntity>
+            {
+                new UserTccEntity { User = student, Profile = new ProfileEntity { Role = "STUDENT" } }
+            }
+        };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        var result = await _useCase.Execute(1, 10);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(403, result.ErrorDetails?.Status);
+        Assert.Equal("Acesso não autorizado para o curso deste TCC.", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturnBadRequest_WhenTccIsNotInFinalStage()
+    {
+        var coordinator = new UserEntity
+        {
+            Id = 10,
+            Status = "ACTIVE",
+            Profile = new[] { new ProfileEntity { Role = "COORDINATOR" } }
+        };
+        _userGateway.FindById(10).Returns(coordinator);
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Step = StepTccType.PROPOSAL_REGISTRATION.ToString(), // Etapa inicial, não final!
+            FinalSubmissionDeadline = null
+        };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        var result = await _useCase.Execute(1, 10);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(400, result.ErrorDetails?.Status);
+        Assert.Equal("O TCC não está na etapa final.", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldSucceed_EvenWhenEmailToLibraryThrowsException()
+    {
+        var coordinator = new UserEntity
+        {
+            Id = 10,
+            Status = "ACTIVE",
+            Profile = new[] { new ProfileEntity { Role = "COORDINATOR" } }
+        };
+        _userGateway.FindById(10).Returns(coordinator);
+
+        var student = new UserEntity { Id = 20, Name = "Aluno", Email = "aluno@ifpe.edu.br" };
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Title = "Sistema TCC",
+            Step = StepTccType.FINALIZATION_AND_PUBLICATION.ToString(),
+            HardCoverReceivedAt = DateTime.UtcNow.AddDays(-1),
+            UserTccs = new List<UserTccEntity>
+            {
+                new UserTccEntity { User = student, Profile = new ProfileEntity { Role = "STUDENT" } }
+            }
+        };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        var librarian = new UserEntity
+        {
+            Id = 50,
+            Name = "Bibliotecária",
+            Email = "biblio@ifpe.edu.br",
+            Status = "ACTIVE",
+            Profile = new[] { new ProfileEntity { Role = "LIBRARY" } }
+        };
+        _userGateway.FindAllByFilter(Arg.Any<UserFilterDTO>(), Arg.Any<long>())
+            .Returns(new List<UserEntity> { librarian });
+
+        // Simula falha ao disparar o e-mail
+        _emailGateway.Send(Arg.Any<SendEmailDTO>()).Throws(new Exception("SMTP timeout"));
+
+        var result = await _useCase.Execute(1, 10);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(tcc.ForwardedToLibraryAt);
+        await _tccGateway.Received(1).Update(tcc);
     }
 }

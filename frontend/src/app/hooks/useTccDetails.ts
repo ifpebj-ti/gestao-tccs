@@ -183,13 +183,34 @@ export function useTccDetails() {
         summary: result.infoTcc.summary ?? ''
       });
 
+      const formatScheduleDate = (dateStr: string | null | undefined): string => {
+        if (!dateStr) return '';
+        const trimmed = dateStr.trim();
+        if (trimmed.includes('/')) {
+          const parts = trimmed.split('/');
+          if (parts.length === 3) {
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+        if (trimmed.includes('T')) {
+          return trimmed.split('T')[0];
+        }
+        return trimmed;
+      };
+
+      const formatScheduleTime = (timeStr: string | null | undefined): string => {
+        if (!timeStr) return '';
+        const cleaned = timeStr.replace('h', ':').trim();
+        const match = cleaned.match(/^([01]?[0-9]|2[0-3]):([0-5][0-9])/);
+        if (match) {
+          return `${match[1].padStart(2, '0')}:${match[2]}`;
+        }
+        return cleaned;
+      };
+
       scheduleForm.reset({
-        scheduleDate: result.infoTcc.presentationDate 
-          ? result.infoTcc.presentationDate.split('/').reverse().join('-') 
-          : '',
-        scheduleTime: result.infoTcc.presentationTime 
-          ? result.infoTcc.presentationTime.replace('h', ':') 
-          : '',
+        scheduleDate: formatScheduleDate(result.infoTcc.presentationDate),
+        scheduleTime: formatScheduleTime(result.infoTcc.presentationTime),
         scheduleLocation: result.infoTcc.presentationLocation ?? '',
         bankingMembers: result.infoBanking?.members?.map(m => ({
           name: m.name,
