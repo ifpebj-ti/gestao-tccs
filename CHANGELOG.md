@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Segurança e CI/CD
+
+- CI reutilizável como pré-requisito da release, com gate agregado, testes de integração em PostgreSQL temporário e bloqueio de cobertura abaixo de 90%.
+- SAST, auditorias npm/NuGet e Trivy com bloqueios efetivos; Gitleaks no histórico; relatórios e SBOM preservados como artifacts.
+- DAST de frontend e API em ambiente temporário, independente da OCI.
+- Deploy separado da publicação e condicionado a opt-in manual, environment de produção e webhooks com HTTPS válido.
+- Dependabot, checklist de PR e guia de preparação para auditoria com pendências explícitas de GitHub e OCI.
+
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)

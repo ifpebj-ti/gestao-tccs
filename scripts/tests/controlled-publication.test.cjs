@@ -143,7 +143,7 @@ test('candidate workflow cannot be started by a push, merge, release or schedule
   assert.match(workflow, /DOCKER_BUILD_RECORD_UPLOAD: 'false'/);
 });
 
-test('production keeps automatic release and deployment; candidate validation is isolated', () => {
+test('production keeps releases and a separate opt-in deployment; candidates remain isolated', () => {
   const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
   const events = workflow.match(/^on:\r?\n([\s\S]*?)(?=^\S)/m)?.[1];
   assert.match(events, /pull_request:/);
@@ -297,7 +297,7 @@ test('actual versioning script skips outros and preserves the three normal versi
   }
 });
 
-test('only the joint successful release job can promote or call either webhook', () => {
+test('promotion requires both builders and deployment additionally requires manual opt-in', () => {
   const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
   const joint = workflow.split('  release-creation:\n')[1];
   assert.match(joint, /needs: \[tag-creation, backend-docker, frontend-docker\]/);
@@ -311,8 +311,15 @@ test('only the joint successful release job can promote or call either webhook',
   assert.ok(joint.indexOf('assemble-release') < joint.indexOf('promote-release'));
   assert.ok(joint.indexOf('verify-release-source') < joint.indexOf('promote-release'));
   assert.ok(joint.indexOf('promote-release') < joint.indexOf('PORTAINER_WEBHOOK_BACKEND'));
-  assert.match(joint, /curl --fail-with-body -k -X POST "\$PORTAINER_WEBHOOK_BACKEND"/);
-  assert.match(joint, /curl --fail-with-body -k -X POST "\$PORTAINER_WEBHOOK_FRONTEND"/);
+  assert.match(joint, /curl --fail .*--proto '=https'.*-X POST "\$PORTAINER_WEBHOOK_BACKEND"/);
+  assert.match(joint, /curl --fail .*--proto '=https'.*-X POST "\$PORTAINER_WEBHOOK_FRONTEND"/);
+  assert.doesNotMatch(joint, /curl[^\n]*\s-k\s/);
+  const deploy = workflow.split('\n  deploy:\n')[1];
+  assert.match(deploy, /needs: \[tag-creation, release-creation\]/);
+  assert.match(deploy, /github.event_name == 'workflow_dispatch' && inputs.deploy/);
+  assert.match(deploy, /environment: production/);
+  assert.doesNotMatch(joint.split('  deploy:\n')[0], /PORTAINER_WEBHOOK/);
+  assert.match(workflow, /deploy:\n\s+description:[\s\S]*?default: false/);
 });
 
 test('only the administrative badge failure is non-blocking; release and webhook failures remain blocking', () => {
