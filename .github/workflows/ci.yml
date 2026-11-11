@@ -29,7 +29,7 @@ jobs:
       - name: Validate workflows
         run: docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.7 -shellcheck= .github/workflows/ci.yml .github/workflows/production.yml
       - name: Validate security shell scripts
-        run: docker run --rm -v "$PWD:/repo:ro" -w /repo koalaman/shellcheck:v0.10.0 scripts/dast.sh scripts/install-security-tools.sh
+        run: docker run --rm -v "$PWD:/repo:ro" -w /repo koalaman/shellcheck:v0.10.0 scripts/dast.sh scripts/install-security-tools.sh scripts/install-opengrep.sh
   backend-ci:
     name: Backend tests and coverage
     runs-on: ubuntu-24.04
@@ -122,19 +122,27 @@ jobs:
           path: frontend/npm-audit.json
           retention-days: 14
   security-sast:
-    name: SAST Semgrep
+    name: SAST Semgrep e Opengrep
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - name: Scan code and fail on findings or scanner errors
+      - name: Install checksum-verified SAST engine with CSharp 12 support
+        run: bash scripts/install-opengrep.sh
+      - name: Scan backend with the CSharp-compatible parser
+        run: |
+          mkdir -p reports
+          opengrep scan --config p/owasp-top-ten --config p/csharp --config p/typescript \
+            --error --strict --sarif --output reports/backend-sast.sarif backend
+      - name: Scan frontend scripts and workflows with Semgrep
+        if: success() || failure()
         run: |
           mkdir -p reports
           docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.185.0 \
             semgrep scan --config p/owasp-top-ten --config p/csharp --config p/typescript \
-            --error --strict --metrics=off --sarif --output reports/semgrep.sarif backend frontend scripts .github
+            --error --strict --metrics=off --sarif --output reports/frontend-sast.sarif frontend scripts .github
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:

@@ -285,9 +285,9 @@ test('actual versioning script skips outros and preserves the three normal versi
     const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'gradus-version-test-'));
     const output = path.join(folder, 'output');
     try {
-      const script = source.replaceAll('${{ steps.last_tag.outputs.last_tag }}', '2.12.0')
-        .replaceAll('${{ steps.change_type.outputs.change_type }}', kind);
-      const result = spawnSync(bash, ['-e', '-c', script], { env: { ...process.env, GITHUB_OUTPUT: output }, encoding: 'utf8' });
+      const result = spawnSync(bash, ['-e', '-c', source], {
+        env: { ...process.env, GITHUB_OUTPUT: output, LAST_RELEASE_TAG: '2.12.0', RELEASE_CHANGE_TYPE: kind }, encoding: 'utf8'
+      });
       assert.equal(result.status, 0, result.stderr);
       const actual = fs.readFileSync(output, 'utf8');
       assert.match(actual, new RegExp(`should_release=${expected ? 'true' : 'false'}`));

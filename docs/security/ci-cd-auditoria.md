@@ -14,7 +14,7 @@ A integração preserva os testes da equipe e acrescenta cenários de segurança
 flowchart TD
   PR[PR ou push em develop/main] --> CI[CI reutilizável]
   CI --> T[Lint, build, testes e cobertura]
-  CI --> S[Semgrep, Trivy, NuGet, npm e histórico de segredos]
+  CI --> S[Semgrep e Opengrep, Trivy, NuGet, npm e histórico de segredos]
   CI --> D[DAST em contêineres temporários]
   T --> G[Quality gate]
   S --> G
@@ -40,7 +40,7 @@ PRs não recebem segredos de produção. O checkout não persiste credenciais; o
 | Frontend | Lint, testes existentes, build ou TypeScript falhando | Logs do job |
 | npm | Vulnerabilidade alta/crítica ou erro de auditoria | frontend-evidence/npm-audit.json |
 | NuGet | Vulnerabilidade alta/crítica, inclusive transitiva; erro de relatório | backend-evidence/nuget-audit.json |
-| Semgrep | Qualquer finding das regras selecionadas; erro de scanner | sast-evidence/semgrep.sarif |
+| Semgrep e Opengrep | Qualquer finding das regras selecionadas; erro de scanner | sast-evidence/frontend-sast.sarif e backend-sast.sarif |
 | Trivy, repositório e imagens | Qualquer vulnerabilidade alta/crítica, inclusive sem correção disponível | JSON de SCA e de imagens |
 | Histórico de segredos | Detecção no histórico completo das refs obtidas pelo checkout | sca-secrets-evidence/gitleaks.sarif, com valores redigidos |
 | DAST | Alerta alto; falha operacional; relatório ausente | dast-evidence, JSON e HTML por serviço |
@@ -48,7 +48,7 @@ PRs não recebem segredos de produção. O checkout não persiste credenciais; o
 
 Achados médios/baixos continuam nos relatórios e precisam de triagem e PAC. Não equivalem a riscos aceitos automaticamente. Vulnerabilidades altas/críticas sem correção disponível também bloqueiam: avaliar troca da dependência ou imagem base. A política adota o critério mais estrito da segunda unidade (zero altas/críticas), sem baseline que esconda achados antigos.
 
-Trivy e Gitleaks usam versões explícitas e validação dos checksums publicados na release. Isso verifica integridade do download; não substitui assinatura independente ou pinagem de hash revisada. Semgrep e ZAP usam tags explícitas. As regras remotas e bases de vulnerabilidade podem mudar entre execuções. Actions ainda usam tags de versão: pinagem por SHA e imagens por digest é um endurecimento adicional pendente de revisão.
+Trivy e Gitleaks usam versões explícitas e validação dos checksums publicados na release. Opengrep 1.33.1 usa executável oficial com SHA-256 fixado; as Actions estão fixadas por SHA, com comentários das versões. O ZAP usa versão explícita. As regras remotas e bases de vulnerabilidade podem mudar entre execuções; pinagem das imagens por digest permanece uma melhoria possível.
 
 ## DAST e seus limites
 
@@ -138,11 +138,11 @@ Os relatórios locais estão em `reports/dast/web.html`, `web.json`, `api.html`,
 
 A validação local de DAST utilizou ZAP 2.16.1 e reaproveitou, na etapa de scan após corrigir os caminhos do Windows, as imagens construídas do mesmo código de frontend/backend. O alerta de versão desatualizada foi confirmado: a configuração final foi atualizada para ZAP 2.17.0, cuja execução no GitHub ainda está pendente. A espera do PostgreSQL também foi endurecida para exigir conexão TCP. Não confundir o resultado local com uma execução completa da configuração final no GitHub.
 
-Não foram executados localmente os scans Semgrep/Gitleaks/Trivy e o CI completo de NuGet/npm com os artifacts da configuração final. Os testes PostgreSQL devem ser comprovados no job com banco temporário. A cobertura atual não foi certificada nesta mudança. O DAST sem sessão autenticada não comprova ausência de falhas nos fluxos protegidos; os 500 precisam de reprodução e triagem, pois o ambiente não tinha armazenamento/e-mail completos. Nenhuma imagem foi publicada e nenhum deploy foi acionado nesta validação.
+A execução #127 do PR #753 aprovou testes PostgreSQL, cobertura, NuGet/npm, SCA/histórico, DAST e validação da esteira. O SAST apontou zero vulnerabilidades bloqueantes, mas falhou por incompatibilidade do parser com C# 12; a troca do motor e as evidências estão em [triagem do PR](triagem-ci-pr-753.md). O DAST sem sessão autenticada não comprova ausência de falhas nos fluxos protegidos. Nenhuma imagem foi publicada e nenhum deploy OCI foi acionado nessa validação.
 
 ## Referências das ferramentas
 
-- [Semgrep CLI e códigos de saída](https://docs.semgrep.dev/cli-reference)
+- [Opengrep e suporte de linguagens](https://github.com/opengrep/opengrep)
 - [ZAP Baseline: análise passiva e códigos de saída](https://www.zaproxy.org/docs/docker/baseline-scan/)
 - [Gitleaks: varredura do Git e redação dos resultados](https://github.com/gitleaks/gitleaks)
 - [Trivy: relatórios e formatos](https://trivy.dev/docs/dev/guide/configuration/reporting/)

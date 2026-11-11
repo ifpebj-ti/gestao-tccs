@@ -43,4 +43,10 @@ Os relatórios da reprodução ficam em `reports/ci-failure-126`, ignorados pelo
 
 A suíte final com o novo teste do Hangfire aprovou **573 testes**, sem falhas nem ignorados, e manteve **95,96% de cobertura global de sequências** (27.195 / 28.338), sem mudar exclusões ou o mínimo de 95%. O teste isolado da baseline do Gitleaks confirmou que um novo segredo sintético continua sendo bloqueado.
 
-Semgrep e DAST devem ser confirmados pelos relatórios da nova execução do PR. Os bloqueios permanecem ativos; esse registro não substitui a aprovação dos jobs no GitHub.
+A execução #127 aprovou pipeline, backend/cobertura, frontend, dependências/histórico e DAST. O Semgrep registrou **zero achados bloqueantes**, mas saiu com código 3 porque `--strict` promoveu 69 avisos de parsing a falha: construtores primários de C# 12 e dois trechos Bash com interpolação de expressões GitHub.
+
+O problema de C# é [conhecido no parser do Semgrep](https://github.com/semgrep/semgrep/issues/11923). Para analisar esse código sem reescrever a aplicação ou desativar regras, o job utiliza **Opengrep 1.33.1**, cujo [suporte oficial a C# 12](https://github.com/opengrep/opengrep/wiki/Support-for-C%23) inclui esses construtores. O executável oficial Linux é validado pelo SHA-256 fixado no instalador. As três configurações de regras e os parâmetros `--error --strict` permanecem. A versão da release é transmitida ao Bash por variáveis de ambiente, preservando os quatro cenários de incremento verificados nos testes.
+
+Opengrep analisa o backend; Semgrep permanece no frontend, scripts e workflows. Ambos executam as mesmas três famílias de regras com `--error --strict`. A reprodução do backend passou com 550 arquivos e zero achados, sem os avisos de parsing de C#.
+
+Os relatórios finais usam `backend-sast.sarif` e `frontend-sast.sarif`; os bloqueios permanecem ativos. Esse registro não substitui a aprovação dos jobs da nova execução no GitHub.

@@ -61,7 +61,7 @@ jobs:
       - name: Extract type of change from PR
         id: change_type
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             echo "change_type=nova-feature-refactor" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -96,9 +96,12 @@ jobs:
 
       - name: Calculate new tag
         id: created_tag
+        env:
+          LAST_RELEASE_TAG: ${{ steps.last_tag.outputs.last_tag }}
+          RELEASE_CHANGE_TYPE: ${{ steps.change_type.outputs.change_type }}
         run: |
-          IFS='.' read -r major minor patch <<< "${{ steps.last_tag.outputs.last_tag }}"
-          case "${{ steps.change_type.outputs.change_type }}" in
+          IFS='.' read -r major minor patch <<< "$LAST_RELEASE_TAG"
+          case "$RELEASE_CHANGE_TYPE" in
             bug-fix)
               patch=$((patch + 1))
               ;;
@@ -432,8 +435,8 @@ jobs:
           FRONTEND: ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
         run: |
           test -n "$BACKEND" && test -n "$FRONTEND"
-          case "$BACKEND" in https://*) ;; *) exit 1 ;; esac
-          case "$FRONTEND" in https://*) ;; *) exit 1 ;; esac
+          case "$BACKEND" in "https://"*) ;; *) exit 1 ;; esac
+          case "$FRONTEND" in "https://"*) ;; *) exit 1 ;; esac
       - name: Trigger Portainer webhook to update Backend service
         env:
           PORTAINER_WEBHOOK_BACKEND: ${{ secrets.PORTAINER_WEBHOOK_BACKEND }}
