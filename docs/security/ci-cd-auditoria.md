@@ -6,7 +6,7 @@ Esta implementação atende à parte de esteira do Documento de Entregas do Proj
 
 **Deploy na OCI pendente:** a conta da integrante responsável ainda aguarda liberação. Não há evidência de implantação, domínio, HTTPS, observabilidade ou rollback na OCI. O CI e o DAST temporário independem dessa conta. Não apresentar esses controles operacionais como concluídos.
 
-A ampliação dos testes da aplicação para 95% está com outra integrante. A esteira exige o mínimo documental de 90% de cobertura de sequências do backend, sem arredondar resultados para cima e sem excluir componentes para aumentar artificialmente o percentual. Isso não representa cobertura de frontend nem comprova, isoladamente, qualidade dos testes.
+A integração preserva os testes da equipe e acrescenta cenários de segurança e integração. A esteira exige **95% de cobertura global de sequências do backend**, sem arredondar resultados para cima e sem excluir componentes para aumentar artificialmente o percentual. Isso não representa cobertura de frontend, 95% de cada módulo ou, isoladamente, qualidade dos testes.
 
 ## Fluxo implementado
 
@@ -35,7 +35,7 @@ PRs não recebem segredos de produção. O checkout não persiste credenciais; o
 | Controle | Bloqueio | Evidência |
 | --- | --- | --- |
 | Validação da esteira | Falha dos testes dos scripts, Actionlint ou ShellCheck | Logs de Pipeline validation |
-| Backend | Build/testes falhando; cobertura inferior a 90%; relatório ausente | TRX e OpenCover em backend-evidence |
+| Backend | Build/testes falhando; cobertura inferior a 95%; relatório ausente | TRX e OpenCover em backend-evidence |
 | Integração PostgreSQL | Falha dos testes com banco descartável | TRX; variável de conexão definida pelo CI |
 | Frontend | Lint, testes existentes, build ou TypeScript falhando | Logs do job |
 | npm | Vulnerabilidade alta/crítica ou erro de auditoria | frontend-evidence/npm-audit.json |
@@ -85,7 +85,7 @@ Para cada evidência registrar commit SHA, URL do workflow/run e artifact, data,
 | Requisito | Evidência a obter | Situação |
 | --- | --- | --- |
 | Testes e segurança bloqueiam release | Run positivo e run negativo de demonstração em branch de teste | Configurado; execução no GitHub pendente |
-| Cobertura mínima de 90%, meta de 95% | OpenCover do commit avaliado | Depende dos testes da equipe; não presumir percentual |
+| Cobertura mínima de 95% | OpenCover do commit avaliado | Medir no commit integrado; não presumir percentual |
 | PR e revisão obrigatórias | Captura/export do ruleset + PR real revisada | Configuração e comprovação pendentes |
 | SAST/SCA/segredos | SARIF/JSON + triagem dos achados | Scanners configurados; resultado real precisa ser avaliado |
 | DAST automatizado temporário | Relatórios por serviço e logs de criação/limpeza | Configurado; escopo autenticado pendente |
@@ -112,7 +112,7 @@ As descobertas desta seção registram a primeira inspeção e o primeiro DAST. 
 | SEC-03 | ZAP local detectou ausência de CSP e proteção contra clickjacking no frontend (risco médio) | Definir CSP compatível com Next.js e documentos, aplicar frame-ancestors/X-Frame-Options e revalidar | Frontend + DevSecOps | Testes dos fluxos e novo scan sem esses achados |
 | SEC-04 | ZAP local apontou ausência de nosniff/Permissions-Policy e exposição de X-Powered-By no frontend (risco baixo) | Aplicar cabeçalhos e remover identificação desnecessária do servidor | Frontend + DevSecOps | Respostas HTTP e novo scan comprovam correção |
 | SEC-05 | ZAP local recebeu HTTP 500 e indicou detalhes de erro em /api/Tcc/code/send e /api/Tcc/code/verify (risco baixo) | Reproduzir com serviços de teste completos; conferir validação, tratamento de exceções e ausência de dados sensíveis | Backend + DevSecOps | Falhas esperadas têm respostas controladas; origem confirmada e novo scan registrado |
-| TEST-01 | Cobertura atual não comprovada nesta entrega | Ampliar testes dos fluxos críticos para meta de 95% | Integrante responsável pelos testes | Relatório real ≥90%; meta 95% |
+| TEST-01 | Manter cobertura após alterações | Preservar testes existentes e ampliar cenários dos fluxos críticos | Equipe | Relatório global real ≥95% |
 | OPS-01 | OCI ainda indisponível | Acompanhar liberação e depois provisionar staging | Responsável OCI | Ambiente e checklist operacional validados |
 
 Criar issues reais para os itens e preencher responsáveis, sprint e links. Esta tabela não cria issues nem comprova correções em execução. Não remover histórico nem adicionar suppressions amplas para fazer um scanner passar. Falso positivo precisa de justificativa específica, revisão e prazo.

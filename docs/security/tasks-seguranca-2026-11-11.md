@@ -21,9 +21,9 @@ Implementação realizada em 10/11/2026. Responsabilidade sugerida: DevSecOps, c
 
 ## Validação registrada
 
-- Backend .NET 8 em contêiner, com PostgreSQL temporário: **484 testes aprovados, zero falhas, zero ignorados**, após incorporar como base as atualizações já presentes na develop. O banco utilizado é exclusivamente `gradus_proposal_test`, em rede temporária, sem usar dados da aplicação.
+- Backend .NET 8 em contêiner, com PostgreSQL temporário: **572 testes aprovados, zero falhas, zero ignorados**, após integrar os dois novos lotes de testes da develop. Cobertura global de sequências: **95,89%**, sem exclusões adicionais. O banco utilizado é exclusivamente `gradus_proposal_test`, em esquema temporário, sem usar dados da aplicação. Comparação e limites da medição em [integração e cobertura](integracao-develop-cobertura.md).
 - Frontend: suíte existente com **107 testes aprovados**; TypeScript sem erros. Build Linux e verificação de resposta HTTP real com os cabeçalhos defensivos aprovados. O mesmo smoke está em `scripts/verify-security-headers.cjs` e foi adicionado ao CI.
-- Os testes adicionados são regressões dos controles de segurança. A frente de ampliação de cobertura para 95% permanece com a integrante responsável.
+- Os testes da colega foram preservados; a integração acrescenta regressões dos controles de segurança e testes HTTP, de persistência e armazenamento. A esteira passa a exigir 95% global de sequências do backend.
 - Compatibilidade: `ValidRecoveryStillWorksOverHttpWithCorsAndTheProtectedCookie` exercita controllers e JSON reais por HTTP, com gateways controlados: recusa sem comprovação, verificação do código, transporte do cookie/CORS, troca válida, limpeza do cookie, recusa de repetição e login de banca pelo novo corpo JSON. Os testes PostgreSQL verificam separadamente a persistência e a concorrência reais.
 - A duração da sessão mantém a unidade original de horas. O teste `TokenLifetimeKeepsTheExistingHoursConfiguration` evita mudar silenciosamente essa unidade; autenticação de sessões ainda válidas continua retornando 200. Alteração de curso/campus também exige renovar o token, para não preservar escopo antigo.
 - Nenhuma imagem foi publicada, nenhuma release criada e nenhum deploy OCI acionado. Os arquivos locais ainda precisam de PR, revisão e execução da esteira no GitHub.
@@ -75,7 +75,7 @@ Aguardar as alterações restantes da integrante responsável pelos testes antes
 
 ## Texto curto para a apresentação
 
-“Nesta entrega, implementei controles de segurança na aplicação além da esteira: recuperação de senha com comprovante protegido e código de uso único, bloqueio de upload em TCC alheio, limites e verificações de arquivos, redução de vazamento de erros e tokens, proteção contra tentativas excessivas e validação/revogação de sessões JWT. Também retirei execução de scripts do visualizador de documentos e bloqueei buscas externas na conversão de PDF. Validei o backend com 484 testes, incluindo os testes já integrados pela equipe e os cenários de concorrência em PostgreSQL, e o frontend com seus 107 testes, build e verificação HTTP dos cabeçalhos. As mudanças estão organizadas em branches para revisão; a implantação na OCI e os controles de infraestrutura continuam pendentes da liberação da conta.”
+“Nesta entrega, implementei controles de segurança na aplicação além da esteira: recuperação de senha com comprovante protegido e código de uso único, bloqueio de upload em TCC alheio, limites e verificações de arquivos, redução de vazamento de erros e tokens, proteção contra tentativas excessivas e validação/revogação de sessões JWT. Também retirei execução de scripts do visualizador de documentos e bloqueei buscas externas na conversão de PDF. Validei o backend com 572 testes e 95,89% de cobertura global de sequências, incluindo os testes já integrados pela equipe e os cenários de concorrência em PostgreSQL, e o frontend com seus 107 testes, build e verificação HTTP dos cabeçalhos. As mudanças estão organizadas em branches para revisão; a implantação na OCI e os controles de infraestrutura continuam pendentes da liberação da conta.”
 
 ## Referências técnicas
 
