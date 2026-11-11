@@ -56,8 +56,8 @@ jobs:
         env:
           GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
         run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage --logger "trx;LogFileName=tests.trx"
-      - name: Enforce 90 percent coverage
-        run: python3 ../scripts/check-coverage.py coverage 90
+      - name: Enforce 95 percent coverage
+        run: python3 ../scripts/check-coverage.py coverage 95
       - name: Dependency vulnerability report including transitives
         if: success() || failure()
         run: dotnet list package --vulnerable --include-transitive --format json > nuget-audit.json

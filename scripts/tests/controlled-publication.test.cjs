@@ -277,7 +277,7 @@ test('badge changes only its marker line and preserves the current README blob S
 });
 
 test('actual versioning script skips outros and preserves the three normal version increments', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
+  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const block = workflow.split('      - name: Calculate new tag\n')[1].split('\n      - name:')[0];
   const source = block.split('        run: |\n')[1].split('\n').map(line => line.replace(/^          /, '')).join('\n');
   const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash';
@@ -298,7 +298,7 @@ test('actual versioning script skips outros and preserves the three normal versi
 });
 
 test('promotion requires both builders and deployment additionally requires manual opt-in', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
+  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const joint = workflow.split('  release-creation:\n')[1];
   assert.match(joint, /needs: \[tag-creation, backend-docker, frontend-docker\]/);
   const badge = joint.split('      - name: Upload Code Coverage Badge from the current README snapshot\n')[1]
@@ -323,7 +323,7 @@ test('promotion requires both builders and deployment additionally requires manu
 });
 
 test('only the administrative badge failure is non-blocking; release and webhook failures remain blocking', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
+  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const joint = workflow.split('  release-creation:\n')[1];
   const badge = joint.split('      - name: Upload Code Coverage Badge from the current README snapshot\n')[1]
     .split('\n      - name:')[0];
