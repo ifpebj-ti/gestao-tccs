@@ -12,7 +12,7 @@ esac
 prefix="gradus-dast-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
 mkdir -p reports/dast
 chmod 777 reports/dast
-# shellcheck disable=SC2329 # Called by the EXIT trap.
+# shellcheck disable=SC2317,SC2329 # Invoked indirectly by the EXIT trap, including on failure.
 cleanup() {
   docker logs "$prefix-api" > reports/dast/api.log 2>&1 || true
   docker logs "$prefix-web" > reports/dast/frontend.log 2>&1 || true
@@ -53,6 +53,8 @@ test "$ready" = 1
 # Scan both targets even when one fails. Exit 2 means WARN; JSON severity decides the gate.
 status=0
 for service in web api; do
+  # A report from an earlier local run must never satisfy this scan's gate.
+  rm -f "reports/dast/$service.json" "reports/dast/$service.html"
   set +e
   if [ "$service" = web ]; then
     docker run --rm --network "$prefix" -v "$workspace/reports/dast:/zap/wrk:rw" \

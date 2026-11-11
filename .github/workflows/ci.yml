@@ -14,13 +14,17 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
       - run: node --test scripts/tests/*.test.cjs
+      - run: python3 -m pip install --require-hashes -r scripts/requirements-security.txt
       - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
       - name: Validate workflows
         run: docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.7 -shellcheck= .github/workflows/ci.yml .github/workflows/production.yml
@@ -44,12 +48,15 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: '8.0.x'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
       - run: dotnet restore --configfile NuGet.Public.config
       - run: dotnet build --no-restore --configuration Release
       - name: Unit and PostgreSQL integration tests
@@ -57,14 +64,16 @@ jobs:
           GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
         run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage --logger "trx;LogFileName=tests.trx"
       - name: Enforce 95 percent coverage
-        run: python3 ../scripts/check-coverage.py coverage 95
+        run: |
+          python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
+          python3 ../scripts/check-coverage.py coverage 95
       - name: Dependency vulnerability report including transitives
         if: success() || failure()
         run: dotnet list package --vulnerable --include-transitive --format json > nuget-audit.json
       - name: Block high and critical NuGet vulnerabilities
         if: success() || failure()
         run: node ../scripts/security-gate.cjs nuget nuget-audit.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: backend-evidence
@@ -80,10 +89,10 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
           cache: npm
@@ -106,7 +115,7 @@ jobs:
           status=$?
           set -e
           exit "$status"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: frontend-evidence
@@ -117,7 +126,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Scan code and fail on findings or scanner errors
@@ -126,7 +135,7 @@ jobs:
           docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.185.0 \
             semgrep scan --config p/owasp-top-ten --config p/csharp --config p/typescript \
             --error --strict --metrics=off --sarif --output reports/semgrep.sarif backend frontend scripts .github
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: sast-evidence
@@ -137,7 +146,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -154,7 +163,7 @@ jobs:
           trivy fs --scanners vuln --format json --output reports/trivy.json .
           trivy fs --format cyclonedx --output reports/sbom.cdx.json .
           node scripts/security-gate.cjs trivy reports/trivy.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: sca-secrets-evidence
@@ -165,12 +174,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Build and scan isolated frontend and API
         run: bash scripts/dast.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: dast-evidence
