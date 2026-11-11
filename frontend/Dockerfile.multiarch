@@ -24,4 +24,6 @@ COPY --from=validation /app/package.json ./
 COPY --from=validation /app/.next ./.next
 COPY --from=validation /app/public ./public
 COPY --from=validation /app/node_modules ./node_modules
+RUN chown -R node:node /app/.next
+USER node
 CMD ["node", "node_modules/next/dist/bin/next", "start"]

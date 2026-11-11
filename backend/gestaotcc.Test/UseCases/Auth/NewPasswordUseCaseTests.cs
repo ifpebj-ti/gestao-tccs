@@ -21,12 +21,13 @@ public class NewPasswordUseCaseTests
     public NewPasswordUseCaseTests()
     {
         _useCase = new NewPasswordUseCase(_userGateway, _bcryptGateway, _tccGateway, _emailGateway, _logger);
+        _userGateway.CompleteFirstAccess(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>()).Returns(true);
     }
 
     [Fact]
     public async Task Execute_ShouldReturnFailure_WhenUserOrTccInviteIsNull()
     {
-        var dto = new NewPasswordDTO("user@example.com", "newpass", "code123");
+        var dto = new NewPasswordDTO("user@example.com", "Newpass!1", "code123");
 
         _userGateway.FindByEmail(dto.Email).Returns((UserEntity?)null);
         _tccGateway.FindInviteTccByEmail(dto.Email).Returns(new TccInviteEntity());
@@ -47,7 +48,7 @@ public class NewPasswordUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnFailure_WhenInviteDataIsInvalid()
     {
-        var dto = new NewPasswordDTO("user@example.com", "newpass", "code123");
+        var dto = new NewPasswordDTO("user@example.com", "Newpass!1", "code123");
 
         var user = new UserEntity { Email = dto.Email, Status = "PENDING" };
         var tccInvite = new TccInviteEntity
@@ -84,7 +85,7 @@ public class NewPasswordUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnFailure_WhenEmailSendingFails()
     {
-        var dto = new NewPasswordDTO("user@example.com", "newpass", "code123");
+        var dto = new NewPasswordDTO("user@example.com", "Newpass!1", "code123");
         var user = new UserEntity { Email = dto.Email, Status = "PENDING" };
         var tccInvite = new TccInviteEntity
         {
@@ -107,7 +108,7 @@ public class NewPasswordUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnSuccess_WhenPasswordIsUpdatedAndEmailSent()
     {
-        var dto = new NewPasswordDTO("user@example.com", "newpass", "code123");
+        var dto = new NewPasswordDTO("user@example.com", "Newpass!1", "code123");
         var user = new UserEntity { Email = dto.Email, Status = "PENDING" };
         var tccInvite = new TccInviteEntity
         {
@@ -126,7 +127,7 @@ public class NewPasswordUseCaseTests
         Assert.True(result.IsSuccess);
         Assert.Equal("hashedpass", user.Password);
         Assert.True(user.Status == "PENDING" || user.Status == "ACTIVE");
-        await _userGateway.Received(1).Update(user);
+        await _userGateway.Received(1).CompleteFirstAccess(user.Id, Arg.Any<string>(), tccInvite.Id, tccInvite.Code, "hashedpass");
         await _emailGateway.Received(1).Send(Arg.Any<SendEmailDTO>());
     }
 }

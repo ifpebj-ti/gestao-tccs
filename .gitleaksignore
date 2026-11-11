@@ -1,0 +1,15 @@
+# Ocorrências históricas exatas; nenhum valor, caminho inteiro ou regra foi liberado.
+# Registro da triagem e da rotação: docs/security/triagem-ci-pr-753.md.
+
+# Chave JWT pública antiga: ocorria somente como valor proibido neste arquivo.
+# O código atual compara o SHA-256 e continua recusando essa chave.
+6167e1ef0e4fa3be575b8899b7d4f53be53d6383:backend/gestaotcc.WebApi/Config/AuthenticationExtension.cs:generic-api-key:18
+
+# Alfabeto público para geração de códigos; não é uma credencial.
+6167e1ef0e4fa3be575b8899b7d4f53be53d6383:.env.example:generic-api-key:23
+
+# Chave RPC do protótipo: substituída por segredo privado; nó local recriado e saudável.
+fc61aca7d0fae2cfa55d8ebdad74fc764bd010f5:garage.toml:generic-api-key:9
+
+# JWT de exemplo antigo: removido do exemplo; rotação aplicada ao backend local.
+b7526da4f7ec3b36b784fae4fa3d8f0dac963d13:.env.example:generic-api-key:9

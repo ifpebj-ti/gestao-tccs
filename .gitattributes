@@ -1,0 +1,2 @@
+# Scripts executados no Linux também devem funcionar em checkouts do Windows.
+*.sh text eol=lf

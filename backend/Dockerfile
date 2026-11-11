@@ -26,4 +26,5 @@ WORKDIR /app
 COPY --from=build /app/out .
 COPY ./gestaotcc.WebApi/Templates ./Templates
 
+USER app
 ENTRYPOINT ["dotnet", "gestaotcc.WebApi.dll"]

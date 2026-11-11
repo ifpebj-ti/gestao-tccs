@@ -36,10 +36,10 @@ jobs:
       tag: ${{ steps.plan.outputs.tag }}
       owner: ${{ steps.plan.outputs.owner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
       - name: Validate publication guard and unique candidate names
@@ -50,9 +50,13 @@ jobs:
           CANDIDATE_API_URL: ${{ inputs.api_url }}
           REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
         run: node scripts/controlled-publication.cjs plan
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
       - name: Test registry and tag safety checks without publishing
         run: |
           node --test scripts/tests/controlled-publication.test.cjs
+          python3 -m pip install --require-hashes -r scripts/requirements-security.txt
           python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
   build-test-scan:
@@ -89,16 +93,20 @@ jobs:
       IMAGE: ghcr.io/${{ needs.plan.outputs.owner }}/gestaotccs-${{ matrix.service }}
       LOCAL_IMAGE: gradus-candidate/${{ matrix.service }}:${{ github.sha }}-${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         if: matrix.service == 'backend'
         with:
           dotnet-version: '8.0.x'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        if: matrix.service == 'backend'
+        with:
+          python-version: '3.12'
       - name: Backend tests with PostgreSQL and OpenCover coverage
         if: matrix.service == 'backend'
         working-directory: backend
@@ -107,12 +115,13 @@ jobs:
         run: |
           dotnet restore gestaotcc.Test/gestaotcc.Test.csproj --configfile NuGet.Public.config
           dotnet test gestaotcc.Test/gestaotcc.Test.csproj --no-restore --configuration Release -m:1 -p:UseSharedCompilation=false --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage
+          python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
           python3 ../scripts/summarize-coverage.py coverage
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
         with:
           buildkitd-config: scripts/buildkit-validation.toml
       - name: Build and load exact platform using the tested Dockerfiles
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile.multiarch
@@ -139,7 +148,7 @@ jobs:
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/aquasecurity/trivy/$TRIVY_VERSION/contrib/install.sh" --output "$RUNNER_TEMP/install-trivy.sh"
           sh "$RUNNER_TEMP/install-trivy.sh" -b "$RUNNER_TEMP/trivy" "$TRIVY_VERSION"
           "$RUNNER_TEMP/trivy/trivy" image --severity CRITICAL --exit-code 1 --ignore-unfixed "$LOCAL_IMAGE"
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         if: inputs.publish_candidates
         with:
           registry: ghcr.io
@@ -175,14 +184,14 @@ jobs:
       CANDIDATE_API_URL: ${{ inputs.api_url }}
       REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

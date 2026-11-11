@@ -1,6 +1,7 @@
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Enums;
 using gestaotcc.Domain.Errors;
+using gestaotcc.Application.Helpers;
 
 namespace gestaotcc.Application.UseCases.Tcc;
 
@@ -33,11 +34,7 @@ public class UploadFinalTccFileUseCase
         if (tcc == null)
             return ResultPattern<string>.FailureResult("TCC não encontrado.", 404);
 
-        var roles = user.Profile.Select(p => p.Role).ToArray();
-        var isLinked = tcc.UserTccs.Any(link => link.UserId == userId && roles.Contains(link.Profile.Role));
-        var isManagement = roles.Any(r => r is "ADMIN" or "COORDINATOR" or "SUPERVISOR");
-
-        if (!isLinked && !isManagement)
+        if (!TccUploadAuthorization.Allows(user, tcc))
             return ResultPattern<string>.FailureResult("Você não tem permissão para enviar a versão final deste TCC.", 403);
 
         var isFinalStage = tcc.Step == StepTccType.FINALIZATION_AND_PUBLICATION.ToString() ||
@@ -53,7 +50,10 @@ public class UploadFinalTccFileUseCase
 
         var finalFileName = $"final/tcc_{tccId}_{Guid.NewGuid()}{extension}";
 
-        await _storageGateway.Send(finalFileName, fileBytes, contentType, isFilledPdfProcess: true);
+        if (!PdfUploadPolicy.IsValid(fileBytes, fileName, contentType))
+            return ResultPattern<string>.FailureResult("Envie um PDF válido de até 20 MB.", 400);
+
+        await _storageGateway.Send(finalFileName, fileBytes, "application/pdf", isFilledPdfProcess: true);
 
         tcc.FinalTccFile = finalFileName;
         await _tccGateway.Update(tcc);

@@ -19,29 +19,27 @@ public static class HangfireExtension
     
     public static IApplicationBuilder UseHangfireExtension(this IApplicationBuilder app, IServiceProvider serviceProvider)
     {
-        app.UseHangfireDashboard();
+        // Background jobs remain active. The dashboard is not exposed by the application.
 
         using var scope = serviceProvider.CreateScope();
-        var resendInvitationUseCase = scope.ServiceProvider.GetRequiredService<ResendInvitationTccEmailUseCase>();
-        var sendPendingsignatures = scope.ServiceProvider.GetRequiredService<SendPendingSignatureUseCase>();
-        var removeFilledPdfsUseCase = scope.ServiceProvider.GetRequiredService<RemoveFilledPdfsUseCase>();
+        var recurringJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
 
-        RecurringJob.AddOrUpdate(
+        recurringJobs.AddOrUpdate<ResendInvitationTccEmailUseCase>(
             "resend-invite-tcc",
-            () => resendInvitationUseCase.Execute(),
-            "0 5 * * *" // Executar diariamente às 5:00
+            useCase => useCase.Execute(),
+            "0 5 * * *", new RecurringJobOptions() // Executar diariamente às 5:00
         );
         
-        RecurringJob.AddOrUpdate(
+        recurringJobs.AddOrUpdate<SendPendingSignatureUseCase>(
             "send-pending-signatures",
-            () => sendPendingsignatures.Execute(0),
-            "0 5 * * *" // Executar diariamente às 5:00
+            useCase => useCase.Execute(0),
+            "0 5 * * *", new RecurringJobOptions() // Executar diariamente às 5:00
         );
         
-        RecurringJob.AddOrUpdate(
+        recurringJobs.AddOrUpdate<RemoveFilledPdfsUseCase>(
             "remove-filled-pdfs",
-            () => removeFilledPdfsUseCase.Execute(),
-            "0 5 * * *" // Executar diariamente às 5:00
+            useCase => useCase.Execute(),
+            "0 5 * * *", new RecurringJobOptions() // Executar diariamente às 5:00
         );
 
         return app;

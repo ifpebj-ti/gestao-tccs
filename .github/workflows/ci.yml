@@ -1,155 +1,208 @@
 name: Continuous Integration (CI)
-
 on:
   push:
-    branches:
-      - develop
-      - main
+    branches: [develop, main]
   pull_request:
-    branches:
-      - develop
-      - main
-
+    branches: [develop, main]
+  workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
-
 jobs:
-  # --------------------------------------------------------------------
-  # 1) BACKEND CI ------------------------------------------------------
-  # --------------------------------------------------------------------
+  pipeline-checks:
+    name: Pipeline validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: node --test scripts/tests/*.test.cjs
+      - run: python3 -m pip install --require-hashes -r scripts/requirements-security.txt
+      - run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Validate workflows
+        run: docker run --rm -v "$PWD:/repo:ro" -w /repo rhysd/actionlint:1.7.7 -shellcheck= .github/workflows/ci.yml .github/workflows/production.yml
+      - name: Validate security shell scripts
+        run: docker run --rm -v "$PWD:/repo:ro" -w /repo koalaman/shellcheck:v0.10.0 scripts/dast.sh scripts/install-security-tools.sh scripts/install-opengrep.sh
   backend-ci:
-    name: Backend Lint, Build & Tests
-    runs-on: ubuntu-latest
+    name: Backend tests and coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: validation-only-password
+          POSTGRES_DB: gradus_proposal_test
+        ports: ['55439:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gradus_proposal_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
     defaults:
       run:
         working-directory: backend
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up .NET 8
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          dotnet-version: "8.0.x"
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build Backend
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run Tests with Coverage
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: dotnet restore --configfile NuGet.Public.config
+      - run: dotnet build --no-restore --configuration Release
+      - name: Unit and PostgreSQL integration tests
+        env:
+          GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
+        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage --logger "trx;LogFileName=tests.trx"
+      - name: Enforce 95 percent coverage
         run: |
-          dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings ./coverlet.runsettings
-
-  # --------------------------------------------------------------------
-  # 2) FRONTEND CI -----------------------------------------------------
-  # --------------------------------------------------------------------
+          python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
+          python3 ../scripts/check-coverage.py coverage 95
+      - name: Dependency vulnerability report including transitives
+        if: success() || failure()
+        run: dotnet list package --vulnerable --include-transitive --format json > nuget-audit.json
+      - name: Block high and critical NuGet vulnerabilities
+        if: success() || failure()
+        run: node ../scripts/security-gate.cjs nuget nuget-audit.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: backend-evidence
+          path: |
+            backend/coverage
+            backend/nuget-audit.json
+          retention-days: 14
   frontend-ci:
-    name: Frontend Lint, Build & Audit
-    runs-on: ubuntu-latest
+    name: Frontend lint tests build and audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: frontend
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          node-version: 20
-          cache: "npm"
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Linter
-        run: npm run lint
-
-      - name: Build Next.js Application
-        run: npm run build
-
-      - name: Security Audit (Fail on Critical)
-        run: |
-          npm audit --audit-level=critical || echo "Auditoria de dependencias concluida. Verificacao completa de seguranca conduzida pelo Trivy."
-
-  # --------------------------------------------------------------------
-  # 3) SECURITY (SAST - SEMGREP) ---------------------------------------
-  # --------------------------------------------------------------------
-  security-sast:
-    name: Security SAST (Semgrep)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Run Semgrep Security Scan
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/security-audit
-            p/owasp-top-ten
-            p/csharp
-            p/javascript
-            p/typescript
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:ui
+      - run: npm run build
         env:
-          SEMGREP_RULES: >-
-            p/security-audit
-            p/owasp-top-ten
-
-  # --------------------------------------------------------------------
-  # 4) SECURITY (SCA - TRIVY FS SCAN) ----------------------------------
-  # --------------------------------------------------------------------
-  security-trivy:
-    name: Security SCA (Trivy)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Trivy
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:8080/api
+          NEXT_TELEMETRY_DISABLED: '1'
+      - run: npx --no-install tsc --noEmit --incremental false
+      - name: Verify defensive headers over HTTP
+        run: node ../scripts/verify-security-headers.cjs .
+      - name: Audit dependencies and retain report even on failure
+        if: success() || failure()
         run: |
-          version="0.76.1"
-          archive="trivy_${version}_Linux-64bit.tar.gz"
-          checksums="trivy_${version}_checksums.txt"
-          release="https://github.com/aquasecurity/trivy/releases/download/v${version}"
-          cd "$RUNNER_TEMP"
-          for file in "$archive" "$checksums"; do
-            curl --fail --show-error --location --retry 3 --retry-all-errors --connect-timeout 15 --max-time 180 \
-              "$release/$file" -o "$file"
-          done
-          grep -F "  $archive" "$checksums" > trivy-checksum.txt
-          sha256sum --check trivy-checksum.txt
-          tar -xzf "$archive" trivy
-          sudo install -m 0755 trivy /usr/local/bin/trivy
-          trivy --version
-
-      - name: Run Trivy vulnerability scanner on repo
-        run: |
-          trivy fs --severity CRITICAL,HIGH --exit-code 0 .
-
-  # --------------------------------------------------------------------
-  # 5) SECURITY (DAST - OWASP ZAP) -------------------------------------
-  # --------------------------------------------------------------------
-  security-dast:
-    name: Security DAST (OWASP ZAP)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.14.0
-        continue-on-error: true
+          set +e
+          npm audit --audit-level=high --json > npm-audit.json
+          status=$?
+          set -e
+          exit "$status"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
-          target: 'https://gradusflow.site'
-          issue_title: 'DAST: Alerta de seguranca detectado pelo OWASP ZAP'
-          fail_action: false
+          name: frontend-evidence
+          path: frontend/npm-audit.json
+          retention-days: 14
+  security-sast:
+    name: SAST Semgrep e Opengrep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install checksum-verified SAST engine with CSharp 12 support
+        run: bash scripts/install-opengrep.sh
+      - name: Scan backend with the CSharp-compatible parser
+        run: |
+          mkdir -p reports
+          opengrep scan --config p/owasp-top-ten --config p/csharp --config p/typescript \
+            --error --strict --sarif --output reports/backend-sast.sarif backend
+      - name: Scan frontend scripts and workflows with Semgrep
+        if: success() || failure()
+        run: |
+          mkdir -p reports
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.185.0 \
+            semgrep scan --config p/owasp-top-ten --config p/csharp --config p/typescript \
+            --error --strict --metrics=off --sarif --output reports/frontend-sast.sarif frontend scripts .github
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: sast-evidence
+          path: reports
+          retention-days: 14
+  security-sca:
+    name: SCA and secret history
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install checksum-verified Trivy and Gitleaks
+        run: bash scripts/install-security-tools.sh
+      - name: Scan full Git history with redacted findings
+        run: |
+          mkdir -p reports
+          gitleaks git --log-opts="--all" --redact --report-format sarif --report-path reports/gitleaks.sarif .
+      - name: Scan dependency vulnerabilities and generate SBOM
+        if: success() || failure()
+        run: |
+          mkdir -p reports
+          trivy fs --scanners vuln --format json --output reports/trivy.json .
+          trivy fs --format cyclonedx --output reports/sbom.cdx.json .
+          node scripts/security-gate.cjs trivy reports/trivy.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: sca-secrets-evidence
+          path: reports
+          retention-days: 14
+  security-dast:
+    name: DAST temporary environment
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build and scan isolated frontend and API
+        run: bash scripts/dast.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: dast-evidence
+          path: reports/dast
+          retention-days: 14
+  quality-gate:
+    name: Quality gate
+    if: always()
+    needs: [pipeline-checks, backend-ci, frontend-ci, security-sast, security-sca, security-dast]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every check to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")'
+          echo 'All mandatory checks passed for this commit.' >> "$GITHUB_STEP_SUMMARY"

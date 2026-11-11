@@ -1,57 +1,30 @@
-﻿using gestaotcc.Application.Gateways;
+using System.Text;
+using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Auth;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.Auth;
+
 public class UpdatePasswordUseCase(IUserGateway userGateway, IBcryptGateway bcryptGateway, IAppLoggerGateway<UpdatePasswordUseCase> logger)
 {
     public async Task<ResultPattern<string>> Execute(UpdatePasswordDTO data)
     {
-        logger.LogInformation("Iniciando processo de alteração de senha para o e-mail: {UserEmail}", data.UserEmail);
-
         var user = await userGateway.FindByEmail(data.UserEmail);
-        if (user is null)
-        {
-            logger.LogWarning("Falha na alteração de senha para {UserEmail}: Usuário não encontrado.", data.UserEmail);
-            return ResultPattern<string>.FailureResult("Erro ao alterar senha. Por favor verifique as informações e tente novamente.", 404);
-        }
-
-        var userId = user.Id;
-        logger.LogInformation("Usuário encontrado para alteração de senha. UserId: {UserId}", userId);
-
-        if (user.Email != "dev-test@ifpe.edu.br")
-        {
-            if (user.AccessCode!.IsActive)
-            {
-                logger.LogWarning("Falha na alteração de senha para UserId {UserId}: O código de acesso ainda não foi validado.", userId);
-                return ResultPattern<string>.FailureResult("Código de acesso ainda não validado. Por favor tente novamente.", 409);
-            }
-                
-            var duration = user.AccessCode!.ExpirationDate - DateTime.UtcNow;
-            if (duration <= TimeSpan.Zero)
-            {
-                logger.LogWarning("Falha na alteração de senha para UserId {UserId}: O código de acesso expirou em {ExpirationDate}.", userId, user.AccessCode.ExpirationDate);
-                return ResultPattern<string>.FailureResult("Código de acesso expirado. Por favor gere outro e tente novamente.", 409);
-            }
-                
-            if (user.AccessCode.IsUserUpdatePassword)
-            {
-                logger.LogWarning("Falha na alteração de senha para UserId {UserId}: O código de acesso já foi utilizado para uma alteração anterior.", userId);
-                return ResultPattern<string>.FailureResult("Código de acesso já utilizado. Por favor gere outro e tente novamente.", 409);
-            }
-
-            logger.LogInformation("Validações concluídas para UserId {UserId}. Atualizando a senha", userId);
-            
-            user.AccessCode.IsUserUpdatePassword = true;
-        }
-
-        user.Password = bcryptGateway.GenerateHashPassword(data.UserPassword);
-        user.Status = user.Status != "INACTIVE" ? "ACTIVE" : user.Status;
-
-        await userGateway.Update(user);
-
-        logger.LogInformation("Senha alterada e usuário atualizado com sucesso no banco de dados para o UserId: {UserId}", userId);
-
+        if (user is null) return ResultPattern<string>.FailureResult("Não foi possível alterar a senha.", 404);
+        if (user.Status == "INACTIVE") return ResultPattern<string>.FailureResult("A conta não está disponível.", 403);
+        if (user.AccessCode is null || user.AccessCode.IsActive)
+            return ResultPattern<string>.FailureResult("Código de acesso não validado.", 409);
+        if (user.AccessCode.ExpirationDate <= DateTime.UtcNow)
+            return ResultPattern<string>.FailureResult("Código de acesso expirado.", 409);
+        if (user.AccessCode.IsUserUpdatePassword)
+            return ResultPattern<string>.FailureResult("Código de acesso já utilizado.", 409);
+        if (string.IsNullOrEmpty(data.UserPassword) || data.UserPassword.Length < 8 ||
+            Encoding.UTF8.GetByteCount(data.UserPassword) > 72)
+            return ResultPattern<string>.FailureResult("A senha deve ter pelo menos 8 caracteres e até 72 bytes.", 400);
+        var hash = bcryptGateway.GenerateHashPassword(data.UserPassword);
+        if (!await userGateway.ResetPassword(user.Id, user.Password, user.AccessCode.Id, user.AccessCode.Code, hash))
+            return ResultPattern<string>.FailureResult("A recuperação expirou ou já foi utilizada. Solicite outro código.", 409);
+        logger.LogInformation("Senha redefinida com código de uso único para UserId {UserId}.", user.Id);
         return ResultPattern<string>.SuccessResult();
     }
 }

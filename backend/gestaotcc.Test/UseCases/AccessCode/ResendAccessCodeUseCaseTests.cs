@@ -57,7 +57,7 @@ public class ResendAccessCodeUseCaseTests
         // Assert
         Assert.True(result.IsFailure);
         Assert.Equal(500, result.ErrorDetails?.Status);
-        Assert.Equal("Falha ao enviar email", result.Message);
+        Assert.Equal("Não foi possível enviar o código. Tente novamente mais tarde.", result.Message);
     }
 
     [Fact]

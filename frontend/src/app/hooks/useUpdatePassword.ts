@@ -19,6 +19,7 @@ export function useUpdatePassword() {
     try {
       const response = await fetch(`${API_URL}/Auth/update-password`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },
@@ -36,7 +37,9 @@ export function useUpdatePassword() {
           toast.success('Senha atualizada com sucesso!');
         }
       } else {
-        toast.error('Erro ao atualizar a senha. Verifique se o e-mail está correto.');
+        toast.error(response.status === 401
+          ? 'Valide novamente o código de recuperação neste navegador.'
+          : 'Não foi possível atualizar a senha. Confira os dados e a validade do código.');
       }
     } catch {
       toast.error('Erro ao enviar a senha. Tente novamente mais tarde.');
