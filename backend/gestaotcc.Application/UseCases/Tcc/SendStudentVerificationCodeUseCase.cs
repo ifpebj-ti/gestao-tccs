@@ -4,6 +4,7 @@ using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Errors;
 
+using System.Security.Cryptography;
 namespace gestaotcc.Application.UseCases.Tcc;
 
 public class SendStudentVerificationCodeUseCase(
@@ -23,12 +24,11 @@ public class SendStudentVerificationCodeUseCase(
             return ResultPattern<bool>.FailureResult("Este e-mail institucional já possui cadastro no sistema. Faça login ou recupere sua senha.", 409);
         }
 
-        var random = new Random();
         const string chars = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
         var code = new string(Enumerable.Repeat(chars, 6)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+            .Select(s => s[RandomNumberGenerator.GetInt32(s.Length)]).ToArray());
 
-        logger.LogDebug("Código de verificação gerado para {UserEmail}: {VerificationCode}", data.UserEmail, code);
+        logger.LogDebug("Código de verificação gerado.");
 
         var existingInvite = await tccGateway.FindInviteTccByEmail(data.UserEmail);
         if (existingInvite is not null)

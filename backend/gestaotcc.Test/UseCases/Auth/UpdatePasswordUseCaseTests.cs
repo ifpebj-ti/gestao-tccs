@@ -16,6 +16,7 @@ public class UpdatePasswordUseCaseTests
     public UpdatePasswordUseCaseTests()
     {
         _useCase = new UpdatePasswordUseCase(_userGateway, _bcryptGateway, _logger);
+        _userGateway.ResetPassword(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>()).Returns(true);
     }
 
     [Fact]
@@ -23,7 +24,7 @@ public class UpdatePasswordUseCaseTests
     {
         _userGateway.FindByEmail("notfound@example.com").Returns((UserEntity?)null);
 
-        var dto = new UpdatePasswordDTO("notfound@example.com", "newpass");
+        var dto = new UpdatePasswordDTO("notfound@example.com", "Newpass!1");
         var result = await _useCase.Execute(dto);
 
         Assert.True(result.IsFailure);
@@ -45,7 +46,7 @@ public class UpdatePasswordUseCaseTests
         };
         _userGateway.FindByEmail(user.Email).Returns(user);
 
-        var dto = new UpdatePasswordDTO(user.Email, "newpass");
+        var dto = new UpdatePasswordDTO(user.Email, "Newpass!1");
         var result = await _useCase.Execute(dto);
 
         Assert.True(result.IsFailure);
@@ -68,7 +69,7 @@ public class UpdatePasswordUseCaseTests
         };
         _userGateway.FindByEmail(user.Email).Returns(user);
 
-        var dto = new UpdatePasswordDTO(user.Email, "newpass");
+        var dto = new UpdatePasswordDTO(user.Email, "Newpass!1");
         var result = await _useCase.Execute(dto);
 
         Assert.True(result.IsFailure);
@@ -91,7 +92,7 @@ public class UpdatePasswordUseCaseTests
         };
         _userGateway.FindByEmail(user.Email).Returns(user);
 
-        var dto = new UpdatePasswordDTO(user.Email, "newpass");
+        var dto = new UpdatePasswordDTO(user.Email, "Newpass!1");
         var result = await _useCase.Execute(dto);
 
         Assert.True(result.IsFailure);
@@ -114,16 +115,14 @@ public class UpdatePasswordUseCaseTests
             }
         };
         _userGateway.FindByEmail(user.Email).Returns(user);
-        _bcryptGateway.GenerateHashPassword("newpass").Returns("hashedpass");
+        _bcryptGateway.GenerateHashPassword("Newpass!1").Returns("hashedpass");
 
-        var dto = new UpdatePasswordDTO(user.Email, "newpass");
+        var dto = new UpdatePasswordDTO(user.Email, "Newpass!1");
         var result = await _useCase.Execute(dto);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal("hashedpass", user.Password);
-        Assert.True(user.AccessCode.IsUserUpdatePassword);
-        Assert.Equal("ACTIVE", user.Status); // Alterou porque status era diferente de "INACTIVE"
-        await _userGateway.Received(1).Update(user);
+        await _userGateway.Received(1).ResetPassword(user.Id, user.Password, user.AccessCode.Id, user.AccessCode.Code, "hashedpass");
+        await _userGateway.DidNotReceive().Update(Arg.Any<UserEntity>());
     }
 
     [Fact]
@@ -141,15 +140,13 @@ public class UpdatePasswordUseCaseTests
             }
         };
         _userGateway.FindByEmail(user.Email).Returns(user);
-        _bcryptGateway.GenerateHashPassword("newpass").Returns("hashedpass");
+        _bcryptGateway.GenerateHashPassword("Newpass!1").Returns("hashedpass");
 
-        var dto = new UpdatePasswordDTO(user.Email, "newpass");
+        var dto = new UpdatePasswordDTO(user.Email, "Newpass!1");
         var result = await _useCase.Execute(dto);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("hashedpass", user.Password);
-        Assert.True(user.AccessCode.IsUserUpdatePassword);
-        Assert.Equal("INACTIVE", user.Status); // Status mantém INACTIVE
-        await _userGateway.Received(1).Update(user);
+        Assert.True(result.IsFailure);
+        Assert.Equal(403, result.ErrorDetails?.Status);
+        await _userGateway.DidNotReceive().ResetPassword(Arg.Any<long>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<string>(), Arg.Any<string>());
     }
 }

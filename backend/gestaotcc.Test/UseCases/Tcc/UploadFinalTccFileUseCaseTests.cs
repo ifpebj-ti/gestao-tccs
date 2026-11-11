@@ -142,7 +142,7 @@ public class UploadFinalTccFileUseCaseTests
         };
         _tccGateway.FindTccById(1).Returns(tcc);
 
-        var fileBytes = new byte[] { 0x25, 0x50, 0x44, 0x46 }; // %PDF
+        var fileBytes = System.Text.Encoding.ASCII.GetBytes("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF");
         var result = await _useCase.Execute(1, 1, fileBytes, "meu_tcc_final.pdf", "application/pdf");
 
         Assert.True(result.IsSuccess);

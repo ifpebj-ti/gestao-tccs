@@ -12,7 +12,7 @@ public class CreateAccessCodeUseCase(IAppLoggerGateway<CreateAccessCodeUseCase> 
         
         var accessCode = AccessCodeFactory.CreateAccessCodeEntity(combination);
         
-        logger.LogInformation("AccessCode criado com sucesso. AccessCode: {AccessCode}", accessCode.Code);
+        logger.LogInformation("Código de acesso criado com sucesso.");
         
         return ResultPattern<AccessCodeEntity>.SuccessResult(accessCode);
     }

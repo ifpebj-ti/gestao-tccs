@@ -21,6 +21,8 @@ Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando
 
 Preparação para a auditoria: [controles de CI/CD, evidências e pendências de infraestrutura](docs/security/ci-cd-auditoria.md). O deploy na OCI aguarda a liberação da conta; a implantação é manual e desativada por padrão na esteira.
 
+Entrega de segurança da aplicação: [tasks, testes, ativação e pendências para 11/11/2026](docs/security/tasks-seguranca-2026-11-11.md).
+
 - **Front-end:** React, Next.js
 - **Back-end:** .Net
 - **Banco de Dados:** PostgreSQL
