@@ -82,6 +82,8 @@ services:
   garage:
     image: dxflrs/garage:v1.0.1
     container_name: gestao-garage
+    environment:
+      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET:?Configure uma chave RPC privada de 32 bytes em hexadecimal}
     ports:
       - "127.0.0.1:${PORT_MACHINE_S3_GARAGE:-3900}:3900"   # S3 API
       - "127.0.0.1:${PORT_MACHINE_ADMIN_GARAGE:-3901}:3901" # Admin API

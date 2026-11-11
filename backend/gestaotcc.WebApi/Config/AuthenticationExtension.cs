@@ -15,7 +15,7 @@ public static class AuthenticationExtension
         var jwtSettings = configuration.GetSection("JWT_SETTINGS");
         var key = jwtSettings.GetValue<string>("TOKEN_KEY");
         if (string.IsNullOrWhiteSpace(key) || Encoding.UTF8.GetByteCount(key) < 32 ||
-            key == "GestaoTCCs2024SecretKeyForJWT123456")
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key))) == "5040FF848041B243F0FDE6B2D7738983B6873717895E0EE5557F87F689B4CEDC")
             throw new InvalidOperationException("Configure JWT_SETTINGS__TOKEN_KEY com pelo menos 32 bytes.");
 
         services.AddAuthentication(options =>
