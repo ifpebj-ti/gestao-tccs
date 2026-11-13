@@ -20,7 +20,7 @@ COPY . .
 RUN dotnet publish ./gestaotcc.WebApi/gestaotcc.WebApi.csproj -c Release -o /app/out
 
 # Etapa de runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-alpine
 WORKDIR /app
 
 COPY --from=build /app/out .

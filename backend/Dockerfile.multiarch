@@ -12,7 +12,7 @@ RUN case "$TARGETARCH" in amd64) arch=x64 ;; arm64) arch=arm64 ;; *) exit 1 ;; e
     --runtime "linux-musl-$arch" --self-contained false --output /app/out \
     -m:1 -p:UseSharedCompilation=false --configfile NuGet.Public.config
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-alpine AS runtime
 WORKDIR /app
 COPY --from=validation /app/out .
 COPY gestaotcc.WebApi/Templates ./Templates
