@@ -33,7 +33,7 @@
     "lucide-react": "^0.509.0",
     "next": "15.5.28",
     "next-runtime-env": "^3.3.0",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.32",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.4",
