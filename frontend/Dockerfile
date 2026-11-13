@@ -1,5 +1,5 @@
 # Etapa 1: Build da aplicação
-FROM node:24-alpine AS builder
+FROM node:25-alpine AS builder
 
 # Define variável de ambiente para a versão da aplicação
 ARG NEXT_PUBLIC_APP_VERSION
@@ -26,7 +26,7 @@ COPY . ./
 RUN npm run build
 
 # Etapa 2: Imagem leve para rodar a aplicação
-FROM node:24-alpine AS runner
+FROM node:25-alpine AS runner
 
 # O runtime executa apenas Node; evita distribuir o npm e suas dependências.
 RUN npm uninstall --global npm

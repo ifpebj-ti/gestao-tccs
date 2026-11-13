@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Intentionally run every stage on TARGETPLATFORM: native addons must match it.
-FROM node:24-alpine AS validation
+FROM node:25-alpine AS validation
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_APP_VERSION=multiarch-validation
@@ -17,7 +17,7 @@ ENV CIRCLE_NODE_TOTAL=2
 RUN npm run test:ui && npm run lint
 RUN npm run build && npx tsc --noEmit --incremental false
 
-FROM node:24-alpine AS runtime
+FROM node:25-alpine AS runtime
 RUN npm uninstall --global npm
 WORKDIR /app
 COPY --from=validation /app/package.json ./
