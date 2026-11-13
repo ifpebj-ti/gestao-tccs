@@ -84,6 +84,7 @@ public static class IocDependencyExtensions
         services.AddScoped<UpdateTccUseCase>();
         services.AddScoped<ConcludePresentationUseCase>();
         services.AddScoped<EvaluateTccUseCase>();
+        services.AddScoped<FindPendingInternalBankingEvaluationsUseCase>();
         services.AddScoped<SaveScheduleInfoUseCase>();
         services.AddScoped<UploadTccFileUseCase>();
         services.AddScoped<SubmitTccProposalUseCase>();

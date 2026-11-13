@@ -11,7 +11,6 @@
       <PackageReference Include="itext" Version="9.7.0" />
       <PackageReference Include="itext.bouncy-castle-adapter" Version="9.7.0" />
       <PackageReference Include="itext.pdfhtml" Version="6.3.3" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.15">
         <PrivateAssets>all</PrivateAssets>
@@ -26,6 +25,8 @@
       <PackageReference Include="PDFsharp" Version="6.2.0" />
       <PackageReference Include="RestSharp" Version="112.1.0" />
       <PackageReference Include="Scriban" Version="7.4.0" />
+      <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
+      <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.5" />
     </ItemGroup>
 
     <ItemGroup>

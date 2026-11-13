@@ -68,6 +68,65 @@ public class ProposalPostgresTests : IAsyncLifetime
         Substitute.For<IProfileGateway>(), Substitute.For<IEmailGateway>(), new SemesterGateway(context), Substitute.For<IAppLoggerGateway<SubmitTccProposalUseCase>>(), new ProposalGateway(context));
 
     [ProposalPostgresFact]
+    public async Task ConcurrentPasswordResetsConsumeTheCodeOnlyOnce()
+    {
+        long codeId;
+        await using (var setup = Context())
+        {
+            var code = new gestaotcc.Domain.Entities.AccessCode.AccessCodeEntity
+            { UserId = ownerId, Code = "reset-test", IsActive = false, ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
+            setup.AccessCodes.Add(code); await setup.SaveChangesAsync(); codeId = code.Id;
+        }
+        async Task<bool> Reset(string hash)
+        {
+            await using var db = Context();
+            return await new UserGateway(db).ResetPassword(ownerId, "", codeId, "reset-test", hash);
+        }
+        var results = await Task.WhenAll(Reset("first-hash"), Reset("second-hash"));
+        Assert.Equal(1, results.Count(result => result));
+        await using var verify = Context();
+        Assert.True((await verify.AccessCodes.SingleAsync(code => code.Id == codeId)).IsUserUpdatePassword);
+        var password = (await verify.Users.SingleAsync(user => user.Id == ownerId)).Password;
+        Assert.Equal(results[0] ? "first-hash" : "second-hash", password);
+    }
+
+    [ProposalPostgresFact]
+    public async Task FailedPasswordCompareRollsBackCodeConsumption()
+    {
+        await using var db = Context();
+        var code = new gestaotcc.Domain.Entities.AccessCode.AccessCodeEntity
+        { UserId = ownerId, Code = "reset-test", IsActive = false, ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
+        db.AccessCodes.Add(code); await db.SaveChangesAsync();
+        Assert.False(await new UserGateway(db).ResetPassword(ownerId, "stale-hash", code.Id, code.Code, "new-hash"));
+        await using var verify = Context();
+        Assert.False((await verify.AccessCodes.SingleAsync(item => item.Id == code.Id)).IsUserUpdatePassword);
+        Assert.Equal("", (await verify.Users.SingleAsync(user => user.Id == ownerId)).Password);
+        Assert.True(await new UserGateway(verify).ResetPassword(ownerId, "", code.Id, code.Code, "new-hash"));
+    }
+
+    [ProposalPostgresFact]
+    public async Task ConcurrentFirstAccessRequestsCannotReuseTheInvitation()
+    {
+        long inviteId;
+        await using (var setup = Context())
+        {
+            var user = await setup.Users.SingleAsync(item => item.Id == ownerId);
+            var invite = new gestaotcc.Domain.Entities.TccInvite.TccInviteEntity
+            { Email = user.Email, Code = "INV123", IsValidCode = false, ExpirationDate = DateTime.UtcNow.AddMinutes(5) };
+            setup.TccInvites.Add(invite); await setup.SaveChangesAsync(); inviteId = invite.Id;
+        }
+        async Task<bool> Complete(string hash)
+        {
+            await using var db = Context();
+            return await new UserGateway(db).CompleteFirstAccess(ownerId, "", inviteId, "INV123", hash);
+        }
+        var results = await Task.WhenAll(Complete("first-hash"), Complete("second-hash"));
+        Assert.Equal(1, results.Count(result => result));
+        await using var verify = Context();
+        Assert.True((await verify.TccInvites.SingleAsync(invite => invite.Id == inviteId)).IsValidCode);
+    }
+
+    [ProposalPostgresFact]
     public async Task GroupProposalKeepsActiveSemesterAndSemesterFilterAfterIntegration()
     {
         await using var context = Context();

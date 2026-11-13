@@ -1,17 +1,12 @@
 'use client';
 
-import { PageState } from '@/components/layout/PageState';
-
 import { SectionTitle } from '@/components/layout/SectionTitle';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { UseFormReturn, SubmitHandler } from 'react-hook-form';
-import { ScheduleSchemaType } from '@/app/schemas/scheduleSchema';
 import {
   Pencil,
-  X,
   Calendar,
   Check,
   Award,
@@ -20,6 +15,7 @@ import {
 } from 'lucide-react';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { AddToCalendarButton } from '@/components/calendar/AddToCalendarButton';
 
 interface ScheduleSectionProps {
   infoTcc: {
@@ -29,11 +25,11 @@ interface ScheduleSectionProps {
     finalGrade?: number | null;
     finalOpinion?: string | null;
   };
+  tccId?: number | string;
+  tccTitle?: string;
+  tccSummary?: string | null;
   isScheduleFormVisible?: boolean;
   onOpenSchedule?: () => void;
-  onScheduleCancel?: () => void;
-  scheduleForm?: UseFormReturn<ScheduleSchemaType>;
-  onScheduleSubmit?: SubmitHandler<ScheduleSchemaType>;
   canSchedule?: boolean;
   onSendScheduleEmail?: () => void;
   isCompleted?: boolean;
@@ -43,11 +39,11 @@ interface ScheduleSectionProps {
 
 export function ScheduleSection({
   infoTcc,
+  tccId,
+  tccTitle,
+  tccSummary,
   isScheduleFormVisible = false,
   onOpenSchedule,
-  onScheduleCancel = () => {},
-  scheduleForm,
-  onScheduleSubmit,
   canSchedule = false,
   onSendScheduleEmail,
   isCompleted = false,
@@ -60,15 +56,6 @@ export function ScheduleSection({
     (infoTcc.finalGrade !== undefined &&
       infoTcc.finalGrade !== null &&
       infoTcc.finalGrade >= 7);
-
-  const {
-    register: registerSchedule,
-    handleSubmit: handleSubmitSchedule,
-    formState: formStateSchedule
-  } = scheduleForm || {};
-
-  const { errors: errorsSchedule, isSubmitting: isSubmittingSchedule } =
-    formStateSchedule || {};
 
   return (
     <section className="mt-4 border-t border-[#ECEAE2] py-6">
@@ -90,55 +77,74 @@ export function ScheduleSection({
           <p className="text-sm text-gray-500 mt-1">
             {isCompleted
               ? 'Consulte o parecer final, nota da banca e informações da defesa.'
-              : 'Gerencie a data, local e os examinadores da banca do TCC.'}
+              : canSchedule
+                ? 'Gerencie a data, local e os examinadores da banca do TCC.'
+                : 'Consulte os dados da apresentação. O gerenciamento da banca fica na área Banca.'}
           </p>
         </div>
 
-        {!isCompleted &&
-          canSchedule &&
-          !isScheduleFormVisible &&
-          onOpenSchedule && (
-            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-              {hasSchedule && onConcludePresentation && (
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {hasSchedule && tccId && !isCompleted && (
+            <AddToCalendarButton
+              eventData={{
+                tccId,
+                title: tccTitle || 'TCC',
+                summary: tccSummary,
+                location: infoTcc.presentationLocation,
+                presentationDate: infoTcc.presentationDate,
+                presentationTime: infoTcc.presentationTime
+              }}
+              variant="outline"
+              size="default"
+            />
+          )}
+
+          {!isCompleted &&
+            canSchedule &&
+            !isScheduleFormVisible &&
+            onOpenSchedule && (
+              <>
+                {hasSchedule && onConcludePresentation && (
+                  <Button
+                    variant="default"
+                    className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
+                    onClick={onConcludePresentation}
+                    disabled={isConcluding}
+                  >
+                    <Check className="w-4 h-4 mr-2" />{' '}
+                    {isConcluding ? 'Concluindo...' : 'Concluir Apresentação'}
+                  </Button>
+                )}
+                {hasSchedule && onSendScheduleEmail && (
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="w-full md:w-auto"
+                    onClick={onSendScheduleEmail}
+                  >
+                    <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Reenviar
+                    Comunicados
+                  </Button>
+                )}
                 <Button
                   variant="default"
-                  className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
-                  onClick={onConcludePresentation}
-                  disabled={isConcluding}
-                >
-                  <Check className="w-4 h-4 mr-2" />{' '}
-                  {isConcluding ? 'Concluindo...' : 'Concluir Apresentação'}
-                </Button>
-              )}
-              {hasSchedule && onSendScheduleEmail && (
-                <Button
-                  variant="outline"
                   size="default"
                   className="w-full md:w-auto"
-                  onClick={onSendScheduleEmail}
+                  onClick={onOpenSchedule}
                 >
-                  <FontAwesomeIcon icon={faEnvelope} className="mr-2" /> Enviar
-                  Agenda
+                  {hasSchedule ? (
+                    <>
+                      <Pencil className="w-4 h-4 mr-2" /> Inserir Examinadores
+                    </>
+                  ) : (
+                    <>
+                      <Calendar className="w-4 h-4 mr-2" /> Agendar Apresentação
+                    </>
+                  )}
                 </Button>
-              )}
-              <Button
-                variant="default"
-                size="default"
-                className="w-full md:w-auto"
-                onClick={onOpenSchedule}
-              >
-                {hasSchedule ? (
-                  <>
-                    <Pencil className="w-4 h-4 mr-2" /> Inserir Examinadores
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="w-4 h-4 mr-2" /> Agendar Apresentação
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+              </>
+            )}
+        </div>
       </div>
 
       {/* Card de Parecer e Nota Final da Banca quando concluído */}
@@ -214,168 +220,7 @@ export function ScheduleSection({
         </div>
       )}
 
-      {isScheduleFormVisible &&
-      scheduleForm &&
-      handleSubmitSchedule &&
-      onScheduleSubmit ? (
-        <form
-          onSubmit={handleSubmitSchedule(onScheduleSubmit)}
-          className="flex flex-col gap-4"
-        >
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="grid gap-1.5">
-              <Label htmlFor="scheduleDate">Data</Label>
-              <Input
-                id="scheduleDate"
-                type="date"
-                {...registerSchedule?.('scheduleDate')}
-              />
-              {errorsSchedule?.scheduleDate && (
-                <p className="text-sm text-red-600">
-                  {errorsSchedule.scheduleDate.message}
-                </p>
-              )}
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="scheduleTime">Hora</Label>
-              <Input
-                id="scheduleTime"
-                type="time"
-                {...registerSchedule?.('scheduleTime')}
-              />
-              {errorsSchedule?.scheduleTime && (
-                <p className="text-sm text-red-600">
-                  {errorsSchedule.scheduleTime.message}
-                </p>
-              )}
-            </div>
-            <div className="grid gap-1.5 lg:col-span-1">
-              <Label htmlFor="scheduleLocation">Local/Link</Label>
-              <Input
-                id="scheduleLocation"
-                placeholder="Ex: Sala 20 ou Link do Meet"
-                {...registerSchedule?.('scheduleLocation')}
-              />
-              {errorsSchedule?.scheduleLocation && (
-                <p className="text-sm text-red-600">
-                  {errorsSchedule.scheduleLocation.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Início Membros da Banca */}
-          <div className="mt-4 border-t pt-4">
-            <div className="flex justify-between items-center mb-2">
-              <Label className="text-base font-semibold">
-                Membros da Banca (Convidados)
-              </Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const current =
-                    scheduleForm.getValues('bankingMembers') || [];
-                  scheduleForm.setValue('bankingMembers', [
-                    ...current,
-                    { name: '', email: '', role: '' }
-                  ]);
-                }}
-              >
-                + Adicionar Membro
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              {scheduleForm.watch('bankingMembers')?.map((member, index) => (
-                <div
-                  key={index}
-                  className="grid md:grid-cols-12 gap-2 items-end border p-3 rounded-md bg-gray-50 relative"
-                >
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 right-2 h-6 w-6 p-0"
-                    aria-label="Remover avaliador"
-                    onClick={() => {
-                      const current =
-                        scheduleForm.getValues('bankingMembers') || [];
-                      scheduleForm.setValue(
-                        'bankingMembers',
-                        current.filter((_, i) => i !== index)
-                      );
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <div className="grid gap-1.5 md:col-span-4">
-                    <Label>Nome</Label>
-                    <Input
-                      placeholder="Nome do avaliador"
-                      {...registerSchedule?.(
-                        `bankingMembers.${index}.name` as const
-                      )}
-                    />
-                    {errorsSchedule?.bankingMembers?.[index]?.name && (
-                      <p className="text-sm text-red-600">
-                        {errorsSchedule.bankingMembers[index]?.name?.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="grid gap-1.5 md:col-span-4">
-                    <Label>E-mail</Label>
-                    <Input
-                      type="email"
-                      placeholder="E-mail"
-                      {...registerSchedule?.(
-                        `bankingMembers.${index}.email` as const
-                      )}
-                    />
-                    {errorsSchedule?.bankingMembers?.[index]?.email && (
-                      <p className="text-sm text-red-600">
-                        {errorsSchedule.bankingMembers[index]?.email?.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="grid gap-1.5 md:col-span-4">
-                    <Label>Instituição/Papel</Label>
-                    <Input
-                      placeholder="Ex: IFPE - Avaliador Externo"
-                      {...registerSchedule?.(
-                        `bankingMembers.${index}.role` as const
-                      )}
-                    />
-                    {errorsSchedule?.bankingMembers?.[index]?.role && (
-                      <p className="text-sm text-red-600">
-                        {errorsSchedule.bankingMembers[index]?.role?.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {(!scheduleForm.watch('bankingMembers') ||
-                scheduleForm.watch('bankingMembers')?.length === 0) && (
-                <PageState>
-                  Nenhum membro adicionado. Apenas o orientador estará na banca
-                  por padrão se ninguém for adicionado.
-                </PageState>
-              )}
-            </div>
-          </div>
-          {/* Fim Membros da Banca */}
-
-          <div className="flex gap-2 self-end mt-4">
-            <Button type="button" variant="destructive" onClick={onScheduleCancel}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmittingSchedule}>
-              {isSubmittingSchedule ? 'Salvando...' : 'Salvar Agendamento'}
-            </Button>
-          </div>
-        </form>
-      ) : hasSchedule ? (
+      {hasSchedule ? (
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid items-center gap-1.5">
             <Label className="font-semibold">Data da apresentação</Label>

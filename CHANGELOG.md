@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### Segurança e CI/CD
+
+- Recuperação de senha com comprovante HttpOnly protegido, consumo transacional de códigos/convites e bloqueio de bypass de demonstração.
+- Autorização e validação dos uploads de TCC; limite de 20 MiB e escopo de gestão por curso.
+- Endurecimento e revogação de JWT, rate limiting público, erros sanitizados, geração criptográfica de códigos e remoção de segredos dos logs alterados.
+- Cabeçalhos e CORS restritos, fechamento do dashboard Hangfire e exposição local de serviços de desenvolvimento limitada a loopback.
+- Visualizador HTML sem permissão para executar scripts; conversão HTML/PDF com busca externa de recursos bloqueada e limite de entrada.
+
+- CI reutilizável como pré-requisito da release, com gate agregado, testes de integração em PostgreSQL temporário e bloqueio de cobertura abaixo de 90%.
+- SAST, auditorias npm/NuGet e Trivy com bloqueios efetivos; Gitleaks no histórico; relatórios e SBOM preservados como artifacts.
+- DAST de frontend e API em ambiente temporário, independente da OCI.
+- Deploy separado da publicação e condicionado a opt-in manual, environment de produção e webhooks com HTTPS válido.
+- Dependabot, checklist de PR e guia de preparação para auditoria com pendências explícitas de GitHub e OCI.
+
 Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)

@@ -113,4 +113,87 @@ public class DownloadDocumentUseCaseTests
         Assert.Equal("TemplateModelo.pdf", result.Data.FileName);
         Assert.Equal(documentBytes, result.Data.File);
     }
+
+    [Fact]
+    public async Task Execute_ShouldReturnNotFound_WhenDocumentNotInTcc()
+    {
+        var tcc = new TccEntity { Id = 1, Documents = new List<DocumentEntity>() };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        var result = await _useCase.Execute(1, 99, null, 1);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(404, result.ErrorDetails?.Status);
+        Assert.Equal("Documento não encontrado", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldReturnFailure_WhenFindDocumentUseCaseFails()
+    {
+        var document = new DocumentEntity
+        {
+            Id = 10,
+            FileName = "doc",
+            DocumentType = new Domain.Entities.DocumentType.DocumentTypeEntity { Name = "Termo" },
+            Signatures = new List<SignatureEntity>()
+        };
+        var tcc = new TccEntity { Id = 1, Documents = new List<DocumentEntity> { document } };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        _findDocumentUseCase.Execute(1, 10, null, 1, true)
+            .Returns(ResultPattern<FindDocumentDTO>.FailureResult("Falha na geração do documento", 500));
+
+        var result = await _useCase.Execute(1, 10, null, 1);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(500, result.ErrorDetails?.Status);
+    }
+
+    [Fact]
+    public async Task Execute_HtmlOverload_ShouldReturnNotFound_WhenTccNotFound()
+    {
+        _tccGateway.FindTccById(1).Returns((TccEntity?)null);
+
+        var result = await _useCase.Execute(1, 10, "<html></html>");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(404, result.ErrorDetails?.Status);
+        Assert.Contains("Erro ao realizar download", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_HtmlOverload_ShouldReturnNotFound_WhenDocumentNotFound()
+    {
+        var tcc = new TccEntity { Id = 1, Documents = new List<DocumentEntity>() };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        var result = await _useCase.Execute(1, 10, "<html></html>");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(404, result.ErrorDetails?.Status);
+        Assert.Equal("Documento não encontrado", result.Message);
+    }
+
+    [Fact]
+    public async Task Execute_HtmlOverload_ShouldConvertHtmlToPdf_AndReturnSuccess()
+    {
+        var document = new DocumentEntity
+        {
+            Id = 10,
+            FileName = "anexo_assinado",
+            DocumentType = new Domain.Entities.DocumentType.DocumentTypeEntity { Name = "Anexo" },
+            Signatures = new List<SignatureEntity> { new() { Id = 1, UserId = 1 } }
+        };
+        var tcc = new TccEntity { Id = 1, Documents = new List<DocumentEntity> { document } };
+        _tccGateway.FindTccById(1).Returns(tcc);
+
+        var pdfBytes = new byte[] { 9, 8, 7 };
+        _iTextGateway.ConvertHtmlToPdf("<html>conteudo</html>").Returns(pdfBytes);
+
+        var result = await _useCase.Execute(1, 10, "<html>conteudo</html>");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("anexo_assinado.pdf", result.Data.FileName);
+        Assert.Equal(pdfBytes, result.Data.File);
+    }
 }

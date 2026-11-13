@@ -6,7 +6,7 @@ services:
       context: ./backend
     container_name: gestao-backend
     ports:
-      - "${PORT_MACHINE_BACKEND}:8080"
+      - "127.0.0.1:${PORT_MACHINE_BACKEND}:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=${DEFAULTCONNECTION}
@@ -48,7 +48,7 @@ services:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     container_name: gestao-frontend
     ports:
-      - "${PORT_MACHINE_FRONTEND}:3000"
+      - "127.0.0.1:${PORT_MACHINE_FRONTEND}:3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
@@ -68,7 +68,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${PORT_MACHINE_POSTGRES}:5432"
+      - "127.0.0.1:${PORT_MACHINE_POSTGRES}:5432"
     restart: unless-stopped
     networks:
       - back_net
@@ -82,9 +82,11 @@ services:
   garage:
     image: dxflrs/garage:v1.0.1
     container_name: gestao-garage
+    environment:
+      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET:?Configure uma chave RPC privada de 32 bytes em hexadecimal}
     ports:
-      - "${PORT_MACHINE_S3_GARAGE:-3900}:3900"   # S3 API
-      - "${PORT_MACHINE_ADMIN_GARAGE:-3901}:3901" # Admin API
+      - "127.0.0.1:${PORT_MACHINE_S3_GARAGE:-3900}:3900"   # S3 API
+      - "127.0.0.1:${PORT_MACHINE_ADMIN_GARAGE:-3901}:3901" # Admin API
     volumes:
       - garage_data:/var/lib/garage/data
       - garage_meta:/var/lib/garage/meta
@@ -98,8 +100,8 @@ services:
     container_name: mailpit
     restart: unless-stopped
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
     networks:
       - back_net
 

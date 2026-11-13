@@ -40,5 +40,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 
+RUN chown -R node:node /app/.next
+USER node
 # Comando padrão ao iniciar o container
 CMD ["node", "node_modules/next/dist/bin/next", "start"]

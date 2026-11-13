@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { usePendingInternalBankingEvaluations } from '@/app/hooks/usePendingInternalBankingEvaluations';
 import { AppBrand } from '@/components/layout/AppBrand';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import {
@@ -28,11 +29,12 @@ export default function Sidebar({
   onToggle
 }: SidebarProps) {
   const pathname = usePathname();
+  const { evaluations } = usePendingInternalBankingEvaluations();
   const [selection, setSelection] = useState<{
     from: string;
     href: string;
   } | null>(null);
-  const items = getSidebarItems(roles, student);
+  const items = getSidebarItems(roles, student, evaluations.length);
   const currentHref = activeSidebarHref(items, pathname);
   useEffect(() => {
     setSelection(null);
@@ -66,10 +68,31 @@ export default function Sidebar({
               }}
               aria-label={compact ? item.label : undefined}
               title={compact ? item.label : undefined}
-              className={`flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#006633] ${active ? 'bg-[#002B18] text-[#FAF9F5]' : 'text-[#374151] hover:bg-[#ECEAE2] hover:text-[#002B18]'}`}
+              className={`group/sidebar relative flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-300 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#006633] motion-reduce:transition-none ${active ? 'bg-[#002B18] text-[#FAF9F5]' : 'text-[#374151] hover:bg-[#ECEAE2] hover:text-[#002B18]'}`}
             >
-              <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
+              <span
+                className={`relative flex size-[18px] shrink-0 items-center justify-center transition-colors duration-300 ease-out motion-reduce:transition-none ${active ? 'group-hover/sidebar:text-[#002B18] group-focus-visible/sidebar:text-[#002B18]' : 'group-hover/sidebar:text-white group-focus-visible/sidebar:text-white'}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`absolute -inset-1.5 scale-75 rounded-full opacity-0 transition-[opacity,transform,scale,background-color] duration-300 ease-out group-hover/sidebar:scale-100 group-hover/sidebar:opacity-100 group-focus-visible/sidebar:scale-100 group-focus-visible/sidebar:opacity-100 motion-reduce:transition-none ${active ? 'bg-[#C8FF47]' : 'bg-[#002B18]'}`}
+                />
+                <Icon
+                  className="relative"
+                  size={18}
+                  strokeWidth={1.7}
+                  aria-hidden="true"
+                />
+              </span>
               <span className={compact ? 'sr-only' : ''}>{item.label}</span>
+              {item.badge !== undefined && item.badge > 0 && (
+                <span
+                  aria-label={`${item.badge} avaliações pendentes`}
+                  className={`ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white ${compact ? 'absolute ml-7 -mt-7' : ''}`}
+                >
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -80,7 +103,7 @@ export default function Sidebar({
           aria-label={compact ? 'Expandir menu' : 'Recolher menu'}
           aria-expanded={!compact}
           onClick={onToggle}
-          className="mx-3 mt-auto mb-6 flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm hover:bg-[#002B18] hover:text-[#C8FF47] focus-visible:outline-2 focus-visible:outline-[#006633]"
+          className="mx-3 mt-auto mb-6 flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm transition-colors duration-300 ease-out hover:bg-[#002B18] hover:text-[#C8FF47] focus-visible:outline-2 focus-visible:outline-[#006633] motion-reduce:transition-none"
         >
           {compact ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           {!compact && <span>Recolher menu</span>}

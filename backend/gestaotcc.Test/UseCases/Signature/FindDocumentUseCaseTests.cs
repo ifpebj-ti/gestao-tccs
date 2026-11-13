@@ -142,4 +142,61 @@ public class FindDocumentUseCaseTests
         Assert.Equal("<html>fake template</html>", result.Data.Url);
         Assert.True(result.Data.IsHtml);
     }
+
+    [Fact]
+    public async Task Execute_ShouldProcessBankingMembersEvaluations_WhenDocumentNotSigned()
+    {
+        var documentType = new DocumentTypeEntity { Id = 2, Name = "ANEXO IV - FICHA AVALIATIVA" };
+
+        var document = new DocumentEntity
+        {
+            Id = 2,
+            DocumentType = documentType,
+            DocumentTypeId = documentType.Id,
+            FileName = "ficha-avaliativa",
+            Signatures = new List<SignatureEntity>() // Não assinado
+        };
+
+        var studentProfile = new ProfileEntity { Id = 1, Role = RoleType.STUDENT.ToString() };
+        var studentUser = new UserEntity { Id = 10, Name = "Aluno Teste", Profile = new List<ProfileEntity> { studentProfile } };
+
+        var evalJson1 = "{\"oral\":{\"apresentacao\":\"4.5\",\"clareza\":\"4.0\"},\"textual\":{\"estrutura\":\"4.0\"}}";
+        var evalJson2 = "{\"oral\":{\"apresentacao\":\"5.0\",\"clareza\":\"4.5\"},\"textual\":{\"estrutura\":\"4.5\"}}";
+
+        var member1 = new gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity("Examinador 1", "ex1@test.com", "Examinador Interno", "tok1", 1)
+        {
+            Grade = 8.5m,
+            EvaluationDetails = evalJson1
+        };
+        var member2 = new gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity("Examinador 2", "ex2@test.com", "Examinador Externo", "tok2", 1)
+        {
+            Grade = 9.5m,
+            EvaluationDetails = evalJson2
+        };
+
+        var tcc = new TccEntity
+        {
+            Id = 1,
+            Title = "TCC Avaliado",
+            Documents = new List<DocumentEntity> { document },
+            UserTccs = new List<UserTccEntity>
+            {
+                new() { User = studentUser, Profile = studentProfile, UserId = 10 }
+            },
+            BankingMembers = new List<gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity> { member1, member2 }
+        };
+
+        var dir = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "Documents");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "default-template.html"), "<html>{{oral_1}} {{textual_1}} {{oral_2}}</html>");
+
+        _tccGateway.FindTccById(1).Returns(tcc);
+        _userGateway.FindAllByFilter(Arg.Any<UserFilterDTO>(), Arg.Any<long>()).Returns(new List<UserEntity>());
+
+        var result = await _useCase.Execute(1, 2, 10, 1, returnSignedPdfIfAvailable: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data.IsHtml);
+        Assert.NotNull(result.Data.Url);
+    }
 }

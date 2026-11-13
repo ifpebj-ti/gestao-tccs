@@ -46,6 +46,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+import { usePendingInternalBankingEvaluations } from '@/app/hooks/usePendingInternalBankingEvaluations';
 
 interface DecodedToken {
   unique_name: string;
@@ -135,6 +136,8 @@ export default function HomePage() {
     useState<CoordinationPendingCounts | null>(null);
   const [libraryPending, setLibraryPending] =
     useState<LibraryPendingCounts | null>(null);
+  const { evaluations: pendingBankingEvaluations } =
+    usePendingInternalBankingEvaluations();
 
   const checkUserTccStatus = useCallback(
     async (userId: string) => {
@@ -488,7 +491,10 @@ export default function HomePage() {
     return false;
   };
 
+  const isCoordinationView = canView(['COORDINATOR']) && !canView(['ADMIN']);
+
   const canShowPendingSignatures = () => {
+    if (isCoordinationView) return false;
     if (isStudent()) {
       return userTCCs.length > 0 || completedUserTCC.length > 0;
     }
@@ -559,15 +565,29 @@ export default function HomePage() {
     ? 'Confira o que precisa da sua atenção.'
     : canView(['ADMIN'])
       ? 'Gerencie usuários, instituições, cursos e períodos letivos em um só lugar.'
-      : canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
-        ? 'Avalie propostas, acompanhe suas orientações e assine os documentos de cada etapa acadêmica.'
-        : canView(['LIBRARY'])
-          ? 'Homologue e catalogue os Trabalhos de Conclusão de Curso encaminhados pela Coordenação para inclusão no acervo.'
-          : canView(['BANKING'])
-            ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
-            : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
+      : isCoordinationView
+        ? 'Acompanhe as pendências de biblioteca, substituições e cancelamentos, as bancas e os TCCs do curso.'
+        : canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR'])
+          ? 'Avalie propostas, acompanhe suas orientações e assine os documentos de cada etapa acadêmica.'
+          : canView(['LIBRARY'])
+            ? 'Homologue e catalogue os Trabalhos de Conclusão de Curso encaminhados pela Coordenação para inclusão no acervo.'
+            : canView(['BANKING'])
+              ? 'Acompanhe os trabalhos de conclusão de curso e os documentos que aguardam sua assinatura.'
+              : 'Acompanhe as atividades acadêmicas e acesse as ferramentas disponíveis para seu perfil.';
 
   const shortcuts: HomeShortcut[] = [
+    {
+      title: 'Banca',
+      icon: ClipboardList,
+      group: 'attention',
+      visible: canView(['BANKING', 'ADVISOR']) || pendingBankingEvaluations.length > 0,
+      description: pendingBankingEvaluations.length > 0
+        ? `${pendingBankingEvaluations.length} apresentação(ões) aguardando sua avaliação`
+        : 'Acesse as bancas disponíveis na etapa de apresentação e gerencie seus TCCs',
+      indicatorNumber: pendingBankingEvaluations.length,
+      indicatorColor: 'bg-red-600 text-white',
+      onClick: () => push('/banking')
+    },
     {
       title: 'Assinaturas pendentes',
       icon: FileSignature,
@@ -587,7 +607,8 @@ export default function HomePage() {
       title: 'Propostas de TCC pendentes',
       icon: Inbox,
       group: 'attention',
-      visible: canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']),
+      visible:
+        !isCoordinationView && canView(['ADVISOR', 'COORDINATOR', 'SUPERVISOR']),
       description:
         advisorPendingProposals.length > 0
           ? `${advisorPendingProposals.length} aguardando seu aceite`
@@ -659,7 +680,7 @@ export default function HomePage() {
       title: 'Cadastrar nova proposta',
       icon: FilePlus2,
       group: 'management',
-      visible: canView(['COORDINATOR', 'SUPERVISOR']),
+      visible: !isCoordinationView && canView(['COORDINATOR', 'SUPERVISOR']),
       description: 'Inclusão direta de propostas e vínculos',
       onClick: () => push('/newTCC')
     },
@@ -714,101 +735,6 @@ export default function HomePage() {
           {supportText}
         </p>
       </div>
-
-      {/* BANNER COORDENADOR/SUPERVISOR: PENDÊNCIAS DE COORDENAÇÃO */}
-      {canView(['COORDINATOR', 'SUPERVISOR']) &&
-        coordinationPending &&
-        coordinationPending.total > 0 && (
-          <NoticeCard title="Pendências da Coordenação" className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <ClipboardList
-                  className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
-                  strokeWidth={1.75}
-                />
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#C8FF47]">
-                    Atenção da Coordenação
-                  </span>
-                  <h3 className="text-base font-bold mt-0.5 text-white">
-                    {coordinationPending.total} trabalho(s) aguardando ação da coordenação
-                  </h3>
-                  <div className="flex flex-wrap gap-2.5 mt-2 text-xs text-gray-200">
-                    {coordinationPending.awaitingHardCoverCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
-                        <BookOpen className="w-3.5 h-3.5 text-[#C8FF47]" />
-                        <strong>{coordinationPending.awaitingHardCoverCount}</strong> aguardando capa dura
-                      </span>
-                    )}
-                    {coordinationPending.awaitingLibraryForwardCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
-                        <Library className="w-3.5 h-3.5 text-[#C8FF47]" />
-                        <strong>{coordinationPending.awaitingLibraryForwardCount}</strong> para encaminhar à biblioteca
-                      </span>
-                    )}
-                    {coordinationPending.awaitingCancellationCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
-                        <AlertTriangle className="w-3.5 h-3.5 text-[#C8FF47]" />
-                        <strong>{coordinationPending.awaitingCancellationCount}</strong> solicitação(ões) de cancelamento
-                      </span>
-                    )}
-                    {coordinationPending.awaitingAdvisorChangesCount > 0 && (
-                      <span className="inline-flex items-center gap-1.5 bg-[#003820] px-2.5 py-1 rounded-md border border-[#C8FF47]/20">
-                        <ClipboardList className="w-3.5 h-3.5 text-[#C8FF47]" />
-                        <strong>{coordinationPending.awaitingAdvisorChangesCount}</strong> substituição(ões) de orientador
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                size="sm"
-                className="self-start md:self-center font-semibold bg-[#C8FF47] text-[#002B18] hover:bg-white hover:text-[#002B18] transition-colors whitespace-nowrap shrink-0"
-                onClick={() => push('/coordinationPending')}
-              >
-                Ver Todas as Pendências
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </div>
-          </NoticeCard>
-        )}
-
-      {/* BANNER BIBLIOTECA: TCCS AGUARDANDO CATALOGAÇÃO */}
-      {canView(['LIBRARY']) &&
-        libraryPending &&
-        libraryPending.pendingCount > 0 && (
-          <NoticeCard title="Fila de Catalogação" className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <Library
-                  className="w-5 h-5 text-[#C8FF47] flex-shrink-0 mt-0.5"
-                  strokeWidth={1.75}
-                />
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#C8FF47]">
-                    Atenção da Biblioteca
-                  </span>
-                  <h3 className="text-base font-bold mt-0.5 text-white">
-                    {libraryPending.pendingCount} trabalho(s) aguardando catalogação no acervo
-                  </h3>
-                  <p className="text-sm text-gray-200 mt-1">
-                    Trabalhos encaminhados pela coordenação prontos para conferência do PDF final e registro do código de catalogação.
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                size="sm"
-                className="self-start md:self-center font-semibold bg-[#C8FF47] text-[#002B18] hover:bg-white hover:text-[#002B18] transition-colors whitespace-nowrap shrink-0"
-                onClick={() => push('/libraryPending')}
-              >
-                Acessar Fila de Catalogação
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </div>
-          </NoticeCard>
-        )}
 
       {/* BANNER DISCENTE: PROPOSTA PENDENTE DE APROVAÇÃO (SEAMLESS FLAT) */}
       {isStudent() && <ProposalInvitations />}

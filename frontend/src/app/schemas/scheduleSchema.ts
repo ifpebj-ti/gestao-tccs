@@ -5,7 +5,8 @@ export const scheduleSchema = z.object({
   scheduleDate: z.string().refine(isValidDate, 'Informe uma data válida.'),
   scheduleTime: z
     .string()
-    .regex(/^([01][0-9]|2[0-3]):[0-5][0-9]$/, 'Informe uma hora válida.'),
+    .regex(/^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, 'Informe uma hora válida.')
+    .transform((val) => (val.length >= 5 ? val.substring(0, 5) : val)),
   scheduleLocation: z
     .string()
     .trim()
@@ -13,6 +14,7 @@ export const scheduleSchema = z.object({
   bankingMembers: z
     .array(
       z.object({
+        memberType: z.enum(['INTERNAL', 'EXTERNAL']).optional(),
         userId: z.number().int().positive().nullable().optional(),
         name: z
           .string()

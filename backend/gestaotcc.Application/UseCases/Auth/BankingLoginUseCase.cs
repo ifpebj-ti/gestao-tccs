@@ -12,19 +12,22 @@ public class BankingLoginUseCase(
 {
     public async Task<ResultPattern<TokenDTO>> Execute(string token)
     {
-        logger.LogInformation("Iniciando tentativa de login para avaliador externo com token: {Token}", token);
+        logger.LogInformation("Iniciando tentativa de login para avaliador externo.");
 
         var member = await tccGateway.FindBankingMemberByToken(token);
         
         if (member == null)
         {
-            logger.LogWarning("Token inválido ou não encontrado: {Token}", token);
+            logger.LogWarning("Token de avaliador inválido ou não encontrado.");
             return ResultPattern<TokenDTO>.FailureResult("Link inválido ou expirado.", 401);
         }
 
+        if (member.UserId.HasValue)
+            return ResultPattern<TokenDTO>.FailureResult("Este examinador deve acessar o sistema com sua conta cadastrada.", 403);
+
         if (member.TokenExpiryDate.HasValue && member.TokenExpiryDate.Value < DateTime.UtcNow)
         {
-            logger.LogWarning("Token expirado: {Token}", token);
+            logger.LogWarning("Token de avaliador expirado.");
             return ResultPattern<TokenDTO>.FailureResult("Este link expirou. Solicite um novo link de avaliação.", 401);
         }
 

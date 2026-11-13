@@ -45,6 +45,9 @@ public class SignatureController(TccFilesUseCase files) : ControllerBase
     public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromForm] SignSignatureInputModel data,
         [FromServices] SignSignatureUseCase signSignatureUseCase)
     {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var authenticatedUserId) || authenticatedUserId != data.UserId)
+            return Forbid();
+
         using var memoryStream = new System.IO.MemoryStream();
         await data.File.CopyToAsync(memoryStream);
         var fileBuffer = memoryStream.ToArray();

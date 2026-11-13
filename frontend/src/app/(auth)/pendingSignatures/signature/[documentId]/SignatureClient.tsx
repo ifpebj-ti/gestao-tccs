@@ -64,24 +64,31 @@ export default function SignatureClient() {
     >
       <div>
         <h2 className="mb-2 text-lg font-bold text-[#C8FF47]">
-          Concluir assinatura
+          {isAnexoVIII && isAdvisor ? 'Concluir entrega do TCC' : 'Concluir assinatura'}
         </h2>
         <p className="text-sm text-[#FAF9F5]/85">
-          Siga os passos abaixo para concluir sua assinatura.
+          {isAnexoVIII && isAdvisor
+            ? 'Primeiro informe os dados da defesa. Depois, baixe, assine e envie o termo junto com o arquivo final do TCC.'
+            : 'Siga os passos abaixo para concluir sua assinatura.'}
         </p>
       </div>
 
       {/* Passo 1: Agendamento (Obrigatório para Orientador no Anexo VIII) */}
       {isAnexoVIII && isAdvisor && (
-        <div className="space-y-2">
-          <h3 className="font-bold text-sm">
-            Passo 1: Agendamento da Apresentação
-          </h3>
-          <p className="text-sm text-[#FAF9F5]/85 mb-2">
-            Preencha a data, horário e local antes de baixar o documento. Ele
-            será gerado com esses dados.
-          </p>
-          <div className="flex flex-col gap-3 mt-2">
+        <section
+          aria-labelledby="defense-details-title"
+          className="space-y-4 rounded-xl border border-[#C8FF47]/35 bg-[#002B18]/45 p-4 md:p-5"
+        >
+          <div>
+            <div className="mb-2 flex items-center gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#C8FF47] text-sm font-bold text-[#002B18]">1</span>
+              <h3 id="defense-details-title" className="font-bold text-base">Dados da apresenta&ccedil;&atilde;o</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-[#FAF9F5]/80">
+              Essas informa&ccedil;&otilde;es ser&atilde;o inclu&iacute;das no termo. Preencha-as antes de baixar o documento.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4">
             <div>
               <label
                 htmlFor="signature-date"
@@ -129,12 +136,31 @@ export default function SignatureClient() {
               />
             </div>
           </div>
-        </div>
+        </section>
       )}
+
+      <div
+        className={
+          isAnexoVIII && isAdvisor
+            ? 'space-y-4 rounded-xl border border-white/15 bg-white/[0.04] p-4 md:p-5'
+            : 'space-y-5'
+        }
+      >
+        {isAnexoVIII && isAdvisor && (
+          <div className="border-b border-[#FAF9F5]/20 pb-3">
+            <div className="mb-2 flex items-center gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#C8FF47] text-sm font-bold text-[#C8FF47]">2</span>
+              <h3 className="font-bold text-base">Envio e assinatura do termo</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-[#FAF9F5]/80">
+              Com os dados da defesa preenchidos, siga estas etapas para enviar o termo e o TCC.
+            </p>
+          </div>
+        )}
 
       {/* Passo 2: Baixar Documento */}
       <div
-        className={`${isAnexoVIII && isAdvisor ? 'border-t border-[#FAF9F5]/20 pt-4 ' : ''}space-y-2`}
+        className="space-y-2"
       >
         <h3 className="font-bold text-base">
           {isAnexoVIII && isAdvisor ? 'Passo 2' : 'Passo 1'}: Baixar Documento
@@ -280,6 +306,7 @@ export default function SignatureClient() {
           {isSubmitting ? 'Enviando...' : 'Confirmar Assinatura'}
         </Button>
       </div>
+      </div>
     </section>
   );
 
@@ -304,7 +331,7 @@ export default function SignatureClient() {
         <iframe
           ref={iframeRef}
           srcDoc={documentHtml}
-          sandbox="allow-same-origin allow-forms allow-scripts"
+          sandbox="allow-same-origin allow-forms"
           className="w-full h-full border rounded-md"
           title="Visualizador HTML Seguro"
         />
@@ -328,7 +355,7 @@ export default function SignatureClient() {
     <div className="flex flex-col">
       <header className="mb-4 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <PageTitle className="text-2xl md:text-3xl">
+          <PageTitle>
             Assinar documento
           </PageTitle>
           <Link

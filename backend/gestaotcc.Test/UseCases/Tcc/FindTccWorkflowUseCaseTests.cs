@@ -114,6 +114,117 @@ public class FindTccWorkflowUseCaseTests
     }
 
     [Fact]
+    public async Task Execute_ShouldAdvanceStep_WhenAllDevelopmentDocumentsSigned()
+    {
+        // Arrange — step DEVELOPMENT_AND_MONITORING com todos docs assinados → avança para PREPARATION_FOR_PRESENTATION
+        var step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString();
+
+        var studentProfile = new ProfileEntity { Role = RoleType.STUDENT.ToString(), DocumentTypes = new List<DocumentTypeEntity>() };
+        var advisorProfile = new ProfileEntity { Role = RoleType.ADVISOR.ToString(), DocumentTypes = new List<DocumentTypeEntity>() };
+
+        var userStudent = new UserEntity { Id = 1, Name = "Student", Email = "student@example.com" };
+        var userAdvisor = new UserEntity { Id = 2, Name = "Advisor", Email = "advisor@example.com" };
+
+        var docType = new DocumentTypeEntity
+        {
+            Id = 30, Name = "PROGRESSO",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { studentProfile }
+        };
+
+        var signedDoc = new DocumentEntity
+        {
+            Id = 1,
+            DocumentTypeId = docType.Id,
+            DocumentType = docType,
+            User = userStudent,
+            Signatures = new List<SignatureEntity> { new SignatureEntity { User = userStudent, UserId = userStudent.Id } }
+        };
+
+        studentProfile.DocumentTypes.Add(docType);
+
+        var tcc = new TccEntity
+        {
+            Id = 789,
+            Step = step,
+            Documents = new List<DocumentEntity> { signedDoc },
+            UserTccs = new List<UserTccEntity>
+            {
+                new UserTccEntity { User = userStudent, Profile = studentProfile, UserId = userStudent.Id },
+                new UserTccEntity { User = userAdvisor, Profile = advisorProfile, UserId = userAdvisor.Id }
+            },
+            TccInvites = new List<TccInviteEntity>()
+        };
+
+        _tccGateway.FindTccWorkflow(Arg.Any<long?>(), Arg.Any<long>()).Returns(tcc);
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
+        _tccGateway.Update(Arg.Any<TccEntity>()).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _useCase.Execute(tcc.Id, 1);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        // O step deve ter avançado
+        Assert.Equal(StepTccType.PREPARATION_FOR_PRESENTATION.ToString(), tcc.Step);
+        await _tccGateway.Received(1).Update(tcc);
+    }
+
+    [Fact]
+    public async Task Execute_ShouldNotAdvanceStep_WhenDevelopmentDocumentsNotFullySigned()
+    {
+        // Arrange — step DEVELOPMENT_AND_MONITORING com doc NÃO assinado → não avança
+        var step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString();
+
+        var studentProfile = new ProfileEntity { Role = RoleType.STUDENT.ToString(), DocumentTypes = new List<DocumentTypeEntity>() };
+        var userStudent = new UserEntity { Id = 1, Name = "Student", Email = "student@example.com" };
+
+        var docType = new DocumentTypeEntity
+        {
+            Id = 31, Name = "RELATÓRIO",
+            SignatureOrder = 3,
+            MethodSignature = MethoSignatureType.ONLY_DOCS.ToString(),
+            Profiles = new List<ProfileEntity> { studentProfile }
+        };
+
+        var unsignedDoc = new DocumentEntity
+        {
+            Id = 2,
+            DocumentTypeId = docType.Id,
+            DocumentType = docType,
+            User = userStudent,
+            Signatures = new List<SignatureEntity>() // sem assinaturas
+        };
+
+        studentProfile.DocumentTypes.Add(docType);
+
+        var tcc = new TccEntity
+        {
+            Id = 790,
+            Step = step,
+            Documents = new List<DocumentEntity> { unsignedDoc },
+            UserTccs = new List<UserTccEntity>
+            {
+                new UserTccEntity { User = userStudent, Profile = studentProfile, UserId = userStudent.Id }
+            },
+            TccInvites = new List<TccInviteEntity>()
+        };
+
+        _tccGateway.FindTccWorkflow(Arg.Any<long?>(), Arg.Any<long>()).Returns(tcc);
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { docType });
+
+        // Act
+        var result = await _useCase.Execute(tcc.Id, 1);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        // Step NÃO deve ter avançado
+        Assert.Equal(StepTccType.DEVELOPMENT_AND_MONITORING.ToString(), tcc.Step);
+        await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
+    }
+
+    [Fact]
     public async Task Execute_ShouldReturnWorkflowDto_ForNormalSteps_WithOnlyDocsAndNotOnlyDocs()
     {
         // Arrange

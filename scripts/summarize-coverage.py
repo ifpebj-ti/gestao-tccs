@@ -2,14 +2,14 @@
 import os
 from pathlib import Path
 import sys
-import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as ET
 
 reports = list(Path(sys.argv[1]).rglob("coverage.opencover.xml"))
 if not reports:
     raise SystemExit("OpenCover coverage report missing")
 lines = []
 for report in reports:
-    summary = ET.parse(report).getroot().find("Summary")
+    summary = ET.parse(report, forbid_dtd=True).getroot().find("Summary")
     if summary is None:
         raise SystemExit(f"OpenCover Summary missing: {report}")
     coverage = float(summary.attrib["sequenceCoverage"])

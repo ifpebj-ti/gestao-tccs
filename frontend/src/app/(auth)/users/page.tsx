@@ -4,13 +4,18 @@ import { PageState } from '@/components/layout/PageState';
 
 import { PageTitle } from '@/components/layout/PageTitle';
 
-import { ResponsiveRecordCard } from '@/components/ResponsiveRecordCard';
-import { faUser, faPen, faSearch } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link';
+import {
+  UserRound,
+  Search,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { env } from 'next-runtime-env';
@@ -57,12 +62,12 @@ const formatStatusTag = (
   if (statusUpperCase === 'ACTIVE') {
     return {
       text: 'Ativo',
-      className: 'bg-green-100 text-green-800'
+      className: 'text-[#24563B]'
     };
   }
   return {
     text: 'Inativo',
-    className: 'bg-red-100 text-red-800'
+    className: 'text-red-800'
   };
 };
 
@@ -182,20 +187,32 @@ export default function UsersPage() {
   const usersToDisplay = filteredUsers;
 
   return (
-    <div className="flex flex-col">
-      <PageTitle className="mb-6">Usuários</PageTitle>
+    <div className="flex w-full max-w-6xl flex-col gap-8">
+      <div>
+        <PageTitle>
+          Usuários
+        </PageTitle>
+        <p className="mt-3 text-sm leading-relaxed text-[#617265]">
+          Consulte os usuários e acesse seus dados cadastrais.
+        </p>
+      </div>
 
       {/* --- BARRA DE PESQUISA --- */}
-      <div className="mb-8 flex justify-end">
-        <div className="w-full max-w-lg">
-          <Input
-            type="text"
-            placeholder="Buscar por nome ou perfil"
-            icon={faSearch}
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </div>
+      <div className="w-full max-w-2xl space-y-2">
+        <label
+          htmlFor="users-search"
+          className="text-xs font-semibold text-[#183E2D]"
+        >
+          Buscar usuário
+        </label>
+        <Input
+          id="users-search"
+          type="text"
+          placeholder="Buscar por nome ou perfil"
+          icon={<Search size={18} aria-hidden="true" />}
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
       </div>
 
       {isLoading ? (
@@ -209,51 +226,90 @@ export default function UsersPage() {
           Nenhum resultado encontrado para &quot;{searchQuery}&quot;.
         </PageState>
       ) : (
-        <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2">
-          {usersToDisplay.map((user) => {
-            const statusTag = formatStatusTag(user.status);
-            const profileText = formatProfile(user.profile);
+        <div>
+          <div
+            aria-hidden="true"
+            className="hidden grid-cols-[minmax(0,1fr)_10rem_6rem_1.5rem] gap-8 border-b border-[#DDD9CD] pb-3 text-xs font-semibold text-[#617265] lg:grid"
+          >
+            <span>Nome e e-mail</span>
+            <span>Perfil</span>
+            <span>Situação</span>
+            <span className="sr-only">Acessar cadastro</span>
+          </div>
+          <ul
+            aria-label="Lista de usuários"
+            className="divide-y divide-[#ECEAE2]"
+          >
+            {usersToDisplay.map((user) => {
+              const statusTag = formatStatusTag(user.status);
+              const profileText = formatProfile(user.profile);
 
-            return (
-              <ResponsiveRecordCard
-                key={user.id}
-                onClick={() => push(`/users/details?id=${user.id}`)}
-                title={user.name || 'Usuário sem nome'}
-                icon={faUser}
-                profileText={profileText}
-                statusText={statusTag.text}
-                statusClass={statusTag.className}
-                indicatorColor={
-                  statusTag.text === 'Ativo' ? 'bg-green-600' : 'bg-red-600'
-                }
-              >
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => push(`/users/details?id=${user.id}`)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition hover:cursor-pointer"
+              return (
+                <li key={user.id}>
+                  <Link
+                    href={`/users/details?id=${user.id}`}
+                    className="group grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-5 text-sm text-[#002B18] transition-colors hover:text-[#006633] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#006633] lg:grid-cols-[minmax(0,1fr)_10rem_6rem_1.5rem] lg:gap-x-8 lg:py-4"
                   >
-                    <FontAwesomeIcon icon={faPen} className="text-[#006633]" />
-                    <span>Editar Usuário</span>
-                  </button>
-                </div>
-              </ResponsiveRecordCard>
-            );
-          })}
+                    <span className="flex min-w-0 items-center gap-3">
+                      <UserRound
+                        className="size-5 shrink-0"
+                        strokeWidth={1.6}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold group-hover:underline group-hover:underline-offset-4">
+                          {user.name || 'Usuário sem nome'}
+                        </span>
+                        <span className="mt-1 block truncate text-xs text-[#617265]">
+                          {user.email}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="col-span-2 flex flex-wrap items-center gap-x-4 gap-y-1 pl-8 text-xs lg:contents">
+                      <span className="text-[#617265] lg:text-sm">
+                        <span className="sr-only">Perfil: </span>
+                        {profileText}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-2 ${statusTag.className}`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`size-1.5 shrink-0 rounded-full ${statusTag.text === 'Ativo' ? 'bg-[#24563B]' : 'bg-red-800'}`}
+                        />
+                        <span className="sr-only">Situação: </span>
+                        {statusTag.text}
+                      </span>
+                    </span>
+                    <ArrowRight
+                      className="col-start-2 row-start-1 size-4 text-[#617265] transition-colors group-hover:text-[#006633] lg:col-start-auto lg:row-start-auto"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
       {/* --- Seção de Paginação (Lógica 1-indexed) --- */}
       {!isLoading && totalPages > 1 && !searchQuery && (
-        <div className="flex justify-center items-center gap-4 mt-8">
+        <nav
+          aria-label="Paginação de usuários"
+          className="flex flex-wrap items-center justify-between gap-5 border-t border-[#DDD9CD] pt-5"
+        >
           <Button
             variant="outline"
             onClick={handlePreviousPage}
             disabled={currentPage === 1}
+            className="h-auto rounded-none border-0 px-0 py-2 shadow-none hover:bg-transparent"
           >
+            <ChevronLeft size={16} aria-hidden="true" />
             Anterior
           </Button>
 
-          <span className="text-gray-700">
+          <span aria-live="polite" className="text-xs text-[#617265]">
             Página {currentPage} de {totalPages}
           </span>
 
@@ -261,10 +317,12 @@ export default function UsersPage() {
             variant="outline"
             onClick={handleNextPage}
             disabled={currentPage >= totalPages}
+            className="h-auto rounded-none border-0 px-0 py-2 shadow-none hover:bg-transparent"
           >
             Próximo
+            <ChevronRight size={16} aria-hidden="true" />
           </Button>
-        </div>
+        </nav>
       )}
     </div>
   );

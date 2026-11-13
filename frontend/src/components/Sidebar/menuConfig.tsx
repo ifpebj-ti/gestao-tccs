@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Library,
+  ClipboardCheck,
   type LucideIcon
 } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export interface SidebarMenuItem {
   href: string;
   icon: LucideIcon;
   activePaths?: string[];
+  badge?: number;
 }
 
 export const roleLabels: Record<UserRole, string> = {
@@ -63,7 +65,8 @@ export function studentTccHref(student: StudentNavigation): string | null {
 
 export function getSidebarItems(
   roles: UserRole[],
-  student: StudentNavigation
+  student: StudentNavigation,
+  pendingBankingEvaluations = 0
 ): SidebarMenuItem[] {
   const has = (...allowed: UserRole[]) =>
     roles.some((role) => allowed.includes(role));
@@ -71,6 +74,36 @@ export function getSidebarItems(
     { label: 'Início', href: '/homePage', icon: Home }
   ];
   const myTcc = studentTccHref(student);
+
+  if (has('COORDINATOR') && !has('ADMIN')) {
+    return [
+      ...items,
+      {
+        label: 'Banca',
+        href: '/banking',
+        icon: ClipboardCheck,
+        badge: pendingBankingEvaluations
+      },
+      {
+        label: 'Pendências',
+        href: '/coordinationPending',
+        icon: ClipboardList
+      },
+      { label: 'Em andamento', href: '/ongoingTCCs', icon: GraduationCap },
+      { label: 'Concluídos', href: '/completedTCCs', icon: CheckCircle2 },
+      { label: 'Usuários', href: '/users', icon: Users },
+      { label: 'Minha conta', href: '/profile', icon: CircleUserRound }
+    ];
+  }
+
+  if (has('BANKING', 'ADVISOR') || pendingBankingEvaluations > 0) {
+    items.push({
+      label: 'Banca',
+      href: '/banking',
+      icon: ClipboardCheck,
+      badge: pendingBankingEvaluations
+    });
+  }
 
   if (has('STUDENT')) {
     if (myTcc) {
@@ -96,8 +129,7 @@ export function getSidebarItems(
   }
   if (
     (has('STUDENT') && myTcc) ||
-    (!has('STUDENT') &&
-      has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING'))
+    (!has('STUDENT') && has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING'))
   ) {
     items.push({
       label: 'Assinaturas',
@@ -119,9 +151,7 @@ export function getSidebarItems(
       icon: Library
     });
   }
-  if (
-    has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'ADMIN')
-  ) {
+  if (has('COORDINATOR', 'SUPERVISOR', 'ADVISOR', 'BANKING', 'ADMIN')) {
     items.push({
       label: 'Em andamento',
       href: '/ongoingTCCs',

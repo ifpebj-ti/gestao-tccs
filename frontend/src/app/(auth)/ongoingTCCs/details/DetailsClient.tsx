@@ -16,7 +16,12 @@ import { AdvisorChangeModal } from '@/components/tcc-details/AdvisorChangeModal'
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AvaliacaoForm } from '@/components/AvaliacaoForm';
 import { FinalSubmissionBanner } from '@/components/tcc-details/FinalSubmissionBanner';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+import { Button } from '@/components/ui/button';
 export default function DetailsClient() {
+  const router = useRouter();
   const {
     tccData,
     cancellationDetails,
@@ -25,22 +30,16 @@ export default function DetailsClient() {
     // Modais e Visibilidade
     isCancellationModalOpen,
     setIsCancellationModalOpen,
-    isScheduleFormVisible,
-    setIsScheduleFormVisible,
     isEditingTccInfo,
     setIsEditingTccInfo,
     // Forms
     cancellationForm,
-    scheduleForm,
     editTccForm,
     // Handlers
     handleRequestCancellation,
     handleApproveCancellation,
-    handleScheduleSubmit,
-    handleSendScheduleEmail,
     handleResendInvite,
     handleEditTccInfo,
-    handleConcludePresentation,
     handleUploadTccFile,
     handleUploadFinalTccFile,
     handleConfirmHardCover,
@@ -52,7 +51,6 @@ export default function DetailsClient() {
     isDownloadingFinalFile,
     isForwardingToLibrary,
     isConfirmingLibrary,
-    isConcluding,
     orientadorToken,
     setOrientadorToken,
     // Alteração / Afastamento de Orientador
@@ -80,6 +78,19 @@ export default function DetailsClient() {
       Array.isArray(profile) ? profile.includes(role) : profile === role
     )
   );
+  let currentUserId: number | null = null;
+  try {
+    const token = Cookies.get('token');
+    if (token) currentUserId = Number(jwtDecode<{ userId: string }>(token).userId);
+  } catch {
+    currentUserId = null;
+  }
+  const canManageBanking =
+    tccData.infoTcc.step === 'PRESENTATION_AND_EVALUATION' &&
+    tccData.infoTcc.status !== 'COMPLETED' &&
+    !tccData.cancellationRequest &&
+    (Array.isArray(profile) ? profile.includes('ADVISOR') : profile === 'ADVISOR') &&
+    currentUserId !== null && currentUserId === Number(tccData.advisorUserId);
 
   return (
     <FormProvider {...cancellationForm}>
@@ -149,20 +160,26 @@ export default function DetailsClient() {
             bankingData={tccData.infoBanking}
             isCompleted={tccData.infoTcc.status === 'COMPLETED'}
           />
+          {canManageBanking && (
+            <section className="rounded-xl border border-[#C8FF47] bg-[#F0F9EB] p-5">
+              <h2 className="font-semibold text-[#002B18]">A banca deste TCC está liberada</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Cadastre os examinadores ou atualize os dados da apresentação.
+              </p>
+              <Button className="mt-4" onClick={() => router.push(`/banking/manage?id=${tccData.id}`)}>
+                {tccData.infoTcc.presentationDate ? 'Gerenciar banca' : 'Cadastrar banca'}
+              </Button>
+            </section>
+          )}
         </div>
 
         <ScheduleSection
           infoTcc={tccData.infoTcc}
-          isScheduleFormVisible={isScheduleFormVisible}
-          onOpenSchedule={() => setIsScheduleFormVisible((prev) => !prev)}
-          onScheduleCancel={() => setIsScheduleFormVisible(false)}
-          scheduleForm={scheduleForm}
-          onScheduleSubmit={handleScheduleSubmit}
-          canSchedule={canManageTcc && !tccData.cancellationRequest}
-          onSendScheduleEmail={handleSendScheduleEmail}
+          tccId={tccData.id}
+          tccTitle={tccData.infoTcc.title || undefined}
+          tccSummary={tccData.infoTcc.summary}
+          canSchedule={false}
           isCompleted={tccData.infoTcc.status === 'COMPLETED'}
-          onConcludePresentation={handleConcludePresentation}
-          isConcluding={isConcluding}
         />
 
         <ActionPanel

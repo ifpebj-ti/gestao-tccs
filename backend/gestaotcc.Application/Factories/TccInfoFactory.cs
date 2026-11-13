@@ -49,7 +49,8 @@ public class TccInfoFactory
             Name: bm.Name,
             Email: bm.Email,
             Role: bm.Role,
-            UserId: bm.UserId
+            UserId: bm.UserId ?? tcc.UserTccs
+                .FirstOrDefault(ut => string.Equals(ut.User.Email, bm.Email, StringComparison.OrdinalIgnoreCase))?.UserId
         )).ToList() ?? new List<gestaotcc.Domain.Dtos.Tcc.BankingMemberDto>();
 
         // 4.1 Cálculo da média final e parecer se houver avaliações
@@ -100,7 +101,9 @@ public class TccInfoFactory
                 Email: advisor!.User.Email
             ),
             InfoBanking: new InfoBankingDTO(bankingMembersDto),
-            CancellationRequest: isCancellationRequest
+            CancellationRequest: isCancellationRequest,
+            AdvisorUserId: tcc.UserTccs
+                .FirstOrDefault(userTcc => userTcc.Profile.Role == RoleType.ADVISOR.ToString())?.UserId
         );
     }
 }

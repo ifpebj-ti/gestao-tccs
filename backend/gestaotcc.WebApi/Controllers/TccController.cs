@@ -7,6 +7,8 @@ using gestaotcc.WebApi.Validators.Tcc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using gestaotcc.Application.Gateways;
+using gestaotcc.Application.Helpers;
 
 namespace gestaotcc.WebApi.Controllers;
 
@@ -50,6 +52,8 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("code/send")]
+    [RequestSizeLimit(16 * 1024)]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     public async Task<ActionResult<MessageSuccessResponseModel>> SendVerificationCode(
         [FromBody] SendStudentVerificationCodeDTO data,
         [FromServices] SendStudentVerificationCodeUseCase sendStudentVerificationCodeUseCase)
@@ -80,6 +84,8 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("code/verify")]
+    [RequestSizeLimit(16 * 1024)]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     public async Task<ActionResult<MessageSuccessResponseModel>> VerifyCode([FromBody] VerifyCodeInviteTccDTO data,
         [FromServices] VerifyCodeInviteTccUseCase verifyCodeInviteTccUseCase)
     {
@@ -180,16 +186,20 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
 
-        var result = await linkBankingUserUseCase.Execute(data);
+        var result = await linkBankingUserUseCase.Execute(data, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                403 => StatusCode(403, result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Usuário de banca vinculado com sucesso"));
     }
@@ -395,16 +405,21 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
         
-        var result = await createScheduleTccUseCase.Execute(data);
+        var result = await createScheduleTccUseCase.Execute(data, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC criado com sucesso"));
     }
@@ -428,16 +443,21 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
         
-        var result = await editScheduleTccUseCase.Execute(data);
+        var result = await editScheduleTccUseCase.Execute(data, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
         return Ok(new MessageSuccessResponseModel("Agendamento de defesa do TCC editado com sucesso"));
     }
@@ -453,18 +473,47 @@ public class TccController : ControllerBase
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null) return Unauthorized();
         
-        var result = await sendScheduleEmailUseCase.Execute(tccId);
+        var result = await sendScheduleEmailUseCase.Execute(tccId, long.Parse(userIdClaim));
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
             // Retornando erro apropriado
-            return result.ErrorDetails?.Status is 409
-                ? Conflict(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                403 => StatusCode(403, result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
-        return Ok(new MessageSuccessResponseModel("Email de agendamento de defesa do TCC enviado com sucesso"));
+        return Ok(new MessageSuccessResponseModel(result.Data));
+    }
+
+    /// <summary>
+    /// Baixar arquivo de calendário (.ics) da defesa do TCC
+    /// </summary>
+    /// <param name="tccId">Id do tcc</param>
+    [AllowAnonymous]
+    [HttpGet("{tccId}/schedule/calendar.ics")]
+    public async Task<IActionResult> DownloadScheduleCalendar(
+        [FromRoute] long tccId,
+        [FromServices] ITccGateway tccGateway)
+    {
+        var tcc = await tccGateway.FindTccScheduling(tccId);
+        if (tcc is null || tcc.TccSchedule is null)
+            return NotFound("Agendamento de defesa não encontrado para este TCC.");
+
+        var ics = CalendarEventHelper.BuildIcsContent(
+            tcc.Id,
+            tcc.Title ?? "TCC",
+            tcc.Summary,
+            tcc.TccSchedule.Location,
+            tcc.TccSchedule.ScheduledDate);
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(ics);
+        return File(bytes, "text/calendar; charset=utf-8", $"defesa-tcc-{tccId}.ics");
     }
 
     /// <summary>
@@ -529,14 +578,21 @@ public class TccController : ControllerBase
     public async Task<ActionResult<object>> ConcludePresentation([FromRoute] long tccId,
         [FromServices] ConcludePresentationUseCase concludePresentationUseCase)
     {
-        var result = await concludePresentationUseCase.Execute(tccId);
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (!long.TryParse(userIdClaim, out var userId)) return Unauthorized();
+
+        var result = await concludePresentationUseCase.Execute(tccId, userId);
         if (result.IsFailure)
         {
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
-            return result.ErrorDetails?.Status is 400
-                ? BadRequest(result.ErrorDetails)
-                : NotFound(result.ErrorDetails);
+            return result.ErrorDetails?.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => StatusCode(403, result.ErrorDetails),
+                404 => NotFound(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails)
+            };
         }
 
         return Ok(new { message = result.Message, token = result.Data });
@@ -547,6 +603,7 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("evaluate")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     public async Task<ActionResult<object>> Evaluate([FromBody] EvaluateTccDTO data,
         [FromServices] EvaluateTccUseCase evaluateTccUseCase)
     {
@@ -559,9 +616,44 @@ public class TccController : ControllerBase
                 ? BadRequest(result.ErrorDetails)
                 : result.ErrorDetails?.Status is 401
                 ? Unauthorized(result.ErrorDetails)
+                : result.ErrorDetails?.Status is 403
+                ? Forbid()
                 : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
         }
         return Ok(new { message = "Avaliação salva com sucesso!", tccId = result.Data });
+    }
+
+    [Authorize]
+    [HttpGet("banking/pending-evaluations")]
+    public async Task<ActionResult<List<PendingInternalBankingEvaluationDTO>>> FindPendingInternalBankingEvaluations(
+        [FromServices] FindPendingInternalBankingEvaluationsUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        return Ok(await useCase.Execute(userId));
+    }
+
+    [Authorize]
+    [HttpPost("evaluate/internal")]
+    public async Task<ActionResult<object>> EvaluateAsRegisteredUser(
+        [FromBody] EvaluateRegisteredTccInputModel data,
+        [FromServices] EvaluateTccUseCase useCase)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId)) return Unauthorized();
+        var result = await useCase.ExecuteRegisteredUser(data.TccId, userId, data.Grade, data.EvaluationComments, data.EvaluationDetails);
+        if (result.IsFailure)
+        {
+            result.ErrorDetails!.Type = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
+            return result.ErrorDetails.Status switch
+            {
+                400 => BadRequest(result.ErrorDetails),
+                403 => Forbid(),
+                404 => NotFound(result.ErrorDetails),
+                409 => Conflict(result.ErrorDetails),
+                _ => StatusCode(result.ErrorDetails.Status ?? 500, result.ErrorDetails)
+            };
+        }
+
+        return Ok(new { tccId = result.Data });
     }
 
     /// <summary>
@@ -569,24 +661,26 @@ public class TccController : ControllerBase
     /// </summary>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
     [HttpPost("{tccId}/upload-file")]
+    [RequestSizeLimit(gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
     public async Task<ActionResult<MessageSuccessResponseModel>> UploadTccFile([FromRoute] long tccId, [FromForm] IFormFile file,
         [FromServices] UploadTccFileUseCase uploadTccFileUseCase)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { Message = "Nenhum arquivo enviado" });
         var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!long.TryParse(userIdClaim, out var userId) || userId <= 0) return Unauthorized();
+        if (file.Length > gestaotcc.Application.Helpers.PdfUploadPolicy.MaxBytes)
+            return StatusCode(413, new { Message = "O arquivo excede 20 MB." });
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();
-        var result = await uploadTccFileUseCase.Execute(tccId, fileBytes, file.FileName, file.ContentType);
+        var result = await uploadTccFileUseCase.Execute(tccId, userId, fileBytes, file.FileName, file.ContentType);
         if (result.IsFailure)
         {
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
-            return result.ErrorDetails?.Status is 404
-                ? NotFound(result.ErrorDetails)
-                : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
         }
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
@@ -596,18 +690,22 @@ public class TccController : ControllerBase
     /// </summary>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
     [HttpPost("{tccId}/upload-final-file")]
+    [RequestSizeLimit(gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
     public async Task<ActionResult<MessageSuccessResponseModel>> UploadFinalTccFile(
         [FromRoute] long tccId, 
         [FromForm] IFormFile file,
         [FromServices] UploadFinalTccFileUseCase uploadFinalTccFileUseCase)
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId) || userId <= 0)
             return Unauthorized();
 
         if (file == null || file.Length == 0)
             return BadRequest(new { Message = "Nenhum arquivo enviado" });
 
+        if (file.Length > gestaotcc.Application.Helpers.PdfUploadPolicy.MaxBytes)
+            return StatusCode(413, new { Message = "O arquivo excede 20 MB." });
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();

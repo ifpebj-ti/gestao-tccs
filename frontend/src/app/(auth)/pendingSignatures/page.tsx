@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRouter } from 'next/navigation';
 
+
 export default function PendingSignaturesPage() {
   const { push } = useRouter();
   const {
@@ -30,7 +31,8 @@ export default function PendingSignaturesPage() {
     showAll,
     setShowAll,
     pendingData,
-    userId: loggedInUserId
+    userId: loggedInUserId,
+    
   } = usePendingSignatures();
 
   const [openUserCards, setOpenUserCards] = useState<Set<number>>(new Set());
@@ -211,7 +213,7 @@ export default function PendingSignaturesPage() {
     <div className="flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
         <div className="space-y-3">
-          <PageTitle className="text-2xl md:text-3xl">
+          <PageTitle>
             Assinaturas pendentes
           </PageTitle>
           <p className="text-sm text-slate-600">
@@ -252,6 +254,7 @@ export default function PendingSignaturesPage() {
             : pendingData.map((tcc) => renderTccCard(tcc))}
         </div>
       )}
+
     </div>
   );
 }

@@ -143,7 +143,7 @@ test('candidate workflow cannot be started by a push, merge, release or schedule
   assert.match(workflow, /DOCKER_BUILD_RECORD_UPLOAD: 'false'/);
 });
 
-test('production keeps automatic release and deployment; candidate validation is isolated', () => {
+test('production keeps releases and a separate opt-in deployment; candidates remain isolated', () => {
   const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
   const events = workflow.match(/^on:\r?\n([\s\S]*?)(?=^\S)/m)?.[1];
   assert.match(events, /pull_request:/);
@@ -277,7 +277,7 @@ test('badge changes only its marker line and preserves the current README blob S
 });
 
 test('actual versioning script skips outros and preserves the three normal version increments', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
+  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const block = workflow.split('      - name: Calculate new tag\n')[1].split('\n      - name:')[0];
   const source = block.split('        run: |\n')[1].split('\n').map(line => line.replace(/^          /, '')).join('\n');
   const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash';
@@ -285,9 +285,9 @@ test('actual versioning script skips outros and preserves the three normal versi
     const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'gradus-version-test-'));
     const output = path.join(folder, 'output');
     try {
-      const script = source.replaceAll('${{ steps.last_tag.outputs.last_tag }}', '2.12.0')
-        .replaceAll('${{ steps.change_type.outputs.change_type }}', kind);
-      const result = spawnSync(bash, ['-e', '-c', script], { env: { ...process.env, GITHUB_OUTPUT: output }, encoding: 'utf8' });
+      const result = spawnSync(bash, ['-e', '-c', source], {
+        env: { ...process.env, GITHUB_OUTPUT: output, LAST_RELEASE_TAG: '2.12.0', RELEASE_CHANGE_TYPE: kind }, encoding: 'utf8'
+      });
       assert.equal(result.status, 0, result.stderr);
       const actual = fs.readFileSync(output, 'utf8');
       assert.match(actual, new RegExp(`should_release=${expected ? 'true' : 'false'}`));
@@ -297,8 +297,8 @@ test('actual versioning script skips outros and preserves the three normal versi
   }
 });
 
-test('only the joint successful release job can promote or call either webhook', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
+test('promotion requires both builders and deployment additionally requires manual opt-in', () => {
+  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const joint = workflow.split('  release-creation:\n')[1];
   assert.match(joint, /needs: \[tag-creation, backend-docker, frontend-docker\]/);
   const badge = joint.split('      - name: Upload Code Coverage Badge from the current README snapshot\n')[1]
@@ -311,12 +311,19 @@ test('only the joint successful release job can promote or call either webhook',
   assert.ok(joint.indexOf('assemble-release') < joint.indexOf('promote-release'));
   assert.ok(joint.indexOf('verify-release-source') < joint.indexOf('promote-release'));
   assert.ok(joint.indexOf('promote-release') < joint.indexOf('PORTAINER_WEBHOOK_BACKEND'));
-  assert.match(joint, /curl --fail-with-body -k -X POST "\$PORTAINER_WEBHOOK_BACKEND"/);
-  assert.match(joint, /curl --fail-with-body -k -X POST "\$PORTAINER_WEBHOOK_FRONTEND"/);
+  assert.match(joint, /curl --fail .*--proto '=https'.*-X POST "\$PORTAINER_WEBHOOK_BACKEND"/);
+  assert.match(joint, /curl --fail .*--proto '=https'.*-X POST "\$PORTAINER_WEBHOOK_FRONTEND"/);
+  assert.doesNotMatch(joint, /curl[^\n]*\s-k\s/);
+  const deploy = workflow.split('\n  deploy:\n')[1];
+  assert.match(deploy, /needs: \[tag-creation, release-creation\]/);
+  assert.match(deploy, /github.event_name == 'workflow_dispatch' && inputs.deploy/);
+  assert.match(deploy, /environment: production/);
+  assert.doesNotMatch(joint.split('  deploy:\n')[0], /PORTAINER_WEBHOOK/);
+  assert.match(workflow, /deploy:\n\s+description:[\s\S]*?default: false/);
 });
 
 test('only the administrative badge failure is non-blocking; release and webhook failures remain blocking', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
+  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const joint = workflow.split('  release-creation:\n')[1];
   const badge = joint.split('      - name: Upload Code Coverage Badge from the current README snapshot\n')[1]
     .split('\n      - name:')[0];

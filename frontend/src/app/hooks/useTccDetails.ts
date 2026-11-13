@@ -42,13 +42,16 @@ export interface PendingAdvisorChange {
   createdAt: string;
 }
 
-interface Member {
+interface InternalExaminer {
   id: number;
   name: string;
+  email: string;
+  profile: string;
 }
 
 interface TccDetailsResponse {
   id: number;
+  advisorUserId?: number | null;
   infoTcc: {
     title: string;
     summary: string;
@@ -116,7 +119,7 @@ export function useTccDetails() {
   const [isConfirmingHardCover, setIsConfirmingHardCover] = useState(false);
   const [isDownloadingFinalFile, setIsDownloadingFinalFile] = useState(false);
 
-  const [allBankingMembers, setAllBankingMembers] = useState<Member[]>([]);
+  const [internalExaminers, setInternalExaminers] = useState<InternalExaminer[]>([]);
 
   const searchParams = useSearchParams();
   const tccId = Number(searchParams.get('id'));
@@ -180,19 +183,43 @@ export function useTccDetails() {
         summary: result.infoTcc.summary ?? ''
       });
 
+      const formatScheduleDate = (dateStr: string | null | undefined): string => {
+        if (!dateStr) return '';
+        const trimmed = dateStr.trim();
+        if (trimmed.includes('/')) {
+          const parts = trimmed.split('/');
+          if (parts.length === 3) {
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+        if (trimmed.includes('T')) {
+          return trimmed.split('T')[0];
+        }
+        return trimmed;
+      };
+
+      const formatScheduleTime = (timeStr: string | null | undefined): string => {
+        if (!timeStr) return '';
+        const cleaned = timeStr.replace('h', ':').trim();
+        const match = cleaned.match(/^([01]?[0-9]|2[0-3]):([0-5][0-9])/);
+        if (match) {
+          return `${match[1].padStart(2, '0')}:${match[2]}`;
+        }
+        return cleaned;
+      };
+
       scheduleForm.reset({
-        scheduleDate: result.infoTcc.presentationDate 
-          ? result.infoTcc.presentationDate.split('/').reverse().join('-') 
-          : '',
-        scheduleTime: result.infoTcc.presentationTime 
-          ? result.infoTcc.presentationTime.replace('h', ':') 
-          : '',
+        scheduleDate: formatScheduleDate(result.infoTcc.presentationDate),
+        scheduleTime: formatScheduleTime(result.infoTcc.presentationTime),
         scheduleLocation: result.infoTcc.presentationLocation ?? '',
         bankingMembers: result.infoBanking?.members?.map(m => ({
           name: m.name,
           email: m.email,
           role: m.role,
-          userId: m.userId ?? null
+          userId: m.userId ?? null,
+          memberType: m.userId || m.role.toLowerCase().includes('orientador')
+            ? 'INTERNAL' as const
+            : 'EXTERNAL' as const
         })) || []
       });
 
@@ -239,22 +266,21 @@ export function useTccDetails() {
   }, [fetchTccDetails]);
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchInternalExaminers = async () => {
       const token = Cookies.get('token');
       if (!token) return;
       try {
-        const res = await fetch(`${API_URL}/User/filter?Profile=BANKING`, {
+        const advisorsRes = await fetch(`${API_URL}/User/filter?Profile=ADVISOR`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.ok) {
-          const data = await res.json();
-          setAllBankingMembers(data);
-        }
+        if (!advisorsRes.ok) throw new Error();
+        const advisors: InternalExaminer[] = await advisorsRes.json();
+        setInternalExaminers(advisors.filter(user => user.id && user.name && user.email));
       } catch {
-        toast.error('Erro ao carregar lista de membros da banca.');
+        toast.error('Erro ao carregar examinadores cadastrados.');
       }
     };
-    fetchMembers();
+    fetchInternalExaminers();
   }, [API_URL]);
 
   useEffect(() => {
@@ -441,7 +467,16 @@ export function useTccDetails() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ ...data, idTcc: tccId })
+        body: JSON.stringify({
+          ...data,
+          idTcc: tccId,
+          bankingMembers: data.bankingMembers?.map(member => ({
+            name: member.name,
+            email: member.email,
+            role: member.memberType === 'INTERNAL' ? 'Examinador Interno' : 'Examinador Externo',
+            userId: member.userId
+          }))
+        })
       });
       if (!res.ok)
         throw new Error(
@@ -476,7 +511,8 @@ export function useTccDetails() {
       if (!res.ok) {
         throw new Error('Falha ao enviar email de agendamento.');
       }
-      toast.success('Agenda enviada por email para todos os envolvidos!');
+      const response = await res.json();
+      toast.success(response.message ?? 'Comunicados personalizados da agenda enviados aos participantes.');
     } catch {
       toast.error('Erro ao tentar enviar o email.');
     }
@@ -846,7 +882,7 @@ export function useTccDetails() {
     bankingForm,
     scheduleForm,
     editTccForm,
-    allBankingMembers,
+    internalExaminers,
     handleRequestCancellation,
     handleApproveCancellation,
     handleRegisterBanking,

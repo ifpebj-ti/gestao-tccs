@@ -16,4 +16,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 COPY --from=validation /app/out .
 COPY gestaotcc.WebApi/Templates ./Templates
+USER app
 ENTRYPOINT ["dotnet", "gestaotcc.WebApi.dll"]

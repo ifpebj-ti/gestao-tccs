@@ -24,6 +24,8 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         logger.LogInformation("TCC encontrado. Carregando todos os tipos de documento.");
         var allDocumentsType = await documentTypeGateway.FindAll();
 
+        await AdvanceDevelopmentStepIfReady(tcc);
+
         var dto = CreateWorkflowDto(tcc!, allDocumentsType);
         
         logger.LogInformation("Busca de workflow concluída com sucesso para TccId: {TccId}", tcc.Id);
@@ -66,7 +68,10 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         }
 
         var workflowSignatures = allDocumentsType
-            .Where(x => x.SignatureOrder == signatureOrder && !(x.Name != null && x.Name.Contains("ANEXO II - TERMO DE COMPROMISSO DE ORIENTAÇÃO VOLUNTÁRIA")))
+            .Where(x => x.SignatureOrder == signatureOrder && !(x.Name?.Contains("ANEXO II", StringComparison.OrdinalIgnoreCase) == true) &&
+                        (!IsAdvisorChangeDocumentType(x.Name) || tcc.AdvisorChanges.Any(ac =>
+                            ac.Status == "PENDING_SIGNATURES" && ac.DocumentId.HasValue &&
+                            tcc.Documents.Any(d => d.Id == ac.DocumentId.Value && d.DocumentTypeId == x.Id))))
             .Select(documentType => CreateSignatureDto(documentType, tcc.Documents, userTccs))
             .OrderBy(x => x.DocumentId)
             .ToList();
@@ -75,6 +80,48 @@ public class FindTccWorkflowUseCase(ITccGateway tccGateway, IDocumentTypeGateway
         var studentNames = tcc.UserTccs.Select(x => x.User.Name).ToList();
 
         return new FindTccWorkflowDTO(tcc.Id, signatureOrder, studentNames, workflowSignatures);
+    }
+
+    private static bool IsAdvisorChangeDocumentType(string? name) =>
+        name?.Contains("ANEXO V -", StringComparison.OrdinalIgnoreCase) == true ||
+        name?.Contains("ANEXO IX", StringComparison.OrdinalIgnoreCase) == true;
+
+    private async Task AdvanceDevelopmentStepIfReady(TccEntity tcc)
+    {
+        if (tcc.Step != StepTccType.DEVELOPMENT_AND_MONITORING.ToString()) return;
+
+        var stepDocuments = tcc.Documents
+            .Where(document => document.DocumentType?.SignatureOrder == 3 &&
+                               (!IsAdvisorChangeDocumentType(document.DocumentType.Name) ||
+                                tcc.AdvisorChanges?.Any(change => change.DocumentId == document.Id && change.Status == "PENDING_SIGNATURES") == true))
+            .ToList();
+
+        // TCCs antigos podem ter somente os anexos opcionais restantes. Recalcula a etapa ao abrir o workflow.
+        if (stepDocuments.Count == 0 || !stepDocuments.All(document => IsDocumentSignedByExpectedUsers(tcc, document))) return;
+
+        tcc.Step = StepTccType.PREPARATION_FOR_PRESENTATION.ToString();
+        await tccGateway.Update(tcc);
+    }
+
+    private static bool IsDocumentSignedByExpectedUsers(TccEntity tcc, DocumentEntity document)
+    {
+        var acceptedRoles = document.DocumentType.Profiles.Select(profile => profile.Role).ToHashSet();
+        var expectedUsers = tcc.UserTccs.Where(userTcc => acceptedRoles.Contains(userTcc.Profile.Role));
+        var signedUserIds = document.Signatures.Select(signature => signature.UserId).ToHashSet();
+
+        if (Enum.Parse<MethoSignatureType>(document.DocumentType.MethodSignature) == MethoSignatureType.ONLY_DOCS)
+        {
+            var expectedUserIds = expectedUsers.Select(userTcc => userTcc.UserId).ToHashSet();
+            if (document.UserId.HasValue)
+                expectedUserIds.RemoveWhere(userId => userId != document.UserId.Value);
+            return expectedUserIds.IsSubsetOf(signedUserIds);
+        }
+
+        var expectedIds = expectedUsers
+            .Where(userTcc => userTcc.Profile.Role != RoleType.STUDENT.ToString() || document.UserId == userTcc.UserId)
+            .Select(userTcc => userTcc.UserId)
+            .ToHashSet();
+        return expectedIds.IsSubsetOf(signedUserIds);
     }
 
     private List<UserTccEntity> FindUsersForStep(TccEntity tcc, int signatureOrder)

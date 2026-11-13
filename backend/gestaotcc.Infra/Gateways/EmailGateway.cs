@@ -86,6 +86,22 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
         mailMessage.IsBodyHtml = true;
         mailMessage.Body = data.EmailBody;
         
+        if (!string.IsNullOrWhiteSpace(data.CalendarIcsContent))
+        {
+            var htmlView = AlternateView.CreateAlternateViewFromString(data.EmailBody, new System.Net.Mime.ContentType("text/html; charset=UTF-8"));
+            mailMessage.AlternateViews.Add(htmlView);
+
+            var calendarContentType = new System.Net.Mime.ContentType("text/calendar; method=REQUEST; charset=UTF-8");
+            calendarContentType.Parameters.Add("component", "VEVENT");
+            var calendarView = AlternateView.CreateAlternateViewFromString(data.CalendarIcsContent, calendarContentType);
+            calendarView.TransferEncoding = System.Net.Mime.TransferEncoding.SevenBit;
+            mailMessage.AlternateViews.Add(calendarView);
+
+            var icsBytes = System.Text.Encoding.UTF8.GetBytes(data.CalendarIcsContent);
+            var attachment = new Attachment(new MemoryStream(icsBytes), "convite-defesa.ics", "text/calendar; method=REQUEST; name=\"convite-defesa.ics\"");
+            mailMessage.Attachments.Add(attachment);
+        }
+        
         if (data.Attachments != null && data.Attachments.Any())
         {
             foreach (var attachment in data.Attachments)
@@ -133,8 +149,15 @@ public class EmailGateway(IConfiguration configuration) : IEmailGateway
             : typeTemplate == "LINK-BANKING-USER" ? Path.Combine(directory, "Templates", "link-banking-user-template.html")
             : typeTemplate == "SEND-PENDING-SIGNATURE" ? Path.Combine(directory, "Templates", "send-pending-signature-template.html")
             : typeTemplate == "SCHEDULE-TCC" ? Path.Combine(directory, "Templates", "schedule-tcc-template.html")
+            : typeTemplate == "SCHEDULE-TCC-STUDENT" ? Path.Combine(directory, "Templates", "schedule-tcc-student-template.html")
+            : typeTemplate == "SCHEDULE-TCC-ADVISOR" ? Path.Combine(directory, "Templates", "schedule-tcc-advisor-template.html")
+            : typeTemplate == "SCHEDULE-TCC-PARTICIPANT" ? Path.Combine(directory, "Templates", "schedule-tcc-participant-template.html")
             : typeTemplate == "BANKING-INVITE" ? Path.Combine(directory, "Templates", "banking-invite-template.html")
+            : typeTemplate == "BANKING-REMINDER" ? Path.Combine(directory, "Templates", "banking-reminder-template.html")
+            : typeTemplate == "BANKING-INTERNAL-REMINDER" ? Path.Combine(directory, "Templates", "banking-internal-reminder-template.html")
             : typeTemplate == "BANKING-EVALUATION" ? Path.Combine(directory, "Templates", "banking-evaluation-template.html")
+            : typeTemplate == "BANKING-INTERNAL-SCHEDULE" ? Path.Combine(directory, "Templates", "banking-internal-schedule-template.html")
+            : typeTemplate == "BANKING-INTERNAL-EVALUATION" ? Path.Combine(directory, "Templates", "banking-internal-evaluation-template.html")
             : typeTemplate == "UPDATE-PASSWORD" ? Path.Combine(directory, "Templates", "update-password-template.html")
             : typeTemplate == "SCHEDULE-ALLOWED" ? Path.Combine(directory, "Templates", "schedule-allowed-template.html")
             : typeTemplate == "FINAL-SUBMISSION-NOTICE" ? Path.Combine(directory, "Templates", "final-submission-notice-template.html")

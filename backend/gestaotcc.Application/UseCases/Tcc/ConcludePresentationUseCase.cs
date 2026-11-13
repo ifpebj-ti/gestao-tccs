@@ -1,3 +1,4 @@
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.Email;
 using gestaotcc.Domain.Enums;
@@ -7,10 +8,11 @@ namespace gestaotcc.Application.UseCases.Tcc;
 
 public class ConcludePresentationUseCase(
     ITccGateway tccGateway,
+    IProfileGateway profileGateway,
     IEmailGateway emailGateway,
     IAppLoggerGateway<ConcludePresentationUseCase> logger)
 {
-    public async Task<ResultPattern<string>> Execute(long tccId)
+    public async Task<ResultPattern<string>> Execute(long tccId, long currentUserId)
     {
         logger.LogInformation("Iniciando conclusão de apresentação para o TccId: {TccId}", tccId);
 
@@ -21,6 +23,8 @@ public class ConcludePresentationUseCase(
             logger.LogWarning("TCC não encontrado para o TccId: {TccId}", tccId);
             return ResultPattern<string>.FailureResult("TCC não encontrado.", 404);
         }
+        if (!TccAdvisorAuthorization.IsAdvisorOf(tcc, currentUserId))
+            return ResultPattern<string>.FailureResult("Somente o orientador deste TCC pode gerenciar a banca.", 403);
 
         if (tcc.Status == StatusTccType.COMPLETED.ToString())
         {
@@ -33,18 +37,38 @@ public class ConcludePresentationUseCase(
 
         // Garante que o orientador está na banca para poder avaliar
         var advisorUser = tcc.UserTccs.FirstOrDefault(ut => ut.Profile.Role == gestaotcc.Domain.Enums.RoleType.ADVISOR.ToString())?.User;
+        var bankingProfile = await profileGateway.FindByRole("BANKING");
         if (advisorUser != null && !tcc.BankingMembers.Any(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase)))
         {
             var token = Guid.NewGuid().ToString("N");
-            var advisorMember = new gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id);
+            var advisorMember = new gestaotcc.Domain.Entities.TccBankingMember.TccBankingMemberEntity(advisorUser.Name, advisorUser.Email, "Orientador(a)", token, tcc.Id)
+            {
+                UserId = advisorUser.Id
+            };
             tcc.BankingMembers.Add(advisorMember);
+            if (bankingProfile is not null)
+                TccFactory.UpdateUsersTccToCreateBanking(tcc, advisorUser, bankingProfile);
+        }
+        else if (advisorUser != null)
+        {
+            var advisorMember = tcc.BankingMembers.First(m => m.Email.Equals(advisorUser.Email, StringComparison.OrdinalIgnoreCase));
+            advisorMember.UserId ??= advisorUser.Id;
+            if (bankingProfile is not null)
+                TccFactory.UpdateUsersTccToCreateBanking(tcc, advisorUser, bankingProfile);
         }
 
         // Revalidate/Generate token for each banking member and send email
         foreach (var member in tcc.BankingMembers)
         {
-            member.AccessToken = Guid.NewGuid().ToString("N");
             member.TokenExpiryDate = DateTime.UtcNow.AddHours(1); // Token válido por 1 hora
+
+            if (member.UserId.HasValue)
+            {
+                member.AccessToken = string.Empty;
+                continue;
+            }
+
+            member.AccessToken = Guid.NewGuid().ToString("N");
 
             // Não enviar e-mail se for o Orientador, pois ele avalia direto na tela
             if (!member.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase))
@@ -53,7 +77,9 @@ public class ConcludePresentationUseCase(
                 {
                     { "username", member.Name },
                     { "titulo_tcc", tcc.Title ?? "TCC" },
-                    { "token", member.AccessToken }
+                    { "token", member.AccessToken },
+                    { "data_horario", tcc.TccSchedule?.ScheduledDate.ToString("dd/MM/yyyy HH:mm") ?? string.Empty },
+                    { "local", tcc.TccSchedule?.Location ?? string.Empty }
                 };
 
                 var emailDto = new SendEmailDTO(
@@ -71,12 +97,31 @@ public class ConcludePresentationUseCase(
         try
         {
             await tccGateway.Update(tcc);
+
+            foreach (var member in tcc.BankingMembers
+                         .Where(member => member.UserId.HasValue && !member.Grade.HasValue)
+                         .DistinctBy(member => member.Email, StringComparer.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var notice = EmailFactory.CreateInternalBankingEvaluationNotice(member.Name, member.Email, tcc);
+                    var result = await emailGateway.Send(notice);
+                    if (result.IsFailure)
+                        logger.LogWarning("Failed to notify internal examiner {Email} about pending evaluation for TCC {TccId}.", member.Email, tcc.Id);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Failed to send evaluation notice to internal examiner {Email}: {Error}", member.Email, ex.Message);
+                }
+            }
             logger.LogInformation("Apresentação do TCC {TccId} concluída com sucesso.", tccId);
             
-            var orientadorToken = tcc.BankingMembers
+            var advisorToken = tcc.BankingMembers
                 .FirstOrDefault(m => m.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase))?.AccessToken;
 
-            return ResultPattern<string>.SuccessResult(orientadorToken ?? string.Empty);
+            var advisorIsRegistered = tcc.BankingMembers.Any(m =>
+                m.Role.Contains("Orientador", StringComparison.OrdinalIgnoreCase) && m.UserId.HasValue);
+            return ResultPattern<string>.SuccessResult(advisorIsRegistered ? string.Empty : advisorToken ?? string.Empty);
         }
         catch (Exception ex)
         {

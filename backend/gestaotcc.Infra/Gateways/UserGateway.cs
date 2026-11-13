@@ -26,7 +26,7 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .Include(x => x.CampiCourse)
                 .ThenInclude(x => x!.Campi)
             .Include(x => x.AccessCode)
-            .FirstOrDefaultAsync(x => x.Email == email);
+            .FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
     }
 
     //verificar
@@ -82,6 +82,38 @@ public class UserGateway(AppDbContext context) : IUserGateway
             .Where(user => user.Id == userId && user.Password == previousHash && user.Status == "ACTIVE")
             .ExecuteUpdateAsync(update => update.SetProperty(user => user.Password, newHash));
         return affected == 1;
+    }
+
+    public async Task<bool> ResetPassword(long userId, string previousHash, long accessCodeId, string code, string newHash)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        var consumed = await context.AccessCodes.Where(access => access.Id == accessCodeId &&
+            access.UserId == userId && access.Code == code && !access.IsActive &&
+            !access.IsUserUpdatePassword && access.ExpirationDate > DateTime.UtcNow)
+            .ExecuteUpdateAsync(update => update.SetProperty(access => access.IsUserUpdatePassword, true));
+        if (consumed != 1) return false;
+        var updated = await context.Users.Where(user => user.Id == userId &&
+            user.Password == previousHash && user.Status != "INACTIVE")
+            .ExecuteUpdateAsync(update => update.SetProperty(user => user.Password, newHash)
+                .SetProperty(user => user.Status, "ACTIVE"));
+        if (updated != 1) return false;
+        await transaction.CommitAsync();
+        return true;
+    }
+
+    public async Task<bool> CompleteFirstAccess(long userId, string previousHash, long inviteId, string code, string newHash)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        var consumed = await context.TccInvites.Where(invite => invite.Id == inviteId && invite.Code == code &&
+            !invite.IsValidCode && invite.ExpirationDate > DateTime.UtcNow &&
+            context.Users.Any(user => user.Id == userId && user.Email == invite.Email))
+            .ExecuteUpdateAsync(update => update.SetProperty(invite => invite.IsValidCode, true));
+        if (consumed != 1) return false;
+        var updated = await context.Users.Where(user => user.Id == userId && user.Password == previousHash && user.Status != "INACTIVE")
+            .ExecuteUpdateAsync(update => update.SetProperty(user => user.Password, newHash).SetProperty(user => user.Status, "ACTIVE"));
+        if (updated != 1) return false;
+        await transaction.CommitAsync();
+        return true;
     }
 
     public async Task<List<UserEntity>> FindAllByEmail(List<string> emails)

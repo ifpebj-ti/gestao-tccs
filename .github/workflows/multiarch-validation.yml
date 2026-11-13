@@ -27,15 +27,15 @@ jobs:
         service: [frontend, backend]
         arch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
         with:
           platforms: arm64
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
         with:
           buildkitd-config: scripts/buildkit-validation.toml
       - name: Build and execute architecture-specific tests
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile.multiarch
@@ -60,8 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
       - run: node scripts/multiarch-inventory.cjs
 
   oci-archive:
@@ -73,15 +73,15 @@ jobs:
       matrix:
         service: [frontend, backend]
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
         with:
           platforms: arm64
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
         with:
           buildkitd-config: scripts/buildkit-validation.toml
       - name: Export multi-platform image locally; never publish
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile.multiarch
@@ -99,7 +99,7 @@ jobs:
         env:
           OCI_ARCHIVE: ${{ runner.temp }}/${{ matrix.service }}.tar
         run: node scripts/verify-oci-platforms.cjs "$OCI_ARCHIVE"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: oci-${{ matrix.service }}-${{ github.sha }}
           path: ${{ runner.temp }}/${{ matrix.service }}.tar

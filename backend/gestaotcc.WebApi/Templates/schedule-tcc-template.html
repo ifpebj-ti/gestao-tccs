@@ -1,67 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Defesa do TCC Agendada — Gradus Flow</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Poppins', Arial, sans-serif; background-color: #F0F4F0; padding: 32px 16px; }
-    .wrapper { max-width: 600px; margin: 0 auto; }
-    .header { background-color: #002B18; border-radius: 12px 12px 0 0; padding: 32px 40px 24px; display: flex; align-items: center; gap: 14px; }
-    .logo-mark { width: 44px; height: 44px; background-color: #C8FF47; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-    .brand { color: #FAF9F5; font-size: 18px; font-weight: 700; }
-    .brand span { color: #C8FF47; }
-    .body { background-color: #ffffff; padding: 40px; }
-    .tag { display: inline-block; background-color: #C8FF47; color: #002B18; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 100px; margin-bottom: 20px; }
-    h1 { font-size: 22px; font-weight: 700; color: #002B18; margin-bottom: 12px; line-height: 1.3; }
-    p { font-size: 15px; color: #4A5A4A; line-height: 1.7; margin-bottom: 14px; }
-    .info-grid { background-color: #F5FFF0; border: 1px solid #C8FF47; border-left: 3px solid #C8FF47; border-radius: 0 8px 8px 0; padding: 20px; margin: 24px 0; }
-    .info-row { margin-bottom: 16px; }
-    .info-row:last-child { margin-bottom: 0; }
-    .info-label { font-size: 11px; font-weight: 700; color: #002B18; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-    .info-value { font-size: 14px; color: #2A4A2A; font-weight: 500; }
-    .footer { background-color: #002B18; border-radius: 0 0 12px 12px; padding: 24px 40px; text-align: center; }
-    .footer p { font-size: 12px; color: #7A9A7A; line-height: 1.6; margin: 0; }
-    .footer a { color: #C8FF47; text-decoration: none; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defesa do TCC Agendada — Gradus Flow</title>
+<style>@media only screen and (max-width:480px){.email-pad{padding-left:22px!important;padding-right:22px!important}.email-ribbon td{font-size:8px!important;letter-spacing:.6px!important}}</style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <div class="logo-mark">🎓</div>
-      <div class="brand">Gradus<span>Flow</span></div>
-    </div>
-    <div class="body">
-      <span class="tag">Defesa Agendada</span>
-      <h1>Olá, {{username}} — defesa confirmada!</h1>
-      <p>A defesa do Trabalho de Conclusão de Curso ao qual você está associado foi agendada com sucesso. Confira os detalhes abaixo:</p>
+<body style="margin:0;padding:0;background:#FAF9F5;font-family:Arial,Helvetica,sans-serif;color:#002B18;-webkit-text-size-adjust:100%;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#FAF9F5;"><tr><td align="center" style="padding:24px 10px;">
+<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;border-collapse:collapse;table-layout:fixed;">
+<tr><td style="background:#002B18;border-top:2px solid #C8FF47;"><table class="email-ribbon" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;table-layout:fixed;"><tr>
+<td align="center" style="padding:12px 6px;color:#C8FF47;font-size:9px;font-weight:700;line-height:16px;letter-spacing:1px;">GEST&#195;O DE TCCs</td>
+<td width="14" align="center" style="width:14px;color:#C8FF47;font-size:14px;">&#10038;</td>
+<td align="center" style="padding:12px 6px;color:#C8FF47;font-size:9px;font-weight:700;line-height:16px;letter-spacing:1px;">PROPOSTAS &amp; PROJETOS</td>
+<td width="14" align="center" style="width:14px;color:#C8FF47;font-size:14px;">&#10038;</td>
+<td align="center" style="padding:12px 6px;color:#C8FF47;font-size:9px;font-weight:700;line-height:16px;letter-spacing:1px;">DEFESA P&#218;BLICA</td>
+</tr></table></td></tr>
+<tr><td class="email-pad" style="padding:30px 36px 24px;border-bottom:1px solid #DDD9CD;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td width="40" style="width:40px;vertical-align:middle;"><img src="{{urlfront}}/email-graduation-cap.png" width="32" height="32" alt="Capelo do Gradus Flow" style="display:block;width:32px;height:32px;border:0;border-radius:6px;background:#002B18;"></td><td style="vertical-align:middle;"><span style="color:#002B18;font-size:22px;font-weight:700;letter-spacing:-0.6px;">Gradus<span style="color:#006633;">Flow</span></span></td></tr></table></td></tr>
+<tr><td class="email-pad email-content" style="padding:28px 36px 30px;overflow-wrap:anywhere;">
+<span class="tag" style="display:block;margin-bottom:16px;color:#006633;font-size:10px;font-weight:700;line-height:18px;letter-spacing:1.4px;text-transform:uppercase;">Defesa Agendada</span>
+      <h1 style="margin:0 0 20px;color:#002B18;font-size:24px;font-weight:600;line-height:32px;letter-spacing:-0.4px;">Olá, {{username}} — defesa confirmada!</h1>
+      <p style="margin:0 0 16px;color:#425B4B;font-size:14px;line-height:24px;">A defesa do Trabalho de Conclusão de Curso ao qual você está associado foi agendada com sucesso. Confira os detalhes abaixo:</p>
 
-      <div class="info-grid">
-        <div class="info-row">
-          <div class="info-label">Título do TCC</div>
-          <div class="info-value">{{titulo_tcc}}</div>
+      <div class="info-grid" style="margin:24px 0;padding:4px 0 4px 20px;border-left:3px solid #006633;color:#002B18;font-size:15px;line-height:24px;">
+        <div class="info-row" style="margin-bottom:16px;color:#425B4B;font-size:14px;line-height:24px;">
+          <div class="info-label" style="margin-bottom:4px;color:#617265;font-size:10px;font-weight:700;line-height:18px;letter-spacing:0.8px;text-transform:uppercase;">Título do TCC</div>
+          <div class="info-value" style="color:#002B18;font-size:15px;font-weight:600;line-height:24px;">{{titulo_tcc}}</div>
         </div>
-        <div class="info-row">
-          <div class="info-label">Resumo</div>
-          <div class="info-value">{{resumo_tcc}}</div>
+        <div class="info-row" style="margin-bottom:16px;color:#425B4B;font-size:14px;line-height:24px;">
+          <div class="info-label" style="margin-bottom:4px;color:#617265;font-size:10px;font-weight:700;line-height:18px;letter-spacing:0.8px;text-transform:uppercase;">Resumo</div>
+          <div class="info-value" style="color:#002B18;font-size:15px;font-weight:600;line-height:24px;">{{resumo_tcc}}</div>
         </div>
-        <div class="info-row">
-          <div class="info-label">Data e Horário</div>
-          <div class="info-value">{{data_horario}}</div>
+        <div class="info-row" style="margin-bottom:16px;color:#425B4B;font-size:14px;line-height:24px;">
+          <div class="info-label" style="margin-bottom:4px;color:#617265;font-size:10px;font-weight:700;line-height:18px;letter-spacing:0.8px;text-transform:uppercase;">Data e Horário</div>
+          <div class="info-value" style="color:#002B18;font-size:15px;font-weight:600;line-height:24px;">{{data_horario}}</div>
         </div>
-        <div class="info-row">
-          <div class="info-label">Local</div>
-          <div class="info-value">{{local}}</div>
+        <div class="info-row" style="margin-bottom:16px;color:#425B4B;font-size:14px;line-height:24px;">
+          <div class="info-label" style="margin-bottom:4px;color:#617265;font-size:10px;font-weight:700;line-height:18px;letter-spacing:0.8px;text-transform:uppercase;">Local</div>
+          <div class="info-value" style="color:#002B18;font-size:15px;font-weight:600;line-height:24px;">{{local}}</div>
         </div>
       </div>
-    </div>
-    <div class="footer">
-      <p>Não reconhece essa ação? Entre em contato com a coordenação.<br>
-      <a href="http://localhost:3000">Gradus Flow</a> &nbsp;·&nbsp; Instituto Federal de Pernambuco</p>
-    </div>
-  </div>
+
+      <div style="margin:20px 0;padding:16px 20px;background:#F0F9EB;border:1px solid #C8FF47;border-radius:8px;text-align:center;">
+        <p style="font-size:12px;font-weight:700;color:#002B18;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Salvar na sua agenda:</p>
+        <div>
+          <a href="{{google_calendar_url}}" target="_blank" style="display:inline-block;padding:8px 14px;background:#002B18;color:#C8FF47!important;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600;margin:3px;">Google Agenda</a>
+          <a href="{{outlook_calendar_url}}" target="_blank" style="display:inline-block;padding:8px 14px;background:#002B18;color:#C8FF47!important;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600;margin:3px;">Outlook</a>
+        </div>
+      </div>
+</td></tr>
+<tr><td class="email-pad" style="padding:22px 36px;border-top:1px solid #DDD9CD;">
+<p style="margin:0 0 8px;color:#617265;font-size:12px;line-height:20px;">Não reconhece essa ação? Entre em contato com a coordenação.<br>
+      <a href="{{urlfront}}" style="color:#006633;text-decoration:underline;overflow-wrap:anywhere;">Gradus Flow</a> &nbsp;·&nbsp; Instituto Federal de Pernambuco</p>
+</td></tr>
+</table></td></tr></table>
 </body>
 </html>
