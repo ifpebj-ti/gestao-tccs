@@ -73,7 +73,7 @@ jobs:
       - name: Block high and critical NuGet vulnerabilities
         if: success() || failure()
         run: node ../scripts/security-gate.cjs nuget nuget-audit.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: backend-evidence
@@ -115,7 +115,7 @@ jobs:
           status=$?
           set -e
           exit "$status"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: frontend-evidence
@@ -143,7 +143,7 @@ jobs:
           docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.185.0 \
             semgrep scan --config p/owasp-top-ten --config p/csharp --config p/typescript \
             --error --strict --metrics=off --sarif --output reports/frontend-sast.sarif frontend scripts .github
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: sast-evidence
@@ -171,7 +171,7 @@ jobs:
           trivy fs --scanners vuln --format json --output reports/trivy.json .
           trivy fs --format cyclonedx --output reports/sbom.cdx.json .
           node scripts/security-gate.cjs trivy reports/trivy.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: sca-secrets-evidence
@@ -187,7 +187,7 @@ jobs:
           persist-credentials: false
       - name: Build and scan isolated frontend and API
         run: bash scripts/dast.sh
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: dast-evidence
