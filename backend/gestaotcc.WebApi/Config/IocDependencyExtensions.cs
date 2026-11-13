@@ -49,6 +49,7 @@ public static class IocDependencyExtensions
         services.AddScoped<UpdatePasswordUseCase>();
         services.AddScoped<NewPasswordUseCase>();
         services.AddScoped<GoogleAccountEligibilityUseCase>();
+        services.AddScoped<GoogleLoginUseCase>();
 
         // User
         services.AddScoped<CreateUserUseCase>();
