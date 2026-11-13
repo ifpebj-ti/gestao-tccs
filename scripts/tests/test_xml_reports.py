@@ -10,12 +10,13 @@ class XmlReportSecurityTests(unittest.TestCase):
         scripts = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            secret = folder / 'private.txt'
-            secret.write_text('PRIVATE-SYNTHETIC-CONTENT', encoding='utf-8')
+            # Synthetic XXE fixture only; no credentials or application data are read.
+            fixture_file = folder / 'xxe-fixture.txt'
+            fixture_file.write_text('PRIVATE-SYNTHETIC-CONTENT', encoding='utf-8')
             report = folder / 'coverage.opencover.xml'
             inputs = [
                 '<!DOCTYPE CoverageSession><CoverageSession><Summary visitedSequencePoints="100" numSequencePoints="100" sequenceCoverage="100"/></CoverageSession>',
-                f'<!DOCTYPE CoverageSession [<!ENTITY xxe SYSTEM "{secret.as_uri()}">]><CoverageSession>&xxe;</CoverageSession>',
+                f'<!DOCTYPE CoverageSession [<!ENTITY xxe SYSTEM "{fixture_file.as_uri()}">]><CoverageSession>&xxe;</CoverageSession>',
             ]
             for xml in inputs:
                 for name, arguments in [('check-coverage.py', ['95']), ('summarize-coverage.py', [])]:
