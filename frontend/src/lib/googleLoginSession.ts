@@ -6,32 +6,42 @@ interface GoogleLoginClaims {
   exp?: number;
 }
 
-/** Confirms that the callback cookie contains a usable local session and persists it. */
-export function persistGoogleLoginSession(token?: string): boolean {
-  if (!token || typeof window === 'undefined') return false;
+export function isGoogleLoginTokenUsable(token?: string): boolean {
+  if (!token) return false;
 
   try {
     const identity = decodeSessionIdentity(token);
     const claims = jwtDecode<GoogleLoginClaims>(token);
 
-    if (
-      !Number.isSafeInteger(Number(identity.userId)) ||
-      Number(identity.userId) <= 0 ||
-      identity.roles.length === 0 ||
-      typeof claims.exp !== 'number' ||
-      !Number.isFinite(claims.exp) ||
-      claims.exp <= Date.now() / 1000
-    ) {
-      return false;
-    }
+    return (
+      Number.isSafeInteger(Number(identity.userId)) &&
+      Number(identity.userId) > 0 &&
+      identity.roles.length > 0 &&
+      typeof claims.exp === 'number' &&
+      Number.isFinite(claims.exp) &&
+      claims.exp > Date.now() / 1000
+    );
+  } catch {
+    return false;
+  }
+}
 
-    Cookies.set('token', token, {
+/** Confirms that the callback cookie contains a usable local session and persists it. */
+export function persistGoogleLoginSession(
+  token?: string,
+  cookieStore = Cookies,
+  secure = typeof window !== 'undefined' && window.location.protocol === 'https:'
+): boolean {
+  if (!token || !isGoogleLoginTokenUsable(token)) return false;
+
+  try {
+    cookieStore.set('token', token, {
       expires: 1,
       path: '/',
       sameSite: 'lax',
-      secure: window.location.protocol === 'https:'
+      secure
     });
-    return Cookies.get('token') === token;
+    return cookieStore.get('token') === token;
   } catch {
     return false;
   }
