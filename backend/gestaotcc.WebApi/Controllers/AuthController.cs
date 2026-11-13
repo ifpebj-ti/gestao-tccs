@@ -7,6 +7,7 @@ using gestaotcc.WebApi.Validators;
 using gestaotcc.WebApi.Validators.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -127,8 +128,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             && frontendUriIsValid;
 
         if (!googleConfigured)
-            return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = "Login com Google indisponível neste ambiente." });
+            return RedirectGoogleFailure(configuration, "unavailable");
 
         var completionPath = Url.Action(nameof(GoogleLoginComplete), "Auth");
         if (string.IsNullOrWhiteSpace(completionPath))
@@ -152,7 +152,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         if (!ticket.Succeeded || ticket.Principal is null)
         {
             await HttpContext.SignOutAsync(GoogleAuthenticationDefaults.ExternalCookieScheme);
-            return Unauthorized(new { message = "Não foi possível autenticar esta conta com o Google." });
+            return RedirectGoogleFailure(configuration, "failed");
         }
 
         var principal = ticket.Principal;
@@ -170,8 +170,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         await HttpContext.SignOutAsync(GoogleAuthenticationDefaults.ExternalCookieScheme);
 
         if (result.IsFailure)
-            return Unauthorized(new { message = "Não foi possível autenticar esta conta com o Google." });
-
+            return RedirectGoogleFailure(configuration, "failed");
         var frontendUrl = configuration["CORS_SETTINGS:URL_FRONT"];
         if (!Uri.TryCreate(frontendUrl, UriKind.Absolute, out var frontendUri) ||
             (frontendUri.Scheme != Uri.UriSchemeHttps && frontendUri.Scheme != Uri.UriSchemeHttp))
@@ -192,7 +191,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
                 IsEssential = true
             });
 
-        return Redirect(frontendUri.AbsoluteUri);
+        return Redirect(QueryHelpers.AddQueryString(frontendUri.AbsoluteUri, "googleLogin", "success"));
     }
     /// <summary>
     /// Realiza login no sistema para avaliador externo
@@ -219,5 +218,18 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
         }
 
         return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken, useCaseResult.Data.IsDevTest, useCaseResult.Data.IsTempDevTestPassword));
+    }
+
+    private IActionResult RedirectGoogleFailure(IConfiguration configuration, string errorCode)
+    {
+        var frontendUrl = configuration["CORS_SETTINGS:URL_FRONT"];
+        if (!Uri.TryCreate(frontendUrl, UriKind.Absolute, out var frontendUri) ||
+            (frontendUri.Scheme != Uri.UriSchemeHttps && frontendUri.Scheme != Uri.UriSchemeHttp))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Não foi possível concluir o login com o Google." });
+        }
+
+        return Redirect(QueryHelpers.AddQueryString(frontendUri.AbsoluteUri, "googleError", errorCode));
     }
 }

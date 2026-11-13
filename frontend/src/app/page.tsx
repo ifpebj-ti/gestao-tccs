@@ -1,20 +1,55 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
+import { toast } from 'react-toastify';
+import { env } from 'next-runtime-env';
 import { useLogin } from '@/app/hooks/useLogin';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthEditorialPanel } from '@/components/auth/AuthEditorialPanel';
 
 export default function LoginPage() {
   const { form, submitForm, isSubmitting } = useLogin();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
     formState: { errors }
   } = form;
   const [showPassword, setShowPassword] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const googleLogin = params.get('googleLogin');
+    const googleError = params.get('googleError');
+    if (!googleLogin && !googleError) return;
+
+    window.history.replaceState(null, '', window.location.pathname);
+    if (googleLogin === 'success') {
+      toast.success('Login com Google realizado com sucesso!');
+      router.replace('/homePage');
+    } else if (googleError === 'unavailable') {
+      toast.error('Login com Google indisponível. Tente novamente mais tarde.');
+    } else {
+      toast.error('Não foi possível entrar com Google. Verifique sua conta e tente novamente.');
+    }
+  }, [router]);
+
+  const startGoogleLogin = () => {
+    const apiUrl = env('NEXT_PUBLIC_API_URL');
+    if (!apiUrl) {
+      toast.error('Login com Google indisponível. Tente novamente mais tarde.');
+      return;
+    }
+
+    setIsGoogleSubmitting(true);
+    window.location.assign(`${apiUrl.replace(/\/$/, '')}/Auth/google`);
+  };
 
   return (
     <AuthLayout>
@@ -246,6 +281,35 @@ export default function LoginPage() {
             </span>
           </button>
         </form>
+
+        <div
+          aria-hidden="true"
+          style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0', color: '#6B7280', fontSize: '0.8rem' }}
+        >
+          <span style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
+          ou
+          <span style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
+        </div>
+        <button
+          id="login-google"
+          type="button"
+          onClick={startGoogleLogin}
+          disabled={isGoogleSubmitting || isSubmitting}
+          aria-busy={isGoogleSubmitting}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+            width: '100%', padding: '0.9rem 1.5rem', background: '#FFFFFF', color: '#002B18',
+            fontSize: '0.95rem', fontWeight: 700, border: '1px solid #D1D5DB', borderRadius: '9999px',
+            cursor: isGoogleSubmitting || isSubmitting ? 'not-allowed' : 'pointer', opacity: isGoogleSubmitting ? 0.7 : 1,
+            fontFamily: 'inherit'
+          }}
+        >
+          <FontAwesomeIcon icon={faGoogle} aria-hidden="true" />
+          {isGoogleSubmitting ? 'Redirecionando para o Google...' : 'Entrar com Google'}
+        </button>
+        <p role="status" aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
+          {isGoogleSubmitting ? 'Redirecionando para o Google...' : ''}
+        </p>
 
         {/* Primeiro Acesso com sublinhado limpo e profissional */}
         <div style={{ marginTop: '2.25rem', textAlign: 'center' }}>
