@@ -330,7 +330,8 @@ test('only the administrative badge failure is non-blocking; release and webhook
   assert.match(badge, /^        continue-on-error: true$/m);
   assert.equal((workflow.match(/continue-on-error:/g) || []).length, 1);
   assert.doesNotMatch(joint.replace(badge, ''), /always\(\)|continue-on-error/);
-  assert.match(badge, /gh api --method PUT/);
+  assert.match(badge, /node scripts\/badge-pull-request.cjs/);
+  assert.doesNotMatch(badge, /gh api --method PUT/);
   assert.ok(joint.indexOf('promote-release') < joint.indexOf('Upload Code Coverage Badge'));
   assert.ok(joint.indexOf('Upload Code Coverage Badge') < joint.indexOf('PORTAINER_WEBHOOK_BACKEND'));
 });
