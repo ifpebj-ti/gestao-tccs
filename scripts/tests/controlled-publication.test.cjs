@@ -300,7 +300,7 @@ test('actual versioning script skips outros and preserves the three normal versi
 test('promotion requires both builders and deployment additionally requires manual opt-in', () => {
   const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
   const joint = workflow.split('  release-creation:\n')[1];
-  assert.match(joint, /needs: \[tag-creation, backend-docker, frontend-docker\]/);
+  assert.match(joint, /needs: \[quality, tag-creation, backend-docker, frontend-docker\]/);
   const badge = joint.split('      - name: Upload Code Coverage Badge from the current README snapshot\n')[1]
     .split('\n      - name:')[0];
   assert.doesNotMatch(joint.replace(badge, ''), /always\(\)|continue-on-error/);

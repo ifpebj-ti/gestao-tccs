@@ -6,6 +6,10 @@ on:
     branches: [develop, main]
   workflow_dispatch:
   workflow_call:
+    outputs:
+      coverage_percentage:
+        description: Backend sequence coverage approved by the coverage gate
+        value: ${{ jobs.backend-ci.outputs.coverage_percentage }}
 permissions:
   contents: read
 jobs:
@@ -32,6 +36,8 @@ jobs:
         run: docker run --rm -v "$PWD:/repo:ro" -w /repo koalaman/shellcheck:v0.10.0 scripts/dast.sh scripts/install-security-tools.sh scripts/install-opengrep.sh
   backend-ci:
     name: Backend tests and coverage
+    outputs:
+      coverage_percentage: ${{ steps.coverage-gate.outputs.coverage_percentage }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
@@ -64,6 +70,7 @@ jobs:
           GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
         run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage --logger "trx;LogFileName=tests.trx"
       - name: Enforce 95 percent coverage
+        id: coverage-gate
         run: |
           python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
           python3 ../scripts/check-coverage.py coverage 95

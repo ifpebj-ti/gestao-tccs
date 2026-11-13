@@ -139,8 +139,6 @@ jobs:
   # --------------------------------------------------------------------
   backend-docker:
     name: 1. Backend CI/CD & Image Build
-    outputs:
-      coverage_percentage: ${{ steps.test-coverage.outputs.coverage_percentage }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     needs: tag-creation
@@ -169,29 +167,6 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
-
-      - name: Run Tests and Code Coverage
-        id: test-coverage
-        run: |
-          sudo apt-get update && sudo apt-get install -y libxml2-utils
-
-          dotnet test --collect:"XPlat Code Coverage" --settings ./coverlet.runsettings --results-directory ./coverage/
-
-          COVERAGE_FILE=$(find ./coverage -name coverage.opencover.xml -print -quit)
-
-          if [ -z "$COVERAGE_FILE" ]; then
-            echo "❌ Arquivo coverage.opencover.xml não encontrado!"
-            exit 1
-          fi
-
-          echo "Arquivo de cobertura encontrado em: $COVERAGE_FILE"
-
-          RAW_COVERAGE=$(xmllint --xpath 'string(/CoverageSession/Summary/@sequenceCoverage)' "$COVERAGE_FILE")
-          COVERAGE_PERCENTAGE=$(echo "$RAW_COVERAGE" | cut -d. -f1)
-          echo "Porcentagem final para o badge: $COVERAGE_PERCENTAGE"
-
-          echo "report_path=$COVERAGE_FILE" >> "$GITHUB_OUTPUT"
-          echo "coverage_percentage=${COVERAGE_PERCENTAGE:-0}" >> "$GITHUB_OUTPUT"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
@@ -358,7 +333,7 @@ jobs:
     timeout-minutes: 15
     name: 3. Automatic Creation Process of New Releases
     runs-on: ubuntu-latest
-    needs: [tag-creation, backend-docker, frontend-docker]
+    needs: [quality, tag-creation, backend-docker, frontend-docker]
     if: needs.tag-creation.outputs.should_release == 'true'
     permissions:
       contents: write
@@ -411,7 +386,7 @@ jobs:
       - name: Upload Code Coverage Badge from the current README snapshot
         continue-on-error: true
         env:
-          COVERAGE_PERCENTAGE: ${{ needs.backend-docker.outputs.coverage_percentage }}
+          COVERAGE_PERCENTAGE: ${{ needs.quality.outputs.coverage_percentage }}
         run: |
           gh api "repos/$GITHUB_REPOSITORY/contents/README.md" > "$RUNNER_TEMP/readme.json"
           node scripts/controlled-publication.cjs badge-content "$RUNNER_TEMP/readme.json" "$COVERAGE_PERCENTAGE" > "$RUNNER_TEMP/badge-update.json"
