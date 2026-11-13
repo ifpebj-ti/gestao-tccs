@@ -31,7 +31,9 @@ Entrega de segurança da aplicação: [tasks, testes, ativação e pendências p
 
 ##  Documentação e Wiki
 
-Acesse a Wiki do Projeto para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
+Acesse a [Wiki do Projeto](https://github.com/ifpebj-ti/gestao-tccs/wiki) para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
+
+Para contribuir, consulte o [guia de contribuição](CONTRIBUTING.md). Para relatar vulnerabilidades em privado, siga a [política de segurança](SECURITY.md).
 
 **Apresentações do Projeto:**
 *  [Sprint Report](https://www.canva.com/design/DAGyh_WU0jU/3eeINFORZW4p_HAiuHqmEg/view?utm_content=DAGyh_WU0jU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfb7fd3492f)
