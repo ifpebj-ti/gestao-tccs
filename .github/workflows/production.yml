@@ -338,6 +338,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      pull-requests: write
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
       CHANGE_TYPE: ${{ needs.tag-creation.outputs.change_type }}
@@ -388,9 +389,7 @@ jobs:
         env:
           COVERAGE_PERCENTAGE: ${{ needs.quality.outputs.coverage_percentage }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/contents/README.md" > "$RUNNER_TEMP/readme.json"
-          node scripts/controlled-publication.cjs badge-content "$RUNNER_TEMP/readme.json" "$COVERAGE_PERCENTAGE" > "$RUNNER_TEMP/badge-update.json"
-          gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/README.md" --input "$RUNNER_TEMP/badge-update.json"
+          node scripts/badge-pull-request.cjs
 
   deploy:
     name: Manual production deployment
