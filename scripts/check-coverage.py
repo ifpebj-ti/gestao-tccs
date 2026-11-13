@@ -24,3 +24,6 @@ if os.environ.get('GITHUB_STEP_SUMMARY'):
         output.write(message + '\n')
 if coverage < float(sys.argv[2]):
     sys.exit(1)
+if os.environ.get('GITHUB_OUTPUT'):
+    with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+        output.write(f'coverage_percentage={visited * 100 // total}\n')

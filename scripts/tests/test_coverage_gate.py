@@ -1,8 +1,10 @@
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'check-coverage.py'
 
@@ -37,6 +39,25 @@ class CoverageGateTests(unittest.TestCase):
         for totals in [[], [(0, 0)], [(101, 100)], [(-1, 100)]]:
             with self.subTest(totals=totals):
                 self.assertNotEqual(self.run_gate(totals).returncode, 0)
+
+    def test_badge_output_uses_approved_aggregate_without_rounding_up(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'github-output'
+            for totals, expected in [([(1, 1), (959, 1000)], '95'),
+                                     ([(100, 100)], '100'),
+                                     ([(94999, 100000)], None)]:
+                with self.subTest(totals=totals):
+                    output.write_text('', encoding='utf-8')
+                    # The helper starts a subprocess that inherits this environment.
+                    with patch.dict(os.environ, {'GITHUB_OUTPUT': str(output)}):
+                        result = self.run_gate(totals, '95')
+                    if expected is None:
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertEqual(output.read_text(encoding='utf-8'), '')
+                    else:
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(output.read_text(encoding='utf-8'),
+                                         f'coverage_percentage={expected}\n')
 
 
 if __name__ == '__main__':
