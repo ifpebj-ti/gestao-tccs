@@ -79,6 +79,7 @@ public class GoogleAccountEligibilityUseCaseTests
     [Theory]
     [InlineData("INACTIVE")]
     [InlineData("FIRST_ACCESS")]
+    [InlineData("WAITINGFORCONFIRMATION")]
     [InlineData("PENDING")]
     public async Task Execute_RejectsLocalAccountThatIsNotActive(string status)
     {

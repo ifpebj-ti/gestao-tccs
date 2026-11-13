@@ -17,11 +17,13 @@ public class GoogleLoginUseCaseTests
     [Fact]
     public async Task Execute_ReturnsLocalJwtForEligibleGoogleIdentity()
     {
+        const string existingPasswordHash = "existing-password-hash";
         var user = new UserEntity
         {
             Id = 10,
             Name = "Aluno",
             Email = "aluno@discente.ifpe.edu.br",
+            Password = existingPasswordHash,
             Status = "ACTIVE",
             Profile = [new() { Role = "STUDENT" }]
         };
@@ -35,7 +37,38 @@ public class GoogleLoginUseCaseTests
         Assert.Equal("local-jwt", result.Data.AccessToken);
         Assert.False(result.Data.IsDevTest);
         Assert.False(result.Data.IsTempDevTestPassword);
+        Assert.Equal(existingPasswordHash, user.Password);
+        Assert.Equal("ACTIVE", user.Status);
         _tokenGateway.Received(1).CreateAccessToken(user);
+        await _userGateway.DidNotReceive().Save(Arg.Any<UserEntity>());
+        await _userGateway.DidNotReceive().Update(Arg.Any<UserEntity>());
+    }
+
+    [Theory]
+    [InlineData("FIRST_ACCESS")]
+    [InlineData("WAITINGFORCONFIRMATION")]
+    [InlineData("PENDING")]
+    public async Task Execute_RejectsFirstAccessAccountWithoutIssuingJwtOrChangingPassword(string status)
+    {
+        const string initialPassword = "temporary-first-access-password";
+        var user = new UserEntity
+        {
+            Id = 10,
+            Email = "aluno@discente.ifpe.edu.br",
+            Password = initialPassword,
+            Status = status
+        };
+        _userGateway.FindByEmail(user.Email).Returns(user);
+
+        var result = await CreateUseCase().Execute(
+            new GoogleIdentityDTO(user.Email, true), AllowedDomains);
+
+        AssertRejected(result);
+        Assert.Equal(initialPassword, user.Password);
+        Assert.Equal(status, user.Status);
+        _tokenGateway.DidNotReceive().CreateAccessToken(Arg.Any<UserEntity>());
+        await _userGateway.DidNotReceive().Save(Arg.Any<UserEntity>());
+        await _userGateway.DidNotReceive().Update(Arg.Any<UserEntity>());
     }
 
     [Fact]
