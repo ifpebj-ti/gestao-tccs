@@ -1,5 +1,5 @@
 # Etapa de build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /app
 
 # Copia a solução e os arquivos de projeto

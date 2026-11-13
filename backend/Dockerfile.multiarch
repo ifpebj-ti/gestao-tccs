@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # TARGETPLATFORM is deliberate: tests execute using the destination's .NET SDK.
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS validation
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS validation
 WORKDIR /app
 COPY . .
 RUN dotnet restore gestaotcc.Test/gestaotcc.Test.csproj --configfile NuGet.Public.config
