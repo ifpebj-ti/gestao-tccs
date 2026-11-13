@@ -23,6 +23,9 @@ services:
       - STORAGE_SETTINGS__SECRET_KEY=${STORAGE_SECRET_KEY}
       - STORAGE_SETTINGS__BUCKET_NAME=${STORAGE_BUCKET_NAME}
       - CORS_SETTINGS__URL_FRONT=${CORS_SETTINGS_URL_FRONT}
+      - GoogleAuth__ClientId=${GOOGLE_CLIENT_ID}
+      - GoogleAuth__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - GoogleAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
       - URL_TEMPO=${URL_TEMPO}
       - URL_LOKI=${URL_LOKI}
     restart: unless-stopped
