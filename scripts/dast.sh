@@ -56,14 +56,16 @@ for service in web api; do
   # A report from an earlier local run must never satisfy this scan's gate.
   rm -f "reports/dast/$service.json" "reports/dast/$service.html"
   set +e
+  # Avoid racing with ephemeral outbound ports while ZAP downloads its add-ons.
+  # Each scanner has its own container namespace; this port is not published.
   if [ "$service" = web ]; then
     docker run --rm --network "$prefix" -v "$workspace/reports/dast:/zap/wrk:rw" \
       ghcr.io/zaproxy/zaproxy:2.17.0 zap-baseline.py \
-      -t "http://$prefix-web:3000" -m 1 -T 5 -J web.json -r web.html
+      -P 8090 -t "http://$prefix-web:3000" -m 1 -T 5 -J web.json -r web.html
   else
     docker run --rm --network "$prefix" -v "$workspace/reports/dast:/zap/wrk:rw" \
       ghcr.io/zaproxy/zaproxy:2.17.0 zap-api-scan.py \
-      -t "http://$prefix-api:8080/swagger/v1/swagger.json" -f openapi -T 5 -J api.json -r api.html
+      -P 8090 -t "http://$prefix-api:8080/swagger/v1/swagger.json" -f openapi -T 5 -J api.json -r api.html
   fi
   scan_status=$?
   set -e
