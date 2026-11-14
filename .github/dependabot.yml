@@ -1,28 +1,67 @@
 version: 2
 updates:
   - package-ecosystem: npm
+    target-branch: develop
     cooldown:
       default-days: 7
     directory: /frontend
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      react:
+        patterns: [react, react-dom, '@types/react', '@types/react-dom']
+      tailwind:
+        patterns: [tailwindcss, '@tailwindcss/*']
   - package-ecosystem: nuget
+    target-branch: develop
     cooldown:
       default-days: 7
     directory: /backend
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      hangfire:
+        patterns: ['Hangfire.*']
   - package-ecosystem: github-actions
+    target-branch: develop
     cooldown:
       default-days: 7
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ['*']
   - package-ecosystem: docker
+    target-branch: develop
     cooldown:
       default-days: 7
     directories: [/backend, /frontend]
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      dotnet-runtime:
+        patterns: ['dotnet/*', 'mcr.microsoft.com/dotnet/*']
+  # Security updates remain on the default branch; version updates use develop.
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    groups:
+      react-security:
+        applies-to: security-updates
+        patterns: [react, react-dom, '@types/react', '@types/react-dom']
+  - package-ecosystem: nuget
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    groups:
+      hangfire-security:
+        applies-to: security-updates
+        patterns: ['Hangfire.*']
