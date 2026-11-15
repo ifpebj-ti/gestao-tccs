@@ -4,6 +4,26 @@ Histórico das releases publicadas no GitHub, em ordem de publicação. As datas
 
 Este arquivo é sincronizado por pull request. A automação não aprova nem integra alterações. As notas originais podem mencionar tecnologias e workflows usados naquela versão. O [registro manual anterior](docs/releases/changelog-legado.md) foi preservado como histórico e não descreve necessariamente a configuração atual.
 
+## [2.14.0](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.14.0) - 2026-11-15
+
+Release automatically generated from the request #824
+Type of change: nova-feature-refactor
+
+Images published:
+- ghcr.io/ifpebj-ti/gestaotccs-backend:2.14.0
+- ghcr.io/ifpebj-ti/gestaotccs-frontend:2.14.0
+
+
+### What's Changed
+* docs: sincroniza changelog com as releases publicadas by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/822
+* chore(deps): migra backend para .NET 10 e consolida atualizações compatíveis by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/823
+* chore(deps): publica migração para .NET 10 e atualizações compatíveis do frontend by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/824
+
+
+**Full Changelog**: https://github.com/ifpebj-ti/gestao-tccs/compare/2.13.5...2.14.0
+
+---
+
 ## [2.13.5](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.13.5) - 2026-11-15
 
 Release automatically generated from the request #821
