@@ -1,5 +1,7 @@
 # CI/CD e preparação para a auditoria cruzada
 
+Registro inicial de implementação. Para a situação verificada em 15/11/2026, incluindo a migração para .NET 10, painéis de alertas, rotação relatada e evidências da release 2.14.0, consultar o [pacote de preparação da auditoria](auditoria-2026/README.md). Referências a pendências e runtimes no texto inicial abaixo devem ser lidas no contexto da data da implementação.
+
 ## Escopo e situação real
 
 Esta implementação atende à parte de esteira do Documento de Entregas do Projeto Integrador do 7º Período (seções 10, 14.2, 14.3 e 15) e à atividade de Auditoria de Processo e de Qualidade de Desenvolvimento de Software. Os documentos são referências de critérios; sua presença não comprova conformidade.

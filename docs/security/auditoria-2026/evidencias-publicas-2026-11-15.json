@@ -1,0 +1,1202 @@
+{
+  "collected_at_utc": "2026-11-15T19:19:09.879Z",
+  "collection": "Public GitHub API and read-only GHCR inspection. No access token stored.",
+  "release": {
+    "tag": "2.14.0",
+    "url": "https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.14.0",
+    "published_at": "2026-11-15T18:09:47Z",
+    "target_commitish": "e18544f81c815925d9c42027806eed73b80cfbce"
+  },
+  "branches": [
+    {
+      "name": "main",
+      "sha": "e18544f81c815925d9c42027806eed73b80cfbce",
+      "protected": true
+    },
+    {
+      "name": "develop",
+      "sha": "66d2840cd9522f54661f42d6c084881b5ba4a25b",
+      "protected": true
+    }
+  ],
+  "rulesets": [
+    {
+      "id": 27234217,
+      "name": "Proteção da main",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/main"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": true,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": false,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "Quality gate",
+                "integration_id": 15368
+              }
+            ]
+          }
+        }
+      ],
+      "bypass_actor_count": 0
+    },
+    {
+      "id": 27234055,
+      "name": "Proteção da develop",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/heads/develop"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": true,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": true,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": false,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "Quality gate",
+                "integration_id": 15368
+              }
+            ]
+          }
+        }
+      ],
+      "bypass_actor_count": 0
+    }
+  ],
+  "ci": {
+    "run_id": 43742819872,
+    "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872",
+    "jobs": [
+      {
+        "name": "Pipeline validation",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132899510491",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run node --test scripts/tests/*.test.cjs",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python3 -m pip install --require-hashes -r scripts/requirements-security.txt",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python3 -m unittest discover -s scripts/tests -p 'test_*.py'",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate workflows",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate security shell scripts",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Backend tests and coverage",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132899510707",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Initialize containers",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run dotnet restore --configfile NuGet.Public.config",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run dotnet build --no-restore --configuration Release",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit and PostgreSQL integration tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Enforce 95 percent coverage",
+            "conclusion": "success"
+          },
+          {
+            "name": "Dependency vulnerability report including transitives",
+            "conclusion": "success"
+          },
+          {
+            "name": "Block high and critical NuGet vulnerabilities",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Stop containers",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "SCA and secret history",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132899510739",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install checksum-verified Trivy and Gitleaks",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan full Git history with redacted findings",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan dependency vulnerabilities and generate SBOM",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "SAST Semgrep e Opengrep",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132899510742",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install checksum-verified SAST engine with CSharp 12 support",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan backend with the CSharp-compatible parser",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan frontend scripts and workflows with Semgrep",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "DAST temporary environment",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132899510804",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and scan isolated frontend and API",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Frontend lint tests build and audit",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132899510861",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm ci",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm run lint",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm run test:ui",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm run build",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npx --no-install tsc --noEmit --incremental false",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify defensive headers over HTTP",
+            "conclusion": "success"
+          },
+          {
+            "name": "Audit dependencies and retain report even on failure",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Quality gate",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819872/job/132900839900",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Require every check to succeed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14173551624,
+        "name": "dast-evidence",
+        "expired": false,
+        "size_in_bytes": 527598,
+        "expires_at": "2026-11-29T17:49:19Z"
+      },
+      {
+        "id": 14173236703,
+        "name": "sca-secrets-evidence",
+        "expired": false,
+        "size_in_bytes": 22907,
+        "expires_at": "2026-11-29T17:44:59Z"
+      },
+      {
+        "id": 14173207007,
+        "name": "frontend-evidence",
+        "expired": false,
+        "size_in_bytes": 315,
+        "expires_at": "2026-11-29T17:45:51Z"
+      },
+      {
+        "id": 14173017711,
+        "name": "backend-evidence",
+        "expired": false,
+        "size_in_bytes": 1073821,
+        "expires_at": "2026-11-29T17:46:42Z"
+      },
+      {
+        "id": 14172772135,
+        "name": "sast-evidence",
+        "expired": false,
+        "size_in_bytes": 215874,
+        "expires_at": "2026-11-29T17:45:19Z"
+      }
+    ]
+  },
+  "publication": {
+    "run_id": 43742819831,
+    "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831",
+    "jobs": [
+      {
+        "name": "Validate release commit / SCA and secret history",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132899511099",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install checksum-verified Trivy and Gitleaks",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan full Git history with redacted findings",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan dependency vulnerabilities and generate SBOM",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Validate release commit / DAST temporary environment",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132899511264",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and scan isolated frontend and API",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Validate release commit / Backend tests and coverage",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132899511301",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Initialize containers",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run dotnet restore --configfile NuGet.Public.config",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run dotnet build --no-restore --configuration Release",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit and PostgreSQL integration tests",
+            "conclusion": "success"
+          },
+          {
+            "name": "Enforce 95 percent coverage",
+            "conclusion": "success"
+          },
+          {
+            "name": "Dependency vulnerability report including transitives",
+            "conclusion": "success"
+          },
+          {
+            "name": "Block high and critical NuGet vulnerabilities",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Stop containers",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Validate release commit / Frontend lint tests build and audit",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132899511343",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm ci",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm run lint",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm run test:ui",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npm run build",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run npx --no-install tsc --noEmit --incremental false",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify defensive headers over HTTP",
+            "conclusion": "success"
+          },
+          {
+            "name": "Audit dependencies and retain report even on failure",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Validate release commit / SAST Semgrep e Opengrep",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132899511351",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install checksum-verified SAST engine with CSharp 12 support",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan backend with the CSharp-compatible parser",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan frontend scripts and workflows with Semgrep",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Validate release commit / Pipeline validation",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132899511363",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run node --test scripts/tests/*.test.cjs",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python3 -m pip install --require-hashes -r scripts/requirements-security.txt",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run python3 -m unittest discover -s scripts/tests -p 'test_*.py'",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate workflows",
+            "conclusion": "success"
+          },
+          {
+            "name": "Validate security shell scripts",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Validate release commit / Quality gate",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132901006057",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Require every check to succeed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "0. Automatic Creation Process of New Tags",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132901024541",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install GitHub CLI",
+            "conclusion": "success"
+          },
+          {
+            "name": "Extract type of change from PR",
+            "conclusion": "success"
+          },
+          {
+            "name": "Get the last release tag",
+            "conclusion": "success"
+          },
+          {
+            "name": "Calculate new tag",
+            "conclusion": "success"
+          },
+          {
+            "name": "Refuse existing Git and image version tags before building",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "2. Frontend CI/CD & Image Build",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132901075999",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout repository",
+            "conclusion": "success"
+          },
+          {
+            "name": "Set up Node.js",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install dependencies",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run Lint",
+            "conclusion": "success"
+          },
+          {
+            "name": "Login to GitHub Container Registry",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and smoke both frontend platforms before publication",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install Trivy",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan Frontend Image for Critical Vulnerabilities (Trivy)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Retain frontend image vulnerability reports",
+            "conclusion": "success"
+          },
+          {
+            "name": "Publish only staged images; promotion waits for both services",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Login to GitHub Container Registry",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Set up Node.js",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Checkout repository",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "1. Backend CI/CD & Image Build",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132901076037",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout repository",
+            "conclusion": "success"
+          },
+          {
+            "name": "Set up .NET",
+            "conclusion": "success"
+          },
+          {
+            "name": "Restore dependencies",
+            "conclusion": "success"
+          },
+          {
+            "name": "Login to GitHub Container Registry",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build and smoke both backend platforms before publication",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install Trivy",
+            "conclusion": "success"
+          },
+          {
+            "name": "Scan Backend Image for Critical Vulnerabilities (Trivy)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Retain backend image vulnerability reports",
+            "conclusion": "success"
+          },
+          {
+            "name": "Publish only staged images; promotion waits for both services",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Login to GitHub Container Registry",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Set up .NET",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Checkout repository",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "3. Automatic Creation Process of New Releases",
+        "conclusion": "success",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132906608162",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify both staged services and publish new version indexes",
+            "conclusion": "success"
+          },
+          {
+            "name": "Release Publication",
+            "conclusion": "success"
+          },
+          {
+            "name": "Confirm the Git release tag points to the compiled commit",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify both versions before promoting latest",
+            "conclusion": "success"
+          },
+          {
+            "name": "Upload Code Coverage Badge from the current README snapshot",
+            "conclusion": "success"
+          },
+          {
+            "name": "Prepare changelog branch and manual PR link",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "name": "Manual production deployment",
+        "conclusion": "skipped",
+        "url": "https://github.com/ifpebj-ti/gestao-tccs/actions/runs/43742819831/job/132906817938",
+        "steps": []
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14174485135,
+        "name": "release-backend-image-scans",
+        "expired": false,
+        "size_in_bytes": 19274,
+        "expires_at": "2026-11-29T18:08:58Z"
+      },
+      {
+        "id": 14173421287,
+        "name": "sast-evidence",
+        "expired": false,
+        "size_in_bytes": 215874,
+        "expires_at": "2026-11-29T17:45:25Z"
+      },
+      {
+        "id": 14173311740,
+        "name": "frontend-evidence",
+        "expired": false,
+        "size_in_bytes": 315,
+        "expires_at": "2026-11-29T17:45:58Z"
+      },
+      {
+        "id": 14173276908,
+        "name": "backend-evidence",
+        "expired": false,
+        "size_in_bytes": 1073528,
+        "expires_at": "2026-11-29T17:46:05Z"
+      },
+      {
+        "id": 14173256805,
+        "name": "sca-secrets-evidence",
+        "expired": false,
+        "size_in_bytes": 22905,
+        "expires_at": "2026-11-29T17:45:01Z"
+      },
+      {
+        "id": 14173102882,
+        "name": "dast-evidence",
+        "expired": false,
+        "size_in_bytes": 527440,
+        "expires_at": "2026-11-29T17:49:51Z"
+      },
+      {
+        "id": 14172939483,
+        "name": "release-frontend-image-scans",
+        "expired": false,
+        "size_in_bytes": 55770,
+        "expires_at": "2026-11-29T18:08:25Z"
+      }
+    ]
+  },
+  "images": [
+    {
+      "image": "ghcr.io/ifpebj-ti/gestaotccs-backend",
+      "reference": "2.14.0",
+      "digest": "sha256:93fe446623c3d04a21968d99684caa53a5d18b22787690090334894c10106030",
+      "images": [
+        {
+          "platform": "linux/amd64",
+          "digest": "sha256:61ef71bd7fb627fb32300abb700a30e293d725bc6804f1e8447f1bb7084e0f46",
+          "revision": "e18544f81c815925d9c42027806eed73b80cfbce"
+        },
+        {
+          "platform": "linux/arm64",
+          "digest": "sha256:26cfa12c1cc8c1e000ee8516ad1d97ff8c63f02f722f5a29c1a55045e1244bf7",
+          "revision": "e18544f81c815925d9c42027806eed73b80cfbce"
+        }
+      ]
+    },
+    {
+      "image": "ghcr.io/ifpebj-ti/gestaotccs-frontend",
+      "reference": "2.14.0",
+      "digest": "sha256:8e6d46c5a31a33de37866220750545e6a783877de5b6a66fa212d9c04d59262e",
+      "images": [
+        {
+          "platform": "linux/amd64",
+          "digest": "sha256:3618814c6ed59c0dd3a762e1a37d0c9d9f7c008e22d480a7bfee0d84b0a15534",
+          "revision": "e18544f81c815925d9c42027806eed73b80cfbce"
+        },
+        {
+          "platform": "linux/arm64",
+          "digest": "sha256:b05655b2b9d36908811c3f783536ca401c0501ec52caaf116fa1121335c22451",
+          "revision": "e18544f81c815925d9c42027806eed73b80cfbce"
+        }
+      ]
+    }
+  ],
+  "rotation_issue": {
+    "number": 794,
+    "state": "closed",
+    "closed_at": "2026-11-15T19:07:44Z",
+    "url": "https://github.com/ifpebj-ti/gestao-tccs/issues/794"
+  }
+}
