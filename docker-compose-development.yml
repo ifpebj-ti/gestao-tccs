@@ -27,6 +27,7 @@ services:
       - GoogleAuth__ClientId=${GOOGLE_CLIENT_ID}
       - GoogleAuth__ClientSecret=${GOOGLE_CLIENT_SECRET}
       - GoogleAuth__RedirectUri=${GOOGLE_REDIRECT_URI}
+      - GoogleAuth__AllowedDomains=${GOOGLE_ALLOWED_DOMAINS}
       - URL_TEMPO=${URL_TEMPO}
       - URL_LOKI=${URL_LOKI}
     restart: unless-stopped

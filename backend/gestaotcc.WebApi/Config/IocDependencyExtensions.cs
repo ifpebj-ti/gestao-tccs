@@ -48,6 +48,7 @@ public static class IocDependencyExtensions
         services.AddScoped<BankingLoginUseCase>();
         services.AddScoped<UpdatePasswordUseCase>();
         services.AddScoped<NewPasswordUseCase>();
+        services.AddScoped<GoogleAccountEligibilityUseCase>();
 
         // User
         services.AddScoped<CreateUserUseCase>();
