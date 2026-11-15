@@ -109,7 +109,7 @@ export function useSignaturePage() {
           });
           const textareas = doc.querySelectorAll('textarea');
           textareas.forEach(textarea => {
-             textarea.innerHTML = textarea.value;
+             textarea.textContent = textarea.value;
           });
           
           currentHtml = doc.documentElement.outerHTML;

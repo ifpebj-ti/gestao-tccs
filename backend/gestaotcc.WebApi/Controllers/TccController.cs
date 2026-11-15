@@ -52,6 +52,8 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("code/send")]
+    [RequestSizeLimit(16 * 1024)]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     public async Task<ActionResult<MessageSuccessResponseModel>> SendVerificationCode(
         [FromBody] SendStudentVerificationCodeDTO data,
         [FromServices] SendStudentVerificationCodeUseCase sendStudentVerificationCodeUseCase)
@@ -82,6 +84,8 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("code/verify")]
+    [RequestSizeLimit(16 * 1024)]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     public async Task<ActionResult<MessageSuccessResponseModel>> VerifyCode([FromBody] VerifyCodeInviteTccDTO data,
         [FromServices] VerifyCodeInviteTccUseCase verifyCodeInviteTccUseCase)
     {
@@ -599,6 +603,7 @@ public class TccController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("evaluate")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     public async Task<ActionResult<object>> Evaluate([FromBody] EvaluateTccDTO data,
         [FromServices] EvaluateTccUseCase evaluateTccUseCase)
     {
@@ -656,24 +661,26 @@ public class TccController : ControllerBase
     /// </summary>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
     [HttpPost("{tccId}/upload-file")]
+    [RequestSizeLimit(gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
     public async Task<ActionResult<MessageSuccessResponseModel>> UploadTccFile([FromRoute] long tccId, [FromForm] IFormFile file,
         [FromServices] UploadTccFileUseCase uploadTccFileUseCase)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { Message = "Nenhum arquivo enviado" });
         var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!long.TryParse(userIdClaim, out var userId) || userId <= 0) return Unauthorized();
+        if (file.Length > gestaotcc.Application.Helpers.PdfUploadPolicy.MaxBytes)
+            return StatusCode(413, new { Message = "O arquivo excede 20 MB." });
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();
-        var result = await uploadTccFileUseCase.Execute(tccId, fileBytes, file.FileName, file.ContentType);
+        var result = await uploadTccFileUseCase.Execute(tccId, userId, fileBytes, file.FileName, file.ContentType);
         if (result.IsFailure)
         {
             var endpointUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}";
             result.ErrorDetails!.Type = endpointUrl;
-            return result.ErrorDetails?.Status is 404
-                ? NotFound(result.ErrorDetails)
-                : StatusCode(StatusCodes.Status500InternalServerError, result.ErrorDetails);
+            return StatusCode(result.ErrorDetails?.Status ?? 500, result.ErrorDetails);
         }
         return Ok(new MessageSuccessResponseModel(result.Message));
     }
@@ -683,18 +690,22 @@ public class TccController : ControllerBase
     /// </summary>
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR, STUDENT")]
     [HttpPost("{tccId}/upload-final-file")]
+    [RequestSizeLimit(gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = gestaotcc.Application.Helpers.PdfUploadPolicy.MaxRequestBytes)]
     public async Task<ActionResult<MessageSuccessResponseModel>> UploadFinalTccFile(
         [FromRoute] long tccId, 
         [FromForm] IFormFile file,
         [FromServices] UploadFinalTccFileUseCase uploadFinalTccFileUseCase)
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId) || userId <= 0)
             return Unauthorized();
 
         if (file == null || file.Length == 0)
             return BadRequest(new { Message = "Nenhum arquivo enviado" });
 
+        if (file.Length > gestaotcc.Application.Helpers.PdfUploadPolicy.MaxBytes)
+            return StatusCode(413, new { Message = "O arquivo excede 20 MB." });
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);
         var fileBytes = memoryStream.ToArray();

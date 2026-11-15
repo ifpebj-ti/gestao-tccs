@@ -42,7 +42,7 @@ public class EvaluateTccUseCase(
 
     public async Task<ResultPattern<long>> Execute(EvaluateTccDTO data)
     {
-        logger.LogInformation("Recebendo avaliação para o token: {Token}", data.Token);
+        logger.LogInformation("Recebendo avaliação externa.");
 
         if (string.IsNullOrWhiteSpace(data.Token))
         {

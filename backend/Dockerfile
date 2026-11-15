@@ -1,9 +1,10 @@
 # Etapa de build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 # Copia a solução e os arquivos de projeto
 COPY ./gestaotcc.sln ./
+COPY ./global.json ./
 COPY ./gestaotcc.WebApi/gestaotcc.WebApi.csproj ./gestaotcc.WebApi/
 COPY ./gestaotcc.Application/gestaotcc.Application.csproj ./gestaotcc.Application/
 COPY ./gestaotcc.Domain/gestaotcc.Domain.csproj ./gestaotcc.Domain/
@@ -20,10 +21,11 @@ COPY . .
 RUN dotnet publish ./gestaotcc.WebApi/gestaotcc.WebApi.csproj -c Release -o /app/out
 
 # Etapa de runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 WORKDIR /app
 
 COPY --from=build /app/out .
 COPY ./gestaotcc.WebApi/Templates ./Templates
 
+USER app
 ENTRYPOINT ["dotnet", "gestaotcc.WebApi.dll"]

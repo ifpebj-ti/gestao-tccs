@@ -63,10 +63,15 @@ public class NewPasswordUseCase(
 
         logger.LogInformation("Validação do convite bem-sucedida para o UserId: {UserId}", userId);
 
-        user.Password = bcryptGateway.GenerateHashPassword(data.Password);
-        user.Status = user.Status != "INACTIVE" ? "ACTIVE" : user.Status;
-
-        await userGateway.Update(user);
+        if (user.Status == "INACTIVE")
+            return ResultPattern<string>.FailureResult("A conta não está disponível.", 403);
+        if (string.IsNullOrEmpty(data.Password) || data.Password.Length < 8 || System.Text.Encoding.UTF8.GetByteCount(data.Password) > 72)
+            return ResultPattern<string>.FailureResult("A senha deve ter pelo menos 8 caracteres e até 72 bytes.", 400);
+        var hash = bcryptGateway.GenerateHashPassword(data.Password);
+        if (!await userGateway.CompleteFirstAccess(user.Id, user.Password, tccInvite.Id, tccInvite.Code, hash))
+            return ResultPattern<string>.FailureResult("O convite expirou ou já foi utilizado.", 409);
+        user.Password = hash;
+        user.Status = "ACTIVE";
 
         logger.LogInformation(
             "Usuário atualizado com nova senha e status no banco de dados. UserId: {UserId}",
@@ -79,7 +84,7 @@ public class NewPasswordUseCase(
                 "Falha ao enviar e-mail de confirmação para UserId: {UserId}. Motivo do gateway: {ErrorMessage}",
                 userId,
                 emailDTO.Message);
-            return ResultPattern<string>.FailureResult(emailDTO.Message, 500);
+            return ResultPattern<string>.FailureResult("Não foi possível enviar a confirmação. Tente entrar com a senha definida.", 500);
         }
 
         logger.LogInformation(

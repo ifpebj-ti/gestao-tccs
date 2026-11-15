@@ -1,5 +1,9 @@
 # --- GENERAL ---
 .env
+reports/
+backend/coverage/
+backend/nuget-audit.json
+frontend/npm-audit.json
 .env.*
 !.env.example
 .vs

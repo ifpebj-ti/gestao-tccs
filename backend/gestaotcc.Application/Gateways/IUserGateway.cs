@@ -13,6 +13,8 @@ public interface IUserGateway
     Task Update(UserEntity user);
     Task<bool> UpdatePhone(long userId, string phone);
     Task<bool> UpdateOwnPassword(long userId, string previousHash, string newHash);
+    Task<bool> ResetPassword(long userId, string previousHash, long accessCodeId, string code, string newHash);
+    Task<bool> CompleteFirstAccess(long userId, string previousHash, long inviteId, string code, string newHash);
     Task<bool> UpdateStudentProfile(long userId, UpdateStudentProfileDTO data, string shift);
     Task<List<UserEntity>> FindAllByEmail(List<string> emails);
     Task<List<UserEntity>> FindAllByFilter(UserFilterDTO filter, long campiCourseId);

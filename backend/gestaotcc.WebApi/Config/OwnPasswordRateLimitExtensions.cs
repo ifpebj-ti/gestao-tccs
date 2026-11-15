@@ -17,5 +17,8 @@ public static class OwnPasswordRateLimitExtensions
             options.AddPolicy("own-password", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.User.FindFirst("userId")?.Value ?? "anonymous",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            options.AddPolicy("public-auth", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
         });
 }

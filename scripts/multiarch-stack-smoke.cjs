@@ -25,8 +25,11 @@ async function probe() {
     headers: { Authorization: `Bearer ${accessToken}` }
   })).json();
   assert.equal(profile.email, 'aluna@discente.ifpe.edu.br');
+  // Disposable Docker network only, with synthetic credentials and no application data.
+  // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request
   const anonymous = await fetch('http://backend:8080/api/User/me');
   assert.equal(anonymous.status, 401);
+  // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request
   const cors = await fetch('http://backend:8080/api/User/me', {
     method: 'OPTIONS', headers: { Origin: 'http://frontend:3000',
       'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'authorization' }
