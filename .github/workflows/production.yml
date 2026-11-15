@@ -390,6 +390,9 @@ jobs:
         run: |
           node scripts/badge-pull-request.cjs
 
+      - name: Propose changelog synchronization after release publication
+        run: node scripts/changelog-pull-request.cjs
+
   deploy:
     name: Manual production deployment
     needs: [tag-creation, release-creation]
