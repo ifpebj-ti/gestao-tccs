@@ -390,6 +390,9 @@ jobs:
         run: |
           node scripts/badge-pull-request.cjs
 
+      - name: Prepare changelog branch and manual PR link
+        run: node scripts/changelog-pull-request.cjs
+
   deploy:
     name: Manual production deployment
     needs: [tag-creation, release-creation]

@@ -115,6 +115,10 @@ jobs:
         env:
           GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
         run: |
+          # SDK/VSTest session files must remain private on both runner architectures.
+          umask 077
+          export VSTEST_ARTIFACTS_DIRECTORY
+          VSTEST_ARTIFACTS_DIRECTORY=$(mktemp -d "$RUNNER_TEMP/vstest-artifacts.XXXXXX")
           dotnet restore gestaotcc.Test/gestaotcc.Test.csproj --configfile NuGet.Public.config
           dotnet test gestaotcc.Test/gestaotcc.Test.csproj --no-restore --configuration Release -m:1 -p:UseSharedCompilation=false --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage
           python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
@@ -149,7 +153,15 @@ jobs:
         run: |
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/aquasecurity/trivy/$TRIVY_VERSION/contrib/install.sh" --output "$RUNNER_TEMP/install-trivy.sh"
           sh "$RUNNER_TEMP/install-trivy.sh" -b "$RUNNER_TEMP/trivy" "$TRIVY_VERSION"
-          "$RUNNER_TEMP/trivy/trivy" image --severity CRITICAL --exit-code 1 --ignore-unfixed "$LOCAL_IMAGE"
+          "$RUNNER_TEMP/trivy/trivy" image --format json --output "$RUNNER_TEMP/candidate-image-scan.json" "$LOCAL_IMAGE"
+          node scripts/security-gate.cjs trivy "$RUNNER_TEMP/candidate-image-scan.json"
+      - name: Retain candidate image vulnerability report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-scan-${{ matrix.service }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/candidate-image-scan.json
+          retention-days: 14
       - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         if: inputs.publish_candidates
         with:
