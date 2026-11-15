@@ -8,9 +8,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'react-toastify';
 import { env } from 'next-runtime-env';
+import Cookies from 'js-cookie';
 import { useLogin } from '@/app/hooks/useLogin';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthEditorialPanel } from '@/components/auth/AuthEditorialPanel';
+import { persistGoogleLoginSession } from '@/lib/googleLoginSession';
 
 export default function LoginPage() {
   const { form, submitForm, isSubmitting } = useLogin();
@@ -31,6 +33,14 @@ export default function LoginPage() {
 
     window.history.replaceState(null, '', window.location.pathname);
     if (googleLogin === 'success') {
+      const token = Cookies.get('token');
+      if (!persistGoogleLoginSession(token)) {
+        toast.error(
+          'O Google confirmou a autenticação, mas não foi possível iniciar sua sessão no sistema. Tente novamente.'
+        );
+        return;
+      }
+
       toast.success('Login com Google realizado com sucesso!');
       router.replace('/homePage');
     } else if (googleError === 'unavailable') {
