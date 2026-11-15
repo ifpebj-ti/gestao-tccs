@@ -4,6 +4,25 @@ Histórico das releases publicadas no GitHub, em ordem de publicação. As datas
 
 Este arquivo é sincronizado por pull request. A automação não aprova nem integra alterações. As notas originais podem mencionar tecnologias e workflows usados naquela versão. O [registro manual anterior](docs/releases/changelog-legado.md) foi preservado como histórico e não descreve necessariamente a configuração atual.
 
+## [2.13.4](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.13.4) - 2026-11-15
+
+Release automatically generated from the request #818
+Type of change: bug-fix
+
+Images published:
+- ghcr.io/ifpebj-ti/gestaotccs-backend:2.13.4
+- ghcr.io/ifpebj-ti/gestaotccs-frontend:2.13.4
+
+
+### What's Changed
+* fix(ci): sincroniza changelog e reforça segurança das imagens candidatas by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/811
+* fix(ci): publica sincronização do changelog e reforça segurança das imagens candidatas by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/818
+
+
+**Full Changelog**: https://github.com/ifpebj-ti/gestao-tccs/compare/2.13.3...2.13.4
+
+---
+
 ## [2.13.3](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.13.3) - 2026-11-14
 
 Release automatically generated from the request #799

@@ -29,7 +29,7 @@ async function updateChangelog(env = process.env, request = fetch) {
         'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
       ...(body ? { body: JSON.stringify(body) } : {}) });
     if (response.status === 404 && method === 'GET' && path.startsWith('git/ref/heads/ci/')) return null;
-    if (!response.ok) throw new Error(`Changelog API failed (${method}, HTTP ${response.status})`);
+    if (!response.ok) throw new Error(`Changelog API failed (${method} ${path.split('?')[0]}, HTTP ${response.status})`);
     return response.json();
   }
   const releases = [];
@@ -45,12 +45,6 @@ async function updateChangelog(env = process.env, request = fetch) {
   const current = await api(`contents/CHANGELOG.md?ref=${sourceSha}`);
   if (Buffer.from(current.content, 'base64').toString('utf8') === content) return { unchanged: true };
   const branch = `ci/changelog-${env.GITHUB_RUN_ID}`;
-  const prs = await api(`pulls?state=all&base=main&head=${encodeURIComponent(env.GITHUB_REPOSITORY.split('/')[0] + ':' + branch)}`);
-  if (prs.length) {
-    assert.equal(prs.length, 1);
-    assert.equal(prs[0].state, 'open', 'Changelog PR already closed; review before retrying');
-    return { url: prs[0].html_url };
-  }
   const existing = await api(`git/ref/heads/${branch}`);
   if (existing) {
     const comparison = await api(`compare/${sourceSha}...${existing.object.sha}`);
@@ -69,14 +63,11 @@ async function updateChangelog(env = process.env, request = fetch) {
   // Create a new ref only: never update main, develop, or an existing branch.
   await api('git/refs', 'POST', { ref: `refs/heads/${branch}`, sha: commit.sha });
   }
-  const run = `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`;
-  const body = `## Tipo de mudança\n\n- [ ] novo-marco\n- [ ] nova-feature-refactor\n- [ ] bug-fix\n- [x] outros\n\n## Descrição\n\nSincroniza o CHANGELOG com as releases públicas, preservando suas notas e datas de publicação. Issue vinculada: não informada.\n\n## Critérios de conclusão e evidências\n\n- [ ] Comparar versões, datas e notas com as releases.\n- [ ] Confirmar que somente CHANGELOG.md foi alterado.\n- [ ] Aprovar a execução dos workflows, se solicitada, e aguardar o Quality gate.\n- [ ] Obter revisão de outro integrante.\n\nExecução do CI: ${run} (geração da PR; conferir também os checks desta PR).\n\nComo validar: comparar o diff com a página de releases do repositório.\n\nImpacto e rollback: documentação apenas; reverter por PR. A opção outros não gera release nem deploy.\n\n## Revisão por outra pessoa\n\nA automação não aprova nem integra esta PR.\n`;
-  const pr = await api('pulls', 'POST', { title: 'docs: sincroniza changelog das releases', head: branch, base: 'main', body });
-  return { url: pr.html_url };
+  return { url: `https://github.com/${env.GITHUB_REPOSITORY}/compare/main...${branch}?expand=1`, manual: true };
 }
 
 if (require.main === module) updateChangelog().then(result => {
-  const message = result.unchanged ? 'Changelog already synchronized.' : `Changelog PR: ${result.url}`;
+  const message = result.unchanged ? 'Changelog already synchronized.' : `Changelog ready. Open the PR manually (select outros): ${result.url}`;
   console.log(message);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, message + '\n');
 }).catch(error => { console.error(error.message); process.exitCode = 1; });

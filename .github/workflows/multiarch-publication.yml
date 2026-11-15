@@ -115,6 +115,10 @@ jobs:
         env:
           GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
         run: |
+          # SDK/VSTest session files must remain private on both runner architectures.
+          umask 077
+          export VSTEST_ARTIFACTS_DIRECTORY
+          VSTEST_ARTIFACTS_DIRECTORY=$(mktemp -d "$RUNNER_TEMP/vstest-artifacts.XXXXXX")
           dotnet restore gestaotcc.Test/gestaotcc.Test.csproj --configfile NuGet.Public.config
           dotnet test gestaotcc.Test/gestaotcc.Test.csproj --no-restore --configuration Release -m:1 -p:UseSharedCompilation=false --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage
           python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
