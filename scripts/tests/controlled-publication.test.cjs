@@ -146,6 +146,9 @@ test('candidate workflow cannot be started by a push, merge, release or schedule
   assert.match(workflow, /retention-days: 14/);
   assert.match(workflow, /node scripts\/security-gate.cjs trivy/);
   assert.doesNotMatch(workflow, /--severity CRITICAL --exit-code 1/);
+  assert.match(workflow, /umask 077/);
+  assert.match(workflow, /VSTEST_ARTIFACTS_DIRECTORY=\$\(mktemp -d/);
+  assert.doesNotMatch(workflow, /VSTEST_DISABLE_ARTIFACTS_DIRECTORY_VERIFICATION/);
   assert.match(workflow, /DOCKER_BUILD_RECORD_UPLOAD: 'false'/);
 });
 
