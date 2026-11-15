@@ -139,7 +139,13 @@ test('candidate workflow cannot be started by a push, merge, release or schedule
   assert.ok(events);
   assert.match(events, /^  workflow_dispatch:/m);
   assert.doesNotMatch(events, /^  (?:push|pull_request|pull_request_target|release|schedule|workflow_run|workflow_call):/m);
-  assert.doesNotMatch(workflow, /PORTAINER_WEBHOOK|softprops\/action-gh-release|gh api|upload-artifact|cache-to:/);
+  assert.doesNotMatch(workflow, /PORTAINER_WEBHOOK|softprops\/action-gh-release|gh api|cache-to:/);
+  // Retain only the small vulnerability report, never build records or images.
+  assert.equal((workflow.match(/uses: actions\/upload-artifact@/g) || []).length, 1);
+  assert.match(workflow, /path: \$\{\{ runner.temp \}\}\/candidate-image-scan.json/);
+  assert.match(workflow, /retention-days: 14/);
+  assert.match(workflow, /node scripts\/security-gate.cjs trivy/);
+  assert.doesNotMatch(workflow, /--severity CRITICAL --exit-code 1/);
   assert.match(workflow, /DOCKER_BUILD_RECORD_UPLOAD: 'false'/);
 });
 

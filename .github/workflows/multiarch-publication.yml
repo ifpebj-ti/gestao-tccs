@@ -149,7 +149,15 @@ jobs:
         run: |
           curl --fail --silent --show-error --location "https://raw.githubusercontent.com/aquasecurity/trivy/$TRIVY_VERSION/contrib/install.sh" --output "$RUNNER_TEMP/install-trivy.sh"
           sh "$RUNNER_TEMP/install-trivy.sh" -b "$RUNNER_TEMP/trivy" "$TRIVY_VERSION"
-          "$RUNNER_TEMP/trivy/trivy" image --severity CRITICAL --exit-code 1 --ignore-unfixed "$LOCAL_IMAGE"
+          "$RUNNER_TEMP/trivy/trivy" image --format json --output "$RUNNER_TEMP/candidate-image-scan.json" "$LOCAL_IMAGE"
+          node scripts/security-gate.cjs trivy "$RUNNER_TEMP/candidate-image-scan.json"
+      - name: Retain candidate image vulnerability report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: candidate-scan-${{ matrix.service }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/candidate-image-scan.json
+          retention-days: 14
       - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         if: inputs.publish_candidates
         with:
