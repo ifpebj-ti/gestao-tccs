@@ -22,7 +22,7 @@ test: cobre rejeição de token expirado
 
 Consulte o `.env.example` para identificar as variáveis necessárias e configure valores próprios no ambiente local. Não reutilize chaves públicas de exemplo e não versione o `.env`.
 
-A configuração atual do CI utiliza Node.js 24, .NET SDK 8 e PostgreSQL 15. Isso descreve a configuração do projeto; a atualização dos runtimes deve ser tratada com revisão de compatibilidade e segurança.
+A configuração atual do CI utiliza Node.js 24, .NET SDK 10 e PostgreSQL 15. O arquivo backend/global.json restringe o SDK à linha estável 10.0. Isso descreve a configuração do projeto; a atualização dos runtimes deve ser tratada com revisão de compatibilidade e segurança.
 
 ## Validação do frontend
 
