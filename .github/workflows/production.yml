@@ -390,7 +390,7 @@ jobs:
         run: |
           node scripts/badge-pull-request.cjs
 
-      - name: Propose changelog synchronization after release publication
+      - name: Prepare changelog branch and manual PR link
         run: node scripts/changelog-pull-request.cjs
 
   deploy:

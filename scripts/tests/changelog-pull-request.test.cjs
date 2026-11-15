@@ -15,15 +15,17 @@ function fixture(options = {}) {
     if (options.fail === path) status = 403;
     else if (path.startsWith('releases?')) data = [release];
     else if (path === 'git/ref/heads/main') data = { object: { sha: env.GITHUB_SHA } };
-    else if (path.startsWith('contents/CHANGELOG.md?')) data = { content: Buffer.from(options.unchanged ? renderChangelog([release]) : '# Old').toString('base64') };
-    else if (path.startsWith('pulls?')) data = options.closed ? [{ state: 'closed' }] : [];
-    else if (path.startsWith('git/ref/heads/ci/')) status = 404;
+    else if (path.startsWith('contents/CHANGELOG.md?')) data = { content: Buffer.from(options.unchanged || (options.existing && !options.modified && path.includes('commit')) ? renderChangelog([release]) : '# Old').toString('base64') };
+    else if (path.startsWith('git/ref/heads/ci/')) {
+      if (options.existing) data = { object: { sha: 'commit' } };
+      else status = 404;
+    }
+    else if (path.startsWith('compare/')) data = { status: 'ahead', ahead_by: 1, files: [{ filename: 'CHANGELOG.md' }] };
     else if (path.startsWith('git/commits/') && init.method === 'GET') data = { tree: { sha: 'old-tree' } };
     else if (path === 'git/blobs') data = { sha: 'blob' };
     else if (path === 'git/trees') data = { sha: 'tree' };
     else if (path === 'git/commits') data = { sha: 'commit' };
     else if (path === 'git/refs') data = {};
-    else if (path === 'pulls') data = { html_url: 'https://github.com/team/project/pull/1' };
     else throw new Error(`Unexpected route: ${path}`);
     return { ok: status === 200, status, json: async () => data };
   }
@@ -47,25 +49,26 @@ test('unchanged content performs no writes', async () => {
   assert.deepEqual(await updateChangelog(env, f.request), { unchanged: true });
   assert.ok(f.calls.every(c => c.method === 'GET'));
 });
-test('writes only changelog to a new branch and opens a non-release PR without merging', async () => {
+test('writes only changelog to a new branch and returns a manual PR link without PR API access', async () => {
   const f = fixture();
-  await updateChangelog(env, f.request);
+  const result = await updateChangelog(env, f.request);
   const writes = f.calls.filter(c => c.method !== 'GET');
   assert.ok(writes.every(c => c.method === 'POST'));
   assert.deepEqual(writes.find(c => c.path === 'git/trees').body.tree.map(t => t.path), ['CHANGELOG.md']);
   assert.equal(writes.find(c => c.path === 'git/refs').body.ref, 'refs/heads/ci/changelog-123');
-  const pr = writes.find(c => c.path === 'pulls').body;
-  assert.equal(pr.base, 'main');
-  assert.match(pr.body, /\[x\] outros/);
-  assert.ok(!writes.some(c => /merge|reviews/.test(c.path)));
+  assert.equal(result.url, 'https://github.com/team/project/compare/main...ci/changelog-123?expand=1');
+  assert.equal(result.manual, true);
+  assert.ok(!f.calls.some(c => /pulls|merge|reviews/.test(c.path)));
 });
 test('permission failure stops without opening a PR', async () => {
   const f = fixture({ fail: 'git/blobs' });
   await assert.rejects(updateChangelog(env, f.request), /HTTP 403/);
   assert.ok(!f.calls.some(c => c.path === 'pulls'));
 });
-test('closed PR requires manual review rather than silently recreating it', async () => {
-  const f = fixture({ closed: true });
-  await assert.rejects(updateChangelog(env, f.request), /already closed/);
+test('retry verifies the prepared branch without rewriting it or using PR permissions', async () => {
+  const f = fixture({ existing: true });
+  assert.equal((await updateChangelog(env, f.request)).manual, true);
   assert.ok(f.calls.every(c => c.method === 'GET'));
+  const modified = fixture({ existing: true, modified: true });
+  await assert.rejects(updateChangelog(env, modified.request));
 });

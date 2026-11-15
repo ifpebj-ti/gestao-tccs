@@ -12,9 +12,9 @@ O histórico de releases não comprova, por si só, que todas as versões possue
 
 ## Atualização automática
 
-Após publicar e verificar uma release, `production.yml` executa `scripts/changelog-pull-request.cjs`. O script consulta todas as páginas de releases, compara o conteúdo com a `main` e, quando necessário, cria uma branch e uma PR que altera somente `CHANGELOG.md`.
+Após publicar e verificar uma release, `production.yml` executa `scripts/changelog-pull-request.cjs`. O script consulta todas as páginas de releases, compara o conteúdo com a `main` e, quando necessário, prepara uma branch que altera somente `CHANGELOG.md`. O resumo da execução apresenta um link para abrir a PR manualmente.
 
-A PR marca `outros` no template para não gerar outra release. A automação não atualiza branches protegidas, não aprova revisões e não faz merge. A equipe deve revisar as notas, autorizar os workflows caso o GitHub solicite e aguardar o Quality gate antes da integração.
+A equipe abre a PR pelo link indicado e marca `outros` no template para não gerar outra release. A política institucional que impede a criação de PRs por Actions permanece ativa. O script não consulta nem escreve na API de PRs; não atualiza branches protegidas, não aprova revisões e não faz merge. A equipe deve revisar as notas e aguardar o Quality gate antes da integração.
 
 Também é possível executar manualmente o workflow `Synchronize release changelog`, selecionando a `main`. Essa opção atende à recuperação de falhas e às mudanças posteriores nas notas de uma release. Falhas de permissão são informadas no job; a publicação já realizada não é desfeita.
 
@@ -26,13 +26,19 @@ As imagens candidatas continuam separadas das tags de release. Essa alteração 
 
 ## Validação após integração
 
-Validação local desta entrega: 51 testes dos scripts aprovados, sem falhas ou testes ignorados; workflows alterados aprovados pelo Actionlint 1.7.7. A abertura real da PR automática depende da execução no GitHub e ainda precisa ser confirmada após a integração. Os testes da aplicação e o gate de cobertura não foram alterados.
+Validação local: 51 testes dos scripts aprovados, sem falhas ou testes ignorados. A preparação da branch e a abertura manual da PR devem ser conferidas no GitHub após a integração. Os testes da aplicação e o gate de cobertura não foram alterados.
 
 1. Conferir o CHANGELOG com a página de releases, incluindo versões sem notas.
 2. Publicar a próxima release pelo fluxo normal e verificar o step de sincronização.
-3. Se houver diferenças, revisar a PR automática e confirmar que altera somente o changelog.
+3. Se houver diferenças, abrir a PR manualmente pelo link do resumo e confirmar que altera somente o changelog.
 4. Confirmar que o template está em `outros` e que o merge não gera nova release.
 5. No workflow manual de imagens candidatas, conferir o relatório do Trivy e o resultado do gate antes de qualquer publicação.
+
+## Diretório de artefatos do VSTest
+
+Na execução 43719464560, o backend ARM64 aprovou 573 testes, sem falhas ou ignorados, mas o processamento posterior dos artefatos foi recusado. O log apontou permissões de acesso a outros usuários e erro de abertura da pasta da sessão. Por isso, o job e a validação da imagem ARM64 não foram concluídos.
+
+O step passa a usar `umask 077` e uma pasta exclusiva criada por `mktemp -d` para `VSTEST_ARTIFACTS_DIRECTORY`. Isso restringe os novos arquivos e diretórios ao usuário da execução, sem desabilitar a verificação do VSTest. A confirmação da correção depende de nova execução no runner ARM64; o teste local de scripts não reproduz esse ambiente.
 
 ## Pendências fora desta entrega
 
