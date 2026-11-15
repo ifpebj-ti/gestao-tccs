@@ -23,7 +23,7 @@ public class VerifyAccessCodeUseCase(IUserGateway userGateway, IAppLoggerGateway
         var userId = user.Id;
         logger.LogInformation("Usuário encontrado para verificação. UserId: {UserId}", userId);
 
-        if (!user.AccessCode!.IsActive)
+        if (user.AccessCode is null || !user.AccessCode.IsActive)
         {
             logger.LogWarning(
                 "Falha na verificação para UserId {UserId}: O código de acesso já foi utilizado/inativado.", 

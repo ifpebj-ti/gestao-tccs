@@ -3,6 +3,7 @@ using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.AccessCode;
 using gestaotcc.Domain.Errors;
 
+using System.Security.Cryptography;
 namespace gestaotcc.Application.UseCases.AccessCode;
 public class ResendAccessCodeUseCase(IUserGateway userGateway, IEmailGateway emailGateway, IAppLoggerGateway<ResendAccessCodeUseCase> logger)
 {
@@ -26,6 +27,7 @@ public class ResendAccessCodeUseCase(IUserGateway userGateway, IEmailGateway ema
             user.Id);
 
         var newAccessCode = GenerateNewAccessCode(combination);
+        user.AccessCode ??= AccessCodeFactory.CreateAccessCodeEntity(combination);
         user.AccessCode!.Code = newAccessCode;
         user.AccessCode!.ExpirationDate = DateTime.UtcNow.AddMinutes(5);
         user.AccessCode.IsActive = true;
@@ -44,7 +46,7 @@ public class ResendAccessCodeUseCase(IUserGateway userGateway, IEmailGateway ema
                 "Falha ao enviar e-mail para o UserId: {UserId}. Motivo do gateway: {ErrorMessage}",
                 user.Id,
                 sendResult.Message);
-            return ResultPattern<string>.FailureResult(sendResult.Message, 500);
+            return ResultPattern<string>.FailureResult("Não foi possível enviar o código. Tente novamente mais tarde.", 500);
         }
 
         logger.LogInformation(
@@ -57,11 +59,10 @@ public class ResendAccessCodeUseCase(IUserGateway userGateway, IEmailGateway ema
 
     private string GenerateNewAccessCode(string combination)
     {
-        var chars = combination;
-        var random = new Random();
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
         var code = new string(Enumerable.Repeat(chars, 6)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+            .Select(s => s[RandomNumberGenerator.GetInt32(s.Length)]).ToArray());
         return code;
     }
 }

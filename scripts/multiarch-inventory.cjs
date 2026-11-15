@@ -6,7 +6,7 @@ const images = [
   'portainer/portainer-ee:latest', 'prom/prometheus:latest',
   'grafana/loki:latest', 'grafana/tempo:latest', 'grafana/grafana:latest',
   'axllent/mailpit:latest', 'node:24-alpine',
-  'mcr.microsoft.com/dotnet/sdk:8.0', 'mcr.microsoft.com/dotnet/aspnet:8.0-alpine'
+  'mcr.microsoft.com/dotnet/sdk:10.0', 'mcr.microsoft.com/dotnet/aspnet:10.0-alpine'
 ];
 let failed = false;
 for (const image of images) {

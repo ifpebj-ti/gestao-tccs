@@ -10,6 +10,8 @@ const output = path.resolve(
 async function run() {
   fs.mkdirSync(output, { recursive: true });
   const target = await (
+    // Local Chrome DevTools endpoint; it does not support TLS.
+    // nosemgrep: typescript.react.security.react-insecure-request.react-insecure-request
     await fetch('http://127.0.0.1:9230/json/new?about:blank', { method: 'PUT' })
   ).json();
   const socket = new WebSocket(target.webSocketDebuggerUrl);

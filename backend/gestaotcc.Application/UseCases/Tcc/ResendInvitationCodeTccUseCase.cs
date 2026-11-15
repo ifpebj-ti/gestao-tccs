@@ -2,6 +2,7 @@ using gestaotcc.Application.Factories;
 using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Errors;
 
+using System.Security.Cryptography;
 namespace gestaotcc.Application.UseCases.Tcc;
 
 public class ResendInvitationCodeTccUseCase(IEmailGateway emailGateway, ITccGateway tccGateway, IAppLoggerGateway<ResendInvitationCodeTccUseCase> logger)
@@ -25,13 +26,12 @@ public class ResendInvitationCodeTccUseCase(IEmailGateway emailGateway, ITccGate
         }
         
         logger.LogInformation("Convite encontrado para {UserEmail}. Gerando novo código...", userEmail);
-        var random = new Random();
         
         var chars = "ABCDEFGHIJKLMONPQRSTUVWXYZ123456789";
         var code = new string(Enumerable.Repeat(chars, 6)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+            .Select(s => s[RandomNumberGenerator.GetInt32(s.Length)]).ToArray());
         
-        logger.LogDebug("Novo código de convite gerado para {UserEmail}: {InviteCode}", userEmail, code);
+        logger.LogDebug("Novo código de convite gerado.");
         
         userInvite.Code = code;
         userInvite.IsValidCode = true;

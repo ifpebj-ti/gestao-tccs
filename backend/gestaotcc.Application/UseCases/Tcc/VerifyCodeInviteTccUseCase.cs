@@ -9,7 +9,7 @@ public class VerifyCodeInviteTccUseCase(IUserGateway userGateway, ITccGateway tc
     public async Task<ResultPattern<bool>> Execute(VerifyCodeInviteTccDTO data)
     {
         logger.LogInformation("Iniciando verificação de código de convite para o e-mail: {UserEmail}", data.UserEmail);
-        logger.LogDebug("Código de convite fornecido para {UserEmail}: {InviteCode}", data.UserEmail, data.Code);
+        logger.LogDebug("Verificando código de convite.");
 
         var user = await userGateway.FindByEmail(data.UserEmail);
 

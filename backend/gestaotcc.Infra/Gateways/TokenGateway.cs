@@ -19,17 +19,21 @@ public class TokenGateway(IConfiguration configuration) : ITokenGateway
 
         var expirationTime = jwtSettings.GetValue<int>("ACCESSTOKEN_EXPIRATION_TIME");
 
-        var keyEncoded = Encoding.ASCII.GetBytes(key);
+        var keyEncoded = Encoding.UTF8.GetBytes(key);
         var tokenDescriptor = new SecurityTokenDescriptor()
         {
+            Issuer = jwtSettings.GetValue<string>("ISSUER") ?? "gradusflow",
+            Audience = jwtSettings.GetValue<string>("AUDIENCE") ?? "gradusflow.web",
             Subject = new ClaimsIdentity(new Claim[]
             {
+                new Claim("securityStamp", gestaotcc.Infra.Security.AccessTokenStamp.Create(user.Id, user.Password, key)),
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim("userId", user.Id.ToString()),
                 new Claim("campiCourseId", user.CampiCourseId.ToString()!)
             }.Concat(user.Profile.Select(p => new Claim(ClaimTypes.Role, p.Role)))
             ),
-            Expires = DateTime.UtcNow.AddHours(expirationTime),
+            // Preserve the existing setting's unit (hours); do not silently turn 8 hours into 8 minutes.
+            Expires = DateTime.UtcNow.AddHours(expirationTime > 0 ? Math.Min(expirationTime, 8) : 1),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyEncoded), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);

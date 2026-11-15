@@ -9,12 +9,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using gestaotcc.WebApi.Config;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 namespace gestaotcc.WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[RequestSizeLimit(16 * 1024)]
+[EnableRateLimiting("public-auth")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public class AuthController(ILogger<AuthController> logger) : ControllerBase
 {
     /// <summary>
@@ -41,9 +46,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
-                : NotFound(useCaseResult.ErrorDetails);
+            return StatusCode(useCaseResult.ErrorDetails?.Status ?? 400, useCaseResult.ErrorDetails);
         }
 
         return Ok(new LoginResponseModel(useCaseResult.Data.AccessToken, useCaseResult.Data.IsDevTest, useCaseResult.Data.IsTempDevTestPassword));
@@ -54,12 +57,15 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("update-password")]
-    public async Task<ActionResult<MessageSuccessResponseModel>> Update([FromBody] UpdatePasswordDTO data, [FromServices] UpdatePasswordUseCase updatePasswordUseCase)
+    public async Task<ActionResult<MessageSuccessResponseModel>> Update([FromBody] UpdatePasswordDTO data, [FromServices] UpdatePasswordUseCase updatePasswordUseCase,
+        [FromServices] PasswordResetSession resetSession)
     {
         var validator = new UpdatePasswordValidator();
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
             throw new ValidatorException(validationResult.ToString());
+        if (!await resetSession.Validate(HttpContext, data.UserEmail))
+            return Unauthorized(new { message = "Valide novamente o código de recuperação neste navegador." });
         var useCaseResult = await updatePasswordUseCase.Execute(data);
 
         if (useCaseResult.IsFailure)
@@ -69,11 +75,10 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
-                : NotFound(useCaseResult.ErrorDetails);
+            return StatusCode(useCaseResult.ErrorDetails?.Status ?? 400, useCaseResult.ErrorDetails);
         }
 
+        resetSession.Clear(HttpContext);
         return Ok(new MessageSuccessResponseModel("Senha alterada com sucesso"));
     }
 
@@ -97,9 +102,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
             useCaseResult.ErrorDetails!.Type = endpointUrl;
 
             // Retornando erro apropriado
-            return useCaseResult.ErrorDetails?.Status is 409
-                ? Conflict(useCaseResult.ErrorDetails)
-                : NotFound(useCaseResult.ErrorDetails);
+            return StatusCode(useCaseResult.ErrorDetails?.Status ?? 400, useCaseResult.ErrorDetails);
         }
 
         return Ok(new MessageSuccessResponseModel("Senha criada com sucesso"));
@@ -199,12 +202,12 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpPost("banking-login")]
-    public async Task<ActionResult<LoginResponseModel>> BankingLogin([FromQuery] string token, [FromServices] BankingLoginUseCase bankingLoginUseCase)
+    public async Task<ActionResult<LoginResponseModel>> BankingLogin([FromBody] gestaotcc.WebApi.InputModel.BankingLoginInputModel data, [FromServices] BankingLoginUseCase bankingLoginUseCase)
     {
-        if (string.IsNullOrWhiteSpace(token))
+        if (string.IsNullOrWhiteSpace(data.Token) || data.Token.Length > 4096)
             return BadRequest(new { message = "Token não informado." });
 
-        var useCaseResult = await bankingLoginUseCase.Execute(token);
+        var useCaseResult = await bankingLoginUseCase.Execute(data.Token);
 
         if (!useCaseResult.IsSuccess)
         {

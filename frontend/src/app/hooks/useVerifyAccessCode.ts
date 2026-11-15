@@ -19,6 +19,7 @@ export function useVerifyAccessCode() {
     try {
       const response = await fetch(`${API_URL}/AccessCode/verify`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
         },

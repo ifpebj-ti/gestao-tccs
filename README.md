@@ -1,4 +1,5 @@
-![CI/CD](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production.yml/badge.svg)
+![CI](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production.yml/badge.svg)
 ![License](https://img.shields.io/github/license/ifpebj-ti/gestao-tccs)
 ![Last Commit](https://img.shields.io/github/last-commit/ifpebj-ti/gestao-tccs)
 ![Top Languages](https://img.shields.io/github/languages/top/ifpebj-ti/gestao-tccs)
@@ -8,7 +9,7 @@
 ![Open PRs](https://img.shields.io/github/issues-pr/ifpebj-ti/gestao-tccs)
 ![Forks](https://img.shields.io/github/forks/ifpebj-ti/gestao-tccs)
 ![Stars](https://img.shields.io/github/stars/ifpebj-ti/gestao-tccs)
-![Coverage](https://img.shields.io/badge/Coverage-14%25-brightgreen) <!-- COVERAGE_BADGE -->
+![Coverage](https://img.shields.io/badge/Coverage-95%25-brightgreen) <!-- COVERAGE_BADGE -->
 
 <!--![Tags Versions](https://img.shields.io/github/v/tag/ifpebj-ti/gestao-tccs)--> <!--Adicionar caso o sistema venha a ter versões separadas por tags-->
 
@@ -18,6 +19,10 @@ Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando
 
 ##  Tecnologias Utilizadas
 
+Preparação para a auditoria: [controles de CI/CD, evidências e pendências de infraestrutura](docs/security/ci-cd-auditoria.md). O deploy na OCI aguarda a liberação da conta; a implantação é manual e desativada por padrão na esteira.
+
+Entrega de segurança da aplicação: [tasks, testes, ativação e pendências para 11/11/2026](docs/security/tasks-seguranca-2026-11-11.md).
+
 - **Front-end:** React, Next.js
 - **Back-end:** .Net
 - **Banco de Dados:** PostgreSQL
@@ -26,7 +31,9 @@ Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando
 
 ##  Documentação e Wiki
 
-Acesse a Wiki do Projeto para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
+Acesse a [Wiki do Projeto](https://github.com/ifpebj-ti/gestao-tccs/wiki) para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
+
+Para contribuir, consulte o [guia de contribuição](CONTRIBUTING.md). Para relatar vulnerabilidades em privado, siga a [política de segurança](SECURITY.md).
 
 **Apresentações do Projeto:**
 *  [Sprint Report](https://www.canva.com/design/DAGyh_WU0jU/3eeINFORZW4p_HAiuHqmEg/view?utm_content=DAGyh_WU0jU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfb7fd3492f)

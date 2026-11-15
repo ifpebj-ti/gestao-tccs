@@ -71,7 +71,11 @@ export function AvaliacaoForm({ token, internalTccId, onSuccessCallback, hideLog
     const checkDocs = async () => {
       if (!success || !token) return;
       try {
-         const authRes = await fetch(`${API_URL}/Auth/banking-login?token=${token}`, { method: 'POST' });
+         const authRes = await fetch(`${API_URL}/Auth/banking-login`, {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ token })
+         });
          if (authRes.ok) {
            const { accessToken } = await authRes.json();
            setBankingJwt(accessToken);
