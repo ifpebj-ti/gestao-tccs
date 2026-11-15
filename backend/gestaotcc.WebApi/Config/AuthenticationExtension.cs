@@ -33,7 +33,7 @@ public static class AuthenticationExtension
             callbackPath = new PathString(redirectUri.AbsolutePath);
 
         services.AddScoped<GoogleOpenIdConnectEvents>();
-        services.AddAuthentication(options =>
+        var authBuilder = services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -86,33 +86,37 @@ public static class AuthenticationExtension
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
             options.SlidingExpiration = false;
-        })
-        .AddOpenIdConnect(GoogleAuthenticationDefaults.Scheme, options =>
-        {
-            options.Authority = "https://accounts.google.com";
-            options.ClientId = clientId;
-            options.ClientSecret = clientSecret;
-            options.CallbackPath = callbackPath;
-            options.SignInScheme = GoogleAuthenticationDefaults.ExternalCookieScheme;
-            options.ResponseType = OpenIdConnectResponseType.Code;
-            options.UsePkce = true;
-            options.SaveTokens = false;
-            options.GetClaimsFromUserInfoEndpoint = true;
-            options.RequireHttpsMetadata = true;
-            options.ProtocolValidator.RequireNonce = true;
-            options.Scope.Add("email");
-            options.Scope.Add("profile");
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                ValidateIssuer = true,
-                ValidIssuers = ["https://accounts.google.com", "accounts.google.com"],
-                ValidateAudience = true,
-                ValidAudience = clientId,
-                ValidateLifetime = true,
-                NameClaimType = "name"
-            };
-            options.EventsType = typeof(GoogleOpenIdConnectEvents);
         });
+
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            authBuilder.AddOpenIdConnect(GoogleAuthenticationDefaults.Scheme, options =>
+            {
+                options.Authority = "https://accounts.google.com";
+                options.ClientId = clientId;
+                options.ClientSecret = clientSecret;
+                options.CallbackPath = callbackPath;
+                options.SignInScheme = GoogleAuthenticationDefaults.ExternalCookieScheme;
+                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.UsePkce = true;
+                options.SaveTokens = false;
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.RequireHttpsMetadata = true;
+                options.ProtocolValidator.RequireNonce = true;
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidIssuers = ["https://accounts.google.com", "accounts.google.com"],
+                    ValidateAudience = true,
+                    ValidAudience = clientId,
+                    ValidateLifetime = true,
+                    NameClaimType = "name"
+                };
+                options.EventsType = typeof(GoogleOpenIdConnectEvents);
+            });
+        }
     }
 }
