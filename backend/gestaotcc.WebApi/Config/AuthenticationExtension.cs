@@ -1,5 +1,9 @@
 using System.Text;
+using gestaotcc.WebApi.Config;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -14,16 +18,27 @@ public static class AuthenticationExtension
     {
         var jwtSettings = configuration.GetSection("JWT_SETTINGS");
         var key = jwtSettings.GetValue<string>("TOKEN_KEY");
+
         if (string.IsNullOrWhiteSpace(key) || Encoding.UTF8.GetByteCount(key) < 32 ||
             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key))) == "5040FF848041B243F0FDE6B2D7738983B6873717895E0EE5557F87F689B4CEDC")
             throw new InvalidOperationException("Configure JWT_SETTINGS__TOKEN_KEY com pelo menos 32 bytes.");
 
-        services.AddAuthentication(options =>
+        var googleSettings = configuration.GetSection("GoogleAuth");
+        var clientId = googleSettings.GetValue<string>("ClientId") ?? string.Empty;
+        var clientSecret = googleSettings.GetValue<string>("ClientSecret") ?? string.Empty;
+        var configuredRedirectUri = googleSettings.GetValue<string>("RedirectUri");
+        var callbackPath = new PathString("/api/Auth/google/callback");
+
+        if (Uri.TryCreate(configuredRedirectUri, UriKind.Absolute, out var redirectUri))
+            callbackPath = new PathString(redirectUri.AbsolutePath);
+
+        services.AddScoped<GoogleOpenIdConnectEvents>();
+        var authBuilder = services.AddAuthentication(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults
-                .AuthenticationScheme;
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(x =>
+        })
+        .AddJwtBearer(x =>
         {
             x.RequireHttpsMetadata = true;
             x.SaveToken = false;
@@ -61,6 +76,47 @@ public static class AuthenticationExtension
                 ValidateAudience = true,
                 ValidAudience = jwtSettings.GetValue<string>("AUDIENCE") ?? "gradusflow.web"
             };
+        })
+        .AddCookie(GoogleAuthenticationDefaults.ExternalCookieScheme, options =>
+        {
+            options.Cookie.Name = GoogleAuthenticationDefaults.ExternalCookieName;
+            options.Cookie.Path = "/api/Auth/google";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+            options.SlidingExpiration = false;
         });
+
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            authBuilder.AddOpenIdConnect(GoogleAuthenticationDefaults.Scheme, options =>
+            {
+                options.Authority = "https://accounts.google.com";
+                options.ClientId = clientId;
+                options.ClientSecret = clientSecret;
+                options.CallbackPath = callbackPath;
+                options.SignInScheme = GoogleAuthenticationDefaults.ExternalCookieScheme;
+                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.UsePkce = true;
+                options.SaveTokens = false;
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.RequireHttpsMetadata = true;
+                options.ProtocolValidator.RequireNonce = true;
+                options.Scope.Add("email");
+                options.Scope.Add("profile");
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidIssuers = ["https://accounts.google.com", "accounts.google.com"],
+                    ValidateAudience = true,
+                    ValidAudience = clientId,
+                    ValidateLifetime = true,
+                    NameClaimType = "name"
+                };
+                options.EventsType = typeof(GoogleOpenIdConnectEvents);
+            });
+        }
     }
 }
