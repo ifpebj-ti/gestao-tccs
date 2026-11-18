@@ -11,51 +11,85 @@
 ![Stars](https://img.shields.io/github/stars/ifpebj-ti/gestao-tccs)
 ![Coverage](https://img.shields.io/badge/Coverage-95%25-brightgreen) <!-- COVERAGE_BADGE -->
 
-<!--![Tags Versions](https://img.shields.io/github/v/tag/ifpebj-ti/gestao-tccs)--> <!--Adicionar caso o sistema venha a ter versões separadas por tags-->
-
 # Sistema de Gestão de TCCs
 
-Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando processos como cadastro, orientação, defesa e avaliação.
+Aplicação web para gerenciar Trabalhos de Conclusão de Curso, apoiando os processos de cadastro, orientação, submissão de documentos, defesa e avaliação.
 
-##  Tecnologias Utilizadas
+## Tecnologias
 
-Preparação para a auditoria: [controles de CI/CD, evidências e pendências de infraestrutura](docs/security/ci-cd-auditoria.md). O deploy na OCI aguarda a liberação da conta; a implantação é manual e desativada por padrão na esteira.
+| Área | Tecnologias |
+| --- | --- |
+| Front-end | TypeScript, React, Next.js e Tailwind CSS |
+| Componentes de interface | shadcn/ui e Radix UI |
+| Formulários e validação | React Hook Form e Zod |
+| Back-end | C#, ASP.NET Core e .NET 10 |
+| Persistência | PostgreSQL e Entity Framework Core |
+| Autenticação | JWT e BCrypt |
+| Armazenamento de arquivos | Garage, com API compatível com Amazon S3 |
+| Tarefas em segundo plano | Hangfire |
+| Documentação da API | Swagger/OpenAPI |
+| Testes de back-end | xUnit, NSubstitute e FluentAssertions |
+| Contêineres e automação | Docker, Docker Compose e GitHub Actions |
+| Observabilidade | OpenTelemetry, Serilog, Grafana, Prometheus, Loki e Tempo |
 
-Entrega de segurança da aplicação: [tasks, testes, ativação e pendências para 11/11/2026](docs/security/tasks-seguranca-2026-11-11.md).
+## Organização do projeto
 
-- **Front-end:** React, Next.js
-- **Back-end:** .Net
-- **Banco de Dados:** PostgreSQL
+O sistema é dividido em front-end e API, com o back-end organizado em camadas:
 
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white) ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![PostgreSql](https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)
+- **frontend:** interface web desenvolvida com Next.js.
+- **backend/gestaotcc.WebApi:** endpoints HTTP e configuração da API.
+- **backend/gestaotcc.Application:** casos de uso e serviços da aplicação.
+- **backend/gestaotcc.Domain:** entidades e contratos do domínio.
+- **backend/gestaotcc.Infra:** persistência e integrações com serviços externos.
+- **backend/gestaotcc.Test:** testes automatizados do back-end.
+- **docs:** documentação técnica, segurança, infraestrutura e releases.
 
-##  Documentação e Wiki
+## Armazenamento de arquivos
 
-Acesse a [Wiki do Projeto](https://github.com/ifpebj-ti/gestao-tccs/wiki) para mais detalhes sobre requisitos, arquitetura e fluxo do sistema.
+O projeto utiliza o **Garage** para armazenar documentos e outros arquivos da aplicação.
 
-Para contribuir, consulte o [guia de contribuição](CONTRIBUTING.md). Para relatar vulnerabilidades em privado, siga a [política de segurança](SECURITY.md).
+O Garage é um serviço de armazenamento de objetos com API compatível com Amazon S3. A integração do back-end utiliza o **AWS SDK for .NET**, com endpoint, credenciais e bucket definidos na configuração do ambiente.
 
-**Apresentações do Projeto:**
-*  [Sprint Report](https://www.canva.com/design/DAGyh_WU0jU/3eeINFORZW4p_HAiuHqmEg/view?utm_content=DAGyh_WU0jU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfb7fd3492f)
-*  [Sprint Report Melhorias](https://canva.link/o1j60bny3bs02z6)
-  
-##  Protótipo
+O Garage é um componente de terceiros, com código-fonte e condições de licenciamento próprios:
 
-Confira o protótipo interativo no [Figma](https://www.figma.com/design/gaL3ToIzCBEcyh09FpyXE1/Gest%C3%A3o-de-TCCs---Gov.BR?node-id=4002-2726&t=aqQQCIGpvvDAxGUC-1).
+- [Site e documentação do Garage](https://garagehq.deuxfleurs.fr/)
+- [Repositório do Garage](https://git.deuxfleurs.fr/Deuxfleurs/garage)
 
-##  Minio
+## Qualidade e segurança
 
- Dependências de Terceiros
-Este sistema utiliza o serviço de armazenamento de objetos MinIO para gerenciamento de arquivos, como documentos de TCC.
+A esteira de CI/CD reúne testes automatizados, verificação de cobertura e análises de segurança do código, das dependências e da aplicação em execução.
 
- Licenciamento do MinIO
-O MinIO Server é licenciado sob a GNU Affero General Public License v3 (AGPL v3).
-De acordo com esta licença:
+O gate de cobertura exige pelo menos **95% de cobertura global de sequências do back-end**. O badge do README utiliza o percentual aprovado pelo CI da release; sua atualização é proposta por pull request e depende de revisão e integração.
 
-O código-fonte do MinIO está disponível em: https://github.com/minio/minio
+Consulte a documentação técnica:
 
-O texto completo da licença pode ser encontrado em: https://www.gnu.org/licenses/agpl-3.0.html
+- [Controles de segurança da aplicação, configuração e limitações](docs/security/tasks-seguranca-2026-11-11.md)
+- [Controles de CI/CD, evidências e pendências de infraestrutura](docs/security/ci-cd-auditoria.md)
+- [Política de segurança e reporte privado de vulnerabilidades](SECURITY.md)
 
-Este projeto utiliza o MinIO como um serviço externo via API REST, sem modificações em seu código-fonte.
+As evidências de testes e segurança devem ser consultadas na execução correspondente ao commit ou à release analisada.
 
-A integração é feita por meio do SDK oficial do MinIO para .NET, licenciado sob a Apache 2.0 License, o que permite seu uso livre nesta aplicação.
+## Releases e implantação
+
+O fluxo de publicação contempla imagens de front-end e back-end para **linux/amd64** e **linux/arm64**, disponibilizadas no GitHub Container Registry.
+
+- [Releases publicadas](https://github.com/ifpebj-ti/gestao-tccs/releases)
+- [Histórico de alterações](CHANGELOG.md)
+- [Execuções da esteira de publicação](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production.yml)
+
+A publicação de uma release é separada da implantação. O deploy na Oracle Cloud Infrastructure (OCI) depende do provisionamento do ambiente e de acionamento manual, permanecendo desativado por padrão na esteira.
+
+## Documentação
+
+A [Wiki do Projeto](https://github.com/ifpebj-ti/gestao-tccs/wiki) reúne informações sobre requisitos, arquitetura e fluxos do sistema.
+
+Para contribuir, consulte o [Guia de Contribuição](CONTRIBUTING.md), que descreve a organização das branches, commits, pull requests, validações e releases.
+
+### Apresentações
+
+- [Sprint Report](https://www.canva.com/design/DAGyh_WU0jU/3eeINFORZW4p_HAiuHqmEg/view?utm_content=DAGyh_WU0jU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hfb7fd3492f)
+- [Sprint Report — Melhorias](https://canva.link/o1j60bny3bs02z6)
+
+### Protótipo
+
+Confira o [protótipo interativo no Figma](https://www.figma.com/design/gaL3ToIzCBEcyh09FpyXE1/Gest%C3%A3o-de-TCCs---Gov.BR?node-id=4002-2726&t=aqQQCIGpvvDAxGUC-1).
