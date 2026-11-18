@@ -13,7 +13,7 @@
     <ItemGroup>
       <PackageReference Include="Hangfire.Core" Version="1.8.25" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="itext7" Version="9.7.0" />
+      <PackageReference Include="itext7" Version="9.8.0" />
       <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.7.0" />
       <PackageReference Include="Scriban" Version="7.4.0" />
     </ItemGroup>
