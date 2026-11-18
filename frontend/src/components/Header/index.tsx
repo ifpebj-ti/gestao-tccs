@@ -17,15 +17,15 @@ interface HeaderProps {
 export default function Header({ user, onLogout, navigation }: HeaderProps) {
   return (
     <header className="relative z-30 bg-[#FAF9F5]">
-      <div className="flex min-h-14 items-center justify-between px-4 md:px-9 lg:px-12">
-        <div className="flex items-center gap-1">
+      <div className="flex min-h-14 items-center justify-between px-3.5 sm:px-6 md:px-9 lg:px-12">
+        <div className="flex items-center gap-1 sm:gap-2">
           {navigation}
           <div className="md:hidden">
-            <AppBrand />
+            <AppBrand className="h-14 px-1 sm:px-3" />
           </div>
         </div>
-        <div className="flex min-w-0 items-center justify-end gap-4">
-          <div className="flex shrink-0 items-center gap-3">
+        <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {user && (
               <UserProfile
                 user={{

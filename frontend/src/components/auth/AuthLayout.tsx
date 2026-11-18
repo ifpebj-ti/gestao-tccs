@@ -10,42 +10,19 @@ interface AuthLayoutProps {
   gridCols?: string;
 }
 
-export function AuthLayout({ children, showBackToLogin = false, gridCols = '1.15fr 0.85fr' }: AuthLayoutProps) {
+export function AuthLayout({
+  children,
+  showBackToLogin = false,
+  gridCols = '1.15fr 0.85fr'
+}: AuthLayoutProps) {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        background: '#FAF9F5',
-        color: '#111827',
-        fontFamily: 'var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        overflowX: 'hidden'
-      }}
-    >
+    <div className="flex min-h-dvh flex-col justify-between overflow-x-hidden bg-[#FAF9F5] font-[family-name:var(--font-poppins)] text-gray-900">
       <AuthNavbar showBackToLogin={showBackToLogin} />
 
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '2.5rem 3rem',
-          maxWidth: '1240px',
-          width: '100%',
-          margin: '0 auto',
-          boxSizing: 'border-box'
-        }}
-      >
+      <main className="mx-auto box-border flex w-full max-w-[1240px] flex-1 items-center justify-center p-4 sm:p-8 md:p-10 lg:p-12">
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: gridCols,
-            gap: '4.5rem',
-            width: '100%',
-            alignItems: 'center'
-          }}
+          className="grid w-full items-center gap-8 sm:gap-12 lg:gap-16 [grid-template-columns:1fr] lg:[grid-template-columns:var(--auth-grid)]"
+          style={{ '--auth-grid': gridCols } as React.CSSProperties}
         >
           {children}
         </div>

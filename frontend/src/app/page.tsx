@@ -29,16 +29,9 @@ export default function LoginPage() {
       />
 
       {/* ── RIGHT: Seamless Flat Form (NO CARD) ── */}
-      <div style={{ paddingLeft: '1rem' }}>
+      <div className="w-full max-w-md mx-auto lg:max-w-none lg:pl-4">
         <h2
-          style={{
-            fontSize: '1.9rem',
-            fontWeight: 800,
-            letterSpacing: '-0.03em',
-            color: '#002B18',
-            margin: 0,
-            marginBottom: '2rem'
-          }}
+          className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002B18] mb-6 sm:mb-8"
         >
           Faça login para continuar
         </h2>

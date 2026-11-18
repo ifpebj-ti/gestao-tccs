@@ -5,7 +5,7 @@ export function PageTitle({ className, ...props }: ComponentProps<'h1'>) {
   return (
     <h1
       className={cn(
-        'font-[family-name:var(--font-poppins)] text-2xl font-semibold leading-tight tracking-tight text-[#002B18]',
+        'font-[family-name:var(--font-poppins)] text-2xl font-semibold sm:text-3xl leading-tight tracking-tight text-[#002B18]',
         className
       )}
       {...props}
