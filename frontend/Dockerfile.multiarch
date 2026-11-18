@@ -10,6 +10,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 COPY package*.json ./
 COPY scripts/minimatch-compat.cjs ./scripts/minimatch-compat.cjs
 RUN npm ci
+RUN node -e 'require("lightningcss").transform({ filename: "smoke.css", code: Buffer.from("a { color: red; }") })'
 COPY . .
 # Limit Next.js build workers on memory-constrained emulated builders.
 # This affects only this validation image, not the production Dockerfile.
