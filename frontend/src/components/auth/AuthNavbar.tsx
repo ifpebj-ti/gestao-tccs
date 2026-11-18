@@ -14,58 +14,35 @@ export function AuthNavbar({ showBackToLogin = false }: AuthNavbarProps) {
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   return (
-    <header
-      style={{
-        padding: '0.85rem 3rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: '1px solid #ECEAE2'
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+    <header className="flex items-center justify-between border-b border-[#ECEAE2] px-4 py-3 sm:px-8 lg:px-12">
+      <div className="flex items-center gap-3 sm:gap-4">
         <Image
           src={IFPELogo}
           alt="Instituto Federal de Pernambuco - Campus Belo Jardim"
-          height={36}
-          style={{ width: 'auto', height: '36px', objectFit: 'contain' }}
+          height={32}
+          className="h-7 w-auto object-contain sm:h-8"
           priority
         />
-        <div style={{ width: '1px', height: '22px', background: '#DDD9CD' }} />
+        <div className="h-5 w-[1px] bg-[#DDD9CD]" />
 
         {/* Gradus Flow com animação de inversão de cores */}
         <Link
           href="/"
-          style={{
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: '0.35rem',
-            cursor: 'pointer',
-            userSelect: 'none'
-          }}
+          className="flex cursor-pointer select-none items-baseline gap-1 no-underline"
           onMouseEnter={() => setIsLogoHovered(true)}
           onMouseLeave={() => setIsLogoHovered(false)}
         >
           <span
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 700,
-              color: isLogoHovered ? '#006633' : '#002B18',
-              letterSpacing: '-0.03em',
-              transition: 'color 0.25s ease'
-            }}
+            className={`text-base font-bold tracking-tight transition-colors duration-200 sm:text-lg ${
+              isLogoHovered ? 'text-[#006633]' : 'text-[#002B18]'
+            }`}
           >
             Gradus
           </span>
           <span
-            style={{
-              fontSize: '1.1rem',
-              fontWeight: 400,
-              color: isLogoHovered ? '#002B18' : '#006633',
-              letterSpacing: '-0.03em',
-              transition: 'color 0.25s ease'
-            }}
+            className={`text-base font-normal tracking-tight transition-colors duration-200 sm:text-lg ${
+              isLogoHovered ? 'text-[#00A355]' : 'text-[#1F2937]'
+            }`}
           >
             Flow
           </span>
@@ -75,31 +52,13 @@ export function AuthNavbar({ showBackToLogin = false }: AuthNavbarProps) {
       {showBackToLogin ? (
         <Link
           href="/"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            color: '#002B18',
-            textDecoration: 'none',
-            transition: 'color 0.15s ease'
-          }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#006633')}
-          onMouseLeave={e => (e.currentTarget.style.color = '#002B18')}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#002B18] no-underline transition-colors hover:text-[#006633] sm:text-sm"
         >
           <ArrowLeft size={14} />
-          <span>Voltar para o Login</span>
+          <span>Voltar ao Login</span>
         </Link>
       ) : (
-        <span
-          style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#6B7280',
-            letterSpacing: '0.04em'
-          }}
-        >
+        <span className="hidden text-xs font-semibold tracking-wider text-gray-500 sm:inline-block">
           Portal Acadêmico
         </span>
       )}

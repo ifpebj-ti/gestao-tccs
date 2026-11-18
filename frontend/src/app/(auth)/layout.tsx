@@ -128,7 +128,7 @@ export default function AuthRoutesLayout({
               )
             }
           />
-          <main className="min-w-0 px-6 pb-12 pt-3 sm:px-9 md:px-9 lg:px-12">
+          <main className="min-w-0 px-3.5 pb-12 pt-3 sm:px-6 md:px-9 lg:px-12">
             <div className="mx-auto w-full max-w-[1200px]">
               {failedTccCheck ? (
                 <div className="space-y-4">

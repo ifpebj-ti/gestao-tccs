@@ -18,7 +18,7 @@ export function AuthEditorialPanel({
   stat2Label = 'Integrado ao Campus'
 }: AuthEditorialPanelProps) {
   return (
-    <div>
+    <div className="hidden lg:block">
       <h1
         style={{
           fontSize: 'clamp(2.3rem, 3.8vw, 3.4rem)',

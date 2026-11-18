@@ -27,7 +27,7 @@ export const FeatureActionCard = forwardRef<HTMLButtonElement, Props>(
         ref={ref}
         {...props}
         className={cn(
-          'group group/notification h-fit w-full cursor-pointer rounded-xl bg-[#183E2D] p-7 text-left text-[#EFF2E8] transition-[background-color,transform,translate] duration-300 ease-out motion-safe:hover:-translate-y-0.5 hover:bg-[#002B18] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#006633] motion-reduce:transform-none motion-reduce:translate-y-0 motion-reduce:transition-none',
+          'group group/notification h-fit w-full cursor-pointer rounded-xl bg-[#183E2D] p-5 sm:p-7 text-left text-[#EFF2E8] transition-[background-color,transform,translate] duration-300 ease-out motion-safe:hover:-translate-y-0.5 hover:bg-[#002B18] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#006633] motion-reduce:transform-none motion-reduce:translate-y-0 motion-reduce:transition-none',
           className
         )}
       >
