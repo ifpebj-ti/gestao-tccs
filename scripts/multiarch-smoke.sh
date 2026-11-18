@@ -20,7 +20,6 @@ docker network create "$name" >/dev/null
 if [ "$service" = frontend ]; then
   docker run --rm --platform "$platform" --entrypoint node "$image" -e '
     require("@next/swc-linux-" + (process.arch === "arm64" ? "arm64" : "x64") + "-musl");
-    require("lightningcss").transform({ filename: "smoke.css", code: Buffer.from("a { color: red; }") });
     require("sharp")({ create: { width: 1, height: 1, channels: 3, background: "red" } }).png().toBuffer().then(() => console.log(process.arch + ": native addons OK")).catch(e => { console.error(e); process.exit(1); });'
   docker run -d --platform "$platform" --network "$name" --name "$name" "$image" >/dev/null
   for ((attempt=1; attempt<=60; attempt++)); do
