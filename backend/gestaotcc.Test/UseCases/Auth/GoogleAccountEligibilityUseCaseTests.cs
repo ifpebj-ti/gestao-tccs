@@ -116,6 +116,32 @@ public class GoogleAccountEligibilityUseCaseTests
         await _userGateway.DidNotReceive().Update(Arg.Any<UserEntity>());
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("   ")]
+    [InlineData("aluno@")]
+    public async Task Execute_RejectsMissingIdentityOrIncompleteEmail(string? email)
+    {
+        var identity = email is null ? null : new GoogleIdentityDTO(email, true);
+        var result = await CreateUseCase().Execute(identity!, AllowedDomains);
+
+        AssertRejected(result);
+        await _userGateway.DidNotReceive().FindByEmail(Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task Execute_IgnoresBlankDomainsAndNormalizesTheMatchingDomain()
+    {
+        const string email = "aluno@ifpe.edu.br";
+        var user = new UserEntity { Email = " ALUNO@IFPE.EDU.BR ", Status = " active " };
+        _userGateway.FindByEmail(email).Returns(user);
+
+        var result = await CreateUseCase().Execute(new GoogleIdentityDTO(email, true), [" ", " IFPE.EDU.BR "]);
+
+        Assert.True(result.IsSuccess);
+        Assert.Same(user, result.Data);
+    }
+
     private static void AssertRejected(gestaotcc.Domain.Errors.ResultPattern<UserEntity> result)
     {
         Assert.True(result.IsFailure);
