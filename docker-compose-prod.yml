@@ -63,7 +63,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${PORT_MACHINE_POSTGRES}:5432"
+      - "127.0.0.1:${PORT_MACHINE_POSTGRES}:5432"
     restart: unless-stopped
     networks:
       - back_net

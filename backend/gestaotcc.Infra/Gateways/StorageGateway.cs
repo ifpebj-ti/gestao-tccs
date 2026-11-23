@@ -109,7 +109,7 @@ public class StorageGateway : IStorageGateway
             {
                 listResponse = await _s3Client.ListObjectsV2Async(listRequest);
 
-                foreach (var obj in listResponse.S3Objects)
+                foreach (var obj in listResponse.S3Objects ?? [])
                 {
                     using var fileStream = new MemoryStream();
 
@@ -132,7 +132,7 @@ public class StorageGateway : IStorageGateway
 
                 listRequest.ContinuationToken = listResponse.NextContinuationToken;
             }
-            while (listResponse.IsTruncated);
+            while (listResponse.IsTruncated == true);
         }
 
         zipStream.Position = 0;
@@ -170,24 +170,24 @@ public class StorageGateway : IStorageGateway
         {
             listResponse = await _s3Client.ListObjectsV2Async(listRequest);
 
-            foreach (var obj in listResponse.S3Objects)
+            foreach (var obj in listResponse.S3Objects ?? [])
             {
                 yield return new StorageObjectDto(
                     obj.Key,
-                    (ulong)obj.Size,
-                    obj.LastModified.ToString("o")
+                    (ulong)obj.Size.GetValueOrDefault(),
+                    obj.LastModified.GetValueOrDefault().ToString("o")
                 );
             }
 
             listRequest.ContinuationToken = listResponse.NextContinuationToken;
         }
-        while (listResponse.IsTruncated);
+        while (listResponse.IsTruncated == true);
     }
 
     private async Task EnsureBucketExistsAsync()
     {
         var bucketsResponse = await _s3Client.ListBucketsAsync();
-        bool bucketExists = bucketsResponse.Buckets.Any(b => b.BucketName == _bucketName);
+        bool bucketExists = bucketsResponse.Buckets?.Any(b => b.BucketName == _bucketName) == true;
 
         if (!bucketExists)
         {

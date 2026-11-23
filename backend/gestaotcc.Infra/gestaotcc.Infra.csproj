@@ -8,9 +8,9 @@
 
     <ItemGroup>
       <PackageReference Include="BCrypt.Net-Core" Version="1.6.0" />
-      <PackageReference Include="itext" Version="9.7.0" />
-      <PackageReference Include="itext.bouncy-castle-adapter" Version="9.7.0" />
-      <PackageReference Include="itext.pdfhtml" Version="6.3.3" />
+      <PackageReference Include="itext" Version="9.8.0" />
+      <PackageReference Include="itext.bouncy-castle-adapter" Version="9.8.0" />
+      <PackageReference Include="itext.pdfhtml" Version="6.3.4" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.15">
         <PrivateAssets>all</PrivateAssets>
@@ -20,7 +20,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="AWSSDK.S3" Version="3.7.*" />
+      <PackageReference Include="AWSSDK.S3" Version="4.0.104.12" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
       <PackageReference Include="PDFsharp" Version="6.2.0" />
       <PackageReference Include="RestSharp" Version="112.1.0" />

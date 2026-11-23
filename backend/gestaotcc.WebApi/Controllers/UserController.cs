@@ -53,6 +53,8 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// <summary>
     /// Busca um usuário por meio do email
     /// </summary>
+    [Authorize(Roles = "ADMIN")]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     [HttpGet("email")]
     public async Task<ActionResult<FindUserByEmailDTO>> FindUserByEmail([FromQuery] string email, [FromServices] FindUserByEmailUseCase findUserByEmailUseCase)
     {
@@ -82,7 +84,9 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     [HttpGet("{userId}")]
     public async Task<ActionResult<UserResponse>> FindById([FromRoute] long userId, [FromServices] FindUserByIdUseCase findUserByIdUseCase)
     {
-        var useCaseResult = await findUserByIdUseCase.Execute(userId);
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var requesterId) || requesterId <= 0) return Unauthorized();
+
+        var useCaseResult = await findUserByIdUseCase.Execute(userId, requesterId);
         if(useCaseResult.IsFailure)
         {
 
@@ -114,7 +118,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
         var validationResult = await validator.ValidateAsync(data);
         if (!validationResult.IsValid)
         {
-            throw new ValidatorException("teste");
+            throw new ValidatorException(validationResult.ToString());
         }
         
         var campiCourseId = User.FindFirst("campiCourseId")?.Value;
@@ -147,6 +151,8 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// Auto cadastro de estudantes
     /// Para o campo de Shift, pode ser as seguintes opções: 1 = MORNING, 2 = AFTERNOON, 3 = NIGHT, 4 = DAYTIME
     /// </summary>
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
+    [RequestSizeLimit(16 * 1024)]
     [HttpPost("autoregister")]
     public async Task<ActionResult<MessageSuccessResponseModel>> AutoRegister([FromBody] AutoRegisterDTO data,
         [FromServices] AutoRegisterUseCase autoRegisterUseCase)

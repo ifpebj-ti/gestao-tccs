@@ -403,6 +403,11 @@ public class SignSignatureUseCaseTests
     [Fact]
     public async Task Execute_ShouldReturnConflict_WhenFileIsNotValidPdf()
     {
+        _tccGateway.FindTccById(1).Returns(new TccEntity
+        {
+            Documents = [new DocumentEntity { Id = 1 }],
+            UserTccs = [new UserTccEntity { UserId = 1, User = new UserEntity { Id = 1 } }]
+        });
         var corruptedBytes = new byte[] { 1, 2, 3, 4, 5 };
         var dto = new SignSignatureDTO(1, 1, 1, corruptedBytes, 1, "application/pdf", "corrupted.pdf");
 
@@ -410,6 +415,24 @@ public class SignSignatureUseCaseTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(409, result.ErrorDetails?.Status);
+    }
+
+    [Fact]
+    public async Task Execute_RejectsUnlinkedIdentityBeforeParsingOrStoringTheFile()
+    {
+        var document = new DocumentEntity { Id = 1, Signatures = [] };
+        _tccGateway.FindTccById(1).Returns(new TccEntity
+        {
+            Documents = [document],
+            UserTccs = [new UserTccEntity { UserId = 1, User = new UserEntity { Id = 1 } }]
+        });
+
+        var result = await _useCase.Execute(new(1, 1, 2, [1], 0.01, "application/pdf", "test.pdf"));
+
+        Assert.Equal(404, result.ErrorDetails?.Status);
+        Assert.Empty(document.Signatures);
+        await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
+        await _documentTypeGateway.DidNotReceive().FindAll();
     }
 
     [Fact]

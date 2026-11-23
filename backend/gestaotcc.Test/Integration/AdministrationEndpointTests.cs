@@ -318,7 +318,8 @@ public class AdministrationEndpointTests : IAsyncLifetime
             [new("Docente interno", "internal@example.com", "BANKING", studentId), new("Docente externo", "external@example.com", "BANKING")]);
         await Check(HttpMethod.Post, "/api/Tcc/schedule", schedule, HttpStatusCode.NotFound);
         await Check(HttpMethod.Put, "/api/Tcc/schedule", schedule, HttpStatusCode.NotFound);
-        await Check(HttpMethod.Put, "/api/Tcc/999999", new { title = "Título revisado", summary = "Resumo válido" }, HttpStatusCode.InternalServerError);
+        await Check(HttpMethod.Put, "/api/Tcc/999999", new { title = "Título revisado", summary = "Resumo válido" }, HttpStatusCode.NotFound);
+        await Check(HttpMethod.Get, "/api/Tcc/workflow?tccId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Signature/document?tccId=999999&documentId=999999&studentId=0", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Signature/document/download?tccId=999999&documentId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Signature/all/documents/download/999999", null, HttpStatusCode.NotFound);

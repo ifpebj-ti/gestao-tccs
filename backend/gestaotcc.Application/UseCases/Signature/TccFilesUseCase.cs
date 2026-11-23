@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using gestaotcc.Application.Gateways;
+using gestaotcc.Application.Helpers;
 using gestaotcc.Domain.Entities.Document;
 using gestaotcc.Domain.Entities.Tcc;
 using gestaotcc.Domain.Errors;
@@ -17,13 +18,7 @@ public class TccFilesUseCase(ITccGateway tccGateway, IUserGateway userGateway, I
         var user = await userGateway.FindById(userId);
         if (user is null || user.Status != "ACTIVE") return null;
         var tcc = await tccGateway.FindTccById(tccId);
-        if (tcc is null) return null;
-        var roles = user.Profile.Select(p => p.Role).ToArray();
-        var linked = tcc.UserTccs.Any(link => link.UserId == userId && roles.Contains(link.Profile.Role));
-        var scopedManagement = roles.Any(role => role is "COORDINATOR" or "SUPERVISOR" or "LIBRARY")
-            && user.CampiCourseId is > 0
-            && tcc.UserTccs.Any(link => link.Profile.Role == "STUDENT" && link.User.CampiCourseId == user.CampiCourseId);
-        return linked || roles.Contains("ADMIN") || scopedManagement ? tcc : null;
+        return tcc is not null && TccReadAuthorization.Allows(user, tcc) ? tcc : null;
     }
 
     public async Task<ResultPattern<List<TccFileDTO>>> List(long tccId, long userId)

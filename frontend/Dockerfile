@@ -17,7 +17,7 @@ COPY package*.json ./
 COPY scripts/minimatch-compat.cjs ./scripts/minimatch-compat.cjs
 
 # Instala as dependências
-RUN npm install
+RUN npm ci
 
 # Copia o restante da aplicação
 COPY . ./
@@ -28,17 +28,16 @@ RUN npm run build
 # Etapa 2: Imagem leve para rodar a aplicação
 FROM node:24-alpine AS runner
 
-# O runtime executa apenas Node; evita distribuir o npm e suas dependências.
-RUN npm uninstall --global npm
-
 # Define diretório de trabalho
 WORKDIR /app
 
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/scripts/minimatch-compat.cjs ./scripts/minimatch-compat.cjs
+RUN npm ci --omit=dev && npm uninstall --global npm
+
 # Copia apenas arquivos essenciais do build anterior
-COPY --from=builder /app/package.json ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
 
 RUN chown -R node:node /app/.next
 USER node
