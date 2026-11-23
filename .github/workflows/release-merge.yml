@@ -1,0 +1,83 @@
+name: Merge release PR
+
+on:
+  workflow_run:
+    workflows: [Continuous Integration (CI)]
+    types: [completed]
+    branches: [release-please--branches--main]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  auto-merge:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.path == '.github/workflows/ci.yml' &&
+      github.event.workflow_run.head_repository.id == github.event.repository.id
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify the open release PR at the commit tested by CI
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          CI_HEAD: ${{ github.event.workflow_run.head_sha }}
+          CI_ACTOR_ID: ${{ github.event.workflow_run.actor.id }}
+        run: |
+          [[ "$CI_RUN_ID" =~ ^[1-9][0-9]*$ && "$CI_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          jobs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID/jobs?filter=latest&per_page=100")
+          if ! jq -e '
+            any(.jobs[]; .name == "Quality gate" and .conclusion == "success") and
+            any(.jobs[]; .name == "Pipeline validation" and any(.steps[]?;
+              .name == "Verify the release PR changes only release metadata" and .conclusion == "success"))' <<< "$jobs" >/dev/null; then
+            echo 'The CI run did not pass the release PR checks.'
+            exit 0
+          fi
+          owner=${GITHUB_REPOSITORY%%/*}
+          pulls=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+            -f state=open -f base=main -f "head=$owner:release-please--branches--main")
+          pr=$(jq -c --arg repo "$GITHUB_REPOSITORY" --arg sha "$CI_HEAD" --arg actor "$CI_ACTOR_ID" '
+            .[] | select(.draft == false and .base.ref == "main" and .base.repo.full_name == $repo
+              and .head.repo.full_name == $repo and .head.ref == "release-please--branches--main"
+              and .head.sha == $sha and (.user.id | tostring) == $actor
+              and any(.labels[]; .name == "autorelease: pending"))' <<< "$pulls")
+          if [[ -z "$pr" ]]; then
+            echo 'No open release PR matches the commit and actor tested by CI.'
+            exit 0
+          fi
+          number=$(jq -er '.number' <<< "$pr")
+          base=$(jq -er '.base.sha' <<< "$pr")
+          [[ "$number" =~ ^[1-9][0-9]*$ && "$base" =~ ^[0-9a-f]{40}$ ]]
+          # Fetch only Git objects. All executed code comes from the default branch checkout.
+          git fetch --no-tags --depth=1 origin "$base" "$CI_HEAD"
+          node scripts/release-pr.cjs "$base" "$CI_HEAD"
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+      - name: Request a merge under the existing branch rules
+        if: steps.candidate.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          CI_ACTOR_ID: ${{ github.event.workflow_run.actor.id }}
+          CI_HEAD: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ steps.candidate.outputs.number }}
+        run: |
+          test -n "$GH_TOKEN" || { echo '::error::Configure RELEASE_PLEASE_TOKEN'; exit 1; }
+          test "$(gh api user --jq .id)" = "$CI_ACTOR_ID"
+          pr=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json state,baseRefName,headRefOid,autoMergeRequest)
+          if ! jq -e --arg sha "$CI_HEAD" '.state == "OPEN" and .baseRefName == "main" and .headRefOid == $sha' <<< "$pr" >/dev/null; then
+            echo 'The PR changed after validation.'
+            exit 0
+          fi
+          if jq -e '.autoMergeRequest != null' <<< "$pr" >/dev/null; then
+            echo 'GitHub is already waiting for the branch requirements.'
+            exit 0
+          fi
+          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --merge --auto --match-head-commit "$CI_HEAD"

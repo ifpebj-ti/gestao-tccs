@@ -81,6 +81,8 @@ As regras de proteção de branches e as permissões são configuradas no GitHub
 
 O workflow [Release Please](.github/workflows/release-please.yml) abre ou atualiza a PR de release na `main`. Use Conventional Commits nos commits que chegam à `main`. `fix:` incrementa o patch, `feat:` incrementa o minor e `BREAKING CHANGE:` ou `!` indica mudança incompatível. A PR contém a versão e o `CHANGELOG.md` gerados automaticamente.
 
-Antes de integrar a automação na `main`, configure o secret `RELEASE_PLEASE_TOKEN` com um token autorizado neste repositório, com escrita em Contents, Issues e Pull requests. A identidade do token deve poder abrir PRs, acionar os checks e publicar releases. As PRs da automação passam pelos checks e pelas revisões da branch protegida.
+Antes de integrar a automação na `main`, configure o secret `RELEASE_PLEASE_TOKEN` com um token pessoal de acesso restrito a este repositório, com escrita em Contents, Issues e Pull requests. Mantenha o check `Quality gate` obrigatório na `main` e habilite **Allow auto-merge** nas configurações gerais do repositório.
+
+Depois que o CI passa, o workflow [Merge release PR](.github/workflows/release-merge.yml) verifica se o PR veio da identidade do token e se o commit aprovado pelos testes altera apenas o manifesto de versão e o changelog. O GitHub faz o merge quando as regras da `main` são atendidas, incluindo as aprovações exigidas pela branch.
 
 O merge da PR de release dispara o [workflow de produção](.github/workflows/production.yml), que valida o commit, publica e verifica as imagens AMD64/ARM64 e publica a release com a mesma versão. O deploy na OCI é manual pelo mesmo workflow, com a opção `deploy` habilitada e o ambiente `production` configurado.

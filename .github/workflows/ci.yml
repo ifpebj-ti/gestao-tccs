@@ -21,6 +21,14 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+          fetch-depth: 2
+      - name: Verify the release PR changes only release metadata
+        if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'release-please--branches--main'
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          test "$(git rev-parse HEAD^2)" = "$PR_HEAD"
+          node scripts/release-pr.cjs "$(git rev-parse HEAD^1)" "$GITHUB_SHA"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
