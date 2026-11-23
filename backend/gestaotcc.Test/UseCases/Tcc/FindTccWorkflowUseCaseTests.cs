@@ -5,6 +5,7 @@ using gestaotcc.Domain.Entities.DocumentType;
 using gestaotcc.Domain.Entities.Profile;
 using gestaotcc.Domain.Entities.Signature;
 using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Entities.TccAdvisorChange;
 using gestaotcc.Domain.Entities.TccInvite;
 using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Entities.UserTcc;
@@ -19,6 +20,89 @@ public class FindTccWorkflowUseCaseTests
     private readonly IDocumentTypeGateway _documentTypeGateway = Substitute.For<IDocumentTypeGateway>();
     private readonly FindTccWorkflowUseCase _useCase;
     private readonly IAppLoggerGateway<FindTccWorkflowUseCase> _logger = Substitute.For<IAppLoggerGateway<FindTccWorkflowUseCase>>();
+
+    [Theory]
+    [InlineData("PENDING_SIGNATURES", true, true)]
+    [InlineData("APPROVED", true, false)]
+    [InlineData("PENDING_SIGNATURES", false, false)]
+    public async Task Execute_OnlyListsTheAdvisorChangeDocumentForAnActiveRequestWithMatchingAttachment(
+        string status, bool hasDocumentId, bool includeOptional)
+    {
+        var student = new UserEntity { Id = 11, Name = "Ana" };
+        var advisor = new UserEntity { Id = 12, Name = "Bia" };
+        var studentProfile = new ProfileEntity { Id = 1, Role = "STUDENT" };
+        var advisorProfile = new ProfileEntity { Id = 2, Role = "ADVISOR" };
+        var shared = new DocumentTypeEntity
+        {
+            Id = 10, Name = "Relatorio", SignatureOrder = 3, MethodSignature = "NOT_ONLY_DOCS",
+            Profiles = [studentProfile, advisorProfile]
+        };
+        var change = new DocumentTypeEntity
+        {
+            Id = 11, Name = "ANEXO IX", SignatureOrder = 3, MethodSignature = "ONLY_DOCS",
+            Profiles = [studentProfile, advisorProfile]
+        };
+        var excluded = new DocumentTypeEntity { Id = 12, Name = "ANEXO II", SignatureOrder = 3 };
+        studentProfile.DocumentTypes = [shared, change];
+        advisorProfile.DocumentTypes = [shared, change];
+        var tcc = new TccEntity
+        {
+            Id = 79,
+            Step = StepTccType.DEVELOPMENT_AND_MONITORING.ToString(),
+            UserTccs =
+            [
+                new UserTccEntity { User = student, UserId = student.Id, Profile = studentProfile },
+                new UserTccEntity { User = advisor, UserId = advisor.Id, Profile = advisorProfile }
+            ],
+            Documents =
+            [
+                new DocumentEntity { Id = 99, DocumentTypeId = shared.Id, DocumentType = shared, UserId = student.Id, User = student, Signatures = [] },
+                new DocumentEntity { Id = 100, DocumentTypeId = change.Id, DocumentType = change, UserId = advisor.Id, User = advisor, Signatures = [] },
+                new DocumentEntity { Id = 101, DocumentType = null! }
+            ],
+            AdvisorChanges =
+            [
+                new TccAdvisorChangeEntity { Id = 3, Status = status, DocumentId = hasDocumentId ? 100 : null }
+            ]
+        };
+        _tccGateway.FindTccWorkflow(tcc.Id, student.Id).Returns(tcc);
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity> { shared, change, excluded });
+
+        var result = await _useCase.Execute(tcc.Id, student.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(3, result.Data.Step);
+        Assert.Equal(includeOptional ? new[] { 10L, 11L } : new[] { 10L },
+            result.Data.Signatures.Select(signature => signature.DocumentId));
+        var sharedSignature = Assert.Single(result.Data.Signatures.Where(signature => signature.DocumentId == shared.Id));
+        var studentDetail = Assert.Single(sharedSignature.DetailsNotOnlyDocs!);
+        Assert.False(studentDetail.IsSigned);
+        Assert.False(Assert.Single(studentDetail.OtherSignatures).IsSigned);
+        if (includeOptional)
+        {
+            var optional = Assert.Single(result.Data.Signatures.Where(signature => signature.DocumentId == change.Id));
+            var detail = Assert.Single(optional.DetailsOnlyDocs!);
+            Assert.Equal(advisor.Id, detail.UserId);
+            Assert.Equal("ADVISOR", detail.UserProfile);
+            Assert.False(detail.IsSigned);
+        }
+        await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
+    }
+
+    [Theory]
+    [InlineData("etapa-desconhecida")]
+    [InlineData("999")]
+    public async Task Execute_DoesNotBuildWorkflowForAnUnsupportedStep(string step)
+    {
+        var tcc = new TccEntity { Id = 79, Step = step };
+        _tccGateway.FindTccWorkflow(79, 11).Returns(tcc);
+        _documentTypeGateway.FindAll().Returns(new List<DocumentTypeEntity>());
+
+        var result = await _useCase.Execute(79, 11);
+
+        Assert.Null(result.Data);
+        await _tccGateway.DidNotReceive().Update(Arg.Any<TccEntity>());
+    }
 
     public FindTccWorkflowUseCaseTests()
     {
