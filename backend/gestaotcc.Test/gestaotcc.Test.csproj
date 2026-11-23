@@ -35,4 +35,8 @@
       <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="../gestaotcc.WebApi/Templates/*-template.html" Link="Templates/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>
