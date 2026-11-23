@@ -22,7 +22,7 @@ public class StorageGatewayContractTests
     public async Task UploadPreservesBytesAndMimeAndCreatesOnlyMissingBucket(bool bucketExists)
     {
         s3.ListBucketsAsync(Arg.Any<CancellationToken>()).Returns(new ListBucketsResponse
-        { Buckets = bucketExists ? [new S3Bucket { BucketName = "isolated-test" }] : [] });
+        { Buckets = bucketExists ? [new S3Bucket { BucketName = "isolated-test" }] : null });
         byte[]? captured = null; PutObjectRequest? request = null;
         s3.PutObjectAsync(Arg.Any<PutObjectRequest>(), Arg.Any<CancellationToken>()).Returns(call =>
         {
@@ -77,6 +77,23 @@ public class StorageGatewayContractTests
         Assert.Equal("AAEC/w==", await Gateway().GetDocumentAsBase64("a.html", []));
         await Gateway().Remove("final/only-this.pdf");
         await s3.Received(1).DeleteObjectAsync(Arg.Is<DeleteObjectRequest>(r => r.Key == "final/only-this.pdf" && r.BucketName == "isolated-test"), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EmptyS3ResponseReturnsAnEmptyListingAndZip()
+    {
+        s3.ListObjectsV2Async(Arg.Any<ListObjectsV2Request>(), Arg.Any<CancellationToken>())
+            .Returns(new ListObjectsV2Response { S3Objects = null, IsTruncated = null });
+
+        await foreach (var _ in await Gateway().ListBuckets("signatures/empty/"))
+        {
+            Assert.Fail("An empty S3 response must not yield objects.");
+        }
+
+        var zip = await Gateway().DownloadFolderAsZip("empty");
+        using var archive = new ZipArchive(new MemoryStream(zip));
+        Assert.Empty(archive.Entries);
+        await s3.DidNotReceive().GetObjectAsync(Arg.Any<GetObjectRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
