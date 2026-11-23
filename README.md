@@ -19,7 +19,7 @@ Sistema web para gerenciar Trabalhos de Conclusão de Curso (TCC), automatizando
 
 ##  Tecnologias Utilizadas
 
-Preparação para a auditoria: [controles de CI/CD, evidências e pendências de infraestrutura](docs/security/ci-cd-auditoria.md). O deploy na OCI aguarda a liberação da conta; a implantação é manual e desativada por padrão na esteira.
+O ambiente OCI já está em uso segundo a equipe. A promoção de novas versões continua manual. [Controles de CI/CD e evidências de auditoria](docs/security/ci-cd-auditoria.md)
 
 Entrega de segurança da aplicação: [tasks, testes, ativação e pendências para 11/11/2026](docs/security/tasks-seguranca-2026-11-11.md).
 
@@ -28,6 +28,27 @@ Entrega de segurança da aplicação: [tasks, testes, ativação e pendências p
 - **Banco de Dados:** PostgreSQL
 
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white) ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white) ![PostgreSql](https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+    Browser[Navegador] --> Proxy[Nginx Proxy Manager]
+    Proxy --> Next[Frontend Next.js]
+    Proxy --> WebApi[API .NET 10 · WebApi]
+    WebApi --> Application[Application · casos de uso]
+    Application --> Domain[Domain · entidades e contratos]
+    WebApi --> Infra[Infra · implementações]
+    Infra --> Domain
+    Infra --> PostgreSQL[(PostgreSQL)]
+    Infra --> Garage[(Garage S3)]
+    WebApi --> Hangfire[Hangfire]
+    Hangfire --> PostgreSQL
+    WebApi -->|métricas| Prometheus[Prometheus]
+    WebApi -->|logs e traces| Observability[Loki e Tempo]
+    Prometheus --> Grafana[Grafana]
+    Observability --> Grafana
+```
 
 ##  Documentação e Wiki
 
@@ -43,19 +64,6 @@ Para contribuir, consulte o [guia de contribuição](CONTRIBUTING.md). Para rela
 
 Confira o protótipo interativo no [Figma](https://www.figma.com/design/gaL3ToIzCBEcyh09FpyXE1/Gest%C3%A3o-de-TCCs---Gov.BR?node-id=4002-2726&t=aqQQCIGpvvDAxGUC-1).
 
-##  Minio
+## Armazenamento de documentos
 
- Dependências de Terceiros
-Este sistema utiliza o serviço de armazenamento de objetos MinIO para gerenciamento de arquivos, como documentos de TCC.
-
- Licenciamento do MinIO
-O MinIO Server é licenciado sob a GNU Affero General Public License v3 (AGPL v3).
-De acordo com esta licença:
-
-O código-fonte do MinIO está disponível em: https://github.com/minio/minio
-
-O texto completo da licença pode ser encontrado em: https://www.gnu.org/licenses/agpl-3.0.html
-
-Este projeto utiliza o MinIO como um serviço externo via API REST, sem modificações em seu código-fonte.
-
-A integração é feita por meio do SDK oficial do MinIO para .NET, licenciado sob a Apache 2.0 License, o que permite seu uso livre nesta aplicação.
+A API guarda documentos e assinaturas no Garage por meio da interface compatível com S3 e do AWS SDK para .NET. As variáveis `STORAGE_*` do `.env.example` descrevem a conexão.

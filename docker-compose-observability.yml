@@ -2,33 +2,33 @@ version: "3.8"
 
 services:
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v3.16.0
     container_name: prometheus
     volumes:
       - ${HOME_PATH}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "${PORT_MACHINE_PROMETHEUS}:9090"
+      - "127.0.0.1:${PORT_MACHINE_PROMETHEUS}:9090"
     networks:
       - observability-net
     restart: unless-stopped
 
   loki:
-    image: grafana/loki
+    image: grafana/loki:3.7.10
     container_name: loki
     command: -config.file=/etc/loki/local-config.yaml
     ports:
-      - "${PORT_MACHINE_LOKI}:3100"
+      - "127.0.0.1:${PORT_MACHINE_LOKI}:3100"
     networks:
       - observability-net
     restart: unless-stopped
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:3.1.1
     container_name: tempo
     command: [ "-config.file=/etc/tempo.yaml" ]
     ports:
-      - "${PORT_FRONTEND_TEMPO}:3200"
-      - "${PORT_SEND_TRACES_TEMPO}:4318"
+      - "127.0.0.1:${PORT_FRONTEND_TEMPO}:3200"
+      - "127.0.0.1:${PORT_SEND_TRACES_TEMPO}:4318"
     volumes:
       - ${HOME_PATH}/tempo/tempo-config.yaml:/etc/tempo.yaml
       - tempo_data:/var/tempo
@@ -42,10 +42,10 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:13.3.1
     container_name: grafana
     ports:
-      - "${PORT_MACHINE_GRAFANA}:3000"
+      - "127.0.0.1:${PORT_MACHINE_GRAFANA}:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     depends_on:

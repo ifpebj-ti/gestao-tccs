@@ -1,4 +1,5 @@
 using gestaotcc.Application.Gateways;
+using gestaotcc.Application.Factories;
 using gestaotcc.Application.UseCases.Tcc;
 using gestaotcc.Application.UseCases.User;
 using gestaotcc.Domain.Entities.Profile;
@@ -94,4 +95,31 @@ public class AuditAccessPolicyTests
 
     private static UserEntity Account(long id, string role, long? course) =>
         new() { Id = id, Status = "ACTIVE", CampiCourseId = course, Profile = [new ProfileEntity { Role = role }] };
+
+    [Theory]
+    [InlineData(11L, "STUDENT", 7L, true, false)]
+    [InlineData(13L, "COORDINATOR", 7L, true, false)]
+    [InlineData(13L, "SUPERVISOR", 8L, false, true)]
+    [InlineData(13L, "ADVISOR", 7L, false, false)]
+    public void ProjectDetailsExposeOnlyTheRequestersOwnOrScopedCpf(
+        long id, string role, long course, bool first, bool second)
+    {
+        var studentA = Account(11, "STUDENT", 7);
+        var studentB = Account(12, "STUDENT", 8);
+        studentA.CPF = "11111111111";
+        studentB.CPF = "22222222222";
+        var advisor = Account(13, "ADVISOR", 7);
+        var tcc = new TccEntity
+        {
+            UserTccs = [Link(studentA), Link(studentB), Link(advisor)]
+        };
+
+        var students = TccInfoFactory.CreateFindTccDTO(tcc, Account(id, role, course)).InfoStudent;
+
+        Assert.Equal(first ? studentA.CPF : null, students[0].CPF);
+        Assert.Equal(second ? studentB.CPF : null, students[1].CPF);
+    }
+
+    private static UserTccEntity Link(UserEntity user) =>
+        new() { User = user, UserId = user.Id, Profile = user.Profile.Single() };
 }

@@ -30,8 +30,16 @@ async function main() {
     assert.match(csp || '', /frame-ancestors 'none'/);
     assert.match(csp || '', /object-src 'none'/);
     assert.match(csp || '', /form-action 'self'/);
-    await response.arrayBuffer();
-    console.log('PASS: HTTP 200, defensive headers and initial CSP; X-Powered-By absent.');
+    const nonce = /script-src 'self' 'nonce-([a-f0-9]+)'/.exec(csp || '')?.[1];
+    assert.ok(nonce, 'A production script nonce is required');
+    const html = await response.text();
+    const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+      .filter(([, attributes, source]) => source.trim() && !/\bsrc=/.test(attributes));
+    assert.ok(inlineScripts.length > 0, 'Expected inline bootstrap scripts');
+    for (const [, attributes] of inlineScripts) {
+      assert.ok(attributes.includes(`nonce="${nonce}"`), 'An inline script lacks the CSP nonce');
+    }
+    console.log('PASS: HTTP 200, defensive headers and matching CSP nonces.');
   } finally {
     if (server) {
       server.closeAllConnections();

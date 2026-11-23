@@ -8,10 +8,16 @@ using gestaotcc.WebApi.SchemaFilters;
 using gestaotcc.WebApi.Validators.User;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+var forwardedHeaders = TrustedProxy.FromConfiguration(builder.Configuration);
+if (builder.Environment.IsProduction() && builder.Configuration["AllowedHosts"] is null or "" or "*" &&
+    Uri.TryCreate(builder.Configuration["PublicApiUrl"], UriKind.Absolute, out var publicApi) &&
+    publicApi.Scheme is "http" or "https")
+{
+    builder.Configuration["AllowedHosts"] = $"{publicApi.IdnHost};backend;localhost;127.0.0.1;[::1]";
+}
 
 // Add services to the container.
 
@@ -40,6 +46,9 @@ builder.Services.AddOpenTelemetryExtension(builder.Environment, builder.Configur
 builder.Services.AddStorageExtension(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
+
+if (forwardedHeaders is not null)
+    app.UseForwardedHeaders(forwardedHeaders);
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<GlobalExceptionHandler>();

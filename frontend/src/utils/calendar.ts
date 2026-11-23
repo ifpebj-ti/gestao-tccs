@@ -79,7 +79,7 @@ export function buildOutlookCalendarUrl(data: CalendarEventData): string | null 
 }
 
 export function getDownloadIcsUrl(tccId: number | string): string {
-  const apiUrl = env('NEXT_PUBLIC_API_URL') || '';
-  return `${apiUrl}/api/Tcc/${tccId}/schedule/calendar.ics`;
+  const apiUrl = (env('NEXT_PUBLIC_API_URL') || '/api').replace(/\/$/, '');
+  return `${apiUrl}/Tcc/${encodeURIComponent(tccId)}/schedule/calendar.ics`;
 }
 

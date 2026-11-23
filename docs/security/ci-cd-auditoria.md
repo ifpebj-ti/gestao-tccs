@@ -4,7 +4,7 @@
 
 Esta implementação atende à parte de esteira do Documento de Entregas do Projeto Integrador do 7º Período (seções 10, 14.2, 14.3 e 15) e à atividade de Auditoria de Processo e de Qualidade de Desenvolvimento de Software. Os documentos são referências de critérios; sua presença não comprova conformidade.
 
-**Deploy na OCI pendente:** a conta da integrante responsável ainda aguarda liberação. Não há evidência de implantação, domínio, HTTPS, observabilidade ou rollback na OCI. O CI e o DAST temporário independem dessa conta. Não apresentar esses controles operacionais como concluídos.
+**Ambiente OCI em uso, segundo a equipe.** Cada nova implantação exige evidência da versão ativa, HTTPS, observabilidade e rollback. O CI e o ambiente temporário de testes são independentes da OCI.
 
 A integração preserva os testes da equipe e acrescenta cenários de segurança e integração. A esteira exige **95% de cobertura global de sequências do backend**, sem arredondar resultados para cima e sem excluir componentes para aumentar artificialmente o percentual. Isso não representa cobertura de frontend, 95% de cada módulo ou, isoladamente, qualidade dos testes.
 
@@ -70,15 +70,27 @@ Arquivos de workflow não ativam Branch Protection. Antes de classificar a matur
 
 Revisão técnica precisa ter discussão e verificação de critérios de aceite. Aprovação obrigatória não mede a qualidade da revisão. Registrar comentário técnico, resultado dos testes e decisão do revisor.
 
-## Deploy quando a OCI estiver disponível
+## Publicação e implantação na OCI
 
-O merge em `main` pode gerar imagens e release depois dos bloqueios, mas não chama Portainer. O input `deploy` de production.yml é `false` por padrão. Manter assim até terminar provisionamento e validação do ambiente.
+O merge em `main` pode gerar imagens e release depois dos bloqueios. A atualização pelo Portainer usa o input manual `deploy` de `production.yml`, desativado por padrão.
 
 Antes de optar por deploy: configurar VM, firewall, domínio, certificado válido e proxy; armazenamento privado; segredos externos ao Git; banco persistente com backup e restauração testada; serviços no Portainer; observabilidade e verificação de saúde. Os dois webhooks devem existir e usar HTTPS válido. Certificado inválido falha: não recolocar `curl -k`.
 
 O opt-in manual atual **cria uma nova release validada e então chama os webhooks**. Não é um mecanismo de promoção independente de uma release antiga. Os dois POSTs não são atômicos: se o segundo falhar, o primeiro pode já ter atualizado. A promoção de `latest` também não constitui transação entre os serviços. Antes do primeiro deploy real, definir promoção por digest/versão, smoke externo e rollback para os digests anteriores; testar em staging. A execução não prova sucesso operacional apenas porque os webhooks responderam.
 
 ## Evidências para entregar aos auditores
+
+### Proxy, hosts e portas administrativas
+
+Configure `TRUSTED_API_PROXIES` com os IPs exatos dos proxies que fazem a última conexão com a API, separados por `;`. Reserve endereços estáveis para esses proxies e confirme os endereços no ambiente antes de aplicar o Compose. Quando a lista está vazia, o Kestrel usa o endereço da conexão direta. O recurso aceita apenas um salto e encaminha endereço e protocolo, sem substituir o `Host`.
+
+Em produção, `NEXT_PUBLIC_API_URL` fornece o host público para a filtragem da API. Use `ALLOWED_API_HOSTS` para listar explicitamente outros hosts legítimos, como domínios internos de monitoração. Após configurar o proxy, verifique o HTTPS, o login Google e o rate limit com duas origens autorizadas. As interfaces administrativas são acessíveis pela rede interna ou via túnel SSH. As portas públicas 80 e 443 continuam no proxy.
+
+### Migração da sessão para cookies HttpOnly
+
+O frontend chama a API com o JWT e usa parte das claims para orientar a navegação. A migração terá um proxy de aplicação em Route Handlers do Next.js. O servidor do frontend receberá a sessão do login local ou concluirá a troca de um código de uso único no retorno do Google. O cookie será `HttpOnly`, `Secure` em HTTPS e com prazo limitado, e o BFF encaminhará a credencial à API do lado do servidor.
+
+As telas passarão a ler apenas os dados de apresentação de uma rota de sessão. Operações mutáveis no BFF terão validação de origem e proteção CSRF. A avaliação externa continuará usando o fluxo próprio de convite. A validação deve cobrir login local e Google, troca de senha, expiração, logout, uploads multipart, arquivos e permissões. A ativação depende da configuração de OAuth e da validação em ambiente de teste.
 
 Para cada evidência registrar commit SHA, URL do workflow/run e artifact, data, ferramenta/versão e conclusão. Os artifacts expiram em 14 dias; exportar para o dossiê de auditoria antes disso, com acesso restrito. Relatórios podem conter caminhos, detalhes de falhas e dados sintéticos; mesmo com segredos redigidos, revisar o conteúdo antes de compartilhá-lo.
 
@@ -91,7 +103,7 @@ Para cada evidência registrar commit SHA, URL do workflow/run e artifact, data,
 | DAST automatizado temporário | Relatórios por serviço e logs de criação/limpeza | Configurado; escopo autenticado pendente |
 | Rastreabilidade | Issue → branch → PR → execução → release/demo | Exige uso real pela equipe |
 | Publicação multiarch | Run da release + digests e arquitetura de cada imagem | Fluxo existente preservado; nova execução pendente |
-| Deploy e HTTPS | URL OCI, certificado, logs, smoke e rollback | Bloqueado pela liberação da conta OCI |
+| Deploy e HTTPS | URL OCI, certificado, logs, smoke e rollback | Ambiente informado pela equipe. Anexar evidências operacionais às issues de implantação. |
 | Qualidade, Wiki e Projects | Painel da ferramenta de qualidade, links e histórico | Fora da validação apenas local; verificar no GitHub |
 
 Não atribuir automaticamente score 5. O documento exige governança efetiva e evidências de funcionamento, além do YAML.
@@ -113,7 +125,7 @@ As descobertas desta seção registram a primeira inspeção e o primeiro DAST. 
 | SEC-04 | ZAP local apontou ausência de nosniff/Permissions-Policy e exposição de X-Powered-By no frontend (risco baixo) | Aplicar cabeçalhos e remover identificação desnecessária do servidor | Frontend + DevSecOps | Respostas HTTP e novo scan comprovam correção |
 | SEC-05 | ZAP local recebeu HTTP 500 e indicou detalhes de erro em /api/Tcc/code/send e /api/Tcc/code/verify (risco baixo) | Reproduzir com serviços de teste completos; conferir validação, tratamento de exceções e ausência de dados sensíveis | Backend + DevSecOps | Falhas esperadas têm respostas controladas; origem confirmada e novo scan registrado |
 | TEST-01 | Manter cobertura após alterações | Preservar testes existentes e ampliar cenários dos fluxos críticos | Equipe | Relatório global real ≥95% |
-| OPS-01 | OCI ainda indisponível | Acompanhar liberação e depois provisionar staging | Responsável OCI | Ambiente e checklist operacional validados |
+| OPS-01 | Validação da versão e do proxy na OCI | Anexar evidências da versão ativa, do HTTPS e do rollback às issues de infraestrutura | Responsável OCI | Ambiente e checklist operacional validados |
 
 Criar issues reais para os itens e preencher responsáveis, sprint e links. Esta tabela não cria issues nem comprova correções em execução. Não remover histórico nem adicionar suppressions amplas para fazer um scanner passar. Falso positivo precisa de justificativa específica, revisão e prazo.
 

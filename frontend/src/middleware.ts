@@ -64,13 +64,44 @@ function hasPermission(
   return false;
 }
 
+function continueWithContentSecurityPolicy(request: NextRequest) {
+  const nonce = crypto.randomUUID().replaceAll('-', '');
+  const runtime = process.env;
+  const configuredApi = runtime.NEXT_PUBLIC_API_URL;
+  const api = configuredApi && URL.canParse(configuredApi) ? new URL(configuredApi) : null;
+  const apiOrigin = api && ['https:', 'http:'].includes(api.protocol) ? ` ${api.origin}` : '';
+  const development = process.env.NODE_ENV === 'development';
+  const policy = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}'${development ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    `connect-src 'self'${apiOrigin}${development ? ' ws: wss:' : ''}`,
+    `img-src 'self' data: blob:${apiOrigin}`,
+    "frame-src 'self' blob:",
+    "worker-src 'self' blob:",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'"
+  ].join('; ');
+
+  const headers = new Headers(request.headers);
+  headers.set('x-nonce', nonce);
+  headers.set('Content-Security-Policy', policy);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set('Content-Security-Policy', policy);
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get('token')?.value;
   const tempToken = request.cookies.get('access_token_temp')?.value;
 
   const protectedRoute = Object.keys(protectedRoutes).find((route) =>
-    path.startsWith(route)
+    path === route || path.startsWith(`${route}/`)
   );
 
   if (protectedRoute) {
@@ -132,7 +163,7 @@ export function middleware(request: NextRequest) {
   if (isTempProtectedRoute) {
     // Permitir acesso se o cookie temporário existir (código de verificação validado)
     if (tempToken) {
-      return NextResponse.next();
+      return continueWithContentSecurityPolicy(request);
     }
     // Verificar o token principal se o temporário não existir
     if (token) {
@@ -140,7 +171,7 @@ export function middleware(request: NextRequest) {
         const decoded = jwtDecode<DecodedToken>(token);
         // Permitir acesso se for usuário de teste ou estiver com senha padrão
         if (decoded.isTestUser || decoded.isDefaultPassword) {
-          return NextResponse.next();
+          return continueWithContentSecurityPolicy(request);
         }
       } catch {
         // Ignora erro de decodificação e redireciona
@@ -149,25 +180,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  return NextResponse.next();
+  return continueWithContentSecurityPolicy(request);
 }
 
 export const config = {
   matcher: [
-    '/homePage',
-    '/profile',
-    '/instituicoes/:path*',
-    '/newTCC',
-    '/receivedProposals',
-    '/newUser',
-    '/newPassword',
-    '/ongoingTCCs/:path*',
-    '/myTCC/:path*',
-    '/completedTCCs/:path*',
-    '/pendingSignatures/:path*',
-    '/libraryPending/:path*',
-    '/coordinationPending/:path*',
-    '/users/:path*',
-    '/semestres/:path*'
+    '/((?!api/|_next/static|_next/image|.*\\.[^/]+$).*)'
   ]
 };

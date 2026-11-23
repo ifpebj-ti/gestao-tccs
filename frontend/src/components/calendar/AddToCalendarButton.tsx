@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
 import { Calendar, ChevronDown, Download, ExternalLink } from 'lucide-react';
 import { Button, ButtonProps } from '@/components/ui/button';
 import {
@@ -37,9 +39,26 @@ export function AddToCalendarButton({
   const outlookUrl = buildOutlookCalendarUrl(eventData);
   const icsUrl = getDownloadIcsUrl(eventData.tccId);
 
-  const handleDownloadIcs = () => {
-    // Open or download the ICS file directly
-    window.open(icsUrl, '_blank');
+  const handleDownloadIcs = async () => {
+    const token = Cookies.get('token');
+    if (!token) {
+      toast.error('Faça login para baixar o calendário.');
+      return;
+    }
+
+    try {
+      const response = await fetch(icsUrl, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error('Falha ao baixar o calendário.');
+
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `defesa-tcc-${eventData.tccId}.ics`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Não foi possível baixar o calendário.');
+    }
   };
 
   return (

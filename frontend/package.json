@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:ui": "node --test tests/*.test.cjs",
+    "test:coverage": "node --test --experimental-test-coverage tests/*.test.cjs",
     "test:browser": "node scripts/preview-shell.cjs",
     "postinstall": "node scripts/minimatch-compat.cjs"
   },
@@ -27,7 +28,6 @@
     "@radix-ui/react-tabs": "^1.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "frontend": "file:",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "lightningcss": "1.33.0",

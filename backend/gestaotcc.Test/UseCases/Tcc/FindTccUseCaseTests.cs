@@ -121,7 +121,7 @@ public class FindTccUseCaseTests
         Assert.Single(dto.InfoStudent);
         Assert.Equal("Aluno 1", dto.InfoStudent[0].Name);
         Assert.Equal("123", dto.InfoStudent[0].Registration);
-        Assert.Equal("11122233344", dto.InfoStudent[0].CPF);
+        Assert.Null(dto.InfoStudent[0].CPF);
         Assert.Equal("Engenharia", dto.InfoStudent[0].Course);
         Assert.Equal("aluno1@email.com", dto.InfoStudent[0].Email);
 

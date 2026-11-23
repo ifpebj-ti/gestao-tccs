@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { PublicEnvScript } from 'next-runtime-env';
 
 import { ToastContainer } from 'react-toastify';
@@ -21,19 +22,21 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang="pt-br">
       <head>
-        <PublicEnvScript />
+        <PublicEnvScript nonce={nonce} />
       </head>
       <body className="antialiased">
         {children}
         <ToastContainer
+          nonce={nonce}
           position="bottom-right"
           autoClose={3000}
           hideProgressBar={false}

@@ -29,7 +29,7 @@ Credenciais devem ser fornecidas pela configuração do ambiente, sem inclusão 
 
 Quando uma credencial for exposta, remover o valor do código não encerra o tratamento. É necessário substituir ou revogar a credencial nos ambientes afetados e verificar os serviços que ainda possam utilizá-la. Não registre a nova credencial em issues, comentários ou evidências.
 
-O deploy na OCI ainda depende do provisionamento da conta. A aprovação dos testes e scans não comprova implantação, proteção da infraestrutura ou ausência de vulnerabilidades.
+O sistema está na OCI segundo a equipe. A implantação de cada versão, a configuração de segurança ativa e o rollback exigem evidências do ambiente.
 
 ## Controles e limitações
 
