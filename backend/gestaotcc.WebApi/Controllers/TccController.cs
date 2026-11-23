@@ -144,10 +144,9 @@ public class TccController : ControllerBase
     public async Task<ActionResult<FindTccDTO>> FindTcc([FromQuery] long tccId,
         [FromServices] FindTccUseCase findTccUseCase)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId) || userId <= 0) return Unauthorized();
 
-        var result = await findTccUseCase.Execute(tccId);
+        var result = await findTccUseCase.Execute(tccId, userId);
         if (result.IsFailure)
         {
             // Construindo a URL dinamicamente
@@ -166,13 +165,14 @@ public class TccController : ControllerBase
     [Authorize]
     [HttpGet("workflow")]
     public async Task<ActionResult<FindTccWorkflowDTO>> FindTccWorkflow([FromServices] FindTccWorkflowUseCase findWorkflowUseCase,
-        [FromQuery] long? tccId)
+        [FromQuery] long? tccId, [FromServices] TccAccessUseCase access)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (tccId.HasValue && !await access.CanRead(tccId.Value, userId)) return NotFound();
 
-        var usecaseResult = await findWorkflowUseCase.Execute(tccId, long.Parse(userIdClaim));
-        return Ok(usecaseResult.Data);
+        var result = await findWorkflowUseCase.Execute(tccId, userId);
+        if (result.IsFailure) return NotFound(result.ErrorDetails);
+        return Ok(result.Data);
     }
 
     /// <summary>
@@ -210,7 +210,7 @@ public class TccController : ControllerBase
     [Authorize(Roles = "STUDENT")]
     [HttpPost("cancellation/request")]
     public async Task<ActionResult<MessageSuccessResponseModel>> RequestCancellation([FromBody] RequestCancellationTccDTO data,
-        [FromServices] RequestCancellationTccUseCase requestCancellationTccUseCase)
+        [FromServices] RequestCancellationTccUseCase requestCancellationTccUseCase, [FromServices] TccAccessUseCase access)
     {
         var validator = new RequestCancellationTccValidator();
         var validationResult = await validator.ValidateAsync(data);
@@ -219,8 +219,8 @@ public class TccController : ControllerBase
             throw new ValidationException(validationResult.ToString());
         }
 
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanRequestCancellation(data.IdTcc, userId)) return NotFound();
 
         var result = await requestCancellationTccUseCase.Execute(data);
         if (result.IsFailure)
@@ -242,10 +242,10 @@ public class TccController : ControllerBase
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpPost("cancellation/approve")]
     public async Task<ActionResult<MessageSuccessResponseModel>> ApproveCancellation([FromQuery] long tccId,
-        [FromServices] ApproveCancellationTccUseCase approveCancellationTccUseCase)
+        [FromServices] ApproveCancellationTccUseCase approveCancellationTccUseCase, [FromServices] TccAccessUseCase access)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanManage(tccId, userId)) return NotFound();
 
         var result = await approveCancellationTccUseCase.Execute(tccId);
         if (result.IsFailure)
@@ -523,8 +523,11 @@ public class TccController : ControllerBase
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpPut("invite/code/{tccId}")]
     public async Task<ActionResult<MessageSuccessResponseModel>> ResendInvitationCode([FromRoute] long tccId, [FromBody] string userEmail,
-        [FromServices] ResendInvitationCodeTccUseCase resendInvitationCodeTccUseCase)
+        [FromServices] ResendInvitationCodeTccUseCase resendInvitationCodeTccUseCase, [FromServices] TccAccessUseCase access)
     {
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanManage(tccId, userId)) return NotFound();
+
         var useCaseResult = await resendInvitationCodeTccUseCase.Execute(userEmail, tccId);
         if (useCaseResult.IsFailure)
         {
@@ -547,7 +550,7 @@ public class TccController : ControllerBase
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpPut("{tccId}")]
     public async Task<ActionResult<MessageSuccessResponseModel>> Update([FromBody] UpdateTccDTO data,
-        [FromRoute] long tccId, [FromServices] UpdateTccUseCase updateTccUseCase)
+        [FromRoute] long tccId, [FromServices] UpdateTccUseCase updateTccUseCase, [FromServices] TccAccessUseCase access)
     {
         var validator = new UpdateTccValidator();
         var validationResult = await validator.ValidateAsync(data);
@@ -556,6 +559,9 @@ public class TccController : ControllerBase
             throw new ValidationException(validationResult.ToString());
         }
         
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanManage(tccId, userId)) return NotFound();
+
         var useCaseResult = await updateTccUseCase.Execute(data, tccId);
         if (useCaseResult.IsFailure)
         {
@@ -1090,6 +1096,9 @@ public class TccController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    private bool TryGetRequester(out long userId) =>
+        long.TryParse(User.FindFirst("userId")?.Value, out userId) && userId > 0;
 }
 
 

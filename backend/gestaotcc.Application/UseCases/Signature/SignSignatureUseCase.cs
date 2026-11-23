@@ -17,6 +17,9 @@ namespace gestaotcc.Application.UseCases.Signature;
 
 public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITccGateway tccGateway, IStorageGateway storageGateway, IEmailGateway emailGateway, IUserGateway userGateway, IAppLoggerGateway<SignSignatureUseCase> logger)
 {
+    public const int MaxFileBytes = 5 * 1024 * 1024;
+    public const int MaxRequestBytes = MaxFileBytes + 64 * 1024;
+
     private readonly Dictionary<StepTccType, int> _stepSignatureOrderMap = new()
     {
         { StepTccType.PROPOSAL_REGISTRATION, 1 },
@@ -38,24 +41,33 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
     {
         logger.LogInformation("Iniciando processo de assinatura de documento. TccId: {TccId}, DocumentId: {DocumentId}, UserId: {UserId}", data.TccId, data.DocumentId, data.UserId);
 
-        if (!IsValidFile(data))
+        if (data.File.Length == 0 || data.File.Length > MaxFileBytes ||
+            data.FileSize > 5 || data.FileContentType != "application/pdf")
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Arquivo inválido. Tamanho: {FileSize}MB, ContentType: {ContentType}", data.UserId, data.FileSize, data.FileContentType);
             return InvalidFileResult();
         }
 
         var tcc = await tccGateway.FindTccById(data.TccId);
+        var document = tcc?.Documents.FirstOrDefault(item => item.Id == data.DocumentId);
+        if (tcc is null || document is null)
+            return ResultPattern<string>.FailureResult("Documento indisponível.", 404);
+
+        var user = GetUserInTcc(tcc, document.Id, data.UserId);
+        if (user is null)
+            return ResultPattern<string>.FailureResult("Documento indisponível.", 404);
+
+        if (!HasPdfSignature(data.File))
+            return InvalidFileResult();
+
         var allDocumentTypes = await documentTypeGateway.FindAll();
 
-        var user = GetUserInTcc(tcc, data.UserId);
         if (UserAlreadySigned(tcc, data.DocumentId, user.Id))
         {
             logger.LogWarning("Falha na assinatura para UserId {UserId}: Usuário já assinou o DocumentId {DocumentId}.", data.UserId, data.DocumentId);
             return InvalidFileResult();
         }
 
-        var document = tcc.Documents.First(d => d.Id == data.DocumentId);
-        
         var expectedPrefix = document.DocumentType.Name.Split('-')[0];
         var expectedNameNormalized = new string(RemoveDiacritics(expectedPrefix).Where(char.IsLetterOrDigit).ToArray()).ToUpperInvariant();
         
@@ -411,16 +423,11 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         }
     }
 
-    private static bool IsValidFile(SignSignatureDTO data)
+    private static bool HasPdfSignature(byte[] file)
     {
-        if (data.FileSize > 5 || data.FileContentType != "application/pdf")
-        {
-            return false;
-        }
-
         try
         {
-            using var stream = new MemoryStream(data.File);
+            using var stream = new MemoryStream(file);
             using var pdfReader = new PdfReader(stream);
             using var pdfDoc = new PdfDocument(pdfReader);
             var signUtil = new SignatureUtil(pdfDoc);
@@ -456,20 +463,16 @@ public class SignSignatureUseCase(IDocumentTypeGateway documentTypeGateway, ITcc
         return text;
     }
 
-    private static UserEntity GetUserInTcc(TccEntity tcc, long userId)
+    private static UserEntity? GetUserInTcc(TccEntity tcc, long documentId, long userId)
     {
-        var utUser = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == userId)?.User;
+        var utUser = tcc.UserTccs.FirstOrDefault(ut => ut.UserId == userId && ut.User?.Id == userId)?.User;
         if (utUser != null) return utUser;
 
-        var suggestedAdvisor = tcc.AdvisorChanges
-            .FirstOrDefault(ac => ac.SuggestedAdvisorId == userId)?.SuggestedAdvisor;
-        if (suggestedAdvisor != null) return suggestedAdvisor;
-
-        var currentAdvisor = tcc.AdvisorChanges
-            .FirstOrDefault(ac => ac.CurrentAdvisorId == userId)?.CurrentAdvisor;
-        if (currentAdvisor != null) return currentAdvisor;
-
-        return tcc.UserTccs.First().User;
+        return tcc.AdvisorChanges?.FirstOrDefault(change =>
+            change.DocumentId == documentId &&
+            change.Status == "PENDING_SIGNATURES" &&
+            change.CurrentAdvisorId == userId &&
+            change.CurrentAdvisor?.Id == userId)?.CurrentAdvisor;
     }
 
     private static bool UserAlreadySigned(TccEntity tcc, long documentId, long userId)

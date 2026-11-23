@@ -174,6 +174,18 @@ public class SignatureControllerTests
         await _storage.DidNotReceive().Send(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<string>(), Arg.Any<bool>());
     }
 
+    [Fact]
+    public async Task Sign_RejectsOversizedUploadBeforeReadingTheFile()
+    {
+        var upload = Substitute.For<IFormFile>();
+        upload.Length.Returns((long)SignSignatureUseCase.MaxFileBytes + 1);
+
+        var response = await Controller().SignSignature(new(TccId, DocumentId, StudentId, upload), null!);
+
+        Assert.Equal(413, Assert.IsType<StatusCodeResult>(response.Result).StatusCode);
+        await upload.DidNotReceive().CopyToAsync(Arg.Any<Stream>(), Arg.Any<CancellationToken>());
+    }
+
     private SignatureController Controller(string? requester = "56", string? campus = "78", bool existingTcc = true)
     {
         var claims = new List<Claim>();
