@@ -28,6 +28,88 @@ public class FindDocumentUseCaseTests
     private readonly FindDocumentUseCase _useCase;
     private readonly IAppLoggerGateway<FindDocumentUseCase> _logger = Substitute.For<IAppLoggerGateway<FindDocumentUseCase>>();
 
+    [Theory]
+    [InlineData("legacy-participant", "Pessoa legada|Pessoa legada|Campus do orientador|Cidade do orientador|Curso do orientador")]
+    [InlineData("no-student", "||Belo Jardim|Belo Jardim|")]
+    [InlineData("student-with-sparse-campus", "||Belo Jardim|Belo Jardim|")]
+    public async Task Execute_RendersLegacyTemplatesWithIncompleteParticipantData(string scenario, string expected)
+    {
+        var prefix = $"legacy{Guid.NewGuid():N}";
+        var directory = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "Documents");
+        Directory.CreateDirectory(directory);
+        var templatePath = Path.Combine(directory, prefix + "-old.html");
+        var advisor = new UserEntity { Name = null!, Email = null!, Phone = null, Registration = null, SIAPE = null, Titration = null };
+        var advisorLink = new UserTccEntity { UserId = 10, User = advisor, Profile = new ProfileEntity { Role = "ADVISOR" } };
+        var examinerLink = new UserTccEntity { UserId = 11, User = new UserEntity(), Profile = new ProfileEntity { Role = "BANKING" } };
+        var student = new UserEntity
+        {
+            Name = null!, Email = null!, UserClass = null, Shift = null, Phone = null, Registration = null
+        };
+        var project = new TccEntity
+        {
+            Id = 1,
+            CreationDate = new DateTime(2026, 4, 1),
+            UserTccs = [advisorLink, examinerLink],
+            AdvisorChanges = null!,
+            Documents =
+            [
+                new DocumentEntity { Id = 3, DocumentType = new DocumentTypeEntity { Name = prefix + "-current" }, Signatures = [] }
+            ]
+        };
+        if (scenario == "legacy-participant")
+        {
+            advisor.CampiCourse = new CampiCourseEntity
+            {
+                Campi = new CampiEntity { Name = "Campus do orientador", City = "Cidade do orientador" },
+                Course = new CourseEntity { Name = "Curso do orientador" }
+            };
+            student.Name = "Pessoa legada";
+            project.UserTccs.Add(new UserTccEntity { UserId = 12, User = student, Profile = new ProfileEntity { Role = "USER" } });
+        }
+        if (scenario == "student-with-sparse-campus")
+        {
+            student.CampiCourse = new CampiCourseEntity
+            {
+                Campi = new CampiEntity { Name = null!, City = null! },
+                Course = new CourseEntity { Name = null! }
+            };
+            advisor.CampiCourse = student.CampiCourse;
+            project.UserTccs.Add(new UserTccEntity { UserId = 12, User = student, Profile = new ProfileEntity { Role = "STUDENT" } });
+            project.AdvisorChanges =
+            [
+                new TccAdvisorChangeEntity
+                {
+                    DocumentId = 3,
+                    CurrentAdvisor = advisor,
+                    SuggestedAdvisor = new UserEntity { Name = null!, SIAPE = null, Registration = null }
+                }
+            ];
+            project.TccSchedule = new TccScheduleEntity { ScheduledDate = new DateTime(2026, 4, 7), Location = null! };
+            project.BankingMembers = [new TccBankingMemberEntity("Bia", "bia@example.org", "Externo", "test-token", 1) { Grade = 7m }];
+        }
+        _tccGateway.FindTccById(1).Returns(project);
+        _userGateway.FindAllByFilter(Arg.Any<UserFilterDTO>(), 1).Returns(new List<UserEntity>
+        {
+            new() { Profile = [new ProfileEntity { Role = "SUPERVISOR" }] }
+        });
+
+        await File.WriteAllTextAsync(templatePath,
+            "{{nome_orientando}}|{{orientandos}}|{{campus_nome}}|{{campus_cidade}}|{{curso_nome}};" +
+            "{{ano_orientando}};{{orientador_substituto_nome}};{{orientador_substituto_siape}};{{telefone_orientador}}");
+        try
+        {
+            var result = await _useCase.Execute(1, 3, null, 1);
+
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Data.IsHtml);
+            Assert.Equal(expected + ";2026.1;A definir;A definir;", result.Data.Url);
+        }
+        finally
+        {
+            File.Delete(templatePath);
+        }
+    }
+
     public FindDocumentUseCaseTests()
     {
         _useCase = new FindDocumentUseCase(_tccGateway, _storageGateway, _userGateway, _iTextGateway, _logger);
