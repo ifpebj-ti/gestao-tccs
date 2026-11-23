@@ -37,7 +37,7 @@ class CoverageSummaryTests(unittest.TestCase):
 
     def test_focused_table_excludes_migrations_and_keeps_the_global_metric(self):
         xml = '''<CoverageSession><Summary sequenceCoverage="92.50"/>
-            <Modules><Module><ModuleName>Infra</ModuleName><Classes>
+            <Modules><Module><ModuleName>gestaotcc.WebApi</ModuleName><Classes>
                 <Class><FullName>Gradus.Repositories</FullName>
                     <SequencePoint vc="1"/><BranchPoint vc="0"/>
                 </Class>
@@ -47,10 +47,15 @@ class CoverageSummaryTests(unittest.TestCase):
             </Classes></Module></Modules></CoverageSession>'''
         with tempfile.TemporaryDirectory() as directory:
             (Path(directory) / "coverage.opencover.xml").write_text(xml, encoding="utf-8")
-            result = self.run_summary(directory, "--sem-migrations")
+            result = self.run_summary(directory, "--sem-migrations", "--min-webapi", "85")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("92.50%", result.stdout)
-            self.assertIn("| Infra | 100.00% (1/1) | 0.00% (0/1) |", result.stdout)
+            self.assertIn("| gestaotcc.WebApi | 100.00% (1/1) | 0.00% (0/1) |", result.stdout)
+            report = Path(directory) / "coverage.opencover.xml"
+            report.write_text(xml.replace('SequencePoint vc="1"', 'SequencePoint vc="0"'), encoding="utf-8")
+            failed = self.run_summary(directory, "--min-webapi", "85")
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertIn("WebApi requires at least 85%", failed.stderr)
 
 
 if __name__ == "__main__":

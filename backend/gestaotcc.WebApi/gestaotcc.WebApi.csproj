@@ -40,4 +40,7 @@
       <ProjectReference Include="..\gestaotcc.Infra\gestaotcc.Infra.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="gestaotcc.Test" />
+    </ItemGroup>
 </Project>
