@@ -3,8 +3,6 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const os = require('node:os');
-const { spawnSync } = require('node:child_process');
 const { candidateTag, validateCandidate, publicationPlan, Registry, releasePreflight, verifyReleaseSource,
   assembleRelease, promoteRelease, badgePayload, main } = require('../controlled-publication.cjs');
 
@@ -155,10 +153,10 @@ test('candidate workflow cannot be started by a push, merge, release or schedule
 test('production keeps releases and a separate opt-in deployment; candidates remain isolated', () => {
   const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8');
   const events = workflow.match(/^on:\r?\n([\s\S]*?)(?=^\S)/m)?.[1];
-  assert.match(events, /pull_request:/);
-  assert.match(events, /- main/);
-  assert.match(events, /- closed/);
-  assert.match(workflow, /softprops\/action-gh-release/);
+  assert.match(events, /push:/);
+  assert.match(events, /branches: \[main\]/);
+  assert.match(events, /[.]release-please-manifest[.]json/);
+  assert.match(workflow, /googleapis\/release-please-action/);
   assert.match(workflow, /PORTAINER_WEBHOOK_BACKEND/);
   assert.match(workflow, /PORTAINER_WEBHOOK_FRONTEND/);
   assert.match(workflow, /assemble-release/);
@@ -285,25 +283,23 @@ test('badge changes only its marker line and preserves the current README blob S
   assert.throws(() => badgePayload({ ...original, content: Buffer.from('No marker').toString('base64') }, '14'));
 });
 
-test('actual versioning script skips outros and preserves the three normal version increments', () => {
-  const workflow = fs.readFileSync(path.join(__dirname, '../../.github/workflows/production.yml'), 'utf8').replace(/\r\n/g, '\n');
-  const block = workflow.split('      - name: Calculate new tag\n')[1].split('\n      - name:')[0];
-  const source = block.split('        run: |\n')[1].split('\n').map(line => line.replace(/^          /, '')).join('\n');
-  const bash = process.platform === 'win32' ? 'C:/Program Files/Git/bin/bash.exe' : 'bash';
-  for (const [kind, expected] of [['outros', null], ['bug-fix', '2.12.1'], ['nova-feature-refactor', '2.13.0'], ['novo-marco', '3.0.0']]) {
-    const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'gradus-version-test-'));
-    const output = path.join(folder, 'output');
-    try {
-      const result = spawnSync(bash, ['-e', '-c', source], {
-        env: { ...process.env, GITHUB_OUTPUT: output, LAST_RELEASE_TAG: '2.12.0', RELEASE_CHANGE_TYPE: kind }, encoding: 'utf8'
-      });
-      assert.equal(result.status, 0, result.stderr);
-      const actual = fs.readFileSync(output, 'utf8');
-      assert.match(actual, new RegExp(`should_release=${expected ? 'true' : 'false'}`));
-      if (expected) assert.ok(actual.includes(`created_tag=${expected}`));
-      else assert.doesNotMatch(actual, /created_tag=/);
-    } finally { fs.rmSync(output, { force: true }); fs.rmdirSync(folder); }
-  }
+test('release please uses an existing numeric version and opens the release PR without publishing it', () => {
+  const root = path.join(__dirname, '../..');
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'release-please-config.json'), 'utf8'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, '.release-please-manifest.json'), 'utf8'));
+  assert.match(manifest['.'], /^[0-9]+[.][0-9]+[.][0-9]+$/);
+  assert.match(config['bootstrap-sha'], /^[a-f0-9]{40}$/);
+  assert.equal(config.packages['.']['include-v-in-tag'], false);
+  assert.equal(config.packages['.']['release-type'], 'simple');
+
+  const proposal = fs.readFileSync(path.join(root, '.github/workflows/release-please.yml'), 'utf8');
+  assert.match(proposal, /skip-github-release: true/);
+  assert.match(proposal, /target-branch: main/);
+  assert.match(proposal, /steps[.]version[.]outputs[.]published == 'true'/);
+
+  const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8');
+  const escapedVersion = manifest['.'].replaceAll('.', '[.]');
+  assert.match(changelog, new RegExp('^## \\[' + escapedVersion + '\\]', 'm'));
 });
 
 test('promotion requires both builders and deployment additionally requires manual opt-in', () => {
@@ -316,7 +312,8 @@ test('promotion requires both builders and deployment additionally requires manu
   const builders = workflow.split('  backend-docker:\n')[1].split('  release-creation:\n')[0];
   assert.doesNotMatch(builders, /PORTAINER_WEBHOOK|imagetools create|:latest/);
   assert.equal((workflow.match(/ref: \$\{\{ github.sha \}\}/g) || []).length, 4);
-  assert.match(joint, /target_commitish: \$\{\{ github.sha \}\}/);
+  assert.match(joint, /skip-github-pull-request: true/);
+  assert.ok(joint.indexOf('assemble-release') < joint.indexOf('Publish the GitHub release'));
   assert.ok(joint.indexOf('assemble-release') < joint.indexOf('promote-release'));
   assert.ok(joint.indexOf('verify-release-source') < joint.indexOf('promote-release'));
   assert.ok(joint.indexOf('promote-release') < joint.indexOf('PORTAINER_WEBHOOK_BACKEND'));
@@ -324,7 +321,7 @@ test('promotion requires both builders and deployment additionally requires manu
   assert.match(joint, /curl --fail .*--proto '=https'.*-X POST "\$PORTAINER_WEBHOOK_FRONTEND"/);
   assert.doesNotMatch(joint, /curl[^\n]*\s-k\s/);
   const deploy = workflow.split('\n  deploy:\n')[1];
-  assert.match(deploy, /needs: \[tag-creation, release-creation\]/);
+  assert.match(deploy, /verify-published "\$image" latest/);
   assert.match(deploy, /github.event_name == 'workflow_dispatch' && inputs.deploy/);
   assert.match(deploy, /environment: production/);
   assert.doesNotMatch(joint.split('  deploy:\n')[0], /PORTAINER_WEBHOOK/);

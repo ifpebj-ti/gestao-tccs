@@ -1,21 +1,13 @@
 name: Production CI/CD & Release Workflow
 
 on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - ".github/workflows/**"
-      - "docker-compose-prod.yml"
-
+  push:
+    branches: [main]
+    paths: [.release-please-manifest.json]
   workflow_dispatch:
     inputs:
       deploy:
-        description: 'Executar deploy após a release (somente após provisionar a OCI)'
+        description: 'Implantar a release publicada mais recente'
         type: boolean
         default: false
 
@@ -30,118 +22,58 @@ jobs:
   quality:
     name: Validate release commit
     uses: ./.github/workflows/ci.yml
-    if: >-
-      github.ref == 'refs/heads/main' &&
-      (github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch')
-  # --------------------------------------------------------------------
-  # 0) TAG CREATION ----------------------------------------------------
-  # --------------------------------------------------------------------
-  tag-creation:
-    needs: quality
-    name: 0. Automatic Creation Process of New Tags
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
-    outputs:
-      created_tag: ${{ steps.created_tag.outputs.created_tag }}
-      change_type: ${{ steps.change_type.outputs.change_type }}
-      should_release: ${{ steps.created_tag.outputs.should_release }}
+    needs: tag-creation
+    if: needs.tag-creation.outputs.should_release == 'true'
 
+  tag-creation:
+    name: Detect a merged release
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || !inputs.deploy)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      created_tag: ${{ steps.version.outputs.tag }}
+      should_release: ${{ steps.version.outputs.should_release }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-
-      - name: Install GitHub CLI
-        run: sudo apt-get install -y gh
-
-      - name: Extract type of change from PR
-        id: change_type
+          fetch-depth: 0
+      - name: Detect a new version at the release merge
+        id: version
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "change_type=nova-feature-refactor" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH" > body.txt
-
-          change_type=""
-          if grep -q "\[x\] novo-marco" body.txt; then
-            change_type="novo-marco"
-          elif grep -q "\[x\] nova-feature-refactor" body.txt; then
-            change_type="nova-feature-refactor"
-          elif grep -q "\[x\] bug-fix" body.txt; then
-            change_type="bug-fix"
-          elif grep -q "\[x\] outros" body.txt; then
-            change_type="outros"
+          tag=$(jq -er '."."' .release-please-manifest.json)
+          [[ "$tag" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]
+          if git show HEAD^:.release-please-manifest.json >/dev/null 2>&1; then
+            previous=$(git show HEAD^:.release-please-manifest.json | jq -er '."."')
           else
-            echo "No option scheduled correctly in 'change_type:'"
-            exit 1
+            previous="$tag"
           fi
-
-          echo "change_type=$change_type" >> "$GITHUB_OUTPUT"
-
-      - name: Get the last release tag
-        id: last_tag
-        run: |
-          gh auth setup-git
-          tag=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
-          if [[ -z "$tag" ]]; then tag="0.0.0"; fi
-          echo "last_tag=$tag" >> "$GITHUB_OUTPUT"
+          if [[ "$tag" == "$previous" ]]; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Refuse existing version tags before building
+        if: steps.version.outputs.should_release == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Calculate new tag
-        id: created_tag
-        env:
-          LAST_RELEASE_TAG: ${{ steps.last_tag.outputs.last_tag }}
-          RELEASE_CHANGE_TYPE: ${{ steps.change_type.outputs.change_type }}
-        run: |
-          IFS='.' read -r major minor patch <<< "$LAST_RELEASE_TAG"
-          case "$RELEASE_CHANGE_TYPE" in
-            bug-fix)
-              patch=$((patch + 1))
-              ;;
-            nova-feature-refactor)
-              minor=$((minor + 1))
-              patch=0
-              ;;
-            novo-marco)
-              major=$((major + 1))
-              minor=0
-              patch=0
-              ;;
-            outros)
-              echo "should_release=false" >> "$GITHUB_OUTPUT"
-              echo "No release for outros; published versions remain intact."
-              exit 0
-              ;;
-          esac
-          created_tag="${major}.${minor}.${patch}"
-          echo "New tag: $created_tag"
-          echo "created_tag=$created_tag" >> "$GITHUB_OUTPUT"
-          echo "should_release=true" >> "$GITHUB_OUTPUT"
-
-      - name: Refuse existing Git and image version tags before building
-        if: steps.created_tag.outputs.should_release == 'true'
-        env:
-          CREATED_TAG: ${{ steps.created_tag.outputs.created_tag }}
+          CREATED_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/controlled-publication.cjs release-preflight "$CREATED_TAG"
+        run: |
+          test -n "$RELEASE_PLEASE_TOKEN" || { echo "::error::Configure RELEASE_PLEASE_TOKEN"; exit 1; }
+          node scripts/controlled-publication.cjs release-preflight "$CREATED_TAG"
 
-  # --------------------------------------------------------------------
   # 1) BACKEND DOCKER --------------------------------------------------
   # --------------------------------------------------------------------
   backend-docker:
     name: 1. Backend CI/CD & Image Build
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    needs: tag-creation
+    needs: [tag-creation, quality]
     if: needs.tag-creation.outputs.should_release == 'true'
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
@@ -235,7 +167,7 @@ jobs:
     name: 2. Frontend CI/CD & Image Build
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    needs: tag-creation
+    needs: [tag-creation, quality]
     if: needs.tag-creation.outputs.should_release == 'true'
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
@@ -342,7 +274,6 @@ jobs:
       pull-requests: write
     env:
       CREATED_TAG: ${{ needs.tag-creation.outputs.created_tag }}
-      CHANGE_TYPE: ${{ needs.tag-creation.outputs.change_type }}
       GHCR_USERNAME: ${{ github.actor }}
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -362,21 +293,17 @@ jobs:
       - name: Verify both staged services and publish new version indexes
         run: node scripts/controlled-publication.cjs assemble-release "$CREATED_TAG"
 
-      - name: Release Publication
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+      - name: Publish the GitHub release
+        id: release
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
         with:
-          tag_name: ${{ env.CREATED_TAG }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          target_commitish: ${{ github.sha }}
-          name: Release ${{ env.CREATED_TAG }}
-          generate_release_notes: true
-          body: |
-            Release automatically generated from the request #${{ github.event.pull_request.number }}
-            Type of change: ${{ env.CHANGE_TYPE }}
-            
-            Images published:
-            - ghcr.io/${{ github.repository_owner }}/gestaotccs-backend:${{ env.CREATED_TAG }}
-            - ghcr.io/${{ github.repository_owner }}/gestaotccs-frontend:${{ env.CREATED_TAG }}
+          target-branch: main
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          skip-github-pull-request: true
+      - name: Check the version created by Release Please
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
+        run: test "$RELEASE_TAG" = "$CREATED_TAG"
       - name: Confirm the Git release tag points to the compiled commit
         run: node scripts/controlled-publication.cjs verify-release-source "$CREATED_TAG"
 
@@ -387,24 +314,37 @@ jobs:
         continue-on-error: true
         env:
           COVERAGE_PERCENTAGE: ${{ needs.quality.outputs.coverage_percentage }}
-        run: |
-          node scripts/badge-pull-request.cjs
-
-      - name: Prepare changelog branch and manual PR link
-        run: node scripts/changelog-pull-request.cjs
+        run: node scripts/badge-pull-request.cjs
 
   deploy:
     name: Manual production deployment
-    needs: [tag-creation, release-creation]
-    if: >-
-      github.event_name == 'workflow_dispatch' && inputs.deploy &&
-      github.ref == 'refs/heads/main' && needs.tag-creation.outputs.should_release == 'true'
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
     environment: production
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
+      packages: read
     steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify the latest published release and both deployed image references
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          [[ "$tag" =~ ^[0-9]+[.][0-9]+[.][0-9]+$ ]]
+          GITHUB_SHA=$(gh api "repos/$GITHUB_REPOSITORY/commits/$tag" --jq .sha)
+          export GITHUB_SHA
+          for service in backend frontend; do
+            image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/gestaotccs-$service"
+            published=$(node scripts/controlled-publication.cjs verify-published "$image" "$tag")
+            latest=$(node scripts/controlled-publication.cjs verify-published "$image" latest)
+            test "$(jq -er .digest <<< "$published")" = "$(jq -er .digest <<< "$latest")"
+          done
       - name: Check deployment configuration before either webhook
         env:
           BACKEND: ${{ secrets.PORTAINER_WEBHOOK_BACKEND }}

@@ -12,11 +12,7 @@ O histórico de releases não comprova, por si só, que todas as versões possue
 
 ## Atualização automática
 
-Após publicar e verificar uma release, `production.yml` executa `scripts/changelog-pull-request.cjs`. O script consulta todas as páginas de releases, compara o conteúdo com a `main` e, quando necessário, prepara uma branch que altera somente `CHANGELOG.md`. O resumo da execução apresenta um link para abrir a PR manualmente.
-
-A equipe abre a PR pelo link indicado e marca `outros` no template para não gerar outra release. A política institucional que impede a criação de PRs por Actions permanece ativa. O script não consulta nem escreve na API de PRs; não atualiza branches protegidas, não aprova revisões e não faz merge. A equipe deve revisar as notas e aguardar o Quality gate antes da integração.
-
-Também é possível executar manualmente o workflow `Synchronize release changelog`, selecionando a `main`. Essa opção atende à recuperação de falhas e às mudanças posteriores nas notas de uma release. Falhas de permissão são informadas no job; a publicação já realizada não é desfeita.
+O Release Please gera o changelog na PR de release. Consulte o [fluxo de release](../../CONTRIBUTING.md#release-e-implantação) para configurar e validar a automação.
 
 ## Imagens candidatas
 
@@ -26,13 +22,9 @@ As imagens candidatas continuam separadas das tags de release. Essa alteração 
 
 ## Validação após integração
 
-Validação local: 51 testes dos scripts aprovados, sem falhas ou testes ignorados. A preparação da branch e a abertura manual da PR devem ser conferidas no GitHub após a integração. Os testes da aplicação e o gate de cobertura não foram alterados.
-
-1. Conferir o CHANGELOG com a página de releases, incluindo versões sem notas.
-2. Publicar a próxima release pelo fluxo normal e verificar o step de sincronização.
-3. Se houver diferenças, abrir a PR manualmente pelo link do resumo e confirmar que altera somente o changelog.
-4. Confirmar que o template está em `outros` e que o merge não gera nova release.
-5. No workflow manual de imagens candidatas, conferir o relatório do Trivy e o resultado do gate antes de qualquer publicação.
+1. Conferir o changelog e a versão propostos na PR de release.
+2. Após o merge, verificar a release e os manifestos de ambas as imagens.
+3. No workflow de imagens candidatas, conferir o relatório do Trivy e o resultado do gate.
 
 ## Diretório de artefatos do VSTest
 
@@ -47,4 +39,3 @@ O step passa a usar `umask 077` e uma pasta exclusiva criada por `mktemp -d` par
 - Concluir a confirmação de rotação da chave JWT nos ambientes dos integrantes.
 - Verificar os alertas privados e conciliar imagens antigas com tags e releases.
 - Atualizar Wiki e README e o plano de testes com os integrantes responsáveis.
-- Provisionar e validar a OCI quando houver acesso à conta.

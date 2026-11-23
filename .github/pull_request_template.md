@@ -10,8 +10,8 @@
 
 ---
 
-> A opção "outros" não gera nova tag de release.
-> Preencha todos os campos de forma clara. Este template é lido automaticamente pela nossa pipeline de CI/CD.
+> Use um título com Conventional Commits para que o Release Please identifique a mudança.
+> Preencha os campos para registrar o contexto, a validação e o impacto para quem vai revisar.
 
 ---
 
@@ -31,7 +31,7 @@ Este PR adiciona a validação de e-mail no cadastro de orientadores. Também re
 - [ ] Critérios de aceite da issue atendidos e funcionalidade executada localmente.
 - [ ] Testes relevantes passaram; link da execução do CI incluído abaixo.
 - [ ] SAST, SCA, segredos e DAST passaram; achados restantes possuem triagem e issue.
-- [ ] Documentação, Wiki e changelog impactados foram atualizados.
+- [ ] Documentação e Wiki impactadas foram atualizadas.
 - [ ] Nenhum dado real, documento privado ou segredo foi incluído no código/logs.
 - [ ] Há instruções de validação e demonstração para o revisor.
 

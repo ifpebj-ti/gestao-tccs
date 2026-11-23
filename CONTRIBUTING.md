@@ -79,19 +79,8 @@ As regras de proteção de branches e as permissões são configuradas no GitHub
 
 ## Release e implantação
 
-A pipeline de produção é acionada por PRs fechadas para `main`, com os filtros de arquivos definidos em [production.yml](.github/workflows/production.yml), ou por execução manual. O fluxo de publicação requer as validações do commit e das imagens.
+O workflow [Release Please](.github/workflows/release-please.yml) abre ou atualiza a PR de release na `main`. Use Conventional Commits nos commits que chegam à `main`. `fix:` incrementa o patch, `feat:` incrementa o minor e `BREAKING CHANGE:` ou `!` indica mudança incompatível. A PR contém a versão e o `CHANGELOG.md` gerados automaticamente.
 
-O corpo da PR determina o incremento de versão. Marque exatamente uma opção, com `x` minúsculo:
+Antes de integrar a automação na `main`, configure o secret `RELEASE_PLEASE_TOKEN` com um token autorizado neste repositório, com escrita em Contents, Issues e Pull requests. A identidade do token deve poder abrir PRs, acionar os checks e publicar releases. As PRs da automação passam pelos checks e pelas revisões da branch protegida.
 
-| Opção | Efeito |
-| --- | --- |
-| `novo-marco` | Incrementa MAJOR e zera MINOR e PATCH. |
-| `nova-feature-refactor` | Incrementa MINOR e zera PATCH. |
-| `bug-fix` | Incrementa PATCH. |
-| `outros` | Não cria uma nova release. |
-
-O título da PR não determina a versão. Na execução manual, o workflow atual utiliza incremento MINOR; confira a execução existente antes de iniciar outra publicação.
-
-Após a publicação, confira tag, release e imagens de frontend/backend com a mesma versão, os manifestos AMD64/ARM64 e a medição de cobertura usada no badge. Atualize o CHANGELOG com as alterações entregues e registre os links das evidências na issue. Os relatórios do CI têm retenção de 14 dias; preserve os necessários à avaliação antes da expiração.
-
-Release e deploy são etapas separadas. O deploy depende de execução manual com a opção correspondente e da configuração do ambiente `production`. Enquanto a conta OCI não estiver disponível, mantenha o deploy desativado.
+O merge da PR de release dispara o [workflow de produção](.github/workflows/production.yml), que valida o commit, publica e verifica as imagens AMD64/ARM64 e publica a release com a mesma versão. O deploy na OCI é manual pelo mesmo workflow, com a opção `deploy` habilitada e o ambiente `production` configurado.
