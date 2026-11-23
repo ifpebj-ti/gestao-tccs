@@ -4,6 +4,7 @@ reports/
 backend/coverage/
 backend/nuget-audit.json
 frontend/npm-audit.json
+/logo.b64
 .env.*
 !.env.example
 .vs
