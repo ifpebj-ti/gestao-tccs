@@ -214,102 +214,35 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Botão de Entrar */}
+          <button
+            id="login-google"
+            type="button"
+            onClick={startGoogleLogin}
+            disabled={isGoogleSubmitting || isSubmitting}
+            aria-busy={isGoogleSubmitting}
+            className="flex w-full items-center justify-center gap-3 rounded-full bg-[#C8FF47] px-6 py-4 text-[0.95rem] font-bold text-[#002B18] shadow-[0_4px_14px_rgba(200,255,71,0.35)] enabled:hover:bg-[#002B18] enabled:hover:text-[#C8FF47] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#002B18] disabled:cursor-not-allowed disabled:opacity-70 motion-safe:transition motion-safe:duration-200 motion-safe:enabled:hover:-translate-y-0.5"
+          >
+            <FontAwesomeIcon icon={faGoogle} aria-hidden="true" />
+            {isGoogleSubmitting ? 'Redirecionando para o Google...' : 'Entrar com Google'}
+          </button>
+          <div aria-hidden="true" className="my-6 flex items-center gap-4 text-[0.8rem] text-gray-500">
+            <span className="h-px flex-1 bg-gray-200" />
+            ou
+            <span className="h-px flex-1 bg-gray-200" />
+          </div>
+
           <button
             id="login-submit"
             type="submit"
             disabled={isSubmitting}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.75rem',
-              width: '100%',
-              padding: '0.95rem 1.5rem',
-              background: isSubmitting ? '#A3E635' : '#C8FF47',
-              color: '#002B18',
-              fontSize: '0.95rem',
-              fontWeight: 700,
-              border: 'none',
-              borderRadius: '9999px',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              letterSpacing: '0.02em',
-              boxShadow: '0 4px 14px rgba(200, 255, 71, 0.35)',
-              transition: 'all 0.15s ease',
-              fontFamily: 'inherit'
-            }}
-            onMouseEnter={e => {
-              if (!isSubmitting) {
-                e.currentTarget.style.background = '#002B18';
-                e.currentTarget.style.color = '#C8FF47';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                const arrow = e.currentTarget.querySelector('.btn-arrow') as HTMLElement;
-                if (arrow) {
-                  arrow.style.background = '#C8FF47';
-                  arrow.style.color = '#002B18';
-                }
-              }
-            }}
-            onMouseLeave={e => {
-              if (!isSubmitting) {
-                e.currentTarget.style.background = '#C8FF47';
-                e.currentTarget.style.color = '#002B18';
-                e.currentTarget.style.transform = 'translateY(0)';
-                const arrow = e.currentTarget.querySelector('.btn-arrow') as HTMLElement;
-                if (arrow) {
-                  arrow.style.background = '#002B18';
-                  arrow.style.color = '#C8FF47';
-                }
-              }
-            }}
+            className="group flex w-full items-center justify-center gap-3 rounded-full border border-[#CAD4CB] bg-white px-6 py-3.5 text-[0.95rem] font-bold text-[#002B18] enabled:hover:border-[#91AA95] enabled:hover:bg-[#DDEBDD] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#002B18] disabled:cursor-not-allowed disabled:opacity-70 motion-safe:transition-colors motion-safe:duration-200"
           >
             <span>{isSubmitting ? 'Autenticando...' : 'Acessar Plataforma'}</span>
-            <span
-              className="btn-arrow"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '26px',
-                height: '26px',
-                borderRadius: '50%',
-                background: '#002B18',
-                color: '#C8FF47',
-                fontSize: '0.85rem',
-                fontWeight: 900,
-                transition: 'all 0.15s ease'
-              }}
-            >
+            <span aria-hidden="true" className="inline-flex size-6 items-center justify-center rounded-full bg-[#E9F2E8] text-sm group-enabled:group-hover:bg-[#002B18] group-enabled:group-hover:text-white motion-safe:transition motion-safe:duration-200 motion-safe:group-enabled:group-hover:translate-x-1">
               →
             </span>
           </button>
         </form>
-
-        <div
-          aria-hidden="true"
-          style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0', color: '#6B7280', fontSize: '0.8rem' }}
-        >
-          <span style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
-          ou
-          <span style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
-        </div>
-        <button
-          id="login-google"
-          type="button"
-          onClick={startGoogleLogin}
-          disabled={isGoogleSubmitting || isSubmitting}
-          aria-busy={isGoogleSubmitting}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-            width: '100%', padding: '0.9rem 1.5rem', background: '#FFFFFF', color: '#002B18',
-            fontSize: '0.95rem', fontWeight: 700, border: '1px solid #D1D5DB', borderRadius: '9999px',
-            cursor: isGoogleSubmitting || isSubmitting ? 'not-allowed' : 'pointer', opacity: isGoogleSubmitting ? 0.7 : 1,
-            fontFamily: 'inherit'
-          }}
-        >
-          <FontAwesomeIcon icon={faGoogle} aria-hidden="true" />
-          {isGoogleSubmitting ? 'Redirecionando para o Google...' : 'Entrar com Google'}
-        </button>
         <p role="status" aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
           {isGoogleSubmitting ? 'Redirecionando para o Google...' : ''}
         </p>
