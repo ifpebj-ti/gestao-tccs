@@ -1,7 +1,6 @@
 const { readFileSync } = require('node:fs');
 const publicationBranch = new RegExp('^(?:release-please--branches--main|ci/changelog-\\d+|ci/coverage-[a-f0-9]{40}-\\d+)$');
-const htmlComment = new RegExp('<!--[\\s\\S]*?-->', 'g');
-const linkedIssue = new RegExp('^\\s*Issue vinculada:[ \\t]*(?:(?:Closes|Fixes|Resolves|Relates to|Refs)\\s+)?#[1-9]\\d*\\b', 'im');
+const commentOrIssue = new RegExp('<!--[\\s\\S]*?(?:-->|(?![\\s\\S]))|^([ \\t]*Issue vinculada:[ \\t]*(?:(?:Closes|Fixes|Resolves|Relates to|Refs)[ \\t]+)?#[1-9]\\d*\\b)', 'gim');
 
 function validatePullRequest(pr) {
   const sameRepository = pr.head.repo?.id === pr.base.repo?.id && Boolean(pr.base.repo?.id);
@@ -18,8 +17,8 @@ function validatePullRequest(pr) {
   const synchronization = sameRepository && (head === 'main' && base === 'develop' || head === 'develop' && base === 'main');
   if (automation || dependabot || synchronization) return;
 
-  const body = (pr.body ?? '').replace(htmlComment, '');
-  if (!linkedIssue.test(body)) {
+  const hasLinkedIssue = [...(pr.body ?? '').matchAll(commentOrIssue)].some(match => match[1]);
+  if (!hasLinkedIssue) {
     return 'Preencha o campo Issue vinculada com a referência da tarefa.';
   }
 }
