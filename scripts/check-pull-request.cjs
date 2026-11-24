@@ -1,11 +1,14 @@
 const { readFileSync } = require('node:fs');
+const publicationBranch = new RegExp('^(?:release-please--branches--main|ci/changelog-\\d+|ci/coverage-[a-f0-9]{40}-\\d+)$');
+const htmlComment = new RegExp('<!--[\\s\\S]*?-->', 'g');
+const linkedIssue = new RegExp('^\\s*Issue vinculada:[ \\t]*(?:(?:Closes|Fixes|Resolves|Relates to|Refs)\\s+)?#[1-9]\\d*\\b', 'im');
 
 function validatePullRequest(pr) {
   const sameRepository = pr.head.repo?.id === pr.base.repo?.id && Boolean(pr.base.repo?.id);
   const head = pr.head.ref;
   const base = pr.base.ref;
   const automation = sameRepository && base === 'main' &&
-    /^(?:release-please--branches--main|ci\/changelog-\d+|ci\/coverage-[a-f0-9]{40}-\d+)$/.test(head);
+    publicationBranch.test(head);
 
   if (base === 'main' && !automation && !(sameRepository && head === 'develop')) {
     return 'PRs para main devem vir de develop ou de uma branch de publicação prevista.';
@@ -15,8 +18,8 @@ function validatePullRequest(pr) {
   const synchronization = sameRepository && (head === 'main' && base === 'develop' || head === 'develop' && base === 'main');
   if (automation || dependabot || synchronization) return;
 
-  const body = (pr.body ?? '').replace(/<!--[\s\S]*?-->/g, '');
-  if (!/^\s*Issue vinculada:[ \t]*(?:(?:Closes|Fixes|Resolves|Relates to|Refs)\s+)?#[1-9]\d*\b/im.test(body)) {
+  const body = (pr.body ?? '').replace(htmlComment, '');
+  if (!linkedIssue.test(body)) {
     return 'Preencha o campo Issue vinculada com a referência da tarefa.';
   }
 }
