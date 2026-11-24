@@ -82,6 +82,7 @@ public static class IocDependencyExtensions
         services.AddScoped<EditScheduleTccUseCase>();
         services.AddScoped<SendScheduleEmailUseCase>();
         services.AddScoped<FindTccUseCase>();
+        services.AddScoped<TccAccessUseCase>();
         services.AddScoped<ResendInvitationCodeTccUseCase>();
         services.AddScoped<UpdateTccUseCase>();
         services.AddScoped<ConcludePresentationUseCase>();

@@ -8,6 +8,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # O frontend e a CI usam Node.js 24.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       react:
         patterns: [react, react-dom, '@types/react', '@types/react-dom']
@@ -46,6 +50,12 @@ updates:
     groups:
       dotnet-runtime:
         patterns: ['dotnet/*', 'mcr.microsoft.com/dotnet/*']
+    ignore:
+      # O backend usa net10.0 e a CI usa o SDK 10.0.x.
+      - dependency-name: 'dotnet/sdk'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'dotnet/aspnet'
+        update-types: ['version-update:semver-major']
   # Security updates remain on the default branch; version updates use develop.
   - package-ecosystem: npm
     cooldown:

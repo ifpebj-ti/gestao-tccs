@@ -54,9 +54,6 @@ public class FindUserByEmailUseCaseTests
         Assert.Equal(user.Id, result.Data.Id);
         Assert.Equal(user.Name, result.Data.Name);
         Assert.Equal(user.Email, result.Data.Email);
-        Assert.Equal(user.UserClass, result.Data.UserClass);
-        Assert.Equal(user.Shift, result.Data.Shift);
-        Assert.Equal(user.Titration, result.Data.Titration);
         Assert.Null(result.ErrorDetails);
     }
 

@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { NextRequest } = require('next/server');
+const { unstable_doesMiddlewareMatch } = require('next/experimental/testing/server');
 const { loadSource } = require('./load-source.cjs');
 const { middleware, config } = loadSource('src/middleware.ts');
 const roles = [
@@ -49,8 +50,19 @@ test('todas as rotas protegidas rejeitam visitante sem cookie', () => {
     '/instituicoes'
   ])
     redirected(path, null, '/');
-  assert.ok(config.matcher.includes('/instituicoes/:path*'));
-  assert.ok(config.matcher.includes('/libraryPending/:path*'));
+  assert.ok(unstable_doesMiddlewareMatch({ config, url: '/instituicoes/new' }));
+  assert.ok(unstable_doesMiddlewareMatch({ config, url: '/libraryPending' }));
+});
+
+test('as páginas de login e do TCC usam nonces independentes para os scripts', () => {
+  const signIn = access('/', null).headers.get('content-security-policy');
+  const tcc = access('/myTCC', token({ role: 'STUDENT' })).headers.get('content-security-policy');
+  assert.match(signIn, /default-src 'self'/);
+  const nonce = /script-src 'self' 'nonce-([a-f0-9]+)'/;
+  assert.match(signIn, nonce);
+  assert.match(tcc, nonce);
+  assert.notEqual(signIn.match(nonce)[1], tcc.match(nonce)[1]);
+  assert.equal(unstable_doesMiddlewareMatch({ config, url: '/_next/static/chunk.js' }), false);
 });
 test('cookie inválido, expirado ou com identidade inválida retorna ao login', () => {
   redirected('/profile', 'invalido', '/');

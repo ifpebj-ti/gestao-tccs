@@ -4,6 +4,7 @@ reports/
 backend/coverage/
 backend/nuget-audit.json
 frontend/npm-audit.json
+/logo.b64
 .env.*
 !.env.example
 .vs
@@ -92,3 +93,5 @@ backend/*.db-wal
 backend/.idea
 
 backend/**/appsettings.Production.json
+backend/gestaotcc.Infra/Database/PostgresSql/.project
+backend/gestaotcc.Test/TestResults/

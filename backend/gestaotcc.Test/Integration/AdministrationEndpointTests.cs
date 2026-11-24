@@ -280,6 +280,7 @@ public class AdministrationEndpointTests : IAsyncLifetime
     [ProposalPostgresFact]
     public async Task MissingTccResourcesReturnDocumentedFailuresWithoutWritingData()
     {
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/Tcc/999999/schedule/calendar.ics")).StatusCode);
         // Perfis sintéticos para exercitar os adaptadores HTTP; o JWT ainda é validado contra o banco.
         await using (var db = database.Context())
         {
@@ -297,6 +298,7 @@ public class AdministrationEndpointTests : IAsyncLifetime
         var reason = new { reason = "Justificativa sintética com mais de vinte caracteres." };
         await Check(HttpMethod.Get, "/api/Tcc?tccId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Tcc/cancellation?tccId=999999", null, HttpStatusCode.NotFound);
+        await Check(HttpMethod.Get, "/api/Tcc/advisor-change?tccId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Tcc/999999/schedule/calendar.ics", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Post, "/api/Tcc/cancellation/approve?tccId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Post, "/api/Tcc/cancellation/request", new { reason.reason, idTcc = 999999 }, HttpStatusCode.NotFound);
@@ -318,7 +320,8 @@ public class AdministrationEndpointTests : IAsyncLifetime
             [new("Docente interno", "internal@example.com", "BANKING", studentId), new("Docente externo", "external@example.com", "BANKING")]);
         await Check(HttpMethod.Post, "/api/Tcc/schedule", schedule, HttpStatusCode.NotFound);
         await Check(HttpMethod.Put, "/api/Tcc/schedule", schedule, HttpStatusCode.NotFound);
-        await Check(HttpMethod.Put, "/api/Tcc/999999", new { title = "Título revisado", summary = "Resumo válido" }, HttpStatusCode.InternalServerError);
+        await Check(HttpMethod.Put, "/api/Tcc/999999", new { title = "Título revisado", summary = "Resumo válido" }, HttpStatusCode.NotFound);
+        await Check(HttpMethod.Get, "/api/Tcc/workflow?tccId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Signature/document?tccId=999999&documentId=999999&studentId=0", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Signature/document/download?tccId=999999&documentId=999999", null, HttpStatusCode.NotFound);
         await Check(HttpMethod.Get, "/api/Signature/all/documents/download/999999", null, HttpStatusCode.NotFound);

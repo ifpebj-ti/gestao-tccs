@@ -30,7 +30,7 @@ public class FindUserByIdUseCaseTests
             Email = "joao@example.com",
             CPF = "00000000000",
             Password = "hashedpassword",
-            Status = "Ativo",
+            Status = "ACTIVE",
             Profile = new List<Domain.Entities.Profile.ProfileEntity>(),
             CampiCourse = new CampiCourseEntity(),
             AccessCode = new Domain.Entities.AccessCode.AccessCodeEntity(),
@@ -42,7 +42,7 @@ public class FindUserByIdUseCaseTests
         _userGateway.FindById(userId).Returns(user);
 
         // Act
-        var result = await _useCase.Execute(userId);
+        var result = await _useCase.Execute(userId, userId);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -58,7 +58,7 @@ public class FindUserByIdUseCaseTests
         _userGateway.FindById(userId).Returns((UserEntity?)null);
 
         // Act
-        var result = await _useCase.Execute(userId);
+        var result = await _useCase.Execute(userId, userId);
 
         // Assert
         Assert.True(result.IsFailure);

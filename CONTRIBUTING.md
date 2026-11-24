@@ -8,6 +8,8 @@ Crie uma branch a partir da `develop` atualizada. Use um nome que descreva a alt
 
 Abra a PR de trabalho para `develop`. A integração de `develop` para `main` deve ocorrer por uma PR própria, com revisão e evidências do commit avaliado. Não inclua alterações sem relação com o objetivo da tarefa.
 
+Preencha o campo `Issue vinculada` no template com o número da tarefa. O CI verifica a referência nas PRs de trabalho e a origem das PRs para `main`. O revisor registra na revisão ao menos um comentário técnico com o cenário que verificou, a evidência do resultado e eventuais riscos ou dúvidas.
+
 Use mensagens de commit com tipo e descrição curta, por exemplo:
 
 ```text

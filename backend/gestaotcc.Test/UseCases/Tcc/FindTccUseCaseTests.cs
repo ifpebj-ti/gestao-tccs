@@ -16,12 +16,14 @@ namespace gestaotcc.Test.UseCases.Tcc;
 public class FindTccUseCaseTests
 {
     private readonly ITccGateway _tccGateway = Substitute.For<ITccGateway>();
+    private readonly IUserGateway _users = Substitute.For<IUserGateway>();
     private readonly FindTccUseCase _useCase;
     private readonly IAppLoggerGateway<FindTccUseCase> _logger = Substitute.For<IAppLoggerGateway<FindTccUseCase>>();
 
     public FindTccUseCaseTests()
     {
-        _useCase = new FindTccUseCase(_tccGateway, _logger);
+        _useCase = new FindTccUseCase(_tccGateway, _users, _logger);
+        _users.FindById(10).Returns(new UserEntity { Id = 10, Status = "ACTIVE", Profile = [new() { Role = "ADMIN" }] });
     }
 
     [Fact]
@@ -31,7 +33,7 @@ public class FindTccUseCaseTests
         _tccGateway.FindTccInformations(Arg.Any<long>()).Returns(Task.FromResult<TccEntity?>(null));
 
         // Act
-        var result = await _useCase.Execute(1);
+        var result = await _useCase.Execute(1, 10);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -102,7 +104,7 @@ public class FindTccUseCaseTests
         _tccGateway.FindTccInformations(Arg.Any<long>()).Returns(Task.FromResult((TccEntity?)tcc));
 
         // Act
-        var result = await _useCase.Execute(1);
+        var result = await _useCase.Execute(1, 10);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -119,7 +121,7 @@ public class FindTccUseCaseTests
         Assert.Single(dto.InfoStudent);
         Assert.Equal("Aluno 1", dto.InfoStudent[0].Name);
         Assert.Equal("123", dto.InfoStudent[0].Registration);
-        Assert.Equal("11122233344", dto.InfoStudent[0].CPF);
+        Assert.Null(dto.InfoStudent[0].CPF);
         Assert.Equal("Engenharia", dto.InfoStudent[0].Course);
         Assert.Equal("aluno1@email.com", dto.InfoStudent[0].Email);
 

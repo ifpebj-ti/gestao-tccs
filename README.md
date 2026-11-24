@@ -44,6 +44,27 @@ O sistema é dividido em front-end e API, com o back-end organizado em camadas:
 - **backend/gestaotcc.Test:** testes automatizados do back-end.
 - **docs:** documentação técnica, segurança, infraestrutura e releases.
 
+## Arquitetura
+
+```mermaid
+flowchart LR
+    Browser[Navegador] --> Proxy[Nginx Proxy Manager]
+    Proxy --> Next[Frontend Next.js]
+    Proxy --> WebApi[API .NET 10 · WebApi]
+    WebApi --> Application[Application · casos de uso]
+    Application --> Domain[Domain · entidades e contratos]
+    WebApi --> Infra[Infra · implementações]
+    Infra --> Domain
+    Infra --> PostgreSQL[(PostgreSQL)]
+    Infra --> Garage[(Garage S3)]
+    WebApi --> Hangfire[Hangfire]
+    Hangfire --> PostgreSQL
+    WebApi -->|métricas| Prometheus[Prometheus]
+    WebApi -->|logs e traces| Observability[Loki e Tempo]
+    Prometheus --> Grafana[Grafana]
+    Observability --> Grafana
+```
+
 ## Armazenamento de arquivos
 
 O projeto utiliza o **Garage** para armazenar documentos e outros arquivos da aplicação.
@@ -77,7 +98,7 @@ O fluxo de publicação contempla imagens de front-end e back-end para **linux/a
 - [Histórico de alterações](CHANGELOG.md)
 - [Execuções da esteira de publicação](https://github.com/ifpebj-ti/gestao-tccs/actions/workflows/production.yml)
 
-A publicação de uma release é separada da implantação. O deploy na Oracle Cloud Infrastructure (OCI) depende do provisionamento do ambiente e de acionamento manual, permanecendo desativado por padrão na esteira.
+O ambiente na Oracle Cloud Infrastructure (OCI) já está em uso segundo a equipe. A atualização de uma versão na OCI requer acionamento manual.
 
 ## Documentação
 

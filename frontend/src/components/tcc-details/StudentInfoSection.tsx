@@ -73,10 +73,12 @@ export function StudentInfoSection({
                     <Label>Matrícula</Label>
                     <Input value={student.registration} readOnly />
                   </div>
-                  <div className="grid items-center gap-1.5">
-                    <Label>CPF</Label>
-                    <Input value={student.cpf} readOnly />
-                  </div>
+                  {student.cpf && (
+                    <div className="grid items-center gap-1.5">
+                      <Label>CPF</Label>
+                      <Input value={student.cpf} readOnly />
+                    </div>
+                  )}
                   <div className="grid items-center gap-1.5">
                     <Label>Curso</Label>
                     <Input value={student.course} readOnly />

@@ -1,6 +1,5 @@
 ﻿using gestaotcc.Application.Gateways;
 using gestaotcc.Domain.Dtos.User;
-using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Errors;
 
 namespace gestaotcc.Application.UseCases.User;
@@ -22,11 +21,7 @@ public class FindUserByEmailUseCase(IUserGateway userGateway, IAppLoggerGateway<
         var userResult = new FindUserByEmailDTO(
             user.Id,
             user.Name,
-            user.Email,
-            user.Status,
-            user.UserClass,
-            user.Shift,
-            user.Titration
+            user.Email
             );
         return ResultPattern<FindUserByEmailDTO>.SuccessResult(userResult);
     }

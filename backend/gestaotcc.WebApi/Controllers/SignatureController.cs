@@ -42,11 +42,16 @@ public class SignatureController(TccFilesUseCase files) : ControllerBase
     /// </summary>
     [Authorize]
     [HttpPost]
+    [RequestSizeLimit(SignSignatureUseCase.MaxRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = SignSignatureUseCase.MaxFileBytes)]
     public async Task<ActionResult<MessageSuccessResponseModel>> SignSignature([FromForm] SignSignatureInputModel data,
         [FromServices] SignSignatureUseCase signSignatureUseCase)
     {
         if (!long.TryParse(User.FindFirst("userId")?.Value, out var authenticatedUserId) || authenticatedUserId != data.UserId)
             return Forbid();
+
+        if (data.File.Length > SignSignatureUseCase.MaxFileBytes)
+            return StatusCode(StatusCodes.Status413PayloadTooLarge);
 
         using var memoryStream = new System.IO.MemoryStream();
         await data.File.CopyToAsync(memoryStream);

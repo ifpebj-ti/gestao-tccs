@@ -8,6 +8,9 @@ services:
       - "${PORT_MACHINE_BACKEND}:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - ReverseProxy__TrustedAddresses=${TRUSTED_API_PROXIES:-}
+      - AllowedHosts=${ALLOWED_API_HOSTS:-*}
+      - PublicApiUrl=${NEXT_PUBLIC_API_URL:-}
       - ConnectionStrings__DefaultConnection=${DEFAULTCONNECTION}
       - JWT_SETTINGS__TOKEN_KEY=${TOKEN_KEY}
       - JWT_SETTINGS__ACCESSTOKEN_EXPIRATION_TIME=${ACCESSTOKEN_EXPIRATION_TIME}
@@ -63,7 +66,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${PORT_MACHINE_POSTGRES}:5432"
+      - "127.0.0.1:${PORT_MACHINE_POSTGRES}:5432"
     restart: unless-stopped
     networks:
       - back_net
