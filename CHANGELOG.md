@@ -4,6 +4,94 @@ Histórico das releases publicadas no GitHub, em ordem de publicação. As datas
 
 Este arquivo é sincronizado por pull request. A automação não aprova nem integra alterações. As notas originais podem mencionar tecnologias e workflows usados naquela versão. O [registro manual anterior](docs/releases/changelog-legado.md) foi preservado como histórico e não descreve necessariamente a configuração atual.
 
+## [2.16.0](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.16.0) - 2026-11-23
+
+Release automatically generated from the request #865
+Type of change: nova-feature-refactor
+
+Images published:
+- ghcr.io/ifpebj-ti/gestaotccs-backend:2.16.0
+- ghcr.io/ifpebj-ti/gestaotccs-frontend:2.16.0
+
+
+### What's Changed
+* docs: reorganiza documentação geral de segurança da aplicação by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/854
+* docs: atualiza e reorganiza o README do projeto by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/855
+* feat: destaca o login com google by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/865
+
+
+**Full Changelog**: https://github.com/ifpebj-ti/gestao-tccs/compare/2.15.1...2.16.0
+
+---
+
+## [2.15.1](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.15.1) - 2026-11-18
+
+Release automatically generated from the request #853
+Type of change: bug-fix
+
+Images published:
+- ghcr.io/ifpebj-ti/gestaotccs-backend:2.15.1
+- ghcr.io/ifpebj-ti/gestaotccs-frontend:2.15.1
+
+
+### What's Changed
+* feat: implementa responsividade mobile-first nos layouts base e autenticacao by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/837
+* Develop by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/849
+* fix(frontend): exclude dev dependencies from runtime image by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/850
+* Develop by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/851
+* Fix/frontend runtime prod deps by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/852
+* fix(frontend): inclui dependências de produção no runtime multiarquitetura by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/853
+
+
+**Full Changelog**: https://github.com/ifpebj-ti/gestao-tccs/compare/2.15.0...2.15.1
+
+---
+
+## [2.15.0](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.15.0) - 2026-11-16
+
+Release automatically generated from the request #835
+Type of change: nova-feature-refactor
+
+Images published:
+- ghcr.io/ifpebj-ti/gestaotccs-backend:2.15.0
+- ghcr.io/ifpebj-ti/gestaotccs-frontend:2.15.0
+
+
+### What's Changed
+* chore: configura autenticacao Google por ambiente by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/828
+* feat: restringe login Google a contas locais elegiveis by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/829
+* feat: implementa fluxo de autenticacao Google no backend by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/830
+* feat: adiciona botao entrar com Google na tela de login by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/831
+* fix: preserva fluxos de primeiro acesso e criacao de senha no login Google by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/832
+* feat: integra retorno do login Google a sessao do frontend by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/833
+* test: adiciona testes para o fluxo de autenticacao Google by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/834
+* feat: entrega fluxo completo de autenticacao via Google OAuth/OIDC by @Vih007 in https://github.com/ifpebj-ti/gestao-tccs/pull/835
+
+
+**Full Changelog**: https://github.com/ifpebj-ti/gestao-tccs/compare/2.14.0...2.15.0
+
+---
+
+## [2.14.0](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.14.0) - 2026-11-15
+
+Release automatically generated from the request #824
+Type of change: nova-feature-refactor
+
+Images published:
+- ghcr.io/ifpebj-ti/gestaotccs-backend:2.14.0
+- ghcr.io/ifpebj-ti/gestaotccs-frontend:2.14.0
+
+
+### What's Changed
+* docs: sincroniza changelog com as releases publicadas by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/822
+* chore(deps): migra backend para .NET 10 e consolida atualizações compatíveis by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/823
+* chore(deps): publica migração para .NET 10 e atualizações compatíveis do frontend by @alexiaduartt in https://github.com/ifpebj-ti/gestao-tccs/pull/824
+
+
+**Full Changelog**: https://github.com/ifpebj-ti/gestao-tccs/compare/2.13.5...2.14.0
+
+---
+
 ## [2.13.5](https://github.com/ifpebj-ti/gestao-tccs/releases/tag/2.13.5) - 2026-11-15
 
 Release automatically generated from the request #821
