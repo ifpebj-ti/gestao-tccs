@@ -9,6 +9,9 @@ function pullRequest(head, base, body = '', sourceId = 1) {
 test('a PR de trabalho referencia a issue no campo do template', () => {
   assert.equal(validatePullRequest(pullRequest('fix/arquivo', 'develop', 'Issue vinculada: Relates to #17')), undefined);
   assert.match(validatePullRequest(pullRequest('fix/arquivo', 'develop', 'Issue vinculada: <!-- Closes #123 -->')), /Issue vinculada/);
+  assert.match(validatePullRequest(pullRequest('fix/arquivo', 'develop', '<!--\nIssue vinculada: #17\n-->')), /Issue vinculada/);
+  assert.match(validatePullRequest(pullRequest('fix/arquivo', 'develop', '<!--\nIssue vinculada: #17')), /Issue vinculada/);
+  assert.equal(validatePullRequest(pullRequest('fix/arquivo', 'develop', '<!-- comentário -->\nIssue vinculada: #17')), undefined);
 });
 
 test('a main recebe a develop do próprio repositório e as branches de publicação previstas', () => {
