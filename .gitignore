@@ -93,3 +93,5 @@ backend/*.db-wal
 backend/.idea
 
 backend/**/appsettings.Production.json
+backend/gestaotcc.Infra/Database/PostgresSql/.project
+backend/gestaotcc.Test/TestResults/

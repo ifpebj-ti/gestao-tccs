@@ -4,6 +4,7 @@ on:
     branches: [develop, main]
   pull_request:
     branches: [develop, main]
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
   workflow_call:
     outputs:
@@ -25,6 +26,9 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
+      - name: Validate the pull request branch and linked issue
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-pull-request.cjs
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
@@ -70,11 +74,12 @@ jobs:
         env:
           GRADUS_PROPOSAL_TEST_DATABASE: Host=127.0.0.1;Port=55439;Database=gradus_proposal_test;Username=postgres;Password=validation-only-password
         run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage" --settings coverlet.runsettings --results-directory coverage --logger "trx;LogFileName=tests.trx"
-      - name: Enforce 95 percent coverage
+      - name: Enforce backend and WebApi coverage
         id: coverage-gate
         run: |
           python3 -m pip install --require-hashes -r ../scripts/requirements-security.txt
           python3 ../scripts/check-coverage.py coverage 95
+          python3 ../scripts/summarize-coverage.py coverage --sem-migrations --min-webapi 85
       - name: Dependency vulnerability report including transitives
         if: success() || failure()
         run: dotnet list package --vulnerable --include-transitive --format json > nuget-audit.json
@@ -107,7 +112,15 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npm run test:ui
+      - name: Run frontend tests and measure coverage
+        shell: bash
+        run: npm run test:coverage | tee frontend-coverage.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/frontend-coverage.txt
+          retention-days: 14
       - run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://127.0.0.1:8080/api

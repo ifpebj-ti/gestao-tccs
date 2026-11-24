@@ -182,8 +182,7 @@ public class AuthController(ILogger<AuthController> logger) : ControllerBase
                 new { message = "Não foi possível concluir o login com o Google." });
         }
 
-        var forwardedProto = Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
-        var isHttps = Request.IsHttps || string.Equals(forwardedProto, "https", StringComparison.OrdinalIgnoreCase);
+        var isHttps = Request.IsHttps || frontendUri.Scheme == Uri.UriSchemeHttps;
         Response.Cookies.Append(GoogleAuthenticationDefaults.LocalJwtCookieName, result.Data.AccessToken,
             new CookieOptions
             {

@@ -2,14 +2,14 @@ version: '3.8'
 
 services:
   portainer:
-    image: portainer/portainer-ee:latest # Usando a business edition do Portainer
+    image: portainer/portainer-ee:2.45.4
     container_name: portainer
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     ports:
-      - "9443:9443" # Interface web HTTPS do Portainer
-      - "8000:8000" # Agente do Portainer
+      - "127.0.0.1:9443:9443" # Interface web HTTPS do Portainer
+      - "127.0.0.1:8000:8000" # Agente do Portainer
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data

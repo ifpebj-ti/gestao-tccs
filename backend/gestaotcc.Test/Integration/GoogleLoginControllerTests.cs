@@ -81,7 +81,8 @@ public class GoogleLoginControllerTests
 
     [Theory]
     [InlineData("email", "true", Frontend, "https", null, true)]
-    [InlineData(ClaimTypes.Email, "True", "http://localhost:3000/", "http", "HTTPS", true)]
+    [InlineData(ClaimTypes.Email, "True", "http://localhost:3000/", "http", "HTTPS", false)]
+    [InlineData(ClaimTypes.Email, "true", Frontend, "http", null, true)]
     [InlineData("email", "true", "http://localhost:3000/", "http", null, false)]
     public async Task Complete_SetsSessionCookieAndRedirectsForVerifiedAccount(
         string emailClaim, string verified, string frontend, string requestScheme, string? forwardedProto, bool secure)

@@ -1,23 +1,27 @@
 using gestaotcc.Domain.Dtos.InfosTcc;
 using gestaotcc.Domain.Dtos.Tcc;
 using gestaotcc.Domain.Entities.Tcc;
+using gestaotcc.Domain.Entities.User;
 using gestaotcc.Domain.Enums;
 
 namespace gestaotcc.Application.Factories;
 public class TccInfoFactory
 {
-    public static FindTccDTO CreateFindTccDTO(TccEntity tcc)
+    public static FindTccDTO CreateFindTccDTO(TccEntity tcc, UserEntity requester)
     {
         // 1. Estudantes cadastrados
         var studentUserTccs = tcc.UserTccs
             .Where(ut => ut.Profile.Role == RoleType.STUDENT.ToString())
             .ToList();
 
+        var managesCourse = requester.CampiCourseId is > 0 &&
+            requester.Profile.Any(profile => profile.Role is "COORDINATOR" or "SUPERVISOR");
         var students = studentUserTccs
             .Select(ut => new InfoStudentDTO(
                 Name: ut.User.Name,
                 Registration: ut.User.Registration,
-                CPF: ut.User.CPF,
+                CPF: ut.UserId == requester.Id || (managesCourse && ut.User.CampiCourseId == requester.CampiCourseId)
+                    ? ut.User.CPF : null,
                 Course: ut.User.CampiCourse?.Course.Name,
                 Email: ut.User.Email
             ))

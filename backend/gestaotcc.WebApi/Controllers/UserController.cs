@@ -12,6 +12,7 @@ namespace gestaotcc.WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class UserController(ILogger<UserController> logger, IConfiguration configuration) : ControllerBase
 {
     /// <summary>
@@ -153,6 +154,7 @@ public class UserController(ILogger<UserController> logger, IConfiguration confi
     /// </summary>
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("public-auth")]
     [RequestSizeLimit(16 * 1024)]
+    [AllowAnonymous]
     [HttpPost("autoregister")]
     public async Task<ActionResult<MessageSuccessResponseModel>> AutoRegister([FromBody] AutoRegisterDTO data,
         [FromServices] AutoRegisterUseCase autoRegisterUseCase)

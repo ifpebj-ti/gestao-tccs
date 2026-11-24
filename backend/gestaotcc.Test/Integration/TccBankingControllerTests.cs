@@ -152,7 +152,7 @@ public class TccBankingControllerTests
     {
         if (projectExists) _tccs.FindTccScheduling(TccId).Returns(new TccEntity { Id = TccId });
 
-        var response = await Controller().DownloadScheduleCalendar(TccId, _tccs);
+        var response = await Controller(UserId).DownloadScheduleCalendar(TccId, _tccs, CalendarAccess());
 
         Assert.IsType<NotFoundObjectResult>(response);
     }
@@ -172,7 +172,7 @@ public class TccBankingControllerTests
             }
         });
 
-        var response = await Controller().DownloadScheduleCalendar(TccId, _tccs);
+        var response = await Controller(UserId).DownloadScheduleCalendar(TccId, _tccs, CalendarAccess());
 
         var file = Assert.IsType<FileContentResult>(response);
         Assert.Equal("text/calendar; charset=utf-8", file.ContentType);
@@ -181,6 +181,28 @@ public class TccBankingControllerTests
         Assert.Contains($"SUMMARY:Defesa de TCC: {expectedTitle}", ics);
         Assert.Contains("DTSTART:20261118T140000Z", ics);
         Assert.Contains("LOCATION:Sala 2", ics);
+    }
+
+    [Fact]
+    public async Task Calendar_DoesNotLoadTheScheduleWithoutAccess()
+    {
+        var access = CalendarAccess();
+        Assert.IsType<UnauthorizedResult>(await Controller(null).DownloadScheduleCalendar(TccId, _tccs, access));
+        Assert.IsType<NotFoundResult>(await Controller(UserId + 1).DownloadScheduleCalendar(TccId, _tccs, access));
+        await _tccs.DidNotReceive().FindTccScheduling(TccId);
+    }
+
+    private TccAccessUseCase CalendarAccess()
+    {
+        var users = Substitute.For<IUserGateway>();
+        var advisor = new ProfileEntity { Role = "ADVISOR" };
+        users.FindById(UserId).Returns(new UserEntity { Id = UserId, Status = "ACTIVE", Profile = [advisor] });
+        _tccs.FindTccById(TccId).Returns(new TccEntity
+        {
+            Id = TccId,
+            UserTccs = [new UserTccEntity { UserId = UserId, Profile = advisor }]
+        });
+        return new TccAccessUseCase(_tccs, users);
     }
 
     private EvaluateTccUseCase EvaluateUseCase() => new(_tccs, Substitute.For<IAppLoggerGateway<EvaluateTccUseCase>>());

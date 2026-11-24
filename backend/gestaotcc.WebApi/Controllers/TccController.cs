@@ -308,8 +308,12 @@ public class TccController : ControllerBase
     [HttpGet("advisor-change")]
     public async Task<ActionResult<FindTccAdvisorChangeDTO?>> GetPendingAdvisorChange(
         [FromQuery] long tccId,
-        [FromServices] FindPendingAdvisorChangeUseCase findPendingAdvisorChangeUseCase)
+        [FromServices] FindPendingAdvisorChangeUseCase findPendingAdvisorChangeUseCase,
+        [FromServices] TccAccessUseCase access)
     {
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanRead(tccId, userId)) return NotFound();
+
         var result = await findPendingAdvisorChangeUseCase.Execute(tccId);
         if (result.IsFailure)
         {
@@ -368,10 +372,11 @@ public class TccController : ControllerBase
     [Authorize(Roles = "ADMIN, COORDINATOR, SUPERVISOR, ADVISOR")]
     [HttpGet("cancellation")]
     public async Task<ActionResult<FindTccCancellationDTO>> FindTccCancellation([FromQuery] long tccId,
-        [FromServices] FindTccCancellationUseCase findTccCancellationUseCase)
+        [FromServices] FindTccCancellationUseCase findTccCancellationUseCase,
+        [FromServices] TccAccessUseCase access)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
-        if (userIdClaim == null) return Unauthorized();
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanManage(tccId, userId)) return NotFound();
 
         var result = await findTccCancellationUseCase.Execute(tccId);
         if (result.IsFailure)
@@ -495,12 +500,16 @@ public class TccController : ControllerBase
     /// Baixar arquivo de calendário (.ics) da defesa do TCC
     /// </summary>
     /// <param name="tccId">Id do tcc</param>
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet("{tccId}/schedule/calendar.ics")]
     public async Task<IActionResult> DownloadScheduleCalendar(
         [FromRoute] long tccId,
-        [FromServices] ITccGateway tccGateway)
+        [FromServices] ITccGateway tccGateway,
+        [FromServices] TccAccessUseCase access)
     {
+        if (!TryGetRequester(out var userId)) return Unauthorized();
+        if (!await access.CanRead(tccId, userId)) return NotFound();
+
         var tcc = await tccGateway.FindTccScheduling(tccId);
         if (tcc is null || tcc.TccSchedule is null)
             return NotFound("Agendamento de defesa não encontrado para este TCC.");
@@ -513,6 +522,7 @@ public class TccController : ControllerBase
             tcc.TccSchedule.ScheduledDate);
 
         var bytes = System.Text.Encoding.UTF8.GetBytes(ics);
+        Response.Headers.CacheControl = "private, no-store";
         return File(bytes, "text/calendar; charset=utf-8", $"defesa-tcc-{tccId}.ics");
     }
 

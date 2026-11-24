@@ -20,7 +20,7 @@ public class FindTccUseCase(ITccGateway tccGateway, IUserGateway userGateway, IA
         }
 
         logger.LogInformation("TCC encontrado para o TccId: {TccId}. Mapeando para DTO.", tccId);
-        var findTccDTO = TccInfoFactory.CreateFindTccDTO(tcc);
+        var findTccDTO = TccInfoFactory.CreateFindTccDTO(tcc, requester!);
         
         logger.LogInformation("Busca e mapeamento concluídos com sucesso para TccId: {TccId}.", tccId);
         return ResultPattern<FindTccDTO>.SuccessResult(findTccDTO);
