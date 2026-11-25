@@ -1,5 +1,5 @@
 # Etapa de build
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /app
 
 # Copia a solução e os arquivos de projeto
@@ -21,7 +21,7 @@ COPY . .
 RUN dotnet publish ./gestaotcc.WebApi/gestaotcc.WebApi.csproj -c Release -o /app/out
 
 # Etapa de runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-alpine
 WORKDIR /app
 
 COPY --from=build /app/out .
